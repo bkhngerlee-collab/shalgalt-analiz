@@ -118,6 +118,28 @@ td input,td select{min-width:70px}
 .ls-banner.ok{background:rgba(25,135,84,.92)}.ls-banner.warn{background:rgba(190,120,0,.92)}
 .ls-banner big{display:block;font-size:1.6rem;font-weight:800}
 .toast{position:fixed;right:16px;bottom:16px;background:var(--leaf);color:#fff;padding:12px 16px;border-radius:10px;z-index:25;box-shadow:0 4px 16px rgba(0,0,0,.25);font-weight:600}
+.wgrid{border-collapse:collapse;width:100%;min-width:560px}
+.wgrid th{position:sticky;top:0;background:var(--leaf);color:#fff;padding:6px 8px;font-size:.85rem;border:1px solid var(--leaf);z-index:1}
+@media (prefers-color-scheme:dark){.wgrid th{color:#0e1a15}}
+.wgrid td{border:1px solid var(--line);padding:0}
+.wgrid td:first-child{width:42px;text-align:center;color:var(--muted);font-size:.8rem;background:var(--bg)}
+.wgrid input{border:0;border-radius:0;background:transparent;padding:7px 8px;width:100%}
+.wgrid input:focus{outline:2px solid var(--iodine);outline-offset:-2px;background:var(--surface)}
+.sq-list{display:grid;gap:8px}
+.sq-row{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.2fr);gap:8px;align-items:center;padding:6px 0;border-bottom:1px solid var(--line)}
+.sq-row .w{font-weight:700;font-size:1.1rem;word-break:break-word}
+.sq-row .w small{display:block;font-weight:400;font-size:.75rem;color:var(--muted)}
+.sq-row input{font-size:1.05rem;padding:10px}
+.sq-row input.filled{border-color:var(--leaf)}
+.namebtns{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px;margin:6px 0}
+.namebtn{font:inherit;font-size:1rem;text-align:left;padding:12px;border-radius:10px;border:2px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer}
+.namebtn small{color:var(--muted);margin-right:6px}
+.namebtn[aria-pressed="true"]{background:var(--leaf);border-color:var(--leaf);color:#fff}
+.namebtn[aria-pressed="true"] small{color:#fff}
+.clsbtns{display:flex;flex-wrap:wrap;gap:8px;margin:6px 0 4px}
+.clsbtn{font:inherit;font-weight:700;font-size:1.05rem;padding:10px 18px;border-radius:10px;border:2px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer}
+.clsbtn[aria-pressed="true"]{background:var(--leaf);border-color:var(--leaf);color:#fff}
+.vdet td{font-size:.88rem}
 .avgrow td{background:var(--iodine-soft);color:var(--iodine);font-weight:700;font-size:.85rem;text-align:center;padding:4px}
 .avgsum{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 6px}
 .avgsum span{background:var(--bg);border:1px solid var(--line);border-radius:999px;padding:4px 12px;font-size:.88rem}
@@ -415,7 +437,7 @@ body.student #studentApp{display:block}
 <!-- ============ 3. ANALYSIS ============ -->
 <section id="tab-vocab" hidden>
   <div class="panel">
-    <h2>Шинэ үгийн сорил</h2>
+    <h2>А. Google Sheets холболт</h2>
     <p class="hint">Сурагчид QR код эсвэл холбоосоор гар утас, компьютерээсээ орж англи, монгол шинэ үгийн сорил өгнө. Хариулт Google Sheets хүснэгтэд хадгалагдаж, зөв хариултын тоо, дараа нь хурдаар нь эрэмбэлэгдэнэ. Эхлээд Google Sheets-ийг нэг удаа холбоно.</p>
     <details class="collapsible" id="vGuide">
       <summary>Google Sheets холбох заавар (нэг удаа хийнэ)</summary>
@@ -428,6 +450,7 @@ body.student #studentApp{display:block}
         <li>Google зөвшөөрөл асууна: <b>Authorize access</b> → бүртгэлээ сонгох → "Google hasn't verified this app" гэвэл <b>Advanced → Go to ... (unsafe)</b> → <b>Allow</b>. Энэ бол таны өөрийн скрипт тул аюулгүй.</li>
         <li>Гарч ирсэн <b>Web app URL</b>-ийг хуулж доорх талбарт буулгаад, нууц үгээ оруулж "Холболт шалгах" дарна.</li>
       </ol>
+      <p class="hint"><b>Кодыг шинэчлэх үед</b> (программ шинэ хувилбар гарахад): Apps Script дээрх кодыг бүгдийг устгаад доорх шинэ кодыг буулгана. 9-р мөрөнд нууц үгээ дахин бичиж хадгална (Ctrl + S). Дараа нь <b>Deploy → Manage deployments → ✏️ (Edit) → Version: New version → Deploy</b> дарна. URL өөрчлөгдөхгүй.</p>
       <textarea id="vCode" class="code-block" readonly></textarea>
       <div class="btns"><button class="btn ghost" id="vCopyCode">Кодыг хуулах</button></div>
     </details>
@@ -443,19 +466,36 @@ body.student #studentApp{display:block}
   </div>
 
   <div class="panel">
-    <h2>Шинэ сорил үүсгэх</h2>
-    <p class="hint">Мөр бүрд нэг үг: англи үг, зураас, монгол орчуулга. Excel-ээс хоёр баганаар хуулж болно. Нэг үг хэд хэдэн зөв орчуулгатай бол цэг таслал (;) эсвэл налуу зураасаар (/) тусгаарлана, аль нь ч зөвд тооцогдоно.</p>
+    <h2>Б. Шинэ сорил үүсгэх</h2>
+    <p class="hint">Үгсээ доорх хүснэгтэд бичнэ, эсвэл Excel-ээс 2–3 баганаар нь хуулаад эхний нүдэнд дараад Ctrl + V дарж буулгана. Нэг үг хоёр зөв орчуулгатай бол хоёр дахийг нь 3-р баганад бичнэ, аль нь ч зөвд тооцогдоно.</p>
     <div class="row"><div style="flex:3 1 300px"><label for="vTitle">Сорилын нэр</label><input id="vTitle" placeholder="Жишээ: Unit 3 шинэ үг"></div></div>
-    <label for="vWords" style="margin-top:10px">Үгс</label>
-    <textarea id="vWords" style="min-height:180px;font-family:inherit" placeholder="apple - алим&#10;cell - эс&#10;big / large - том&#10;run - гүйх; ажиллуулах"></textarea>
+    <div class="scroll" style="margin-top:12px;max-height:440px;overflow-y:auto;border:1px solid var(--line);border-radius:6px">
+      <table class="wgrid"><thead><tr><th>№</th><th>Англи үг</th><th>Монгол орчуулга</th><th>Өөр зөв хариулт (заавал биш)</th></tr></thead><tbody id="vGrid"></tbody></table>
+    </div>
+    <div class="btns">
+      <button class="btn ghost" id="vAddRows">+ 10 мөр нэмэх</button>
+      <button class="btn ghost" id="vWordsTpl">Excel загвар татах</button>
+      <label class="btn ghost" style="margin:0;color:var(--leaf)">Excel файлаас оруулах<input type="file" id="vWordsFile" accept=".xlsx" hidden></label>
+      <button class="btn danger" id="vClearWords">Хүснэгтийг цэвэрлэх</button>
+    </div>
+    <div class="avgsum" style="margin-top:10px"><span id="vScoreInfo">0 үг</span></div>
     <div class="row" style="margin-top:10px">
       <div><label for="vDir">Чиглэл</label><select id="vDir">
         <option value="en">Англи → Монгол</option><option value="mn">Монгол → Англи</option><option value="mix">Холимог</option></select></div>
       <div><label for="vType">Хариулах арга</label><select id="vType">
-        <option value="choice">4 хувилбараас сонгох</option><option value="type">Бичиж хариулах</option></select></div>
+        <option value="type">Бичиж хариулах</option><option value="choice">4 хувилбараас сонгох</option></select></div>
+      <div><label for="vView">Харуулах хэлбэр</label><select id="vView">
+        <option value="list">Бүх үг нэг хуудсанд, эцэст нь "Илгээх"</option><option value="single">Нэг нэгээр нь</option></select></div>
       <div><label for="vTime">Хугацаа (минут, 0 = хязгааргүй)</label><input id="vTime" type="number" min="0" max="120" value="10"></div>
     </div>
     <div class="row" style="margin-top:10px">
+      <div style="flex:2 1 320px" id="vTolWrap"><label for="vTol">Үсгийн алдаа</label><select id="vTol">
+        <option value="0">Яг зөв бичсэн байх</option>
+        <option value="1" selected>1 үсгийн алдааг зөвд тооцох (4 ба түүнээс урт үгэнд)</option>
+        <option value="2">2 хүртэл үсгийн алдааг зөвд тооцох (8+ үсэгтэй үгэнд 2, 4–7 үсэгтэй үгэнд 1)</option></select></div>
+      <div style="flex:2 1 320px"><label for="vLogin">Сурагч нэвтрэх арга</label><select id="vLogin">
+        <option value="names">Ангиа сонгоод нэрсийн жагсаалтаас нэрээ дарна</option>
+        <option value="code">Ангиа сонгоод 2 оронтой кодоо оруулна (илүү найдвартай)</option></select></div>
       <div style="flex:2 1 320px"><label for="vMode">Сорилоос гарвал</label><select id="vMode">
         <option value="strict">Сорил шууд дуусна, буцаж үргэлжлүүлэх боломжгүй</option>
         <option value="warn">Анхааруулж, гарсан тоог тэмдэглэнэ, үргэлжлүүлж болно</option></select></div>
@@ -466,7 +506,8 @@ body.student #studentApp{display:block}
   </div>
 
   <div class="panel">
-    <h2>Сорилууд ба үр дүн</h2>
+    <h2>В. Сорилын дүн ба анализ</h2>
+    <p class="hint">Сурагчдын илгээсэн хариулт энд гарна: эрэмбэ, оноо (100-аас), хугацаа, түвшин, ороогүй сурагчид, хамгийн их алдсан үгс. Сурагчийн нэр дээр дарвал үг бүрт юу гэж бичсэнийг харна.</p>
     <div class="row">
       <div style="flex:3 1 280px"><label for="vQuizSel">Сорил</label><select id="vQuizSel"><option value="">Холболт шалгасны дараа жагсаалт гарна</option></select></div>
     </div>
@@ -494,7 +535,7 @@ body.student #studentApp{display:block}
 <div id="printArea"></div>
 <div id="studentApp"></div>
 <script type="text/plain" id="gsCode">/**
- * Шалгалтын анализ: Google Sheets сервер (хувилбар 2)
+ * Шалгалтын анализ: Google Sheets сервер (хувилбар 3)
  * Шинэ үгийн сорил, утас ба компьютерийн хоорондын холбоо
  *
  * 1. Доорх TEACHER_KEY-ийн утгыг зөвхөн өөрийн мэдэх нууц үгээр солино.
@@ -531,7 +572,7 @@ function respond_(p) {
 
 function route_(p) {
   var a = String(p.action || '');
-  if (a === 'ping') return { ok: true, teacher: isTeacher_(p), now: Date.now(), version: 2 };
+  if (a === 'ping') return { ok: true, teacher: isTeacher_(p), now: Date.now(), version: 3 };
   if (a === 'quiz') return publicQuiz_(p);
   if (a === 'who') return who_(p);
   if (a === 'start') return withLock_(function () { return start_(p); });
@@ -613,11 +654,38 @@ function findStudent_(q, clsName, code) {
   return st ? { cls: cls, st: st } : null;
 }
 
+function lev_(a, b) {
+  if (a === b) return 0;
+  var m = a.length, n = b.length, prev = [], cur = [], i, j;
+  for (j = 0; j <= n; j++) prev[j] = j;
+  for (i = 1; i <= m; i++) {
+    cur = [i];
+    for (j = 1; j <= n; j++) cur[j] = Math.min(prev[j] + 1, cur[j - 1] + 1, prev[j - 1] + (a.charAt(i - 1) === b.charAt(j - 1) ? 0 : 1));
+    prev = cur;
+  }
+  return prev[n];
+}
+
+function allowed_(target, tol) {
+  var n = target.length;
+  if (tol >= 2 && n >= 8) return 2;
+  if (tol >= 1 && n >= 4) return 1;
+  return 0;
+}
+
+function match_(x, a, tol) {
+  if (!a) return false;
+  return (x.accepted || [x.answer]).some(function (y) {
+    var t = norm_(y);
+    return t === a || (tol > 0 && lev_(t, a) <= allowed_(t, tol));
+  });
+}
+
 function grade_(q, answers) {
-  var detail = [], correct = 0;
+  var detail = [], correct = 0, tol = q.type === 'type' ? Number(q.tol || 0) : 0;
   q.questions.forEach(function (x, i) {
     var a = norm_(answers && answers[i]);
-    var ok = !!a && (x.accepted || [x.answer]).some(function (y) { return norm_(y) === a; });
+    var ok = match_(x, a, tol);
     detail.push(ok ? 1 : 0);
     if (ok) correct++;
   });
@@ -642,8 +710,13 @@ function publicQuiz_(p) {
   return {
     ok: true,
     quiz: {
-      id: q.id, title: q.title, mode: q.mode, type: q.type, timeLimit: q.timeLimit || 0,
-      classes: (q.classes || []).map(function (c) { return { name: c.name }; }),
+      id: q.id, title: q.title, mode: q.mode, type: q.type, timeLimit: q.timeLimit || 0, view: q.view || 'single',
+      login: q.login || 'code',
+      classes: (q.classes || []).map(function (c) {
+        return q.login === 'names'
+          ? { name: c.name, students: (c.students || []).map(function (st) { return { code: st.code, name: st.name }; }) }
+          : { name: c.name };
+      }),
       questions: q.questions.map(function (x) {
         return { prompt: x.prompt, dir: x.dir, options: q.type === 'choice' ? x.options : null };
       })
@@ -2440,13 +2513,64 @@ function buildQuestions(words,dir,type){
     }
     return q;});
 }
+let vGridData=[];
+function vGridLoad(){const c=vcfg();vGridData=(c.draft&&c.draft.length?c.draft:[]).map(r=>r.slice(0,3));while(vGridData.length<25)vGridData.push(['','','']);}
+function vGridSave(){const c=vcfg();let last=vGridData.length;while(last>0&&!vGridData[last-1].some(x=>x.trim()))last--;c.draft=vGridData.slice(0,last);save();}
+function vGridRender(){
+  $('#vGrid').innerHTML=vGridData.map((r,i)=>`<tr><td>${i+1}</td>${[0,1,2].map(c=>`<td><input data-r="${i}" data-c="${c}" value="${esc(r[c]||'')}" aria-label="${i+1}-р мөр, ${['англи үг','монгол орчуулга','өөр зөв хариулт'][c]}" autocomplete="off" spellcheck="false"></td>`).join('')}</tr>`).join('');
+  vScoreInfo();
+}
+function gridWords(){
+  const sp=x=>String(x||'').split(/\s*[;\/]\s*/).map(y=>y.trim()).filter(Boolean),out=[];
+  vGridData.forEach(r=>{let a=sp(r[0]),b=[...sp(r[1]),...sp(r[2])];if(!a.length||!b.length)return;
+    const cyr=x=>/[а-яөүё]/i.test(x.join(' ')),lat=x=>/[a-z]/i.test(x.join(' '));
+    if(cyr(a)&&!lat(a)&&lat(b))[a,b]=[b,a];out.push({en:a,mn:[...new Set(b)]});});
+  return out;
+}
+function vScoreInfo(){const n=gridWords().length,el=$('#vScoreInfo');if(!el)return;
+  el.innerHTML=n?`<b>${n} үг</b>. Нэг үг = <b>${r1(100/n)}</b> оноо, бүгдийг зөв хариулбал <b>100</b> оноо (100%).`:'Үг оруулаагүй байна.';}
+$('#vGrid').addEventListener('input',e=>{const t=e.target;if(t.dataset.r==null)return;vGridData[+t.dataset.r][+t.dataset.c]=t.value;vGridSave();vScoreInfo();});
+$('#vGrid').addEventListener('keydown',e=>{const t=e.target;if(e.key!=='Enter'||t.dataset.r==null)return;e.preventDefault();
+  const r=+t.dataset.r+1;if(r>=vGridData.length){vGridData.push(['','','']);vGridRender();}
+  const n=$(`#vGrid input[data-r="${r}"][data-c="${t.dataset.c}"]`);if(n)n.focus();});
+$('#vGrid').addEventListener('paste',e=>{
+  const t=e.target;if(t.dataset.r==null)return;const txt=(e.clipboardData||window.clipboardData).getData('text');
+  if(!/[\t\n]/.test(txt))return;e.preventDefault();
+  const rows=txt.replace(/\r/g,'').replace(/\n$/,'').split('\n').map(l=>l.split('\t'));
+  const r0=+t.dataset.r,c0=+t.dataset.c;
+  rows.forEach((cells,i)=>{while(vGridData.length<=r0+i)vGridData.push(['','','']);cells.forEach((v,j)=>{if(c0+j<3)vGridData[r0+i][c0+j]=v.trim();});});
+  while(vGridData.length<r0+rows.length+5)vGridData.push(['','','']);
+  vGridSave();vGridRender();$('#vPubMsg').style.color='';$('#vPubMsg').textContent=rows.length+' мөр буулгагдлаа.';
+});
+$('#vAddRows').addEventListener('click',()=>{for(let i=0;i<10;i++)vGridData.push(['','','']);vGridRender();});
+$('#vClearWords').addEventListener('click',()=>{if(!confirm('Хүснэгтийн бүх үгийг устгах уу?'))return;vGridData=[];while(vGridData.length<25)vGridData.push(['','','']);vGridSave();vGridRender();});
+$('#vWordsTpl').addEventListener('click',()=>{
+  const rows=[[{v:'Шинэ үгийн жагсаалт',s:'t'}],[{v:'Мөр бүрд нэг үг. 3-р багана заавал биш: өөр зөв орчуулга байвал бичнэ.',s:'n'}],[],
+    ['№','Англи үг','Монгол орчуулга','Өөр зөв хариулт'].map(v=>({v,s:'h'}))];
+  const filled=vGridData.filter(r=>r.some(x=>String(x).trim()));
+  filled.forEach((r,i)=>rows.push([{v:i+1,s:'cc'},{v:r[0]||'',s:'c'},{v:r[1]||'',s:'c'},{v:r[2]||'',s:'c'}]));
+  for(let i=filled.length;i<Math.max(40,filled.length+10);i++)rows.push([{v:i+1,s:'cc'},{v:'',s:'c'},{v:'',s:'c'},{v:'',s:'c'}]);
+  saveBlob(buildXlsx([{name:'Үгс',rows,freeze:4,widths:[5,26,26,26]}]),'shine-ug-zagvar.xlsx');
+});
+$('#vWordsFile').addEventListener('change',async e=>{
+  const f=e.target.files[0];e.target.value='';if(!f)return;const m=$('#vPubMsg');
+  try{const sh=(await readXlsx(f))[0];if(!sh)throw new Error('Хуудас олдсонгүй.');
+    let h=sh.rows.findIndex(r=>r&&r.some(x=>/англи/i.test(x))&&r.some(x=>/монгол/i.test(x)));
+    let ci=[0,1,2];if(h>=0){const H=sh.rows[h];const f2=re=>H.findIndex(x=>re.test(x));ci=[f2(/англи/i),f2(/монгол/i),f2(/өөр|зөв/i)];}
+    const data=sh.rows.slice(h+1).filter(r=>r).map(r=>ci.map(c=>c>=0?(r[c]||''):'')).filter(r=>r[0]||r[1]);
+    if(!data.length)throw new Error('Файлд үг олдсонгүй.');
+    vGridData=data;while(vGridData.length<data.length+5)vGridData.push(['','','']);vGridSave();vGridRender();
+    m.style.color='';m.textContent=data.length+' үг Excel файлаас орлоо.';
+  }catch(err){m.style.color='var(--stain)';m.textContent=err.message;}
+});
+$('#vType').addEventListener('change',()=>{$('#vTolWrap').hidden=$('#vType').value!=='type';});
 function vLink(id){
   const c=vcfg();let base=/^https?:$/.test(location.protocol)?location.origin+location.pathname:(c.base||'').trim();
   if(!base)return'';if(!/\.html?$/.test(base)&&!base.endsWith('/'))base+='/';
   return base+'?quiz='+encodeURIComponent(id)+'&api='+encodeURIComponent(c.api);
 }
 function renderVocab(){
-  const c=vcfg();
+  const c=vcfg();if(!vGridData.length){vGridLoad();vGridRender();}$('#vTolWrap').hidden=$('#vType').value!=='type';
   if(!$('#vCode').value)$('#vCode').value=$('#gsCode').textContent.trim();
   if(document.activeElement!==$('#vApi'))$('#vApi').value=c.api||'';
   if(document.activeElement!==$('#vKey'))$('#vKey').value=c.key||'';
@@ -2472,21 +2596,22 @@ $('#vTest').addEventListener('click',async()=>{
   const c=vcfg();c.api=$('#vApi').value.trim();c.key=$('#vKey').value;c.base=$('#vBase').value.trim();save();
   try{const r=await vCall({action:'ping'});
     if(!r.teacher){m.style.color='var(--stain)';m.textContent='Сервертэй холбогдлоо, гэхдээ нууц үг таарахгүй байна (эсвэл скрипт дотор нууц үгээ солиогүй байна).';return;}
-    await vLoadList();m.textContent='Амжилттай холбогдлоо. '+vList.length+' сорил байна.';
+    await vLoadList();m.textContent='Амжилттай холбогдлоо. '+vList.length+' сорил байна.'+((r.version||1)<3?' Анхаар: Google дээрх скрипт хуучин хувилбар байна. Үсгийн алдаа зөвшөөрөх, жагсаалт хэлбэр бүрэн ажиллахын тулд кодыг шинэчилнэ үү (заавар доор).':'');
     if(!vLink('x')){m.textContent+=' Сурагчдын холбоос үүсгэхийн тулд программын GitHub Pages хаягийг оруулна уу.';}
     if(vSel)vShowQuiz();
   }catch(e){m.style.color='var(--stain)';m.textContent=e.message;}
 });
 $('#vPublish').addEventListener('click',async()=>{
   const m=$('#vPubMsg'),err=t=>{m.style.color='var(--stain)';m.textContent=t;};
-  const words=parseWords($('#vWords').value),type=$('#vType').value;
+  const words=gridWords(),type=$('#vType').value;
   const clsNames=[...document.querySelectorAll('#vClasses input:checked')].map(x=>x.value);
-  if(!words.length)return err('Үг танигдсангүй. Мөр бүрд "apple - алим" хэлбэрээр бичнэ үү.');
+  if(!words.length)return err('Хүснэгтэд үг оруулаагүй байна. Англи үг болон монгол орчуулгыг бичнэ үү.');
   if(type==='choice'&&words.length<4)return err('4 хувилбараас сонгох сорилд дор хаяж 4 үг хэрэгтэй.');
   if(!clsNames.length)return err('Оролцох ангиа сонгоно уу.');
   const classes=clsNames.map(n=>{const k=db.classes.find(x=>x.name===n);return{name:n,students:k.students.map(s=>({code:k.codes[s],name:s}))};});
   const quiz={title:$('#vTitle').value.trim()||'Шинэ үгийн сорил',mode:$('#vMode').value,type,timeLimit:Math.max(0,+$('#vTime').value||0),
-    dir:$('#vDir').value,classes,questions:buildQuestions(words,$('#vDir').value,type),created:todayStr()};
+    dir:$('#vDir').value,view:$('#vView').value,login:$('#vLogin').value,tol:type==='type'?+$('#vTol').value:0,maxScore:100,
+    classes,questions:buildQuestions(words,$('#vDir').value,type),created:todayStr()};
   m.style.color='';m.textContent='Нийтэлж байна...';
   try{const r=await vCall({action:'saveQuiz',quiz});vSel=r.id;await vLoadList();
     m.textContent=words.length+' үгтэй сорил нийтлэгдлээ. Доорх холбоос эсвэл QR кодыг сурагчдад өгнө үү.';vShowQuiz();
@@ -2512,11 +2637,25 @@ async function vShowQuiz(){
 }
 async function vLoadResults(){
   if(!vSel)return;const m=$('#vResMsg');
-  try{vRes=await vCall({action:'results',quizId:vSel});m.style.color='';m.textContent='Шинэчилсэн: '+new Date().toLocaleTimeString();renderVResults();}
+  try{vRes=await vCall({action:'results',quizId:vSel});vRes._graded=false;m.style.color='';m.textContent='Шинэчилсэн: '+new Date().toLocaleTimeString();renderVResults();}
   catch(e){m.style.color='var(--stain)';m.textContent=e.message;}
 }
+function levD(a,b){if(a===b)return 0;const m=a.length,n=b.length;let prev=[...Array(n+1).keys()];
+  for(let i=1;i<=m;i++){const cur=[i];for(let j=1;j<=n;j++)cur[j]=Math.min(prev[j]+1,cur[j-1]+1,prev[j-1]+(a[i-1]===b[j-1]?0:1));prev=cur;}return prev[n];}
+const tolAllowed=(t,tol)=>tol>=2&&t.length>=8?2:tol>=1&&t.length>=4?1:0;
+function vMatch(q,ans,tol){const a=vNorm(ans);if(!a)return 0;
+  for(const y of(q.accepted||[q.answer])){const t=vNorm(y);if(t===a)return 2;if(tol>0&&levD(t,a)<=tolAllowed(t,tol))return 1;}return 0;}
+function vRegrade(){
+  if(!vRes||vRes._graded)return;const q=vRes.quiz,tol=q.type==='type'?+(q.tol||0):0;
+  vRes.attempts.forEach(a=>{if(a.status==='started'||!a.answers)return;
+    a.marks=q.questions.map((x,i)=>q.type==='choice'?(a.answers[i]&&vNorm(a.answers[i])===vNorm(x.answer)?2:0):vMatch(x,a.answers[i],tol));
+    a.detail=a.marks.map(m=>m?1:0);a.correct=a.detail.reduce((s,x)=>s+x,0);a.total=q.questions.length;});
+  vRes._graded=true;
+}
+const vScore=a=>a.total?Math.round(a.correct/a.total*1000)/10:0;
+let vDetailId='';
 function vRanked(){
-  if(!vRes)return{fin:[],live:[],missing:[],stats:[]};
+  if(!vRes)return{fin:[],live:[],missing:[],stats:[]};vRegrade();
   const A=vRes.attempts.filter(a=>!vCls||a.cls===vCls);
   const fin=A.filter(a=>a.status!=='started').sort((a,b)=>(b.correct||0)-(a.correct||0)||(a.durationSec||1e9)-(b.durationSec||1e9));
   fin.forEach(a=>{a.rank=1+fin.filter(x=>(x.correct||0)>(a.correct||0)||((x.correct||0)===(a.correct||0)&&(x.durationSec||1e9)<(a.durationSec||1e9))).length;});
@@ -2538,26 +2677,33 @@ function renderVResults(){
     <div class="stat"><b>${R.fin.length}</b><span>Дуусгасан</span></div>
     <div class="stat"><b>${R.live.length}</b><span>Одоо өгч байгаа</span></div>
     <div class="stat"><b>${R.missing.length}</b><span>Ороогүй</span></div>
-    <div class="stat"><b>${R.fin.length?Math.round(avg/n*100)+'%':'–'}</b><span>Дундаж (${n} үгнээс)</span></div>
+    <div class="stat"><b>${R.fin.length?r1(avg/n*100):'–'}</b><span>Дундаж оноо (100-аас)</span></div>
     <div class="stat"><b>${R.fin.length?mmss(avgT):'–'}</b><span>Дундаж хугацаа</span></div>
   </div>
   <h3 style="margin:8px 0">Эрэмбэ <small style="font-weight:400;color:var(--muted)">зөв хариултын тоогоор, тэнцвэл хурдаар</small></h3>
   <div class="scroll"><table>
-    <thead><tr><th>Байр</th><th>Анги</th><th>Код</th><th>Нэр</th><th class="num">Зөв</th><th class="num">Хувь</th><th class="num">Хугацаа</th><th class="num">Түвшин</th><th class="num">Гарсан</th><th>Төлөв</th><th></th></tr></thead>
+    <thead><tr><th>Байр</th><th>Анги</th><th>Код</th><th>Нэр</th><th class="num">Зөв</th><th class="num">Оноо (100)</th><th class="num">Хугацаа</th><th class="num">Түвшин</th><th class="num">Гарсан</th><th>Төлөв</th><th></th></tr></thead>
     <tbody>${R.fin.length||R.live.length?'':'<tr><td colspan="11" class="empty">Одоогоор хариулт ирээгүй байна.</td></tr>'}
-    ${R.fin.map(a=>{const p=a.total?a.correct/a.total*100:0;return`<tr class="${a.rank<=3?'medal1':''}"><td><b>${a.rank}</b></td><td>${esc(a.cls)}</td><td>${pad2(a.code)}</td><td><b>${esc(a.name)}</b></td>
-      <td class="num">${a.correct} / ${a.total}</td><td class="num">${pc(p)}</td><td class="num" title="${a.durationSec} сек">${mmss(a.durationSec)}</td><td class="num">${levelOf(p)}</td>
+    ${R.fin.map(a=>{const p=vScore(a);return`<tr class="${a.rank<=3?'medal1':''}"><td><b>${a.rank}</b></td><td>${esc(a.cls)}</td><td>${pad2(a.code)}</td><td><a href="#" data-det="${esc(a.attemptId)}"><b>${esc(a.name)}</b></a></td>
+      <td class="num">${a.correct} / ${a.total}</td><td class="num"><b class="${({good:'g',mid:'m',bad:'b'})[lvl(p)]}">${r1(p)}</b></td><td class="num" title="${a.durationSec} сек">${mmss(a.durationSec)}</td><td class="num">${levelOf(p)}</td>
       <td class="num">${a.leaves?`<span class="b">${a.leaves}</span>`:'0'}</td><td>${V_STATUS[a.status]||esc(a.status)}</td>
       <td><button class="btn danger" style="padding:3px 10px" data-reset="${esc(a.attemptId)}">Дахин өгүүлэх</button></td></tr>`;}).join('')}
     ${R.live.map(a=>`<tr><td>–</td><td>${esc(a.cls)}</td><td>${pad2(a.code)}</td><td>${esc(a.name)}</td><td colspan="2" class="num">–</td>
       <td class="num">${mmss((vRes.now-a.startMs)/1000)}</td><td></td><td class="num">${a.leaves?`<span class="b">${a.leaves}</span>`:'0'}</td><td><span class="m">${V_STATUS.started}</span></td>
       <td><button class="btn danger" style="padding:3px 10px" data-reset="${esc(a.attemptId)}">Дахин өгүүлэх</button></td></tr>`).join('')}
     </tbody></table></div>
+  ${(()=>{const a=vRes.attempts.find(x=>x.attemptId===vDetailId&&x.marks);if(!a)return'';
+    return`<div class="detail"><h3>${esc(a.name)} (${esc(a.cls)}): ${a.correct} / ${a.total}, ${r1(vScore(a))} оноо</h3>
+    <div class="scroll"><table class="vdet"><thead><tr><th>№</th><th>Асуулт</th><th>Сурагчийн хариулт</th><th>Зөв хариулт</th><th></th></tr></thead><tbody>
+    ${q.questions.map((x,i)=>`<tr><td>${i+1}</td><td><b>${esc(x.prompt)}</b></td><td>${esc(a.answers[i]||'–')}</td><td>${esc((x.accepted||[x.answer]).join('; '))}</td>
+      <td>${a.marks[i]===2?'<span class="g">✓ Зөв</span>':a.marks[i]===1?'<span class="m">✓ Үсгийн алдаатай</span>':'<span class="b">✗</span>'}</td></tr>`).join('')}
+    </tbody></table></div><div class="btns"><button class="btn ghost" data-det="">Хаах</button></div></div>`;})()}
   <div class="legend">"Гарсан" нь сорил өгөх үедээ өөр хуудас, программ руу шилжсэн тоо. "Дахин өгүүлэх" нь тэр сурагчийн оролдлогыг устгаж, дахин өгөх боломж олгоно.</div>
   ${R.missing.length?`<h3 style="margin:16px 0 6px">Ороогүй сурагчид (${R.missing.length})</h3><p style="margin:0">${R.missing.map(s=>esc(s.cls)+' '+pad2(s.code)+' '+esc(s.name)).join(', ')}</p>`:''}
   ${R.fin.length?`<h3 style="margin:16px 0 6px">Үг тус бүрийн гүйцэтгэл <small style="font-weight:400;color:var(--muted)">хамгийн их алдсанаас эхлэн</small></h3>
     ${R.stats.map(x=>bar(x.q.prompt+' → '+x.q.answer,x.pct)).join('')}`:''}`;
   $('#vClsSel').onchange=e=>{vCls=e.target.value;renderVResults();};
+  box.querySelectorAll('[data-det]').forEach(b=>b.onclick=e=>{e.preventDefault();vDetailId=b.dataset.det;renderVResults();});
   box.querySelectorAll('[data-reset]').forEach(b=>b.onclick=async()=>{
     const a=vRes.attempts.find(x=>x.attemptId===b.dataset.reset);
     if(!confirm((a?a.name:'')+'-ийн оролдлогыг устгаж, дахин өгөх боломж олгох уу?'))return;
@@ -2578,8 +2724,8 @@ $('#vXlsx').addEventListener('click',()=>runExport(async()=>{
   if(!vRes)throw new Error('эхлээд үр дүнгээ шинэчилнэ үү');
   const q=vRes.quiz,R=vRanked();
   const res={name:'Үр дүн',freeze:1,widths:[7,8,6,22,8,8,10,9,8,16],rows:[
-    ['Байр','Анги','Код','Нэр','Зөв','Хувь','Хугацаа','Түвшин','Гарсан','Төлөв'].map(v=>({v,s:'h'})),
-    ...R.fin.map(a=>[a.rank,a.cls,pad2(a.code),a.name,a.correct,P(a.total?a.correct/a.total*100:0),mmss(a.durationSec),levelOf(a.total?a.correct/a.total*100:0),a.leaves,V_STATUS[a.status]||a.status]),
+    ['Байр','Анги','Код','Нэр','Зөв','Оноо (100)','Хугацаа','Түвшин','Гарсан','Төлөв'].map(v=>({v,s:'h'})),
+    ...R.fin.map(a=>[a.rank,a.cls,pad2(a.code),a.name,a.correct,vScore(a),mmss(a.durationSec),levelOf(vScore(a)),a.leaves,V_STATUS[a.status]||a.status]),
     ...R.live.map(a=>['–',a.cls,pad2(a.code),a.name,'','','','',a.leaves,V_STATUS.started])]};
   const ws={name:'Үгс',freeze:1,widths:[24,24,10],rows:[['Асуулт','Зөв хариулт','Гүйцэтгэл'].map(v=>({v,s:'h'})),...R.stats.map(x=>[x.q.prompt,x.q.accepted.join('; '),P(x.pct)])]};
   const ms={name:'Ороогүй',widths:[8,6,24],rows:[['Анги','Код','Нэр'].map(v=>({v,s:'h'})),...R.missing.map(s=>[s.cls,pad2(s.code),s.name])]};
@@ -2587,7 +2733,7 @@ $('#vXlsx').addEventListener('click',()=>runExport(async()=>{
 },'#vResMsg'));
 
 /* ---------- vocabulary quiz: student page ---------- */
-const SQ={api:'',quizId:'',quiz:null,sel:{g1:'',g2:'',l:'',c1:'',c2:''},who:null,att:null,order:[],opt:{},i:0,answers:[],leaves:0,done:false,tick:null,offset:0,lastLeave:0,warnPending:false,inQuiz:false};
+const SQ={api:'',quizId:'',quiz:null,sel:{cls:'',c1:'',c2:''},who:null,att:null,order:[],opt:{},i:0,answers:[],leaves:0,done:false,tick:null,offset:0,lastLeave:0,warnPending:false,inQuiz:false};
 const sqEl=()=>$('#studentApp');
 async function sqGet(params){const u=SQ.api+(SQ.api.includes('?')?'&':'?')+new URLSearchParams(params);const r=await fetch(u);return r.json();}
 async function sqPost(body,keepalive){const r=await fetch(SQ.api,{method:'POST',body:JSON.stringify(body),keepalive:!!keepalive});return r.json();}
@@ -2608,32 +2754,34 @@ function sqSave(k,v){try{localStorage.setItem(sqKey(k),JSON.stringify(v));}catch
 function sqLoad(k){try{return JSON.parse(localStorage.getItem(sqKey(k)));}catch(e){return null;}}
 function sqDel(k){try{localStorage.removeItem(sqKey(k));}catch(e){}}
 function sqIdentity(){
-  const cl=SQ.quiz.classes.map(c=>({name:c.name,...classParts(c.name)}));
-  const letters=[...new Set(cl.map(c=>c.letter).filter(Boolean))];
   const digits=[...'0123456789'],S=SQ.sel;
   const row=(key,label,vals)=>`${label?`<div class="bublab">${label}</div>`:''}<div class="bubrow">${vals.map(v=>`<button type="button" class="bub" data-k="${key}" data-v="${esc(v)}" aria-pressed="${S[key]===v}">${esc(v)}</button>`).join('')}</div>`;
-  const q=SQ.quiz,n=q.questions.length;
+  const q=SQ.quiz,n=q.questions.length,byName=q.login==='names'&&q.classes.some(c=>c.students&&c.students.length);
+  const selCls=byName?q.classes.find(c=>c.name===S.cls):null;
   sqEl().innerHTML=sqHead(n+' үг'+(q.timeLimit?', '+q.timeLimit+' минут':''))+`<div class="panel">
     <h2>Өөрийгөө сонгоно уу</h2>
-    <p class="hint" style="margin:0">Хариултын хуудас дээрхтэй адил анги, бүлэг, кодоо сонгоно.</p>
-    <div class="bubgrp"><b>Анги</b>${row('g1','1-р орон',digits)}${row('g2','2-р орон',digits)}</div>
-    <div class="bubgrp"><b>Бүлэг</b>${row('l','',letters)}</div>
-    <div class="bubgrp"><b>Код</b>${row('c1','1-р орон',digits)}${row('c2','2-р орон',digits)}</div>
-    <div class="sq-who" id="sqWho">${SQ.who?`Та: <b>${esc(SQ.who.name)}</b> (${esc(SQ.who.cls)}, код ${esc(SQ.who.code)}). Зөв бол "Эхлэх" дарна уу.`:'Анги, бүлэг, кодоо бүрэн сонгоно уу.'}</div>
+    <p class="hint" style="margin:0">${byName?'Ангиа дараад, нэрээ сонгоно.':'Ангиа дараад, багшийн өгсөн 2 оронтой кодоо сонгоно.'}</p>
+    <div class="bubgrp"><b>Анги</b><div class="clsbtns">${q.classes.map(c=>`<button type="button" class="clsbtn" data-cls="${esc(c.name)}" aria-pressed="${S.cls===c.name}">${esc(c.name)}</button>`).join('')}</div></div>
+    ${byName?(selCls?`<div class="bubgrp"><b>Нэр</b><div class="namebtns">${selCls.students.map(st=>`<button type="button" class="namebtn" data-code="${esc(st.code)}" aria-pressed="${SQ.who&&SQ.who.cls===selCls.name&&+SQ.who.code===+st.code}"><small>${pad2(st.code)}</small>${esc(st.name)}</button>`).join('')}</div></div>`:'')
+      :`<div class="bubgrp"><b>Код</b>${row('c1','1-р орон',digits)}${row('c2','2-р орон',digits)}</div>`}
+    <div class="sq-who" id="sqWho">${SQ.who?`Та: <b>${esc(SQ.who.name)}</b> (${esc(SQ.who.cls)}, код ${esc(SQ.who.code)}). Зөв бол "Эхлэх" дарна уу.`:(byName?'Ангиа сонгоод нэрээ дарна уу.':'Ангиа сонгоод кодоо бүрэн сонгоно уу.')}</div>
     <ul class="sq-rules">
-      <li>${q.type==='choice'?'Үг бүрт 4 хувилбараас зөвийг сонгоно.':'Үг бүрийн орчуулгыг бичиж хариулна.'} Буцаж засах боломжгүй.</li>
+      <li>${q.type==='choice'?'Үг бүрт 4 хувилбараас зөвийг сонгоно.':'Үг бүрийн орчуулгыг бичиж хариулна. Том, жижиг үсэг хамаагүй.'} ${q.view==='list'?'Бүх үг нэг хуудсанд гарна, бөглөж дуусаад "Илгээх" дарна.':'Буцаж засах боломжгүй.'}</li>
       <li>Зөв хариултын тоогоор, тэнцвэл хурдаар эрэмбэлнэ. Хугацаа "Эхлэх" дарснаас тоологдоно.</li>
       <li>${q.mode==='strict'?'<b>Сорил өгөх үедээ өөр хуудас, программ руу шилжвэл сорил шууд дуусна.</b>':'<b>Өөр хуудас, программ руу шилжвэл багшид мэдэгдэнэ.</b>'}</li>
     </ul>
     <div class="btns"><button class="btn" id="sqStart" ${SQ.who?'':'disabled'} style="width:100%;padding:14px;font-size:1.1rem">Эхлэх</button></div>
     <div class="msg" id="sqErr" style="color:var(--stain)"></div></div>`;
   sqEl().querySelectorAll('.bub').forEach(b=>b.onclick=()=>{S[b.dataset.k]=S[b.dataset.k]===b.dataset.v?'':b.dataset.v;SQ.who=null;sqIdentity();sqLookup();});
+  sqEl().querySelectorAll('.clsbtn').forEach(b=>b.onclick=()=>{S.cls=b.dataset.cls;SQ.who=null;sqIdentity();if(!byName)sqLookup();});
+  sqEl().querySelectorAll('.namebtn').forEach(b=>b.onclick=()=>{const st=selCls.students.find(x=>String(x.code)===b.dataset.code);
+    SQ.who={cls:selCls.name,code:pad2(st.code),name:st.name};sqIdentity();const s2=$('#sqStart');if(s2)s2.scrollIntoView({behavior:'smooth',block:'center'});});
   $('#sqStart').onclick=sqBegin;
 }
 let sqLookTimer=null;
 function sqLookup(){
-  const S=SQ.sel;if(!S.g1||!S.g2||!S.l||!S.c1||!S.c2)return;
-  const c=SQ.quiz.classes.find(k=>{const p=classParts(k.name);return p.grade===S.g1+S.g2&&normL(p.letter)===normL(S.l);});
+  const S=SQ.sel;if(!S.cls||!S.c1||!S.c2)return;
+  const c=SQ.quiz.classes.find(k=>k.name===S.cls);
   const w=$('#sqWho');if(!c){w.textContent='Ийм анги энэ сорилд оролцохгүй байна.';return;}
   const code=S.c1+S.c2;w.textContent='Шалгаж байна...';clearTimeout(sqLookTimer);
   sqLookTimer=setTimeout(async()=>{try{const r=await sqGet({action:'who',quizId:SQ.quizId,cls:c.name,code});
@@ -2651,7 +2799,7 @@ async function sqBegin(){
   else{SQ.order=shuffleArr([...Array(n).keys()]);SQ.opt={};SQ.order.forEach(k=>{const o=SQ.quiz.questions[k].options;if(o)SQ.opt[k]=shuffleArr(o);});SQ.i=0;SQ.answers=Array(n).fill('');}
   sqPersist();SQ.inQuiz=true;SQ.done=false;
   if(r.resumed)SQ.warnPending=true;
-  sqGuard();sqQuestion();
+  sqGuard();if(SQ.quiz.view==='list')sqList();else sqQuestion();
   SQ.tick=setInterval(sqTick,250);
 }
 function sqPersist(){sqSave('state',{att:SQ.att,order:SQ.order,opt:SQ.opt,i:SQ.i,answers:SQ.answers});}
@@ -2682,6 +2830,28 @@ function sqQuestion(){
     inp.addEventListener('input',()=>{SQ.answers[k]=inp.value;sqPersist();});
     inp.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();sqNext();}});
     $('#sqNext').onclick=sqNext;}
+  sqBindWarn();
+}
+function sqList(){
+  const n=SQ.order.length,q0=SQ.quiz,filled=SQ.answers.filter(a=>String(a||'').trim()).length;
+  sqEl().innerHTML=sqHead(esc(SQ.who.name)+', '+esc(SQ.who.cls))+`<div class="panel">
+    <div class="sq-bar"><span id="sqFilled">Бөглөсөн: ${filled} / ${n}</span><span class="sq-timer" id="sqTime">--:--</span></div>
+    <div class="sq-dir" style="margin-bottom:8px">${q0.dir==='mix'?'Үг бүрийн орчуулгыг бичнэ үү.':DIR_LABEL[q0.dir]||''}</div>
+    <div class="sq-list">${SQ.order.map((k,j)=>{const q=q0.questions[k];return`<div class="sq-row"><div class="w">${j+1}. ${esc(q.prompt)}${q0.dir==='mix'?`<small>${q.dir==='en'?'монголоор':'англиар'}</small>`:''}</div>
+      <input data-k="${k}" data-j="${j}" value="${esc(SQ.answers[k]||'')}" class="${SQ.answers[k]?'filled':''}" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="${q.dir==='en'?'монголоор':'англиар'}"></div>`;}).join('')}</div>
+    <div class="msg" id="sqListMsg" style="color:var(--stain)"></div>
+    <div class="btns"><button class="btn" id="sqSubmit" style="width:100%;padding:14px;font-size:1.1rem">Илгээх</button></div>
+  </div>${SQ.warnPending?sqWarnHtml():''}`;
+  sqTick();
+  sqEl().querySelectorAll('.sq-row input').forEach(inp=>{
+    inp.addEventListener('paste',e=>e.preventDefault());inp.addEventListener('drop',e=>e.preventDefault());
+    inp.addEventListener('input',()=>{SQ.answers[+inp.dataset.k]=inp.value;inp.classList.toggle('filled',!!inp.value.trim());sqPersist();SQ.confirmBlank=false;$('#sqListMsg').textContent='';
+      $('#sqFilled').textContent='Бөглөсөн: '+SQ.answers.filter(a=>String(a||'').trim()).length+' / '+n;});
+    inp.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();const nx=sqEl().querySelector(`.sq-row input[data-j="${+inp.dataset.j+1}"]`);if(nx)nx.focus();else $('#sqSubmit').focus();}});
+  });
+  $('#sqSubmit').onclick=()=>{const blank=SQ.answers.filter(a=>!String(a||'').trim()).length;
+    if(blank&&!SQ.confirmBlank){SQ.confirmBlank=true;$('#sqListMsg').textContent=blank+' үг хоосон байна. Тэгсээр илгээх бол "Илгээх"-ийг дахин дарна уу.';return;}
+    sqFinish('done');};
   sqBindWarn();
 }
 function sqNext(){if(!SQ.inQuiz)return;if(SQ.i>=SQ.order.length-1)return sqFinish('done');SQ.i++;sqPersist();sqQuestion();}
@@ -2716,14 +2886,14 @@ async function sqFinish(reason,keepalive){
 function sqShowResult(r,reason){
   if(r&&(r.ok||r.already)){sqDel('pending');sqSave('done',1);
     const head=reason==='left'?'Та сорилоос гарсан тул сорил дууссан':reason==='time'?'Хугацаа дууслаа':'Сорил дууслаа';
-    sqMsg(head,`<div class="sq-big">${r.correct} / ${r.total}</div><p>Зөв хариулт. Зарцуулсан хугацаа: <b>${mmss(r.durationSec)}</b></p><p class="hint" style="margin:0 auto">Таны хариулт багшид илгээгдлээ.</p>`,reason==='left'?'b':'');}
+    sqMsg(head,`<div class="sq-big">${r.correct} / ${r.total}</div><p>Зөв хариулт, <b>${r.total?r1(r.correct/r.total*100):0}</b> оноо (100-аас). Зарцуулсан хугацаа: <b>${mmss(r.durationSec)}</b></p><p class="hint" style="margin:0 auto">Таны хариулт багшид илгээгдлээ.</p>`,reason==='left'?'b':'');}
   else sqMsg('Илгээж чадсангүй',`<p>${esc(r&&r.error||'')}</p>`,'b');
 }
 function sqResend(body){
   sqMsg('Хариулт илгээгдээгүй байна',`<p>${body.who?'<b>'+esc(body.who)+'</b>-ийн хариулт энэ төхөөрөмж дээр хадгалагдсан байна. ':''}Интернэт холболтоо шалгаад доорх товчийг дарна уу.</p>
     <div class="btns" style="justify-content:center"><button class="btn" id="sqRe">Дахин илгээх</button><button class="btn ghost" id="sqSkip">Би өөр сурагч</button></div>`,'b');
   $('#sqRe').onclick=async()=>{try{const r=await sqPost(body);sqShowResult(r,body.reason);}catch(e){sqResend(body);}};
-  $('#sqSkip').onclick=()=>{SQ.sel={g1:'',g2:'',l:'',c1:'',c2:''};SQ.who=null;sqIdentity();};
+  $('#sqSkip').onclick=()=>{SQ.sel={cls:'',c1:'',c2:''};SQ.who=null;sqIdentity();};
 }
 
 if(new URLSearchParams(location.search).get('quiz'))startStudent();
