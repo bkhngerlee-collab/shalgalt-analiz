@@ -100,6 +100,15 @@ td input,td select{min-width:70px}
 .matrix .tot{background:var(--bg);font-weight:700}
 .omr-card{display:flex;gap:14px;flex-wrap:wrap;border:1px solid var(--line);border-radius:8px;padding:12px;margin-top:12px}
 .omr-card.saved{opacity:.6}
+.omr-mini{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:8px 12px;border:1px solid var(--line);border-radius:8px;margin-top:6px;font-size:.92rem}
+.omr-mini .g{font-weight:700}
+.omr-mini button{font:inherit;font-size:.85rem;padding:3px 10px;border-radius:6px;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer;margin-left:auto}
+.omr-crops{display:grid;gap:6px;margin:8px 0}
+.omr-crop{display:flex;align-items:center;gap:10px;flex-wrap:wrap;background:var(--iodine-soft);border-radius:8px;padding:6px 8px}
+.omr-crop img{height:44px;border-radius:4px;background:#fff;border:1px solid var(--line)}
+.omr-crop img.id{height:150px}
+.omr-head{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin:14px 0 4px}
+.omr-head b{font-size:1rem}
 .omr-card img{width:240px;max-width:100%;border:1px solid var(--line);border-radius:4px;background:#fff;cursor:zoom-in}
 .omr-body{flex:1 1 300px;min-width:0}
 .omr-ans{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0}
@@ -140,6 +149,11 @@ td input,td select{min-width:70px}
 .clsbtn{font:inherit;font-weight:700;font-size:1.05rem;padding:10px 18px;border-radius:10px;border:2px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer}
 .clsbtn[aria-pressed="true"]{background:var(--leaf);border-color:var(--leaf);color:#fff}
 .vdet td{font-size:.88rem}
+.lock{position:fixed;inset:0;background:var(--bg);z-index:40;display:flex;align-items:center;justify-content:center;padding:20px;overflow:auto}
+.lock[hidden]{display:none}
+.lock .panel{max-width:540px;width:100%}
+.lock textarea{min-height:90px;font-size:.85rem;word-break:break-all}
+.licinfo{font-size:.8rem;opacity:.85;margin-left:6px}
 .avgrow td{background:var(--iodine-soft);color:var(--iodine);font-weight:700;font-size:.85rem;text-align:center;padding:4px}
 .avgsum{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 6px}
 .avgsum span{background:var(--bg);border:1px solid var(--line);border-radius:999px;padding:4px 12px;font-size:.88rem}
@@ -240,6 +254,7 @@ body.student #studentApp{display:block}
 <header>
   <div class="wrap">
     <h1>Шалгалтын анализ</h1>
+    <p><span id="curTitleWrap"></span></p>
     <p id="curTitle">Хариултыг оруулахад анги, сурагч, агуулга тус бүрийн дүн автоматаар гарна.</p>
     <nav role="tablist">
       <button role="tab" data-tab="setup" aria-selected="true">1. Шалгалт</button>
@@ -389,18 +404,21 @@ body.student #studentApp{display:block}
 
   <div class="panel">
     <h2>Хариултын хуудасны зургаас унших</h2>
-    <p class="hint">Будсан хариултын хуудасны зургийг оруулахад программ анги, бүлэг, кодоос сурагчийг таньж, хариултыг уншина. Нэг дор олон зураг сонгож болно. Уншсаны дараа шалгаад "Хадгалах" дарна. Шар өнгөтэй нүд нь программ эргэлзсэн хариулт тул хуудастай тулгаж шалгана уу.</p>
-    <ul class="hint" style="margin:0 0 8px;padding-left:20px">
-      <li>Хуудасны дөрвөн булангийн хар дөрвөлжин зурагт бүтэн орсон байх ёстой.</li>
-      <li>Гэрэлтэй газар, хуудсыг тэгш тавьж, сүүдэргүй авна. Жаахан хазгай байсан ч болно.</li>
-      <li>Энэ шалгалтад зориулж хэвлэсэн хуудсыг уншина. Асуултын тоо өөрчилсөн бол хуудсаа дахин хэвлэнэ.</li>
-    </ul>
+    <div class="detail" style="margin:0 0 12px">
+      <h3>Хамгийн хурдан арга (30 хуудас 5 минутад)</h3>
+      <ol style="margin:4px 0 0;padding-left:20px">
+        <li><b>Зураг авах:</b> бүх хуудсаа ширээн дээр нэг нэгээр тавиад утасныхаа <b>ердийн камераар</b> дараалан зургийг нь авна. Дөрвөн булангийн хар дөрвөлжин зурагт орсон байхад л болно.</li>
+        <li><b>Нэг дор оруулах:</b> "Зураг сонгох" дарж галерейгаас бүх зургаа зэрэг сонгоно.</li>
+        <li><b>Программ өөрөө хийнэ:</b> бүх хуудсыг уншиж, итгэлтэй уншсаныг шууд хадгална. Танд зөвхөн эргэлзээтэй хэдэн хуудсыг шалгах л үлдэнэ.</li>
+      </ol>
+    </div>
     <div class="btns">
       <label class="btn" style="margin:0">Зураг сонгох<input type="file" id="omrFiles" accept="image/*" multiple hidden></label>
       <button class="btn" id="liveBtn">Камераар шууд уншуулах</button>
       <label class="btn ghost" style="margin:0;color:var(--leaf)">Камераар зураг авах<input type="file" id="omrCam" accept="image/*" capture="environment" hidden></label>
       <button class="btn ghost" id="omrSaveAll" hidden>Бэлэн бүх хуудсыг хадгалах</button>
     </div>
+    <label style="display:flex;align-items:center;gap:8px;margin-top:10px;color:var(--ink)"><input type="checkbox" id="omrAuto" style="width:auto" checked> Итгэлтэй уншсан хуудсыг шууд хадгалах (сурагч танигдсан, эргэлзээтэй хариултгүй)</label>
     <div class="msg" id="omrMsg" role="status"></div>
     <div id="omrList"></div>
   </div>
@@ -534,6 +552,14 @@ body.student #studentApp{display:block}
 </main>
 <div id="printArea"></div>
 <div id="studentApp"></div>
+<div id="lock" class="lock" hidden><div class="panel">
+  <h2>Программыг идэвхжүүлэх</h2>
+  <p class="hint" id="lockMsg"></p>
+  <label for="lockCode">Идэвхжүүлэх код</label>
+  <textarea id="lockCode" placeholder="Программын эзнээс авсан кодоо энд буулгана (Ctrl + V)" spellcheck="false"></textarea>
+  <div class="btns"><button class="btn" id="lockGo">Идэвхжүүлэх</button><button class="btn ghost" id="lockBackup" hidden>Өгөгдлөө нөөц файлаар татах</button></div>
+  <div class="msg" id="lockErr" role="status" style="color:var(--stain)"></div>
+</div></div>
 <script type="text/plain" id="gsCode">/**
  * Шалгалтын анализ: Google Sheets сервер (хувилбар 3)
  * Шинэ үгийн сорил, утас ба компьютерийн хоорондын холбоо
@@ -2130,7 +2156,7 @@ function omrFiducials(im){
   return{lum,mn,cands:cands.sort((a,b)=>b.s-a.s).slice(0,16)};
 }
 function omrQuad(cands){
-  let best=null;const n=cands.length,d=(a,b)=>Math.hypot(a.x-b.x,a.y-b.y);
+  const all=[];const n=cands.length,d=(a,b)=>Math.hypot(a.x-b.x,a.y-b.y);
   for(let a=0;a<n;a++)for(let b=a+1;b<n;b++)for(let c=b+1;c<n;c++)for(let e=c+1;e<n;e++){
     const P=[cands[a],cands[b],cands[c],cands[e]],cx=P.reduce((s,p)=>s+p.x,0)/4,cy=P.reduce((s,p)=>s+p.y,0)/4;
     P.sort((p,q)=>Math.atan2(p.y-cy,p.x-cx)-Math.atan2(q.y-cy,q.x-cx));
@@ -2141,23 +2167,24 @@ function omrQuad(cands){
     if(ratio<1.478*.75||ratio>1.478*1.3)continue;
     const area=Math.abs(P.reduce((t,p,i)=>t+p.x*P[(i+1)%4].y-P[(i+1)%4].x*p.y,0))/2;
     const meanS=sz.reduce((x,y)=>x+y,0)/4;if(area<(meanS*8)**2)continue;
-    const score=area*(1-Math.abs(ratio/1.478-1));
-    if(!best||score>best.score)best={P,s,score};}
-  return best;
+    const dev=ratio/1.478-1,score=area*Math.exp(-((dev/0.08)**2));
+    all.push({P,s,score});}
+  return all.sort((a,b)=>b.score-a.score).slice(0,6);
 }
 function omrRead(im,qs,letters,opt){opt=opt||{};
-  const F=omrFiducials(im),Q=omrQuad(F.cands);
-  if(!Q)return{ok:false,error:'Хуудасны дөрвөн булангийн хар дөрвөлжин олдсонгүй. Дөрвөн булан бүгд зурагт орсон, гэрэлтэй зураг авна уу.'};
-  const{W,H}=im,mn=F.mn,P=Q.P,s=Q.s,fid=[[14,14],[196,14],[196,283],[14,283]];
+  const F=omrFiducials(im),QS=omrQuad(F.cands);
+  if(!QS.length)return{ok:false,error:'Хуудасны дөрвөн булангийн хар дөрвөлжин олдсонгүй. Дөрвөн булан бүгд зурагт орсон, гэрэлтэй зураг авна уу.'};
+  const{W,H}=im,mn=F.mn,fid=[[14,14],[196,14],[196,283],[14,283]];
   const val=(x,y)=>{x=Math.round(x);y=Math.round(y);return x<0||y<0||x>=W||y>=H?255:mn[y*W+x];};
   let best=null;
+  for(const Q of QS){const P=Q.P,s=Q.s;
   for(let r=0;r<4;r++){
     const top=s[r],side=s[(r+1)%4];if(top>side*1.05)continue;
     const map=solveH(fid,[0,1,2,3].map(i=>[P[(r+i)%4].x,P[(r+i)%4].y]));if(!map)continue;
-    let ln=0,bl=0,c=0;for(let x=40;x<=190;x+=2){let lo=255,hi=0;for(let y=141.6;y<=144.4;y+=.2)lo=Math.min(lo,val(...map(x,y)));
+    let ln=0,bl=0,c=0;for(let x=40;x<=190;x+=2){let lo=255,hi=0;for(let y=141;y<=145;y+=.2)lo=Math.min(lo,val(...map(x,y)));
       for(let y=138.6;y<=140.6;y+=.4)hi+=val(...map(x,y))/6;c++;ln+=lo;bl+=hi;}
-    const sc=(bl-ln)/c;if(!best||sc>best.sc)best={map,sc};}
-  if(!best||best.sc<20)return{ok:false,error:'Хуудасны байрлалыг тодорхойлж чадсангүй. Хуудсыг бүтэн, тэгш авна уу.'};
+    const sc=(bl-ln)/c;if(!best||sc>best.sc)best={map,sc};}}
+  if(!best||best.sc<4)return{ok:false,error:'Хуудасны байрлалыг тодорхойлж чадсангүй. Хуудсыг бүтэн, тэгш авна уу.'};
   const map=best.map,L=sheetLayout(qs,letters);
   const score=(cx,cy)=>{
     const ring=[];for(let t=0;t<24;t++){const a=t/24*2*Math.PI;ring.push(val(...map(cx+3.1*Math.cos(a),cy+3.1*Math.sin(a))));}
@@ -2184,6 +2211,10 @@ function omrRead(im,qs,letters,opt){opt=opt||{};
     if(u>=0&&v>=0&&u<W&&v<H){const k=4*(v*W+u);od[o]=src[k];od[o+1]=src[k+1];od[o+2]=src[k+2];}else{od[o]=od[o+1]=od[o+2]=255;}od[o+3]=255;}
   cx.putImageData(out,0,0);cx.lineWidth=3;
   marks.forEach(m=>{if(m.sc<MAYBE)return;cx.strokeStyle=m.sc>=FILL?'#1F9D55':'#E8A100';cx.beginPath();cx.arc(m.x*S,m.y*S,3.4*S,0,2*Math.PI);cx.stroke();});
+  const crop=(x0,y0,x1,y1)=>{const c2=document.createElement('canvas');c2.width=Math.round((x1-x0)*S);c2.height=Math.round((y1-y0)*S);
+    c2.getContext('2d').drawImage(cv,x0*S,y0*S,(x1-x0)*S,(y1-y0)*S,0,0,c2.width,c2.height);return c2.toDataURL('image/jpeg',.85);};
+  res.crops={};[...L.q,...L.q2].forEach((q,i)=>{if(amb[i]){const o=q.opts;res.crops[i]=crop(Math.max(0,q.x-1),q.y-4,o[o.length-1].x+5,q.y+4);}});
+  res.idCrop=crop(16,48,L.code[L.code.length-1].x+7,L.top+9*L.dy+8);
   res.preview=cv.toDataURL('image/jpeg',.8);return res;
 }
 let omrItems=[];
@@ -2192,19 +2223,28 @@ function omrMatch(it){
   it.cls=c?c.name:'';it.name='';
   if(c&&it.r.code){const n=c.students.find(x=>c.codes[x]===+it.r.code);if(n)it.name=n;}
 }
+const omrReady=it=>it.r.ok&&it.cls&&it.name&&!it.r.idAmb&&!it.r.amb.some(Boolean);
 async function omrAdd(files){
-  const m=$('#omrMsg'),qs=state.exam.questions,letters=sheetLetters();let k=0;
-  for(const f of files){k++;m.style.color='';m.textContent='Уншиж байна: '+k+' / '+files.length+'...';await new Promise(r=>setTimeout(r,20));
+  const m=$('#omrMsg'),qs=state.exam.questions,letters=sheetLetters(),auto=$('#omrAuto').checked;let k=0,autoN=0;
+  for(const f of files){k++;m.style.color='';m.textContent='Уншиж байна: '+k+' / '+files.length+'...'+(autoN?' ('+autoN+' хадгалагдсан)':'');await new Promise(r=>setTimeout(r,20));
     const it={id:uid(),file:f.name,saved:false};
     try{const im=await omrLoad(f);it.r=omrRead(im,qs,letters);}catch(e){it.r={ok:false,error:e.message};}
-    if(it.r.ok){omrMatch(it);it.answers=it.r.answers.slice();}
-    omrItems.push(it);renderOmr();}
-  const okN=omrItems.filter(i=>i.r.ok).length;m.textContent=files.length+' зураг уншлаа.';
+    if(it.r.ok){omrMatch(it);it.answers=it.r.answers.slice();
+      const dup=omrItems.find(x=>x.saved&&x.cls===it.cls&&x.name===it.name&&x.answers.join()===it.answers.join());
+      if(dup){it.dup=true;}
+      else if(auto&&omrReady(it)){omrSave(it);it.auto=true;autoN++;}}
+    if(!it.dup)omrItems.push(it);renderOmr();}
+  save();renderRoster();renderList();
+  const need=omrItems.filter(i=>!i.saved).length;
+  m.style.color='';m.textContent=files.length+' зураг уншлаа.'+(autoN?' '+autoN+' хуудас шууд хадгалагдлаа.':'')+(need?' '+need+' хуудсыг доор шалгаж хадгална уу.':' Бүгд хадгалагдлаа.');
+  if(need){const f=document.querySelector('.omr-card:not(.saved)');if(f)f.scrollIntoView({behavior:'smooth',block:'start'});}
 }
+const omrScore=it=>{const qs=state.exam.questions,e=qs.reduce((s,q,i)=>s+qEarn(q,it.answers[i]),0),t=qs.reduce((s,q)=>s+(+q.points||0),0);return{e,t,p:t?e/t*100:0};};
 function renderOmr(){
   const box=$('#omrList'),qs=state.exam.questions;
   $('#omrSaveAll').hidden=!omrItems.some(i=>i.r.ok&&!i.saved);
-  box.innerHTML=omrItems.map(it=>{
+  const todo=omrItems.filter(i=>!i.saved),done=omrItems.filter(i=>i.saved&&!i.open),opened=omrItems.filter(i=>i.saved&&i.open);
+  const card=it=>{
     if(!it.r.ok)return`<div class="omr-card" data-id="${it.id}"><div class="omr-body"><b>${esc(it.file)}</b><div class="omr-st b">${esc(it.r.error)}</div>
       <div class="btns"><button class="btn danger" data-act="del">Хасах</button></div></div></div>`;
     const r=it.r,c=db.classes.find(x=>x.name===it.cls),idTxt=`Хуудсан дээр: анги <b>${esc(r.grade||'?')}${esc(r.letter||'?')}</b>, код <b>${esc(r.code||'?')}</b>`;
@@ -2216,18 +2256,32 @@ function renderOmr(){
       <div class="omr-body"><div class="omr-st">${idTxt}${r.idAmb?' <span class="m">(эргэлзээтэй)</span>':''}</div>${warn}
       <div class="row" style="margin-top:6px"><div><label>Анги</label><select data-f="cls"><option value="">Сонгох</option>${db.classes.map(k=>`<option${k.name===it.cls?' selected':''}>${esc(k.name)}</option>`).join('')}</select></div>
         <div style="flex:2 1 200px"><label>Сурагч</label><select data-f="name"><option value="">Сонгох</option>${c?c.students.map(n=>`<option value="${esc(n)}"${n===it.name?' selected':''}>${pad2(c.codes[n])} ${esc(n)}</option>`).join(''):''}</select></div></div>
+      ${!it.saved&&(r.amb.some(Boolean)||!it.name||r.idAmb)?`<div class="omr-crops">
+        ${(!it.name||r.idAmb)&&r.idCrop?`<div class="omr-crop"><img class="id" src="${r.idCrop}" alt="Анги, бүлэг, код"><span>Хуудсан дээрх анги, бүлэг, код. Дээрх цэснээс сурагчаа сонгоно уу.</span></div>`:''}
+        ${qs.map((q,i)=>r.amb[i]&&r.crops&&r.crops[i]?`<div class="omr-crop"><b>${i+1}.</b><img src="${r.crops[i]}" alt="${i+1}-р асуулт">${isP2(q)
+          ?`<input data-q="${i}" value="${esc(it.answers[i])}" style="width:80px">`
+          :`<select data-q="${i}" style="width:70px"><option value="">–</option>${OPTS.map(o=>`<option${o===it.answers[i]?' selected':''}>${o}</option>`).join('')}</select>`}</div>`:'').join('')}
+      </div>`:''}
+      <details${it.saved||r.amb.some(Boolean)?'':' open'}><summary class="omr-st" style="cursor:pointer;color:var(--leaf)">Бүх хариулт (${it.answers.filter(Boolean).length} / ${qs.length})</summary>
       <div class="omr-ans">${qs.map((q,i)=>`<label class="${r.amb[i]?'amb':''}">${i+1}${isP2(q)
         ?`<input data-q="${i}" value="${esc(it.answers[i])}">`
-        :`<select data-q="${i}"><option value="">–</option>${OPTS.map(o=>`<option${o===it.answers[i]?' selected':''}>${o}</option>`).join('')}</select>`}</label>`).join('')}</div>
+        :`<select data-q="${i}"><option value="">–</option>${OPTS.map(o=>`<option${o===it.answers[i]?' selected':''}>${o}</option>`).join('')}</select>`}</label>`).join('')}</div></details>
       <div class="omr-st">${amb?`<span class="m">${amb} эргэлзээтэй хариулт шалгана уу.</span> `:''}${empty?empty+' асуулт хариулаагүй. ':''}${ex&&!it.saved?'<span class="m">Энэ сурагчийн өмнө оруулсан хариулт солигдоно.</span>':''}</div>
-      <div class="btns">${it.saved?'<span class="g">✓ Хадгалсан</span>':`<button class="btn" data-act="save"${it.cls&&it.name?'':' disabled'}>Хадгалах</button>`}<button class="btn danger" data-act="del">Хасах</button></div>
-      </div></div>`;}).join('');
+      <div class="btns">${it.saved?`<span class="g">✓ Хадгалсан</span><button class="btn ghost" data-act="resave">Засвараа хадгалах</button><button class="btn ghost" data-act="close">Хураах</button>`:`<button class="btn" data-act="save"${it.cls&&it.name?'':' disabled'}>Хадгалах</button>`}<button class="btn danger" data-act="del">Хасах</button></div>
+      </div></div>`;};
+  const mini=it=>{const sc=omrScore(it);return`<div class="omr-mini" data-id="${it.id}"><span class="g">✓</span><span>${pad2(+(db.classes.find(c=>c.name===it.cls)||{codes:{}}).codes[it.name]||0)} <b>${esc(it.name)}</b> (${esc(it.cls)})</span>
+    <span>${r1(sc.e)} / ${r1(sc.t)} оноо, <b class="${({good:'g',mid:'m',bad:'b'})[lvl(sc.p)]}">${Math.round(sc.p)}%</b></span><button data-act="open">Харах</button></div>`;};
+  box.innerHTML=(todo.length?`<div class="omr-head"><b class="m">Шалгах шаардлагатай: ${todo.length}</b></div>`+todo.map(card).join(''):'')
+    +opened.map(card).join('')
+    +(done.length?`<div class="omr-head"><b class="g">✓ Хадгалагдсан: ${done.length + opened.length}</b></div>`+done.map(mini).join(''):'');
 }
 function omrSave(it){
   if(!it.cls||!it.name||it.saved)return false;
   const ex=state.students.find(x=>x.cls===it.cls&&x.name===it.name);
   if(ex)ex.answers=it.answers.slice();else state.students.push({id:uid(),cls:it.cls,name:it.name,answers:it.answers.slice()});
-  it.saved=true;return true;
+  it.saved=true;
+  if(vcfg().api&&vcfg().key){ccfg().queue.push({id:uid(),examId:state.id,cls:it.cls,name:it.name,answers:it.answers.slice()});setTimeout(cloudPoll,300);}
+  return true;
 }
 $('#omrFiles').addEventListener('change',e=>{const f=[...e.target.files];e.target.value='';if(f.length)omrAdd(f);});
 $('#omrCam').addEventListener('change',e=>{const f=[...e.target.files];e.target.value='';if(f.length)omrAdd(f);});
@@ -2239,8 +2293,11 @@ $('#omrList').addEventListener('change',e=>{
   renderOmr();
 });
 $('#omrList').addEventListener('click',e=>{
-  const b=e.target.closest('[data-act]');if(!b)return;const card=b.closest('.omr-card'),it=omrItems.find(x=>x.id===card.dataset.id);if(!it)return;
+  const b=e.target.closest('[data-act]');if(!b)return;const card=b.closest('.omr-card,.omr-mini');if(!card)return;const it=omrItems.find(x=>x.id===card.dataset.id);if(!it)return;
   if(b.dataset.act==='del'){omrItems=omrItems.filter(x=>x!==it);renderOmr();}
+  if(b.dataset.act==='open'){it.open=true;renderOmr();return;}
+  if(b.dataset.act==='close'){it.open=false;renderOmr();return;}
+  if(b.dataset.act==='resave'){it.saved=false;omrSave(it);it.open=false;save();renderOmr();renderRoster();renderList();$('#omrMsg').textContent=it.name+'-ийн засвар хадгалагдлаа.';return;}
   if(b.dataset.act==='save'){omrSave(it);save();renderOmr();renderRoster();renderList();$('#omrMsg').textContent=it.name+'-ийн хариулт хадгалагдлаа.';}
   if(b.dataset.act==='zoom'){const d=document.createElement('div');d.className='qr-full';d.innerHTML=`<img src="${it.r.preview}" style="max-height:92vh;max-width:96vw">`;d.onclick=()=>d.remove();document.body.appendChild(d);}
 });
@@ -2324,19 +2381,37 @@ async function liveOpen(){
     alert('Камер ашиглахын тулд программыг GitHub холбоосоор (https://...) нээх шаардлагатай. Эсвэл "Камераар зураг авах" товчийг ашиглана уу.');return;}
   const el=document.createElement('div');el.className='ls';
   el.innerHTML=`<video playsinline muted autoplay></video><div class="ls-guide" id="lsGuide"></div>
-    <div class="ls-top"><div><b>${esc(state.exam.title||'Шалгалт')}</b><br><span id="lsCount">Уншсан: 0</span></div><button id="lsClose">Дуусгах</button></div>
+    <div class="ls-top"><div><b>${esc(state.exam.title||'Шалгалт')}</b><br><span id="lsCount">Уншсан: 0</span></div>
+      <div style="display:flex;gap:8px"><button id="lsSwitch">Камер солих</button><button id="lsClose">Дуусгах</button></div></div>
     <div class="ls-banner" id="lsBanner">Камер нээж байна...</div>`;
   document.body.appendChild(el);
-  let stream;
-  try{stream=await navigator.mediaDevices.getUserMedia({audio:false,video:{facingMode:{ideal:'environment'},width:{ideal:4096},height:{ideal:4096}}});}
-  catch(e){el.remove();alert('Камер нээж чадсангүй. Хөтөчид камер ашиглахыг зөвшөөрсөн эсэхээ шалгана уу.');return;}
-  const v=el.querySelector('video');v.srcObject=stream;try{await v.play();}catch(e){}
-  LS={el,v,stream,cv:document.createElement('canvas'),busy:false,key:'',stable:0,saved:{},flagged:{},count:0};
-  LS.timer=setInterval(liveTick,250);
+  const v=el.querySelector('video');
+  LS={el,v,stream:null,cv:document.createElement('canvas'),busy:false,key:'',stable:0,saved:{},flagged:{},count:0,cams:[],camIdx:-1,dark:0,tries:0};
   el.querySelector('#lsClose').onclick=liveClose;
-  liveBanner('Хуудсыг хүрээн дотор бүтэн харуулна уу.','');
+  el.querySelector('#lsSwitch').onclick=()=>liveCamera(LS.camIdx+1);
+  const ok=await liveCamera(-1);
+  if(!ok){liveClose();alert('Камер нээж чадсангүй. Chrome-д камер ашиглахыг зөвшөөрсөн эсэхээ шалгана уу. Эсвэл "Камераар зураг авах" товчийг ашиглана уу.');return;}
+  LS.timer=setInterval(liveTick,250);
 }
-function liveClose(){if(!LS)return;clearInterval(LS.timer);LS.stream.getTracks().forEach(t=>t.stop());LS.el.remove();const n=LS.count;LS=null;
+async function liveCamera(idx){
+  if(!LS)return false;
+  if(LS.stream)LS.stream.getTracks().forEach(t=>t.stop());
+  LS.dark=0;LS.key='';LS.stable=0;
+  const attempts=[];
+  if(idx>=0&&LS.cams.length){const c=LS.cams[idx%LS.cams.length];LS.camIdx=idx%LS.cams.length;attempts.push({deviceId:{exact:c.deviceId},width:{ideal:1920}});}
+  attempts.push({facingMode:{ideal:'environment'},width:{ideal:1920}},{facingMode:{ideal:'environment'}},true);
+  for(const video of attempts){
+    try{LS.stream=await navigator.mediaDevices.getUserMedia({audio:false,video});break;}catch(e){LS.stream=null;}
+  }
+  if(!LS.stream)return false;
+  try{const devs=await navigator.mediaDevices.enumerateDevices();LS.cams=devs.filter(d=>d.kind==='videoinput');
+    if(idx<0){const id=LS.stream.getVideoTracks()[0].getSettings().deviceId;LS.camIdx=Math.max(0,LS.cams.findIndex(d=>d.deviceId===id));}}catch(e){}
+  LS.v.srcObject=LS.stream;try{await LS.v.play();}catch(e){}
+  const sw=LS.el.querySelector('#lsSwitch');if(sw)sw.hidden=LS.cams.length<2;
+  liveBanner('Хуудсыг хүрээн дотор бүтэн харуулна уу.'+(LS.cams.length>1?'<br><small>Камер '+(LS.camIdx+1)+' / '+LS.cams.length+'</small>':''),'');
+  return true;
+}
+function liveClose(){if(!LS)return;clearInterval(LS.timer);if(LS.stream)LS.stream.getTracks().forEach(t=>t.stop());LS.el.remove();const n=LS.count;LS=null;
   save();renderEntry();renderOmr();if(n)$('#omrMsg').textContent='Камераар '+n+' хуудас уншиж хадгаллаа.';cloudPoll();}
 function liveBanner(html,cls){const b=$('#lsBanner');if(!b)return;b.className='ls-banner'+(cls?' '+cls:'');b.innerHTML=html;$('#lsGuide').className='ls-guide'+(cls?' '+cls:'');}
 function liveTick(){
@@ -2344,7 +2419,14 @@ function liveTick(){
   try{
     const sc=Math.min(1,1600/Math.max(v.videoWidth,v.videoHeight)),W=Math.round(v.videoWidth*sc),H=Math.round(v.videoHeight*sc);
     LS.cv.width=W;LS.cv.height=H;const x=LS.cv.getContext('2d',{willReadFrequently:true});x.drawImage(v,0,0,W,H);
-    const im={W,H,data:x.getImageData(0,0,W,H).data},qs=state.exam.questions,r=omrRead(im,qs,sheetLetters(),{preview:false});
+    const im={W,H,data:x.getImageData(0,0,W,H).data},qs=state.exam.questions;
+    let lum=0,cnt=0;for(let i=0;i<im.data.length;i+=4*97){lum+=im.data[i]+im.data[i+1]+im.data[i+2];cnt++;}
+    if(lum/cnt/3<6){LS.dark++;
+      if(LS.dark===12&&LS.cams.length>1&&LS.tries<LS.cams.length){LS.tries++;liveBanner('Энэ камераас дүрс ирэхгүй байна. Өөр камер руу шилжиж байна...','warn');LS.busy=false;liveCamera(LS.camIdx+1);return;}
+      if(LS.dark>=12)liveBanner('<big>Камерын дүрс хар байна</big>'+(LS.cams.length>1?'Дээрх "Камер солих" дарж үзнэ үү. Болохгүй бол ':'')+'"Дуусгах" дараад "Камераар зураг авах" товчийг ашиглана уу. Программыг Messenger биш, Chrome дээр нээсэн эсэхээ шалгаарай.','warn');
+      return;}
+    LS.dark=0;
+    const r=omrRead(im,qs,sheetLetters(),{preview:false});
     if(!r.ok){LS.stable=0;LS.key='';liveBanner('Хуудсыг хүрээн дотор бүтэн, тэгш харуулна уу. Дөрвөн булан харагдах ёстой.','');return;}
     const key=r.grade+r.letter+r.code+'|'+r.answers.join(',')+'|'+r.amb.join('');
     LS.stable=key===LS.key?LS.stable+1:1;LS.key=key;
@@ -2896,8 +2978,48 @@ function sqResend(body){
   $('#sqSkip').onclick=()=>{SQ.sel={cls:'',c1:'',c2:''};SQ.who=null;sqIdentity();};
 }
 
+/* ---------- usage licence (time-limited activation codes) ---------- */
+const LIC_KEY='shalgalt-license',LIC_SEEN='shalgalt-license-seen';
+const LIC_PUB={"kty": "EC", "crv": "P-256", "x": "T-pXzE1drAEOS4IoezAKN2TNrLEmIhPxMG_i8r7mq6c", "y": "tMUtLgvHEyrhRwXI_aI1BNO0WBeh7gyrBtrkNHaYBnU"};
+const lsGet=k=>{try{return localStorage.getItem(k)||'';}catch(e){return'';}};
+const lsSet=(k,v)=>{try{localStorage.setItem(k,v);}catch(e){}};
+const localDay=()=>{const t=new Date();return t.getFullYear()+'-'+String(t.getMonth()+1).padStart(2,'0')+'-'+String(t.getDate()).padStart(2,'0');};
+const b64uBytes=x=>{x=x.replace(/-/g,'+').replace(/_/g,'/');while(x.length%4)x+='=';return Uint8Array.from(atob(x),c=>c.charCodeAt(0));};
+function licToday(){const t=localDay(),seen=lsGet(LIC_SEEN);return seen&&seen>t?seen:t;}
+async function licVerify(code){
+  code=String(code||'').replace(/\s+/g,'');const parts=code.split('.');if(parts.length!==2||!parts[0]||!parts[1])return{ok:false,why:code?'bad':'none'};
+  if(!(window.crypto&&crypto.subtle))return{ok:false,why:'nocrypto'};
+  try{const key=await crypto.subtle.importKey('jwk',LIC_PUB,{name:'ECDSA',namedCurve:'P-256'},false,['verify']);
+    const good=await crypto.subtle.verify({name:'ECDSA',hash:'SHA-256'},key,b64uBytes(parts[1]),new TextEncoder().encode(parts[0]));
+    if(!good)return{ok:false,why:'bad'};
+    const d=JSON.parse(new TextDecoder().decode(b64uBytes(parts[0])));
+    if(!d.e||d.e<licToday())return{ok:false,why:'expired',d};
+    return{ok:true,d,code};
+  }catch(e){return{ok:false,why:'bad'};}
+}
+function licApply(d){
+  const t=licToday();lsSet(LIC_SEEN,t);
+  const left=Math.round((new Date(d.e+'T00:00:00')-new Date(t+'T00:00:00'))/864e5)+1;
+  $('#curTitleWrap').innerHTML=d.e<'2090'?`<span class="licinfo">Ашиглах эрх: ${esc(d.e)} хүртэл (${left} хоног үлдсэн)${d.n?', '+esc(d.n):''}</span>`:'';
+}
+function licLock(r){
+  const L=$('#lock');L.hidden=false;
+  $('#lockMsg').innerHTML=r.why==='expired'
+    ?`Ашиглах эрхийн хугацаа <b>${esc(r.d.e)}</b>-нд дууссан байна. Сунгуулахын тулд программын эзэнтэй холбогдож шинэ код аваарай. Таны оруулсан анги, нэрс, дүн устаагүй, шинэ код оруулахад хэвээрээ үргэлжилнэ.`
+    :r.why==='nocrypto'?'Энэ хөтөч кодыг шалгаж чадахгүй байна. Chrome эсвэл Edge-ийн шинэ хувилбараар, программын https холбоосоор нээнэ үү.'
+    :'Энэ программыг ашиглахын тулд идэвхжүүлэх код хэрэгтэй. Кодыг программын эзнээс авна уу.';
+  $('#lockBackup').hidden=!(db&&db.exams&&db.exams.some(e=>e.students.length)||(db&&db.classes&&db.classes.length));
+  $('#lockGo').onclick=async()=>{const c=$('#lockCode').value,v=await licVerify(c),err=$('#lockErr');
+    if(v.ok){lsSet(LIC_KEY,v.code);L.hidden=true;err.textContent='';licApply(v.d);renderSetup();return;}
+    err.textContent=v.why==='expired'?'Энэ кодын хугацаа '+v.d.e+'-нд дууссан байна.':v.why==='none'?'Кодоо буулгана уу.':'Код буруу байна. Бүтэн хуулсан эсэхээ шалгана уу.';};
+  $('#lockBackup').onclick=()=>{const a=document.createElement('a');
+    a.href=URL.createObjectURL(new Blob([JSON.stringify({app:'shalgalt-analiz',version:2,saved:new Date().toISOString(),...db},null,1)],{type:'application/json'}));
+    a.download='shalgalt-nooc-'+localDay()+'.json';document.body.appendChild(a);a.click();a.remove();};
+}
+async function licBoot(){const r=await licVerify(lsGet(LIC_KEY));if(r.ok){licApply(r.d);renderSetup();}else licLock(r);}
+
 if(new URLSearchParams(location.search).get('quiz'))startStudent();
-else renderSetup();
+else licBoot();
 </script>
 </body>
 </html>
