@@ -383,6 +383,9 @@ body.student #studentApp{display:block}
     </div>
     <label style="display:flex;align-items:center;gap:8px;margin-top:10px;color:var(--ink)"><input type="checkbox" id="cAuto" style="width:auto"> Утаснаас ирэх хариултыг автоматаар хүлээн авах</label>
     <div class="msg" id="cMsg" role="status"></div>
+    <div class="avgsum" style="margin-top:10px"><span id="cStatus">Холболтын төлөв: шалгаагүй</span></div>
+    <div class="btns" style="margin-top:6px"><button class="btn ghost" id="cSync">Одоо илгээх / хүлээн авах</button>
+      <button class="btn ghost" id="cPushAns">Энэ шалгалтын бүх хариултыг нөгөө төхөөрөмж рүү илгээх</button></div>
   </div>
 </section>
 
@@ -1217,6 +1220,7 @@ $('#saveStudent').addEventListener('click',()=>{
   if(miss&&!confirm(miss+' асуулт хариулаагүй байна. Тэр хэвээр нь хадгалах уу?'))return;
   const ex=editId?state.students.find(s=>s.id===editId):state.students.find(s=>s.cls===cls&&s.name===name);
   if(ex){ex.answers=draft.slice();ex.name=name;}else state.students.push({id:uid(),cls,name,answers:draft.slice()});
+  queueStudent(cls,name,draft);
   ensureRoster(cls,name);save();
   m.style.color='';m.textContent=name+'-ийн хариулт хадгалагдлаа.';
   editId=null;draft=[];$('#name').value='';$('#saveStudent').textContent='Хариултыг хадгалах';
@@ -1235,6 +1239,7 @@ function importText(t){
     if(!ans.some(Boolean)||!c[1])return;
     const a=Array.from({length:n},(_,i)=>ans[i]||''),ex=state.students.find(s=>s.cls===c[0]&&s.name===c[1]);
     if(ex)ex.answers=a;else state.students.push({id:uid(),cls:c[0],name:c[1],answers:a});
+    queueStudent(c[0],c[1],a);
     ensureRoster(c[0],c[1]);added++;
   });
   save();renderEntry();
@@ -1463,7 +1468,9 @@ function renderAnalysis(){
 const LOOK={A:'А',B:'В',C:'С',E:'Е',H:'Н',K:'К',M:'М',O:'О',P:'Р',T:'Т',X:'Х',Y:'У'};
 const normL=x=>String(x||'').trim().toUpperCase().replace(/[A-Z]/g,ch=>LOOK[ch]||ch);
 function classParts(n){const m=String(n||'').trim().match(/^(\d{1,2})\s*[-–.]?\s*(.*)$/);
-  return m?{grade:m[1].padStart(2,'0'),letter:m[2].trim()}:{grade:'',letter:String(n||'').trim()};}
+  return m?{grade:m[1].padStart(2,'0'),letter:m[2].replace(/[\s-]*(анги|бүлэг)[\s.]*$/i,'').trim()}:{grade:'',letter:String(n||'').trim()};}
+function queueStudent(cls,name,answers){if(typeof vcfg!=='function'||!vcfg().api||!vcfg().key)return;
+  ccfg().queue.push({id:uid(),examId:state.id,cls,name,answers:answers.slice()});setTimeout(()=>cloudPoll(),400);}
 function sheetLetters(){
   if(!db.sheet||!db.sheet.letters){const f=[...new Set(db.classes.map(c=>classParts(c.name).letter).filter(Boolean))];
     const base=['А','Б','В','Г'];f.forEach(x=>{if(!base.map(normL).includes(normL(x)))base.push(x);});return base.slice(0,10);}
@@ -2109,6 +2116,7 @@ async function importAnswersXlsx(f){
       if(!name){miss.push((cls||'?')+' '+(code?pad2(code):'?'));return;}
       const ex=state.students.find(x=>x.cls===cls&&x.name===name);
       if(ex){ex.answers=ans;updated++;}else{state.students.push({id:uid(),cls,name,answers:ans});added++;}
+      queueStudent(cls,name,ans);
       ensureRoster(cls,name);});
     save();renderEntry();
     if(!added&&!updated)throw new Error('Файлд бөглөсөн хариулт олдсонгүй.');
@@ -2314,7 +2322,7 @@ function renderCloud(){
   const c=vcfg(),k=ccfg();
   if(document.activeElement!==$('#cApi'))$('#cApi').value=c.api||'';
   if(document.activeElement!==$('#cKey'))$('#cKey').value=c.key||'';
-  $('#cAuto').checked=!!k.auto;
+  $('#cAuto').checked=!!k.auto;cStatusRender();
 }
 ['cApi','cKey'].forEach(id=>$('#'+id).addEventListener('change',e=>{vcfg()[id==='cApi'?'api':'key']=e.target.value.trim();save();}));
 const cMsg=(t,bad)=>{$('#cMsg').style.color=bad?'var(--stain)':'';$('#cMsg').textContent=t;};
@@ -2340,32 +2348,53 @@ $('#cPull').addEventListener('click',async()=>{
     const keepV=db.vocab,keepC=db.cloud;db=d;db.vocab=keepV;db.cloud=keepC;db.classes=db.classes||[];db.classes.forEach(fixCodes);
     openExam(db.cur&&db.exams.some(e=>e.id===db.cur)?db.cur:db.exams[0].id);
     cMsg('Татлаа: '+db.exams.length+' шалгалт, '+db.classes.length+' анги.');
+    if(ccfg().orphans&&ccfg().orphans.length)cloudPoll(true);
   }catch(e){cMsg(e.message,true);}
 });
 $('#cAuto').addEventListener('change',e=>{ccfg().auto=e.target.checked;save();if(e.target.checked)cloudPoll();});
 function applyScans(list){
-  let n=0,unk=0;
-  list.forEach(sc=>{const ex=db.exams.find(e=>e.id===sc.examId);if(!ex){unk++;return;}
+  let n=0,unk=0;const other={},orph=[];
+  list.forEach(sc=>{const ex=db.exams.find(e=>e.id===sc.examId);if(!ex){unk++;orph.push(sc);return;}
+    if(ex!==state)other[ex.exam.title||'Нэргүй шалгалт']=(other[ex.exam.title||'Нэргүй шалгалт']||0)+1;
     const L=ex.exam.questions.length,a=(sc.answers||[]).slice(0,L);while(a.length<L)a.push('');
     const st=ex.students.find(x=>x.cls===sc.cls&&x.name===sc.name);
     if(st)st.answers=a;else ex.students.push({id:uid(),cls:sc.cls,name:sc.name,answers:a});
     ensureRoster(sc.cls,sc.name);n++;});
-  return{n,unk};
+  return{n,unk,other,orph};
 }
+let cLast={t:null,got:0,err:''};
+function cStatusRender(){const el=$('#cStatus');if(!el)return;const k=ccfg();
+  el.innerHTML=(k.queue.length?`<b class="m">Илгээгдээгүй: ${k.queue.length} хуудас</b>. `:'')+
+    (cLast.err?`<b class="b">Алдаа: ${esc(cLast.err)}</b>`:cLast.t?`Сүүлд шалгасан: ${cLast.t}${k.auto?'':' (автоматаар хүлээн авах унтраалттай)'}`:'Холболтын төлөв: шалгаагүй')+
+    (k.orphans&&k.orphans.length?`. <b class="m">Энэ төхөөрөмжид байхгүй шалгалтын ${k.orphans.length} хуудас хүлээгдэж байна</b>`:'');}
 let pollBusy=false;
-async function cloudPoll(){
+async function cloudPoll(force){
   const c=vcfg(),k=ccfg();if(pollBusy||!c.api||!c.key)return;pollBusy=true;
   try{
     if(k.queue.length){const r=await vCall({action:'addScans',scans:k.queue});const done=new Set(r.ids||[]);k.queue=k.queue.filter(x=>!done.has(x.id));save();}
-    if(k.auto&&document.visibilityState==='visible'&&!LS){
+    if((k.auto||force)&&(document.visibilityState==='visible'||force)&&!LS){
+      let list=[];
+      if(k.orphans&&k.orphans.length){list=k.orphans;k.orphans=[];}
       const r=await vCall({action:'getScans',since:k.since||0});
-      if(r.scans&&r.scans.length){const a=applyScans(r.scans);k.since=r.until;save();
-        if(a.n){toast('Утаснаас '+a.n+' хуудасны хариулт ирлээ.');
-          if(!$('#tab-analysis').hidden)renderAnalysis();if(!$('#tab-entry').hidden)renderEntry();if(!$('#tab-final').hidden)renderFinal();}}
-      else if(r.until)k.since=Math.max(k.since||0,r.until);
+      if(r.scans&&r.scans.length)list=list.concat(r.scans);
+      if(r.until)k.since=Math.max(k.since||0,r.until);
+      if(list.length){const a=applyScans(list);k.orphans=a.orph;save();
+        if(a.n){const ot=Object.entries(a.other);
+          toast('Утаснаас '+a.n+' хуудасны хариулт ирлээ.'+(ot.length?' ('+ot.map(([t,n])=>t+': '+n).join(', ')+' — "1. Шалгалт" хэсгээс тэр шалгалтыг нээж харна уу)':''));
+          if(!$('#tab-analysis').hidden)renderAnalysis();if(!$('#tab-entry').hidden)renderEntry();if(!$('#tab-final').hidden)renderFinal();renderExams();}
+      }else save();
     }
-  }catch(e){}finally{pollBusy=false;}
+    cLast={t:new Date().toLocaleTimeString(),err:''};
+  }catch(e){cLast={t:null,err:e.message};}finally{pollBusy=false;cStatusRender();}
 }
+$('#cPushAns').addEventListener('click',async()=>{
+  if(!state.students.length)return cMsg('Энэ шалгалтад хариулт оруулаагүй байна. "1. Шалгалт" → "Миний шалгалтууд"-аас зөв шалгалтаа сонгоно уу.',true);
+  state.students.forEach(st=>ccfg().queue.push({id:uid(),examId:state.id,cls:st.cls,name:st.name,answers:st.answers.slice()}));save();
+  cMsg('Илгээж байна...');await cloudPoll(true);const k=ccfg();
+  cMsg(k.queue.length?'Илгээж чадсангүй. Интернэт, URL-ээ шалгана уу.':state.students.length+' сурагчийн хариулт илгээгдлээ. Нөгөө төхөөрөмж дээр "Одоо илгээх / хүлээн авах" дарвал шууд орж ирнэ.',!!k.queue.length);
+});
+$('#cSync').addEventListener('click',async()=>{$('#cStatus').textContent='Шалгаж байна...';await cloudPoll(true);
+  const k=ccfg();cMsg(k.queue.length?'Зарим хуудас илгээгдсэнгүй. Интернэтээ шалгаад дахин дарна уу.':'Илгээх, хүлээн авах ажил дууслаа.',!!k.queue.length);});
 setInterval(cloudPoll,8000);
 
 /* ---------- live camera scanning (ZipGrade-like) ---------- */
