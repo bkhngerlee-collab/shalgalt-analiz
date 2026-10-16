@@ -154,6 +154,14 @@ td input,td select{min-width:70px}
 .lock .panel{max-width:540px;width:100%}
 .lock textarea{min-height:90px;font-size:.85rem;word-break:break-all}
 .licinfo{font-size:.8rem;opacity:.85;margin-left:6px}
+.confetti{position:fixed;inset:0;pointer-events:none;z-index:50;overflow:hidden}
+.confetti span{position:absolute;top:-40px;animation-name:fall;animation-timing-function:linear;animation-fill-mode:forwards}
+@keyframes fall{to{transform:translateY(110vh) rotate(540deg)}}
+.sq-words{display:grid;gap:4px;margin:12px 0 0;text-align:left}
+.sq-words div{display:grid;grid-template-columns:22px 1fr 1fr;gap:8px;align-items:center;padding:6px 8px;border-radius:8px;font-size:.95rem}
+.sq-words .ok{background:var(--leaf-soft)}.sq-words .ok span{color:var(--leaf);font-weight:800}
+.sq-words .no{background:var(--stain-soft)}.sq-words .no span{color:var(--stain);font-weight:800}
+.sq-words em{font-style:normal;color:var(--muted);word-break:break-word}
 .avgrow td{background:var(--iodine-soft);color:var(--iodine);font-weight:700;font-size:.85rem;text-align:center;padding:4px}
 .avgsum{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 6px}
 .avgsum span{background:var(--bg);border:1px solid var(--line);border-radius:999px;padding:4px 12px;font-size:.88rem}
@@ -512,8 +520,9 @@ body.student #studentApp{display:block}
     <div class="row" style="margin-top:10px">
       <div style="flex:2 1 320px" id="vTolWrap"><label for="vTol">Үсгийн алдаа</label><select id="vTol">
         <option value="0">Яг зөв бичсэн байх</option>
-        <option value="1" selected>1 үсгийн алдааг зөвд тооцох (4 ба түүнээс урт үгэнд)</option>
-        <option value="2">2 хүртэл үсгийн алдааг зөвд тооцох (8+ үсэгтэй үгэнд 2, 4–7 үсэгтэй үгэнд 1)</option></select></div>
+        <option value="1">1 үсгийн алдааг зөвд тооцох (4 ба түүнээс урт үгэнд)</option>
+        <option value="2" selected>Уян хатан: 2 хүртэл алдааг зөвд тооцох, 3 ба түүнээс олон бол буруу (6+ үсэгтэй үгэнд 2, 4–5 үсэгтэй үгэнд 1)</option></select>
+        <div class="hint" style="margin:4px 0 0;font-size:.82rem">о/ө, у/ү, е/э, и/й гэх мэт ойролцоо үсгийг хольж бичвэл хагас алдаа гэж тооцно. Үр дүнгээс багш үг бүрийг гараар "Зөв болгох" боломжтой.</div></div>
       <div style="flex:2 1 320px"><label for="vLogin">Сурагч нэвтрэх арга</label><select id="vLogin">
         <option value="names">Ангиа сонгоод нэрсийн жагсаалтаас нэрээ дарна</option>
         <option value="code">Ангиа сонгоод 2 оронтой кодоо оруулна (илүү найдвартай)</option></select></div>
@@ -564,7 +573,7 @@ body.student #studentApp{display:block}
   <div class="msg" id="lockErr" role="status" style="color:var(--stain)"></div>
 </div></div>
 <script type="text/plain" id="gsCode">/**
- * Шалгалтын анализ: Google Sheets сервер (хувилбар 3)
+ * Шалгалтын анализ: Google Sheets сервер (хувилбар 4)
  * Шинэ үгийн сорил, утас ба компьютерийн хоорондын холбоо
  *
  * 1. Доорх TEACHER_KEY-ийн утгыг зөвхөн өөрийн мэдэх нууц үгээр солино.
@@ -601,7 +610,7 @@ function respond_(p) {
 
 function route_(p) {
   var a = String(p.action || '');
-  if (a === 'ping') return { ok: true, teacher: isTeacher_(p), now: Date.now(), version: 3 };
+  if (a === 'ping') return { ok: true, teacher: isTeacher_(p), now: Date.now(), version: 4 };
   if (a === 'quiz') return publicQuiz_(p);
   if (a === 'who') return who_(p);
   if (a === 'start') return withLock_(function () { return start_(p); });
@@ -683,13 +692,20 @@ function findStudent_(q, clsName, code) {
   return st ? { cls: cls, st: st } : null;
 }
 
+var NEAR_ = ['оө', 'уү', 'еэ', 'ий', 'ыи', 'ея', 'ёе'];
+function subCost_(x, y) {
+  if (x === y) return 0;
+  for (var k = 0; k < NEAR_.length; k++) { var p = NEAR_[k]; if ((p.charAt(0) === x && p.charAt(1) === y) || (p.charAt(0) === y && p.charAt(1) === x)) return 0.5; }
+  return 1;
+}
+
 function lev_(a, b) {
   if (a === b) return 0;
   var m = a.length, n = b.length, prev = [], cur = [], i, j;
   for (j = 0; j <= n; j++) prev[j] = j;
   for (i = 1; i <= m; i++) {
     cur = [i];
-    for (j = 1; j <= n; j++) cur[j] = Math.min(prev[j] + 1, cur[j - 1] + 1, prev[j - 1] + (a.charAt(i - 1) === b.charAt(j - 1) ? 0 : 1));
+    for (j = 1; j <= n; j++) cur[j] = Math.min(prev[j] + 1, cur[j - 1] + 1, prev[j - 1] + subCost_(a.charAt(i - 1), b.charAt(j - 1)));
     prev = cur;
   }
   return prev[n];
@@ -697,7 +713,7 @@ function lev_(a, b) {
 
 function allowed_(target, tol) {
   var n = target.length;
-  if (tol >= 2 && n >= 8) return 2;
+  if (tol >= 2 && n >= 6) return 2;
   if (tol >= 1 && n >= 4) return 1;
   return 0;
 }
@@ -727,7 +743,7 @@ function finalize_(sh, row, rv, q, answers, reason, now) {
   sh.getRange(row, 7, 1, 9).setValues([[String(now), String(dur), reason, String(rv[9] || 0),
     String(g.correct), String(total), String(Math.round(g.correct / total * 1000) / 10),
     JSON.stringify(g.detail), JSON.stringify(answers || [])]]);
-  return { correct: g.correct, total: total, durationSec: dur };
+  return { correct: g.correct, total: total, durationSec: dur, detail: g.detail };
 }
 
 /* ---------- public (students) ---------- */
@@ -810,7 +826,7 @@ function submit_(p) {
   var reason = ['done', 'time', 'left'].indexOf(p.reason) >= 0 ? p.reason : 'done';
   f.v[9] = Math.max(Number(f.v[9] || 0), Number(p.leaves || 0));
   var r = finalize_(sh, f.row, f.v, L.quiz, p.answers || [], reason, Date.now());
-  return { ok: true, correct: r.correct, total: r.total, durationSec: r.durationSec };
+  return { ok: true, correct: r.correct, total: r.total, durationSec: r.durationSec, detail: r.detail };
 }
 
 /* ---------- teacher ---------- */
@@ -1427,7 +1443,9 @@ function renderAnalysis(){
     </table></div>
   </div>
 
-  <div class="panel"><h2>Дүнгийн хүснэгт</h2>
+  <div class="panel"><div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap"><h2 style="margin:0">Дүнгийн хүснэгт</h2>
+    <button class="btn noprint" id="mxXlsx">Дүнгийн хүснэгтийг Excel-ээр татах</button></div>
+    <div class="msg noprint" id="mxMsg" role="status"></div>
     <p class="hint">Мөр бүр сурагч, багана бүр асуулт. Нүдэнд тухайн асуултаар авсан оноо: ногоон нь бүтэн оноо, шар нь хэсэгчилсэн, улаан нь 0. Доод мөрүүдэд асуулт бүрийн ангийн нийт авах оноо, авсан оноо, дундаж, гүйцэтгэл гарна. Доорх "Харуулах", "Эрэмбэлэх" сонголт энэ хүснэгтэд ч хамаарна.</p>
     ${matrixHtml(viewRows(d.rows,{pct:r=>r.pct,name:r=>r.s.name,cls:r=>r.s.cls,show:viewShow,sort:viewSort,avg:d.avg}),qs,!filterCls)}
   </div>
@@ -1462,6 +1480,7 @@ function renderAnalysis(){
   $('#stable').addEventListener('click',pick);$('#stable').addEventListener('keydown',pick);
   $('#xXlsx').addEventListener('click',()=>runExport(exportExamXlsx,'#xMsg'));
   $('#xDocx').addEventListener('click',()=>runExport(exportExamDocx,'#xMsg'));
+  $('#mxXlsx').addEventListener('click',()=>runExport(exportMatrixXlsx,'#mxMsg'));
 }
 
 /* ---------- answer sheet ---------- */
@@ -1896,6 +1915,16 @@ function matrixSheet(name,title,note,list,qs,withCls){
   gp[F+n+2]={f:lv(tc+(fr+3)),s:'fb'};rows.push(gp);
   return{name,rows,freeze:7,freezeCol:F,heights:{5:Math.min(130,Math.max(40,8+5.5*Math.max(...qs.map((q,i)=>topicOf(i).length))))},
     widths:[5,...(withCls?[7]:[]),6,22,...qs.map(()=>6),10,11,9]};
+}
+async function exportMatrixXlsx(){
+  const X=examExportData(),{d,qs}=X;if(!d.n)throw new Error('сурагчийн хариулт алга');
+  const nm=X.title+(state.exam.date?', '+state.exam.date:''),note='Мөр бүр сурагч, багана бүр асуулт. Нүдэнд авсан оноо. Доод мөрүүдэд ангийн нийт, дундаж, гүйцэтгэл.';
+  const clsList=[...new Set(X.V.map(r=>r.s.cls))];
+  const sheets=!filterCls&&clsList.length>1
+    ?clsList.map(c=>{const sub=d.rows.filter(r=>r.s.cls===c),a=sub.reduce((x,r)=>x+r.pct,0)/(sub.length||1);
+      return matrixSheet('Дүн '+c,c+' анги: '+nm,note,viewRows(sub,{pct:r=>r.pct,name:r=>r.s.name,cls:r=>r.s.cls,show:viewShow,sort:viewSort,avg:a}),qs,false);})
+    :[matrixSheet('Дүнгийн хүснэгт',(filterCls?filterCls+' анги: ':'')+nm,note,X.V,qs,false)];
+  const name=fileSafe(X.title+(filterCls?' '+filterCls:'')+' dungiin khusnegt')+'.xlsx';saveBlob(buildXlsx(sheets),name);return name;
 }
 async function exportExamXlsx(){
   const X=examExportData(),{d,qs}=X,best=d.topics[0],worst=d.topics[d.topics.length-1];
@@ -2751,16 +2780,20 @@ async function vLoadResults(){
   try{vRes=await vCall({action:'results',quizId:vSel});vRes._graded=false;m.style.color='';m.textContent='Шинэчилсэн: '+new Date().toLocaleTimeString();renderVResults();}
   catch(e){m.style.color='var(--stain)';m.textContent=e.message;}
 }
+const NEAR=['оө','уү','еэ','ий','ыи','ея','ёе'];
+const subCost=(x,y)=>x===y?0:NEAR.some(p=>(p[0]===x&&p[1]===y)||(p[0]===y&&p[1]===x))?.5:1;
 function levD(a,b){if(a===b)return 0;const m=a.length,n=b.length;let prev=[...Array(n+1).keys()];
-  for(let i=1;i<=m;i++){const cur=[i];for(let j=1;j<=n;j++)cur[j]=Math.min(prev[j]+1,cur[j-1]+1,prev[j-1]+(a[i-1]===b[j-1]?0:1));prev=cur;}return prev[n];}
-const tolAllowed=(t,tol)=>tol>=2&&t.length>=8?2:tol>=1&&t.length>=4?1:0;
+  for(let i=1;i<=m;i++){const cur=[i];for(let j=1;j<=n;j++)cur[j]=Math.min(prev[j]+1,cur[j-1]+1,prev[j-1]+subCost(a[i-1],b[j-1]));prev=cur;}return prev[n];}
+const tolAllowed=(t,tol)=>tol>=2&&t.length>=6?2:tol>=1&&t.length>=4?1:0;
+const vOvr=()=>{const c=vcfg();c.ovr=c.ovr||{};return c.ovr;};
 function vMatch(q,ans,tol){const a=vNorm(ans);if(!a)return 0;
   for(const y of(q.accepted||[q.answer])){const t=vNorm(y);if(t===a)return 2;if(tol>0&&levD(t,a)<=tolAllowed(t,tol))return 1;}return 0;}
 function vRegrade(){
   if(!vRes||vRes._graded)return;const q=vRes.quiz,tol=q.type==='type'?+(q.tol||0):0;
   vRes.attempts.forEach(a=>{if(a.status==='started'||!a.answers)return;
     a.marks=q.questions.map((x,i)=>q.type==='choice'?(a.answers[i]&&vNorm(a.answers[i])===vNorm(x.answer)?2:0):vMatch(x,a.answers[i],tol));
-    a.detail=a.marks.map(m=>m?1:0);a.correct=a.detail.reduce((s,x)=>s+x,0);a.total=q.questions.length;});
+    const o=vOvr()[a.attemptId]||{};Object.keys(o).forEach(i=>{a.marks[+i]=o[i]?3:-1;});
+    a.detail=a.marks.map(m=>m>0?1:0);a.correct=a.detail.reduce((s,x)=>s+x,0);a.total=q.questions.length;});
   vRes._graded=true;
 }
 const vScore=a=>a.total?Math.round(a.correct/a.total*1000)/10:0;
@@ -2805,9 +2838,12 @@ function renderVResults(){
     </tbody></table></div>
   ${(()=>{const a=vRes.attempts.find(x=>x.attemptId===vDetailId&&x.marks);if(!a)return'';
     return`<div class="detail"><h3>${esc(a.name)} (${esc(a.cls)}): ${a.correct} / ${a.total}, ${r1(vScore(a))} оноо</h3>
-    <div class="scroll"><table class="vdet"><thead><tr><th>№</th><th>Асуулт</th><th>Сурагчийн хариулт</th><th>Зөв хариулт</th><th></th></tr></thead><tbody>
+    <div class="scroll"><table class="vdet"><thead><tr><th>№</th><th>Асуулт</th><th>Сурагчийн хариулт</th><th>Зөв хариулт</th><th></th><th>Багшийн шийдвэр</th></tr></thead><tbody>
     ${q.questions.map((x,i)=>`<tr><td>${i+1}</td><td><b>${esc(x.prompt)}</b></td><td>${esc(a.answers[i]||'–')}</td><td>${esc((x.accepted||[x.answer]).join('; '))}</td>
-      <td>${a.marks[i]===2?'<span class="g">✓ Зөв</span>':a.marks[i]===1?'<span class="m">✓ Үсгийн алдаатай</span>':'<span class="b">✗</span>'}</td></tr>`).join('')}
+      <td>${a.marks[i]===2?'<span class="g">✓ Зөв</span>':a.marks[i]===1?'<span class="m">✓ Үсгийн алдаатай</span>':a.marks[i]===3?'<span class="g">✓ Багш зөвшөөрсөн</span>':a.marks[i]===-1?'<span class="b">✗ Багш буруу гэсэн</span>':'<span class="b">✗</span>'}</td>
+      <td>${a.marks[i]===3||a.marks[i]===-1?`<button class="btn ghost" style="padding:2px 8px" data-ovr="${i}" data-v="">Буцаах</button>`
+        :a.marks[i]>0?`<button class="btn ghost" style="padding:2px 8px" data-ovr="${i}" data-v="0">Буруу болгох</button>`
+        :`<button class="btn" style="padding:2px 8px" data-ovr="${i}" data-v="1">Зөв болгох</button>`}</td></tr>`).join('')}
     </tbody></table></div><div class="btns"><button class="btn ghost" data-det="">Хаах</button></div></div>`;})()}
   <div class="legend">"Гарсан" нь сорил өгөх үедээ өөр хуудас, программ руу шилжсэн тоо. "Дахин өгүүлэх" нь тэр сурагчийн оролдлогыг устгаж, дахин өгөх боломж олгоно.</div>
   ${R.missing.length?`<h3 style="margin:16px 0 6px">Ороогүй сурагчид (${R.missing.length})</h3><p style="margin:0">${R.missing.map(s=>esc(s.cls)+' '+pad2(s.code)+' '+esc(s.name)).join(', ')}</p>`:''}
@@ -2815,6 +2851,8 @@ function renderVResults(){
     ${R.stats.map(x=>bar(x.q.prompt+' → '+x.q.answer,x.pct)).join('')}`:''}`;
   $('#vClsSel').onchange=e=>{vCls=e.target.value;renderVResults();};
   box.querySelectorAll('[data-det]').forEach(b=>b.onclick=e=>{e.preventDefault();vDetailId=b.dataset.det;renderVResults();});
+  box.querySelectorAll('[data-ovr]').forEach(b=>b.onclick=()=>{const o=vOvr();o[vDetailId]=o[vDetailId]||{};
+    if(b.dataset.v==='')delete o[vDetailId][b.dataset.ovr];else o[vDetailId][b.dataset.ovr]=+b.dataset.v;save();vRes._graded=false;renderVResults();});
   box.querySelectorAll('[data-reset]').forEach(b=>b.onclick=async()=>{
     const a=vRes.attempts.find(x=>x.attemptId===b.dataset.reset);
     if(!confirm((a?a.name:'')+'-ийн оролдлогыг устгаж, дахин өгөх боломж олгох уу?'))return;
@@ -2994,10 +3032,29 @@ async function sqFinish(reason,keepalive){
   try{const r=await sqPost(body,keepalive);sqShowResult(r,reason);}
   catch(e){sqResend(body);}
 }
+function celebrate(level){
+  if(level<1)return;
+  try{const a=new (window.AudioContext||window.webkitAudioContext)(),notes=level>=3?[523,659,784,1047,784,1047]:level>=2?[523,659,784,1047]:[523,659,784];
+    notes.forEach((f,i)=>{const o=a.createOscillator(),g=a.createGain(),t=a.currentTime+i*.13;o.type='triangle';o.frequency.value=f;
+      g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(.18,t+.02);g.gain.exponentialRampToValueAtTime(.001,t+.25);o.connect(g);g.connect(a.destination);o.start(t);o.stop(t+.3);});
+    setTimeout(()=>a.close(),2500);}catch(e){}
+  if(navigator.vibrate)navigator.vibrate([60,40,60]);
+  if(window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches)return;
+  const em=level>=3?['🏆','🎉','⭐','🎊','✨']:['🎉','⭐','🎊','✨'],box=document.createElement('div');box.className='confetti';
+  for(let i=0;i<(level>=2?40:22);i++){const sp=document.createElement('span');sp.textContent=em[i%em.length];
+    sp.style.left=Math.random()*100+'%';sp.style.animationDelay=(Math.random()*.8)+'s';sp.style.fontSize=(18+Math.random()*18)+'px';sp.style.animationDuration=(2.2+Math.random()*1.6)+'s';box.appendChild(sp);}
+  document.body.appendChild(box);setTimeout(()=>box.remove(),4800);
+}
 function sqShowResult(r,reason){
   if(r&&(r.ok||r.already)){sqDel('pending');sqSave('done',1);
-    const head=reason==='left'?'Та сорилоос гарсан тул сорил дууссан':reason==='time'?'Хугацаа дууслаа':'Сорил дууслаа';
-    sqMsg(head,`<div class="sq-big">${r.correct} / ${r.total}</div><p>Зөв хариулт, <b>${r.total?r1(r.correct/r.total*100):0}</b> оноо (100-аас). Зарцуулсан хугацаа: <b>${mmss(r.durationSec)}</b></p><p class="hint" style="margin:0 auto">Таны хариулт багшид илгээгдлээ.</p>`,reason==='left'?'b':'');}
+    const pct=r.total?r.correct/r.total*100:0,lv=reason==='left'?0:pct>=90?3:pct>=70?2:pct>=50?1:0;
+    const head=reason==='left'?'Та сорилоос гарсан тул сорил дууссан':lv===3?'🏆 Гайхалтай!':lv===2?'🎉 Баяр хүргэе!':lv===1?'👍 Сайн байна!':reason==='time'?'Хугацаа дууслаа':'💪 Дахин давтаад сайжруулаарай!';
+    const q=SQ.quiz,det=Array.isArray(r.detail)?r.detail:null;
+    const words=det&&q?`<div class="sq-words">${(SQ.order&&SQ.order.length?SQ.order:q.questions.map((x,i)=>i)).map(k=>{const ok=det[k]===1,a=SQ.answers&&SQ.answers[k];
+      return`<div class="${ok?'ok':'no'}"><span>${ok?'✓':'✗'}</span><b>${esc(q.questions[k].prompt)}</b><em>${esc(a||'—')}</em></div>`;}).join('')}</div>
+      <p class="hint" style="margin:6px auto 0">✓ зөв хариулсан, ✗ алдсан үг. Алдсан үгээ дахин давтаарай.</p>`:'';
+    sqMsg(head,`<div class="sq-big">${r.correct} / ${r.total}</div><p>Зөв хариулт, <b>${r1(pct)}</b> оноо (100-аас). Зарцуулсан хугацаа: <b>${mmss(r.durationSec)}</b></p>${words}<p class="hint" style="margin:8px auto 0">Таны хариулт багшид илгээгдлээ.</p>`,reason==='left'?'b':'');
+    celebrate(lv);}
   else sqMsg('Илгээж чадсангүй',`<p>${esc(r&&r.error||'')}</p>`,'b');
 }
 function sqResend(body){
@@ -3009,7 +3066,7 @@ function sqResend(body){
 
 /* ---------- usage licence (time-limited activation codes) ---------- */
 const LIC_KEY='shalgalt-license',LIC_SEEN='shalgalt-license-seen';
-const LIC_PUB={"kty": "EC", "crv": "P-256", "x": "T-pXzE1drAEOS4IoezAKN2TNrLEmIhPxMG_i8r7mq6c", "y": "tMUtLgvHEyrhRwXI_aI1BNO0WBeh7gyrBtrkNHaYBnU"};
+const LIC_PUB={"kty":"EC","crv":"P-256","x":"SW-q6riyuCAN3HlcPiMU5orLFHWSWjH6PwYmNmvm4E8","y":"tMmhhYJxghR57d-BwICb0C09zmUv3XFCye7dTGhpSwU"};
 const lsGet=k=>{try{return localStorage.getItem(k)||'';}catch(e){return'';}};
 const lsSet=(k,v)=>{try{localStorage.setItem(k,v);}catch(e){}};
 const localDay=()=>{const t=new Date();return t.getFullYear()+'-'+String(t.getMonth()+1).padStart(2,'0')+'-'+String(t.getDate()).padStart(2,'0');};
