@@ -348,8 +348,10 @@ body.student #studentApp{display:block}
     <div class="btns">
       <button class="btn" id="saveRoster">Нэрсийг хадгалах</button>
       <button class="btn ghost" id="printCodes">Кодын жагсаалт хэвлэх</button>
+      <button class="btn ghost" id="tidyCls">Ангиудыг цэгцлэх</button>
       <button class="btn danger" id="delCls">Энэ ангийг устгах</button>
     </div>
+    <p class="hint" style="margin:8px 0 0">"Ангиудыг цэгцлэх" нь нэг ангийг хоёр янзаар бичсэнийг ("10б Анги" ба "10Б") нэг болгож нэгтгэнэ, латин үсгээр бичсэнийг кирилл болгоно. Өмнөх шалгалтуудын дүн хамт шилжинэ.</p>
     <div style="margin-top:14px;padding-top:12px;border-top:1px solid var(--line)">
       <b>Excel файлаар оруулах</b>
       <p class="hint" style="margin:4px 0 0">Загвар файлыг татаад Excel дээр "Анги", "Код", "Нэр" баганыг бөглөж хадгална. Дараа нь "Excel файлаас оруулах" дарж тэр файлаа сонгоно. Хэд хэдэн ангийг нэг файлд оруулж болно. Файлд байгаа ангийн нэрс шинэчлэгдэнэ.</p>
@@ -409,7 +411,12 @@ body.student #studentApp{display:block}
     <div id="roster" class="roster"></div>
     <div class="progress" id="progress"></div>
     <div id="sheet" style="margin-top:10px"></div>
-    <div class="btns"><button class="btn" id="saveStudent">Хариултыг хадгалах</button></div>
+    <div class="btns">
+      <button class="btn" id="saveStudent">Хариултыг хадгалах</button>
+      <button class="btn ghost" id="fillKey">Бүгдийг зөв хариултаар дүүргэх</button>
+    </div>
+    <label style="display:flex;align-items:center;gap:8px;margin-top:10px;color:var(--ink)"><input type="checkbox" id="prefillKey" style="width:auto"> Сурагч сонгоход зөв хариултаар урьдчилан дүүргэх — дараа нь зөвхөн <b>алдсан</b> хариултыг нь дарж өөрчилнө</label>
+    <p class="hint" style="margin:4px 0 0;font-size:.82rem">Хурдан боловч болгоомжтой: алдсан хариултыг нь засахаа мартвал зөв гэж тооцогдоно. Хариулаагүй орхисон асуултад "хариулсан" гэж тэмдэглэгдэхгүйн тулд тэр асуултын товчийг дахин дарж цайруулна.</p>
     <div class="msg" id="entryMsg" role="status"></div>
   </div>
 
@@ -488,7 +495,8 @@ body.student #studentApp{display:block}
       <div><label for="vKey">Багшийн нууц үг</label><input id="vKey" type="password" autocomplete="off"></div>
     </div>
     <div class="row" id="vBaseRow" style="margin-top:10px" hidden>
-      <div style="flex:1 1 300px"><label for="vBase">Программын нийтэд нээлттэй хаяг (GitHub Pages)</label><input id="vBase" placeholder="https://таны-нэр.github.io/shalgalt-analiz/"></div>
+      <div style="flex:1 1 300px"><label for="vBase">Программын нийтэд нээлттэй хаяг (GitHub Pages)</label><input id="vBase" placeholder="https://таны-нэр.github.io/shalgalt-analiz/">
+        <p class="hint" style="margin:6px 0 0;font-size:.85rem">Та программаа энэ компьютерээсээ нээсэн байна (localhost). Энэ хаяг руу сурагчийн утас хүрч чадахгүй тул сорилын QR, холбоосыг <b>интернэтэд байршуулсан хаягаар</b> үүсгэнэ. Тэр хаягаа энд нэг удаа бичихэд хангалттай.</p></div>
     </div>
     <div class="btns"><button class="btn" id="vTest">Холболт шалгах</button></div>
     <div class="msg" id="vConnMsg" role="status"></div>
@@ -1115,8 +1123,11 @@ function renderRosterSetup(){
 }
 $('#rcls').addEventListener('change',e=>{rosterCls=e.target.value;renderRosterSetup();$('#rosterMsg').textContent='';});
 $('#addCls').addEventListener('click',()=>{
-  const n=$('#newCls').value.trim(),m=$('#rosterMsg');if(!n){$('#newCls').focus();return;}
-  if(db.classes.find(c=>c.name===n)){m.style.color='var(--stain)';m.textContent=n+' анги аль хэдийн байна.';return;}
+  const raw=$('#newCls').value.trim(),m=$('#rosterMsg');if(!raw){$('#newCls').focus();return;}
+  const old=findClass(raw);
+  if(old){rosterCls=old.name;renderRosterSetup();$('#newCls').value='';
+    m.style.color='var(--stain)';m.textContent=old.name+' анги аль хэдийн байна. Тэр ангийг нээлээ, доороос нэрсийг нь засна уу.';return;}
+  const n=clsPretty(raw);
   ensureRoster(n);rosterCls=n;
   const lt=classParts(n).letter;
   if(lt&&db.sheet&&db.sheet.letters&&!sheetLetters().some(x=>normL(x)===normL(lt)))db.sheet.letters=(db.sheet.letters+' '+lt).trim();
@@ -1136,6 +1147,34 @@ $('#saveRoster').addEventListener('click',()=>{
   if(dup.length){m.style.color='var(--stain)';m.textContent='Код давхацсан байна: '+dup.map(([k,v])=>pad2(k)+' ('+v.join(', ')+')').join('; ')+'. Засаад дахин хадгална уу.';return;}
   c.students=items.map(it=>it.name);c.codes={};items.forEach(it=>{if(it.code)c.codes[it.name]=it.code;});fixCodes(c);
   save();renderRosterSetup();renderSheetPanel();m.style.color='';m.textContent=c.name+' ангид '+c.students.length+' сурагч хадгалагдлаа. Код бүр давхцалгүй.';
+});
+$('#tidyCls').addEventListener('click',()=>{
+  const m=$('#rosterMsg'),groups=new Map();
+  db.classes.forEach(c=>{const k=clsCanon(c.name);if(!groups.has(k))groups.set(k,[]);groups.get(k).push(c);});
+  const plan=[],rename={};
+  groups.forEach(list=>{
+    const to=clsPretty(list[0].name);
+    list.forEach(c=>{if(c.name!==to)rename[c.name]=to;});
+    if(list.length>1)plan.push(list.map(c=>c.name).join(' + ')+' → '+to);
+    else if(list[0].name!==to)plan.push(list[0].name+' → '+to);
+  });
+  if(!plan.length){m.style.color='';m.textContent='Цэгцлэх зүйл алга. Бүх ангийн нэр зөв байна.';return;}
+  if(!confirm('Дараах өөрчлөлтийг хийх үү?\n\n'+plan.join('\n')+'\n\nСурагчдын нэрс, код, өмнөх дүн хамт шилжинэ.'))return;
+  const out=[];
+  groups.forEach(list=>{
+    const c0={name:clsPretty(list[0].name),students:[],codes:{}};
+    list.forEach(c=>{const used=new Set(Object.values(c0.codes));
+      (c.students||[]).forEach(n=>{if(c0.students.includes(n))return;c0.students.push(n);
+        const code=c.codes&&c.codes[n];if(code&&!used.has(code)){c0.codes[n]=code;used.add(code);}});});
+    fixCodes(c0);out.push(c0);
+  });
+  db.classes=out.sort(clsSort);
+  let moved=0;
+  db.exams.forEach(e=>e.students.forEach(s=>{if(rename[s.cls]){s.cls=rename[s.cls];moved++;}}));
+  [['entryCls',v=>entryCls=v],['rosterCls',v=>rosterCls=v],['filterCls',v=>filterCls=v],['finalCls',v=>finalCls=v]]
+    .forEach(([k,set])=>{const cur=({entryCls,rosterCls,filterCls,finalCls})[k];if(cur&&rename[cur])set(rename[cur]);});
+  save();renderRosterSetup();renderSheetPanel();renderEntry();
+  m.style.color='';m.textContent='Цэгцэллээ: '+plan.join('; ')+'.'+(moved?' '+moved+' сурагчийн өмнөх дүнг шинэ ангид шилжүүллээ.':'');
 });
 $('#delCls').addEventListener('click',()=>{
   if(!rosterCls||!confirm(rosterCls+' ангийн нэрсийн жагсаалтыг устгах уу? Өмнөх шалгалтуудын дүн хэвээр үлдэнэ.'))return;
@@ -1193,15 +1232,25 @@ function renderRoster(){
     ||'<span class="progress">Энэ ангид нэрс оруулаагүй байна. "1. Шалгалт" хэсгээс нэмнэ үү.</span>';
   $('#progress').textContent=c.students.length?c.students.filter(n=>done.has(n)).length+' / '+c.students.length+' сурагчийн хариулт орсон':'';
 }
+function ecfg(){db.entry=db.entry||{prefill:false};return db.entry;}
+const keyDraft=()=>state.exam.questions.map(q=>isP2(q)?keyNorm(q.key||''):(q.key||''));
 function pickStudent(n){
   $('#name').value=n;
-  const s=state.students.find(x=>x.cls===entryCls&&x.name===n);
-  editId=s?s.id:null;draft=s?s.answers.slice():[];
-  $('#entryMsg').style.color='';$('#entryMsg').textContent=s?n+'-ийн хариулт орсон байна. Засаад хадгалж болно.':'';
+  const s=state.students.find(x=>x.cls===entryCls&&x.name===n),pre=!s&&ecfg().prefill;
+  editId=s?s.id:null;draft=s?s.answers.slice():(pre?keyDraft():[]);
+  $('#entryMsg').style.color='';$('#entryMsg').textContent=s?n+'-ийн хариулт орсон байна. Засаад хадгалж болно.'
+    :(pre?'Зөв хариултаар дүүргэлээ. Алдсан хариултыг нь дарж өөрчилнө үү.':'');
   $('#saveStudent').textContent=s?'Засварыг хадгалах':'Хариултыг хадгалах';
   renderSheet();renderRoster();
 }
-function renderEntry(){renderEntryClasses();renderRoster();renderSheet();renderList();}
+function renderEntry(){renderEntryClasses();renderRoster();renderSheet();renderList();$('#prefillKey').checked=!!ecfg().prefill;}
+$('#prefillKey').addEventListener('change',e=>{ecfg().prefill=e.target.checked;save();
+  const m=$('#entryMsg');m.style.color='';m.textContent=e.target.checked?'Одооноос сурагч сонгоход зөв хариулт нь урьдчилж орох болно.':'Урьдчилан дүүргэхийг унтраалаа.';});
+$('#fillKey').addEventListener('click',()=>{
+  const m=$('#entryMsg');
+  if(!state.exam.questions.some(q=>q.key)){m.style.color='var(--stain)';m.textContent='Энэ шалгалтад зөв хариулт оруулаагүй байна. "1. Шалгалт" хэсэгт оруулна уу.';return;}
+  draft=keyDraft();renderSheet();
+  m.style.color='';m.textContent='Зөв хариултаар дүүргэлээ. Алдсан хариултыг нь дарж өөрчилнө үү.';});
 $('#cls').addEventListener('change',e=>{entryCls=e.target.value;$('#name').value='';editId=null;draft=[];$('#saveStudent').textContent='Хариултыг хадгалах';renderRoster();renderSheet();renderList();});
 $('#roster').addEventListener('click',e=>{const b=e.target.closest('[data-n]');if(b)pickStudent(b.dataset.n);});
 $('#name').addEventListener('input',()=>{
@@ -1488,6 +1537,11 @@ const LOOK={A:'А',B:'В',C:'С',E:'Е',H:'Н',K:'К',M:'М',O:'О',P:'Р',T:'Т
 const normL=x=>String(x||'').trim().toUpperCase().replace(/[A-Z]/g,ch=>LOOK[ch]||ch);
 function classParts(n){const m=String(n||'').trim().match(/^(\d{1,2})\s*[-–.]?\s*(.*)$/);
   return m?{grade:m[1].padStart(2,'0'),letter:m[2].replace(/[\s-]*(анги|бүлэг)[\s.]*$/i,'').trim()}:{grade:'',letter:String(n||'').trim()};}
+/* Ангийн нэрийг нэг хэлбэрт оруулна: "10б анги", "10 Б", "10b" -> "10Б" */
+function clsPretty(n){const p=classParts(n);
+  return p.grade?String(+p.grade)+normL(p.letter).replace(/\s+/g,''):String(n||'').trim().replace(/\s+/g,' ');}
+const clsCanon=n=>clsPretty(n).toUpperCase();
+function findClass(n){const k=clsCanon(n);return db.classes.find(c=>clsCanon(c.name)===k)||null;}
 function queueStudent(cls,name,answers){if(typeof vcfg!=='function'||!vcfg().api||!vcfg().key)return;
   ccfg().queue.push({id:uid(),examId:state.id,cls,name,answers:answers.slice()});setTimeout(()=>cloudPoll(),400);}
 function sheetLetters(){
@@ -2100,12 +2154,13 @@ $('#rosterFile').addEventListener('change',async e=>{
     const cl=Object.keys(by);if(!cl.length)throw new Error('Файлд нэр олдсонгүй.'+(bad.length?' "Анги" баганыг бөглөнө үү.':''));
     const errs=[];cl.forEach(c=>{const seen={};by[c].forEach(x=>{if(x.code){if(seen[x.code]&&seen[x.code]!==x.name)errs.push(c+': '+pad2(x.code)+' ('+seen[x.code]+', '+x.name+')');seen[x.code]=x.name;}});});
     if(errs.length)throw new Error('Код давхацсан: '+errs.join('; ')+'. Засаад дахин оруулна уу.');
-    if(!confirm(cl.map(c=>c+' ('+by[c].length+' сурагч)').join(', ')+' ангийн нэрсийг файлаас шинэчлэх үү?'))return(m.textContent='');
-    cl.forEach(c=>{ensureRoster(c);const k=db.classes.find(x=>x.name===c),seen=new Set();
+    const nameOf=c=>{const ex=findClass(c);return ex?ex.name:clsPretty(c);};
+    if(!confirm(cl.map(c=>nameOf(c)+' ('+by[c].length+' сурагч)').join(', ')+' ангийн нэрсийг файлаас шинэчлэх үү?'))return(m.textContent='');
+    cl.forEach(c=>{const nm=nameOf(c);ensureRoster(nm);const k=db.classes.find(x=>x.name===nm),seen=new Set();
       const items=by[c].filter(x=>!seen.has(x.name)&&seen.add(x.name));
       k.students=items.map(x=>x.name);k.codes={};items.forEach(x=>{if(x.code)k.codes[x.name]=x.code;});fixCodes(k);});
-    rosterCls=cl[0];save();renderRosterSetup();renderSheetPanel();
-    m.textContent=cl.map(c=>c+': '+by[c].length).join(', ')+' сурагч орлоо.'+(bad.length?' Анги тодорхойгүй '+bad.length+' мөрийг алгаслаа.':'');
+    rosterCls=nameOf(cl[0]);save();renderRosterSetup();renderSheetPanel();
+    m.textContent=cl.map(c=>nameOf(c)+': '+by[c].length).join(', ')+' сурагч орлоо.'+(bad.length?' Анги тодорхойгүй '+bad.length+' мөрийг алгаслаа.':'');
   }catch(err){m.style.color='var(--stain)';m.textContent=err.message;}
 });
 $('#ansTpl').addEventListener('click',()=>{
@@ -2511,7 +2566,19 @@ function liveTick(){
 $('#liveBtn').addEventListener('click',liveOpen);
 
 /* ---------- charts ---------- */
-let chartData='q',chartType='bar',lastD=null;
+let chartData='q',chartType='bar',chartStyle='deep',lastD=null;
+const STYLE_OPTS=[['deep','Эзэлхүүнтэй (3D)'],['soft','Зөөлөн сүүдэртэй'],['flat','Энгийн хавтгай']];
+function chcfg(){db.chart=db.chart||{style:'deep'};return db.chart;}
+function chartDefs(){return `<defs>
+  <linearGradient id="cGloss" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0" stop-color="#fff" stop-opacity=".36"/><stop offset=".5" stop-color="#fff" stop-opacity=".08"/><stop offset="1" stop-color="#000" stop-opacity=".1"/></linearGradient>
+  <linearGradient id="cGlossH" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0" stop-color="#fff" stop-opacity=".4"/><stop offset=".55" stop-color="#fff" stop-opacity=".05"/><stop offset="1" stop-color="#000" stop-opacity=".14"/></linearGradient>
+  <linearGradient id="cArea" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0" stop-color="var(--leaf)" stop-opacity=".32"/><stop offset="1" stop-color="var(--leaf)" stop-opacity="0"/></linearGradient>
+  <filter id="cSh" x="-35%" y="-35%" width="170%" height="180%">
+    <feDropShadow dx="0" dy="3" stdDeviation="3.2" flood-color="#000" flood-opacity=".22"/></filter>
+</defs>`;}
 const DATA_OPTS=[['q','Асуулт тус бүрийн гүйцэтгэл'],['t','Агуулга тус бүрийн гүйцэтгэл'],['lv','Түвшний тархалт'],['s','Сурагчдын гүйцэтгэл'],['c','Ангиудын харьцуулалт']];
 const TYPE_OPTS=[['bar','Босоо багана'],['hbar','Хэвтээ багана'],['line','Шугаман'],['pie','Дугуй']];
 const PIE_COLORS=['#1F5A41','#3E8A63','#78B48F','#A96A12','#D19A3E','#B4314A','#D46A80','#8A93A6'];
@@ -2533,42 +2600,86 @@ function axisY(L,T,W,ih,max,pct){
   return g;
 }
 function svgBar(S,line){
-  const n=S.items.length,rot=n>8,W=Math.max(640,n*(rot?34:56)+60),H=rot?360:320,L=46,T=18,B=rot?90:44,ih=H-T-B;
-  const max=S.pct?100:Math.max(1,...S.items.map(i=>i.v)),cw=(W-L-10)/n,bw=Math.min(46,cw*.65);
-  let g=axisY(L,T,W-10,ih,max,S.pct),pts=[];
+  const d3=chartStyle==='deep'&&!line,soft=chartStyle!=='flat';
+  const n=S.items.length,rot=n>8,W=Math.max(640,n*(rot?34:56)+60),H=rot?360:320,L=46,T=24,B=rot?90:44,ih=H-T-B;
+  const max=S.pct?100:Math.max(1,...S.items.map(i=>i.v)),cw=(W-L-10)/n,bw=Math.min(46,cw*.62);
+  const dz=d3?Math.max(5,Math.min(13,bw*.3)):0,base=T+ih;
+  let bars='',marks='',labels='',pts=[];
   S.items.forEach((it,i)=>{
-    const cx=L+cw*i+cw/2,h=ih*it.v/max,y=T+ih-h;
-    if(line){pts.push(cx+','+y);g+=`<circle cx="${cx}" cy="${y}" r="5" fill="${col(it.v,S.pct)}"><title>${esc(it.full)}: ${fmt(it.v,S.pct)}</title></circle>`;}
-    else g+=`<rect x="${cx-bw/2}" y="${y}" width="${bw}" height="${Math.max(h,1)}" rx="4" fill="${col(it.v,S.pct)}"><title>${esc(it.full)}: ${fmt(it.v,S.pct)}</title></rect>`;
-    g+=`<text x="${cx}" y="${y-8}" text-anchor="middle" font-size="11" font-weight="600" fill="var(--ink)">${fmt(it.v,S.pct)}</text>`;
-    g+=rot?`<text transform="translate(${cx+4},${T+ih+12}) rotate(-45)" text-anchor="end" font-size="11" fill="var(--ink)">${esc(cut(it.l,14))}</text>`
-          :`<text x="${cx}" y="${T+ih+18}" text-anchor="middle" font-size="12" fill="var(--ink)">${esc(cut(it.l,Math.max(4,Math.floor(cw/7))))}</text>`;
+    const cx=L+cw*i+cw/2,h=Math.max(ih*it.v/max,1),y=base-h,x=cx-bw/2;
+    const c=col(it.v,S.pct),tip=`<title>${esc(it.full)}: ${fmt(it.v,S.pct)}</title>`;
+    if(line){
+      pts.push(cx+','+y);
+      marks+=`<circle cx="${cx}" cy="${y}" r="${soft?5.5:5}" fill="${c}" stroke="var(--surface)" stroke-width="2"${soft?' filter="url(#cSh)"':''}>${tip}</circle>`;
+    }else if(d3){
+      const side=`M${x+bw},${y} L${x+bw+dz},${y-dz} L${x+bw+dz},${base-dz} L${x+bw},${base} Z`;
+      const top=`M${x},${y} L${x+dz},${y-dz} L${x+bw+dz},${y-dz} L${x+bw},${y} Z`;
+      bars+=`<g>${tip}<path d="${side}" fill="${c}"/><path d="${side}" fill="#000" opacity=".3"/>`
+        +`<path d="${top}" fill="${c}"/><path d="${top}" fill="#fff" opacity=".32"/>`
+        +`<rect x="${x}" y="${y}" width="${bw}" height="${h}" fill="${c}"/>`
+        +`<rect x="${x}" y="${y}" width="${bw}" height="${h}" fill="url(#cGloss)"/></g>`;
+    }else{
+      bars+=`<rect x="${x}" y="${y}" width="${bw}" height="${h}" rx="${soft?6:4}" fill="${c}"${soft?' filter="url(#cSh)"':''}>${tip}</rect>`
+        +(soft?`<rect x="${x}" y="${y}" width="${bw}" height="${h}" rx="6" fill="url(#cGloss)" pointer-events="none"/>`:'');
+    }
+    labels+=`<text x="${cx}" y="${y-(d3?dz+7:8)}" text-anchor="middle" font-size="11" font-weight="700" fill="var(--ink)">${fmt(it.v,S.pct)}</text>`
+      +(rot?`<text transform="translate(${cx+4},${base+12}) rotate(-45)" text-anchor="end" font-size="11" fill="var(--ink)">${esc(cut(it.l,14))}</text>`
+           :`<text x="${cx}" y="${base+18}" text-anchor="middle" font-size="12" fill="var(--ink)">${esc(cut(it.l,Math.max(4,Math.floor(cw/7))))}</text>`);
   });
-  if(line)g=`${axisY(L,T,W-10,ih,max,S.pct)}<polyline points="${pts.join(' ')}" fill="none" stroke="var(--leaf)" stroke-width="2.5"/>`+g.slice(axisY(L,T,W-10,ih,max,S.pct).length);
-  return`<svg viewBox="0 0 ${W} ${H}" style="min-width:${W>720?W:0}px" xmlns="http://www.w3.org/2000/svg">${g}</svg>`;
+  let g=axisY(L,T,W-10,ih,max,S.pct);
+  if(line){
+    if(soft&&pts.length>1)g+=`<polygon points="${pts[0].split(',')[0]},${base} ${pts.join(' ')} ${pts[pts.length-1].split(',')[0]},${base}" fill="url(#cArea)"/>`;
+    g+=`<polyline points="${pts.join(' ')}" fill="none" stroke="var(--leaf)" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"${soft?' filter="url(#cSh)"':''}/>`+marks;
+  }else g+=bars;
+  return`<svg viewBox="0 0 ${W} ${H}" style="min-width:${W>720?W:0}px" xmlns="http://www.w3.org/2000/svg">${chartDefs()}${g}${labels}</svg>`;
 }
 function svgHBar(S){
-  const n=S.items.length,L=170,W=680,R=56,row=30,T=10,H=T+n*row+10,max=S.pct?100:Math.max(1,...S.items.map(i=>i.v)),iw=W-L-R;
-  let g='';S.items.forEach((it,i)=>{const y=T+i*row,w=iw*it.v/max;
-    g+=`<text x="${L-8}" y="${y+18}" text-anchor="end" font-size="12" fill="var(--ink)">${esc(cut(it.full,24))}</text>
-      <rect x="${L}" y="${y+5}" width="${iw}" height="18" rx="9" fill="var(--bg)"/>
-      <rect x="${L}" y="${y+5}" width="${Math.max(w,2)}" height="18" rx="9" fill="${col(it.v,S.pct)}"><title>${esc(it.full)}: ${fmt(it.v,S.pct)}</title></rect>
-      <text x="${W-R+8}" y="${y+18}" font-size="12" font-weight="600" fill="var(--ink)">${fmt(it.v,S.pct)}</text>`;});
-  return`<svg viewBox="0 0 ${W} ${H}" style="min-width:520px" xmlns="http://www.w3.org/2000/svg">${g}</svg>`;
+  const d3=chartStyle==='deep',soft=chartStyle!=='flat';
+  const n=S.items.length,L=170,W=680,R=56,row=d3?34:30,T=12,H=T+n*row+14,max=S.pct?100:Math.max(1,...S.items.map(i=>i.v)),iw=W-L-R;
+  const bh=d3?20:18,dz=d3?6:0;
+  let g='';S.items.forEach((it,i)=>{const y=T+i*row,w=Math.max(iw*it.v/max,2),c=col(it.v,S.pct);
+    const tip=`<title>${esc(it.full)}: ${fmt(it.v,S.pct)}</title>`;
+    g+=`<text x="${L-8}" y="${y+bh/2+5}" text-anchor="end" font-size="12" fill="var(--ink)">${esc(cut(it.full,24))}</text>
+      <rect x="${L}" y="${y}" width="${iw}" height="${bh}" rx="${bh/2}" fill="var(--bg)"/>`;
+    if(d3)g+=`<path d="M${L+dz},${y-dz} L${L+w+dz},${y-dz} L${L+w},${y} L${L},${y} Z" fill="${c}"/>`
+      +`<path d="M${L+dz},${y-dz} L${L+w+dz},${y-dz} L${L+w},${y} L${L},${y} Z" fill="#fff" opacity=".3"/>`
+      +`<path d="M${L+w},${y} L${L+w+dz},${y-dz} L${L+w+dz},${y+bh-dz} L${L+w},${y+bh} Z" fill="${c}"/>`
+      +`<path d="M${L+w},${y} L${L+w+dz},${y-dz} L${L+w+dz},${y+bh-dz} L${L+w},${y+bh} Z" fill="#000" opacity=".3"/>`;
+    g+=`<rect x="${L}" y="${y}" width="${w}" height="${bh}" rx="${d3?3:bh/2}" fill="${c}"${soft&&!d3?' filter="url(#cSh)"':''}>${tip}</rect>`
+      +(soft?`<rect x="${L}" y="${y}" width="${w}" height="${bh}" rx="${d3?3:bh/2}" fill="url(#cGlossH)" pointer-events="none"/>`:'')
+      +`<text x="${W-R+8}" y="${y+bh/2+5}" font-size="12" font-weight="700" fill="var(--ink)">${fmt(it.v,S.pct)}</text>`;});
+  return`<svg viewBox="0 0 ${W} ${H}" style="min-width:520px" xmlns="http://www.w3.org/2000/svg">${chartDefs()}${g}</svg>`;
 }
 function svgPie(S){
-  const items=S.items.filter(i=>i.v>0),tot=items.reduce((a,i)=>a+i.v,0)||1,c=130,r=120;
-  let a0=-Math.PI/2,g='';
-  items.forEach((it,k)=>{const a1=a0+2*Math.PI*it.v/tot,large=a1-a0>Math.PI?1:0,clr=PIE_COLORS[LEVELS.findIndex(l=>l[0]===it.l)]||PIE_COLORS[k%8];
-    g+=items.length===1?`<circle cx="${c}" cy="${c}" r="${r}" fill="${clr}"/>`
-      :`<path d="M${c},${c} L${c+r*Math.cos(a0)},${c+r*Math.sin(a0)} A${r},${r} 0 ${large} 1 ${c+r*Math.cos(a1)},${c+r*Math.sin(a1)} Z" fill="${clr}" stroke="var(--surface)" stroke-width="2"><title>${esc(it.full)}: ${it.v}</title></path>`;
+  const d3=chartStyle==='deep',soft=chartStyle!=='flat';
+  const items=S.items.filter(i=>i.v>0),tot=items.reduce((a,i)=>a+i.v,0)||1;
+  const c=130,rx=118,ry=d3?70:118,cy=d3?112:130,dep=d3?26:0,H=d3?232:260;
+  const clrOf=(it,k)=>PIE_COLORS[LEVELS.findIndex(l=>l[0]===it.l)]||PIE_COLORS[k%8];
+  const path=(a0,a1,y)=>items.length===1
+    ? `M${c-rx},${y} a${rx},${ry} 0 1 0 ${rx*2},0 a${rx},${ry} 0 1 0 ${-rx*2},0`
+    : `M${c},${y} L${c+rx*Math.cos(a0)},${y+ry*Math.sin(a0)} A${rx},${ry} 0 ${a1-a0>Math.PI?1:0} 1 ${c+rx*Math.cos(a1)},${y+ry*Math.sin(a1)} Z`;
+  let g='',a0=-Math.PI/2;
+  if(d3){ // доод давхарга: эзэлхүүний мэдрэмж өгнө
+    let b0=-Math.PI/2;
+    items.forEach((it,k)=>{const b1=b0+2*Math.PI*it.v/tot,p=path(b0,b1,cy+dep);
+      g+=`<path d="${p}" fill="${clrOf(it,k)}"/><path d="${p}" fill="#000" opacity=".42"/>`;b0=b1;});
+    g+=`<rect x="${c-rx}" y="${cy}" width="${rx*2}" height="${dep}" fill="none"/>`;
+  }
+  a0=-Math.PI/2;
+  items.forEach((it,k)=>{const a1=a0+2*Math.PI*it.v/tot,p=path(a0,a1,cy),clr=clrOf(it,k);
+    g+=`<path d="${p}" fill="${clr}" stroke="var(--surface)" stroke-width="${d3?1:2}"><title>${esc(it.full)}: ${it.v}</title></path>`
+      +(soft?`<path d="${p}" fill="url(#cGloss)" pointer-events="none"/>`:'');
     a0=a1;});
-  g+=`<circle cx="${c}" cy="${c}" r="58" fill="var(--surface)"/><text x="${c}" y="${c-2}" text-anchor="middle" font-size="26" font-weight="700" fill="var(--ink)">${tot}</text><text x="${c}" y="${c+18}" text-anchor="middle" font-size="12" fill="var(--muted)">сурагч</text>`;
-  const leg=items.map(it=>`<div><i style="background:${PIE_COLORS[LEVELS.findIndex(l=>l[0]===it.l)]}"></i>${esc(it.full)}: <b>${it.v}</b> (${Math.round(it.v/tot*100)}%)</div>`).join('');
-  return`<div class="pie-wrap"><svg viewBox="0 0 260 260" width="260" xmlns="http://www.w3.org/2000/svg">${g}</svg><div class="pie-legend">${leg}</div></div>`;
+  g+=`<ellipse cx="${c}" cy="${cy}" rx="56" ry="${d3?33:56}" fill="var(--surface)"/>`
+    +`<text x="${c}" y="${cy+(d3?2:-2)}" text-anchor="middle" font-size="${d3?22:26}" font-weight="700" fill="var(--ink)">${tot}</text>`
+    +(d3?`<text x="${c}" y="${cy+18}" text-anchor="middle" font-size="10" fill="var(--muted)">сурагч</text>`
+        :`<text x="${c}" y="${cy+18}" text-anchor="middle" font-size="12" fill="var(--muted)">сурагч</text>`);
+  const leg=items.map((it,k)=>`<div><i style="background:${clrOf(it,k)}"></i>${esc(it.full)}: <b>${it.v}</b> (${Math.round(it.v/tot*100)}%)</div>`).join('');
+  return`<div class="pie-wrap"><svg viewBox="0 0 260 ${H}" width="260" xmlns="http://www.w3.org/2000/svg">${chartDefs()}${g}</svg><div class="pie-legend">${leg}</div></div>`;
 }
 function renderChart(){
   const p=$('#chartPanel');if(!p||!lastD)return;
+  chartStyle=chcfg().style||'deep';
   if(chartType==='pie'&&chartData!=='lv')chartType='bar';
   const S=series(lastD),title=DATA_OPTS.find(o=>o[0]===chartData)[1];
   const body=!S.items.length?'<div class="empty">Харуулах өгөгдөл алга.</div>'
@@ -2577,6 +2688,7 @@ function renderChart(){
     <div class="chart-controls">
       <div><label for="cdata">Юуг харуулах</label><select id="cdata">${DATA_OPTS.map(o=>`<option value="${o[0]}"${o[0]===chartData?' selected':''}>${o[1]}</option>`).join('')}</select></div>
       <div><label for="ctype">Графикийн төрөл</label><select id="ctype">${TYPE_OPTS.map(o=>`<option value="${o[0]}"${o[0]===chartType?' selected':''}${o[0]==='pie'&&chartData!=='lv'?' disabled':''}>${o[1]}${o[0]==='pie'&&chartData!=='lv'?' (зөвхөн түвшинд)':''}</option>`).join('')}</select></div>
+      <div><label for="cstyle">Загвар</label><select id="cstyle">${STYLE_OPTS.map(o=>`<option value="${o[0]}"${o[0]===chartStyle?' selected':''}>${o[1]}</option>`).join('')}</select></div>
     </div>
     <h3 id="ctitle" style="margin:0 0 8px;font-size:1rem">${esc(title)}${filterCls&&chartData!=='c'?', '+esc(filterCls)+' анги':''}</h3>
     <div class="chart-box" id="cbox">${body}</div>
@@ -2584,6 +2696,7 @@ function renderChart(){
     <div class="btns"><button class="btn ghost" id="cpng">Графикийг зураг болгож татах</button></div>`;
   $('#cdata').addEventListener('change',e=>{chartData=e.target.value;renderChart();});
   $('#ctype').addEventListener('change',e=>{chartType=e.target.value;renderChart();});
+  $('#cstyle').addEventListener('change',e=>{chartStyle=e.target.value;chcfg().style=chartStyle;save();renderChart();});
   $('#cpng').addEventListener('click',()=>downloadChart(title));
 }
 function downloadChart(title){
@@ -2704,8 +2817,11 @@ $('#vWordsFile').addEventListener('change',async e=>{
   }catch(err){m.style.color='var(--stain)';m.textContent=err.message;}
 });
 $('#vType').addEventListener('change',()=>{$('#vTolWrap').hidden=$('#vType').value!=='type';});
+/* localhost бол зөвхөн энэ компьютер дээр ажиллана — сурагчдын холбоос болгож болохгүй */
+const isLocalPage=()=>location.protocol==='file:'||/^(localhost|127\.0\.0\.1|\[?::1\]?)$/i.test(location.hostname)||/\.localhost$/i.test(location.hostname);
+const isPublicPage=()=>/^https?:$/.test(location.protocol)&&!isLocalPage();
 function vLink(id){
-  const c=vcfg();let base=/^https?:$/.test(location.protocol)?location.origin+location.pathname:(c.base||'').trim();
+  const c=vcfg();let base=isPublicPage()?location.origin+location.pathname:(c.base||'').trim();
   if(!base)return'';if(!/\.html?$/.test(base)&&!base.endsWith('/'))base+='/';
   return base+'?quiz='+encodeURIComponent(id)+'&api='+encodeURIComponent(c.api);
 }
@@ -2714,7 +2830,7 @@ function renderVocab(){
   if(!$('#vCode').value)$('#vCode').value=$('#gsCode').textContent.trim();
   if(document.activeElement!==$('#vApi'))$('#vApi').value=c.api||'';
   if(document.activeElement!==$('#vKey'))$('#vKey').value=c.key||'';
-  $('#vBaseRow').hidden=/^https?:$/.test(location.protocol);$('#vBase').value=c.base||'';
+  $('#vBaseRow').hidden=isPublicPage();$('#vBase').value=c.base||'';
   const prev=new Set([...document.querySelectorAll('#vClasses input:checked')].map(x=>x.value));
   $('#vClasses').innerHTML=db.classes.length?db.classes.map(k=>`<label class="chip" style="display:inline-flex;gap:6px;align-items:center;margin:0"><input type="checkbox" value="${esc(k.name)}" style="width:auto"${prev.has(k.name)?' checked':''}> ${esc(k.name)} (${k.students.length})</label>`).join('')
     :'<span class="progress">"1. Шалгалт" хэсэгт анги, сурагчдын нэрс оруулна уу.</span>';
@@ -2727,7 +2843,12 @@ function renderVQuizList(){
   const q=vList.find(x=>x.id===vSel);$('#vToggle').textContent=q&&!q.open?'Сорилыг нээх':'Сорилыг хаах';
 }
 async function vLoadList(){const r=await vCall({action:'listQuizzes'});vList=r.quizzes||[];if(!vList.find(q=>q.id===vSel))vSel=vList[0]?vList[0].id:'';renderVQuizList();}
-['vApi','vKey','vBase'].forEach(id=>$('#'+id).addEventListener('change',e=>{const c=vcfg();c[{vApi:'api',vKey:'key',vBase:'base'}[id]]=e.target.value.trim();save();}));
+['vApi','vKey','vBase'].forEach(id=>$('#'+id).addEventListener('change',e=>{const c=vcfg();c[{vApi:'api',vKey:'key',vBase:'base'}[id]]=e.target.value.trim();save();
+  if(id==='vBase'){const m=$('#vConnMsg'),v=e.target.value.trim();
+    if(v&&/localhost|127\.0\.0\.1|^file:/i.test(v)){m.style.color='var(--stain)';
+      m.textContent='Энэ хаяг зөвхөн таны компьютер дээр ажиллана. Сурагчид нээж чадахгүй — интернэтэд байршуулсан (https://... github.io гэх мэт) хаягаа бичнэ үү.';}
+    else if(v){m.style.color='';m.textContent='Сурагчдын холбоос энэ хаягаар үүснэ.';vShowQuiz();}}
+}));
 $('#vCopyCode').addEventListener('click',async()=>{const t=$('#vCode');t.select();
   try{await navigator.clipboard.writeText(t.value);}catch(e){try{document.execCommand('copy');}catch(x){}}
   $('#vCopyCode').textContent='Хуулагдлаа';setTimeout(()=>$('#vCopyCode').textContent='Кодыг хуулах',2000);});
@@ -3088,15 +3209,21 @@ function licApply(d){
   const left=Math.round((new Date(d.e+'T00:00:00')-new Date(t+'T00:00:00'))/864e5)+1;
   $('#curTitleWrap').innerHTML=d.e<'2090'?`<span class="licinfo">Ашиглах эрх: ${esc(d.e)} хүртэл (${left} хоног үлдсэн)${d.n?', '+esc(d.n):''}</span>`:'';
 }
+const NOCRYPTO='Энэ хуудсыг хөтөч кодыг шалгаж чадахгүй байдлаар нээсэн байна (файл дээр давхар товшсон бол ингэдэг). '
+  +'Хавтас доторх <b>"Программ нээх.cmd"</b>-ээр нээнэ үү, эсвэл программынхаа <b>https://</b>-ээр эхэлсэн интернэт холбоосоор орно уу. Таны код зөв, зүгээр л энд шалгагдаж чадахгүй байна.';
+const noSubtle=()=>!(window.crypto&&window.crypto.subtle);
 function licLock(r){
   const L=$('#lock');L.hidden=false;
+  if(noSubtle())r={why:'nocrypto'};
   $('#lockMsg').innerHTML=r.why==='expired'
     ?`Ашиглах эрхийн хугацаа <b>${esc(r.d.e)}</b>-нд дууссан байна. Сунгуулахын тулд программын эзэнтэй холбогдож шинэ код аваарай. Таны оруулсан анги, нэрс, дүн устаагүй, шинэ код оруулахад хэвээрээ үргэлжилнэ.`
-    :r.why==='nocrypto'?'Энэ хөтөч кодыг шалгаж чадахгүй байна. Chrome эсвэл Edge-ийн шинэ хувилбараар, программын https холбоосоор нээнэ үү.'
+    :r.why==='nocrypto'?NOCRYPTO
     :'Энэ программыг ашиглахын тулд идэвхжүүлэх код хэрэгтэй. Кодыг программын эзнээс авна уу.';
+  $('#lockCode').disabled=noSubtle();$('#lockGo').disabled=noSubtle();
   $('#lockBackup').hidden=!(db&&db.exams&&db.exams.some(e=>e.students.length)||(db&&db.classes&&db.classes.length));
   $('#lockGo').onclick=async()=>{const c=$('#lockCode').value,v=await licVerify(c),err=$('#lockErr');
     if(v.ok){lsSet(LIC_KEY,v.code);L.hidden=true;err.textContent='';licApply(v.d);renderSetup();return;}
+    if(v.why==='nocrypto'){err.innerHTML=NOCRYPTO;return;}
     err.textContent=v.why==='expired'?'Энэ кодын хугацаа '+v.d.e+'-нд дууссан байна.':v.why==='none'?'Кодоо буулгана уу.':'Код буруу байна. Бүтэн хуулсан эсэхээ шалгана уу.';};
   $('#lockBackup').onclick=()=>{const a=document.createElement('a');
     a.href=URL.createObjectURL(new Blob([JSON.stringify({app:'shalgalt-analiz',version:2,saved:new Date().toISOString(),...db},null,1)],{type:'application/json'}));
