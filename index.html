@@ -397,6 +397,14 @@ body.student #studentApp{display:block}
     <div class="btns" style="margin-top:6px"><button class="btn ghost" id="cSync">Одоо илгээх / хүлээн авах</button>
       <button class="btn ghost" id="cPushAns">Энэ шалгалтын бүх хариултыг нөгөө төхөөрөмж рүү илгээх</button></div>
   </div>
+
+  <div class="panel">
+    <h2>Багш нарыг урих</h2>
+    <p class="hint">Энэ холбоосыг бусад багшид өгнө. Тэд нээхэд "Эрх хүсэх" товч гарч ирэх бөгөөд нэр, мэргэжлээ бичээд хүсэлт илгээнэ. Хүсэлт таны Google хүснэгтэд ирэх ба та код үүсгэгч дээрээсээ хараад баталгаажуулна.</p>
+    <div class="btns" style="margin-top:0"><button class="btn" id="inviteBtn">Урих холбоос гаргах</button></div>
+    <div id="inviteBox"></div>
+    <div class="msg" id="inviteMsg" role="status"></div>
+  </div>
 </section>
 
 <!-- ============ 2. ENTRY ============ -->
@@ -579,10 +587,38 @@ body.student #studentApp{display:block}
   <textarea id="lockCode" placeholder="Программын эзнээс авсан кодоо энд буулгана (Ctrl + V)" spellcheck="false"></textarea>
   <div class="btns"><button class="btn" id="lockGo">Идэвхжүүлэх</button><button class="btn ghost" id="lockBackup" hidden>Өгөгдлөө нөөц файлаар татах</button></div>
   <div class="msg" id="lockErr" role="status" style="color:var(--stain)"></div>
+
+  <div id="askBox" hidden style="margin-top:16px;padding-top:14px;border-top:1px solid var(--line)">
+    <p class="hint" style="margin:0 0 10px">Код байхгүй юу? Программын эзнээс эрх хүсье. Багш мөн эсэхийг тань хараад баталгаажуулна.</p>
+    <div class="btns" style="margin:0"><button class="btn ghost" id="askOpen">Эрх хүсэх</button></div>
+
+    <div id="askForm" hidden style="margin-top:12px">
+      <label for="askName">Таны нэр</label><input id="askName" placeholder="Жишээ: Б. Сарнай" autocomplete="name">
+      <div style="margin-top:10px"><label>Хүйс</label><div class="roster" id="askGender">
+        <button type="button" class="chip" data-v="Эр">Эр</button>
+        <button type="button" class="chip" data-v="Эм">Эм</button></div></div>
+      <div style="margin-top:6px"><label>Аль ангид ордог вэ (хэдийг ч сонгож болно)</label><div class="roster" id="askLevel">
+        <button type="button" class="chip" data-v="Бага">Бага</button>
+        <button type="button" class="chip" data-v="Дунд">Дунд</button>
+        <button type="button" class="chip" data-v="Ахлах">Ахлах</button></div></div>
+      <div class="row" style="margin-top:10px">
+        <div><label for="askSubject">Мэргэжил, хичээл</label><input id="askSubject" placeholder="Жишээ: физик"></div>
+        <div><label for="askSchool">Сургууль</label><input id="askSchool" placeholder="Жишээ: 12-р сургууль"></div>
+      </div>
+      <div style="margin-top:10px"><label for="askContact">Холбоо барих (заавал биш)</label><input id="askContact" placeholder="Утас эсвэл и-мэйл"></div>
+      <div class="btns"><button class="btn" id="askSend">Хүсэлт илгээх</button><button class="btn ghost" id="askCancel">Болих</button></div>
+      <div class="msg" id="askMsg" role="status"></div>
+    </div>
+
+    <div id="askWait" hidden style="margin-top:12px">
+      <div class="avgsum"><span id="askWaitMsg">Хүсэлт илгээгдлээ.</span></div>
+      <div class="btns"><button class="btn ghost" id="askCheck">Одоо шалгах</button><button class="btn ghost" id="askNew">Шинэ хүсэлт</button></div>
+    </div>
+  </div>
 </div></div>
 <script type="text/plain" id="gsCode">/**
- * Шалгалтын анализ: Google Sheets сервер (хувилбар 4)
- * Шинэ үгийн сорил, утас ба компьютерийн хоорондын холбоо
+ * Шалгалтын анализ: Google Sheets сервер (хувилбар 5)
+ * Шинэ үгийн сорил, утас ба компьютерийн холбоо, багш нарын хандалтын хүсэлт
  *
  * 1. Доорх TEACHER_KEY-ийн утгыг зөвхөн өөрийн мэдэх нууц үгээр солино.
  * 2. Тэр нууц үгээ программын "Шинэ үгийн сорил" хэсэгт оруулна.
@@ -598,6 +634,9 @@ var STORE_SHEET = 'Хадгалалт';
 var SCAN_SHEET = 'Уншилт';
 var STORE_HEAD = ['Хэсэг', 'Өгөгдөл', 'Хадгалсан'];
 var SCAN_HEAD = ['id', 'Шалгалт', 'Анги', 'Нэр', 'Хариулт', 'Хугацаа'];
+var ASK_SHEET = 'Хүсэлтүүд';
+var ASK_HEAD = ['id', 'Нэр', 'Хүйс', 'Түвшин', 'Мэргэжил', 'Сургууль', 'Холбоо барих',
+  'Төлөв', 'Код', 'Дуусах', 'Хүссэн', 'Шийдсэн'];
 var ATT_HEAD = ['attemptId', 'Сорил', 'Анги', 'Код', 'Нэр', 'Эхэлсэн', 'Дууссан', 'Хугацаа (сек)',
   'Төлөв', 'Гарсан тоо', 'Зөв', 'Нийт', 'Хувь', 'Дэлгэрэнгүй', 'Хариултууд'];
 
@@ -618,12 +657,14 @@ function respond_(p) {
 
 function route_(p) {
   var a = String(p.action || '');
-  if (a === 'ping') return { ok: true, teacher: isTeacher_(p), now: Date.now(), version: 4 };
+  if (a === 'ping') return { ok: true, teacher: isTeacher_(p), now: Date.now(), version: 5 };
   if (a === 'quiz') return publicQuiz_(p);
   if (a === 'who') return who_(p);
   if (a === 'start') return withLock_(function () { return start_(p); });
   if (a === 'leave') return withLock_(function () { return leave_(p); });
   if (a === 'submit') return withLock_(function () { return submit_(p); });
+  if (a === 'askAccess') return withLock_(function () { return askAccess_(p); });
+  if (a === 'askStatus') return askStatus_(p);
   if (!isTeacher_(p)) {
     throw new Error(TEACHER_KEY === DEFAULT_KEY
       ? 'Скрипт доторх TEACHER_KEY нууц үгийг солиогүй байна.'
@@ -639,6 +680,9 @@ function route_(p) {
   if (a === 'loadDb') return loadDb_();
   if (a === 'addScans') return withLock_(function () { return addScans_(p); });
   if (a === 'getScans') return getScans_(p);
+  if (a === 'listAsks') return listAsks_();
+  if (a === 'grantAsk') return withLock_(function () { return grantAsk_(p); });
+  if (a === 'dropAsk') return withLock_(function () { return dropAsk_(p); });
   return { ok: false, error: 'Тодорхойгүй үйлдэл: ' + a };
 }
 
@@ -926,6 +970,66 @@ function addScans_(p) {
     seen[x.id] = 1; n++;
   });
   return { ok: true, added: n, ids: list.map(function (x) { return x && x.id; }) };
+}
+
+/* ---------- access requests (teachers asking the owner for a code) ---------- */
+function cut_(s, n) { return String(s == null ? '' : s).trim().slice(0, n || 80); }
+
+function askAccess_(p) {
+  var name = cut_(p.name, 60);
+  if (!name) throw new Error('Нэрээ бичнэ үү.');
+  var sh = sheet_(ASK_SHEET, ASK_HEAD), v = all_(sh), now = Date.now();
+  var contact = cut_(p.contact, 60), subj = cut_(p.subject, 60);
+  for (var i = 1; i < v.length; i++) {
+    // нэг багш дахин дахин илгээхээс сэргийлнэ
+    if (String(v[i][7]) !== 'denied' && String(v[i][1]) === name &&
+        (!contact || String(v[i][6]) === contact)) {
+      return { ok: true, id: String(v[i][0]), status: String(v[i][7]), again: true };
+    }
+  }
+  if (v.length > 500) throw new Error('Хүсэлт хэт олон байна. Программын эзэнтэй холбогдоно уу.');
+  var id = rid_(12);
+  sh.appendRow([id, name, cut_(p.gender, 10), cut_(p.level, 40), subj, cut_(p.school, 60),
+    contact, 'pending', '', '', String(now), '']);
+  return { ok: true, id: id, status: 'pending' };
+}
+
+function askStatus_(p) {
+  var f = find_(sheet_(ASK_SHEET, ASK_HEAD), 0, p.id);
+  if (!f) return { ok: false, error: 'Хүсэлт олдсонгүй.' };
+  var st = String(f.v[7]);
+  return { ok: true, status: st, code: st === 'granted' ? String(f.v[8]) : '', name: String(f.v[1]) };
+}
+
+function listAsks_() {
+  var v = all_(sheet_(ASK_SHEET, ASK_HEAD)), out = [];
+  for (var i = 1; i < v.length; i++) {
+    out.push({
+      id: String(v[i][0]), name: String(v[i][1]), gender: String(v[i][2]), level: String(v[i][3]),
+      subject: String(v[i][4]), school: String(v[i][5]), contact: String(v[i][6]),
+      status: String(v[i][7]), until: String(v[i][9]),
+      asked: Number(v[i][10] || 0), solved: Number(v[i][11] || 0)
+    });
+  }
+  return { ok: true, asks: out.reverse() };
+}
+
+function grantAsk_(p) {
+  var sh = sheet_(ASK_SHEET, ASK_HEAD), f = find_(sh, 0, p.id);
+  if (!f) return { ok: false, error: 'Хүсэлт олдсонгүй.' };
+  if (!p.code) throw new Error('Код алга.');
+  sh.getRange(f.row, 8, 1, 5).setValues([['granted', String(p.code), String(p.until || ''),
+    String(f.v[10] || ''), String(Date.now())]]);
+  return { ok: true };
+}
+
+function dropAsk_(p) {
+  var sh = sheet_(ASK_SHEET, ASK_HEAD), f = find_(sh, 0, p.id);
+  if (!f) return { ok: false, error: 'Хүсэлт олдсонгүй.' };
+  if (p.erase) { sh.deleteRow(f.row); return { ok: true, erased: true }; }
+  sh.getRange(f.row, 8).setValue('denied');
+  sh.getRange(f.row, 12).setValue(String(Date.now()));
+  return { ok: true };
 }
 
 function getScans_(p) {
@@ -2477,6 +2581,24 @@ $('#cPushAns').addEventListener('click',async()=>{
   cMsg('Илгээж байна...');await cloudPoll(true);const k=ccfg();
   cMsg(k.queue.length?'Илгээж чадсангүй. Интернэт, URL-ээ шалгана уу.':state.students.length+' сурагчийн хариулт илгээгдлээ. Нөгөө төхөөрөмж дээр "Одоо илгээх / хүлээн авах" дарвал шууд орж ирнэ.',!!k.queue.length);
 });
+function inviteLink(){
+  const c=vcfg();let base=isPublicPage()?location.origin+location.pathname:(c.base||'').trim();
+  if(!base)return'';if(!/\.html?$/.test(base)&&!base.endsWith('/'))base+='/';
+  const m=/^https:\/\/script\.google\.com\/macros\/s\/([\w-]+)\/exec\/?$/i.exec((c.api||'').trim());
+  return m?base+'?s='+m[1]:(c.api?base+'?api='+encodeURIComponent(c.api):'');
+}
+$('#inviteBtn').addEventListener('click',async()=>{
+  const m=$('#inviteMsg'),box=$('#inviteBox'),link=inviteLink();
+  if(!link){m.style.color='var(--stain)';box.innerHTML='';
+    m.textContent=vcfg().api?'Эхлээд "5. Шинэ үгийн сорил" хэсэгт программын нийтэд нээлттэй хаягаа (GitHub Pages) оруулна уу.'
+      :'Эхлээд дээрх Google Apps Script хаяг, нууц үгээ оруулж "Холболт шалгах" дарна уу.';return;}
+  m.style.color='';m.textContent='';
+  box.innerHTML=`<div class="code-block" style="margin-top:10px;word-break:break-all;padding:10px;border:1px solid var(--line);border-radius:8px;background:var(--bg);font-family:ui-monospace,Consolas,monospace;font-size:.85rem">${esc(link)}</div>
+    <div class="btns"><button class="btn ghost" id="inviteCopy">Холбоос хуулах</button><button class="btn ghost" id="inviteQr">QR харуулах</button></div><div id="inviteQrBox"></div>`;
+  $('#inviteCopy').onclick=async()=>{try{await navigator.clipboard.writeText(link);m.textContent='Хуулагдлаа. Багш нартаа илгээнэ үү.';}catch(e){m.textContent='Хуулж чадсангүй, гараар тэмдэглээд хуулна уу.';}};
+  $('#inviteQr').onclick=async()=>{try{$('#inviteQrBox').innerHTML='<div style="max-width:260px;margin:10px 0">'+await qrSvg(link)+'</div>';}
+    catch(e){m.style.color='var(--stain)';m.textContent='QR үүсгэхэд интернэт холболт хэрэгтэй.';}};
+});
 $('#cSync').addEventListener('click',async()=>{$('#cStatus').textContent='Шалгаж байна...';await cloudPoll(true);
   const k=ccfg();cMsg(k.queue.length?'Зарим хуудас илгээгдсэнгүй. Интернэтээ шалгаад дахин дарна уу.':'Илгээх, хүлээн авах ажил дууслаа.',!!k.queue.length);});
 setInterval(cloudPoll,8000);
@@ -3225,6 +3347,7 @@ function licLock(r){
     :r.why==='nocrypto'?NOCRYPTO
     :'Энэ программыг ашиглахын тулд идэвхжүүлэх код хэрэгтэй. Кодыг программын эзнээс авна уу.';
   $('#lockCode').disabled=noSubtle();$('#lockGo').disabled=noSubtle();
+  askInit();
   $('#lockBackup').hidden=!(db&&db.exams&&db.exams.some(e=>e.students.length)||(db&&db.classes&&db.classes.length));
   $('#lockGo').onclick=async()=>{const c=$('#lockCode').value,v=await licVerify(c),err=$('#lockErr');
     if(v.ok){lsSet(LIC_KEY,v.code);L.hidden=true;err.textContent='';licApply(v.d);renderSetup();return;}
@@ -3233,6 +3356,75 @@ function licLock(r){
   $('#lockBackup').onclick=()=>{const a=document.createElement('a');
     a.href=URL.createObjectURL(new Blob([JSON.stringify({app:'shalgalt-analiz',version:2,saved:new Date().toISOString(),...db},null,1)],{type:'application/json'}));
     a.download='shalgalt-nooc-'+localDay()+'.json';document.body.appendChild(a);a.click();a.remove();};
+}
+/* ---------- багш эрх хүсэх (урих холбоосоор ирсэн үед) ---------- */
+const ASK_KEY='shalgalt-ask';
+function askApi(){
+  const pr=new URLSearchParams(location.search),s=pr.get('s'),api=pr.get('api');
+  if(api)return api;
+  if(s)return'https://script.google.com/macros/s/'+s+'/exec';
+  const a=askSaved();return a&&a.api?a.api:'';
+}
+function askSaved(){try{return JSON.parse(lsGet(ASK_KEY)||'null');}catch(e){return null;}}
+async function askCall(body){
+  const api=askApi();if(!api)throw new Error('Урих холбоос алга. Программын эзнээс холбоосоо дахин авна уу.');
+  let r;try{r=await fetch(api,{method:'POST',body:JSON.stringify(body)});}
+  catch(e){throw new Error('Сервертэй холбогдож чадсангүй. Интернэтээ шалгана уу.');}
+  let j;try{j=await r.json();}catch(e){throw new Error('Серверээс буруу хариу ирлээ.');}
+  if(!j.ok)throw new Error(j.error||'Тодорхойгүй алдаа');return j;
+}
+const askPick=id=>[...document.querySelectorAll('#'+id+' .chip.done')].map(b=>b.dataset.v);
+function askMode(m){$('#askOpen').hidden=m!=='idle';$('#askForm').hidden=m!=='form';$('#askWait').hidden=m!=='wait';}
+['askGender','askLevel'].forEach(id=>document.getElementById(id).addEventListener('click',e=>{
+  const b=e.target.closest('.chip');if(!b)return;
+  if(id==='askGender')[...document.querySelectorAll('#askGender .chip')].forEach(x=>{if(x!==b)x.classList.remove('done');});
+  b.classList.toggle('done');}));
+$('#askOpen').addEventListener('click',()=>{askMode('form');$('#askName').focus();});
+$('#askCancel').addEventListener('click',()=>askMode('idle'));
+$('#askNew').addEventListener('click',()=>{lsSet(ASK_KEY,'');askMode('form');});
+$('#askCheck').addEventListener('click',()=>askPoll(true));
+$('#askSend').addEventListener('click',async()=>{
+  const m=$('#askMsg'),name=$('#askName').value.trim();
+  if(!name){m.style.color='var(--stain)';m.textContent='Нэрээ бичнэ үү.';$('#askName').focus();return;}
+  m.style.color='';m.textContent='Илгээж байна...';
+  try{
+    const r=await askCall({action:'askAccess',name:name,gender:askPick('askGender')[0]||'',
+      level:askPick('askLevel').join(', '),subject:$('#askSubject').value.trim(),
+      school:$('#askSchool').value.trim(),contact:$('#askContact').value.trim()});
+    lsSet(ASK_KEY,JSON.stringify({id:r.id,api:askApi(),name:name}));
+    m.textContent='';askMode('wait');
+    $('#askWaitMsg').textContent=r.again?'Таны хүсэлт аль хэдийн илгээгдсэн байна. Хариуг хүлээж байна.'
+      :'Хүсэлт илгээгдлээ. Программын эзэн баталмагц энэ хуудас өөрөө нээгдэнэ.';
+    askPoll();
+  }catch(e){m.style.color='var(--stain)';m.textContent=e.message;}
+});
+let askTimer=null;
+async function askPoll(manual){
+  const a=askSaved();if(!a||!a.id)return;
+  const w=$('#askWaitMsg');
+  if(manual)w.textContent='Шалгаж байна...';
+  try{
+    const r=await askCall({action:'askStatus',id:a.id});
+    if(r.status==='granted'&&r.code){
+      const v=await licVerify(r.code);
+      if(v.ok){clearInterval(askTimer);lsSet(LIC_KEY,v.code);lsSet(ASK_KEY,'');
+        $('#lock').hidden=true;licApply(v.d);renderSetup();
+        toast&&toast('Эрх баталгаажлаа. Программ бэлэн.');return;}
+      w.textContent='Код ирсэн боловч шалгагдсангүй. Программын эзэнтэй холбогдоно уу.';return;
+    }
+    if(r.status==='denied'){clearInterval(askTimer);
+      w.textContent='Хүсэлт батлагдаагүй байна. Программын эзэнтэй холбогдоно уу.';return;}
+    w.textContent='Хүлээгдэж байна: '+(a.name||'')+'. Батлагдмагц энэ хуудас өөрөө нээгдэнэ.'
+      +(manual?' (сая шалгалаа)':'');
+  }catch(e){w.textContent=e.message;}
+}
+function askInit(){
+  if(noSubtle()||!askApi())return;
+  $('#askBox').hidden=false;
+  const a=askSaved();
+  if(a&&a.id){askMode('wait');$('#askWaitMsg').textContent='Хүсэлт илгээгдсэн. Шалгаж байна...';askPoll();}
+  else askMode('idle');
+  clearInterval(askTimer);askTimer=setInterval(()=>{if(!$('#lock').hidden)askPoll();},15000);
 }
 async function licBoot(){const r=await licVerify(lsGet(LIC_KEY));if(r.ok){licApply(r.d);renderSetup();}else licLock(r);}
 
