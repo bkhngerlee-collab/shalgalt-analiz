@@ -603,9 +603,8 @@ body.student #studentApp{display:block}
         <button type="button" class="chip" data-v="Ахлах">Ахлах</button></div></div>
       <div class="row" style="margin-top:10px">
         <div><label for="askSubject">Мэргэжил, хичээл</label><input id="askSubject" placeholder="Жишээ: физик"></div>
-        <div><label for="askSchool">Сургууль</label><input id="askSchool" placeholder="Жишээ: 12-р сургууль"></div>
+        <div><label for="askEmail">И-мэйл хаяг</label><input id="askEmail" type="email" placeholder="jishee@gmail.com" autocomplete="email"></div>
       </div>
-      <div style="margin-top:10px"><label for="askContact">Холбоо барих (заавал биш)</label><input id="askContact" placeholder="Утас эсвэл и-мэйл"></div>
       <div class="btns"><button class="btn" id="askSend">Хүсэлт илгээх</button><button class="btn ghost" id="askCancel">Болих</button></div>
       <div class="msg" id="askMsg" role="status"></div>
     </div>
@@ -635,7 +634,7 @@ var SCAN_SHEET = 'Уншилт';
 var STORE_HEAD = ['Хэсэг', 'Өгөгдөл', 'Хадгалсан'];
 var SCAN_HEAD = ['id', 'Шалгалт', 'Анги', 'Нэр', 'Хариулт', 'Хугацаа'];
 var ASK_SHEET = 'Хүсэлтүүд';
-var ASK_HEAD = ['id', 'Нэр', 'Хүйс', 'Түвшин', 'Мэргэжил', 'Сургууль', 'Холбоо барих',
+var ASK_HEAD = ['id', 'Нэр', 'Хүйс', 'Түвшин', 'Мэргэжил', 'И-мэйл',
   'Төлөв', 'Код', 'Дуусах', 'Хүссэн', 'Шийдсэн'];
 var ATT_HEAD = ['attemptId', 'Сорил', 'Анги', 'Код', 'Нэр', 'Эхэлсэн', 'Дууссан', 'Хугацаа (сек)',
   'Төлөв', 'Гарсан тоо', 'Зөв', 'Нийт', 'Хувь', 'Дэлгэрэнгүй', 'Хариултууд'];
@@ -976,29 +975,28 @@ function addScans_(p) {
 function cut_(s, n) { return String(s == null ? '' : s).trim().slice(0, n || 80); }
 
 function askAccess_(p) {
-  var name = cut_(p.name, 60);
+  var name = cut_(p.name, 60), mail = cut_(p.email, 80);
   if (!name) throw new Error('Нэрээ бичнэ үү.');
+  if (!mail) throw new Error('И-мэйл хаягаа бичнэ үү.');
   var sh = sheet_(ASK_SHEET, ASK_HEAD), v = all_(sh), now = Date.now();
-  var contact = cut_(p.contact, 60), subj = cut_(p.subject, 60);
   for (var i = 1; i < v.length; i++) {
     // нэг багш дахин дахин илгээхээс сэргийлнэ
-    if (String(v[i][7]) !== 'denied' && String(v[i][1]) === name &&
-        (!contact || String(v[i][6]) === contact)) {
-      return { ok: true, id: String(v[i][0]), status: String(v[i][7]), again: true };
+    if (String(v[i][6]) !== 'denied' && String(v[i][5]).toLowerCase() === mail.toLowerCase()) {
+      return { ok: true, id: String(v[i][0]), status: String(v[i][6]), again: true };
     }
   }
   if (v.length > 500) throw new Error('Хүсэлт хэт олон байна. Программын эзэнтэй холбогдоно уу.');
   var id = rid_(12);
-  sh.appendRow([id, name, cut_(p.gender, 10), cut_(p.level, 40), subj, cut_(p.school, 60),
-    contact, 'pending', '', '', String(now), '']);
+  sh.appendRow([id, name, cut_(p.gender, 10), cut_(p.level, 40), cut_(p.subject, 60), mail,
+    'pending', '', '', String(now), '']);
   return { ok: true, id: id, status: 'pending' };
 }
 
 function askStatus_(p) {
   var f = find_(sheet_(ASK_SHEET, ASK_HEAD), 0, p.id);
   if (!f) return { ok: false, error: 'Хүсэлт олдсонгүй.' };
-  var st = String(f.v[7]);
-  return { ok: true, status: st, code: st === 'granted' ? String(f.v[8]) : '', name: String(f.v[1]) };
+  var st = String(f.v[6]);
+  return { ok: true, status: st, code: st === 'granted' ? String(f.v[7]) : '', name: String(f.v[1]) };
 }
 
 function listAsks_() {
@@ -1006,9 +1004,9 @@ function listAsks_() {
   for (var i = 1; i < v.length; i++) {
     out.push({
       id: String(v[i][0]), name: String(v[i][1]), gender: String(v[i][2]), level: String(v[i][3]),
-      subject: String(v[i][4]), school: String(v[i][5]), contact: String(v[i][6]),
-      status: String(v[i][7]), until: String(v[i][9]),
-      asked: Number(v[i][10] || 0), solved: Number(v[i][11] || 0)
+      subject: String(v[i][4]), email: String(v[i][5]),
+      status: String(v[i][6]), until: String(v[i][8]),
+      asked: Number(v[i][9] || 0), solved: Number(v[i][10] || 0)
     });
   }
   return { ok: true, asks: out.reverse() };
@@ -1018,8 +1016,8 @@ function grantAsk_(p) {
   var sh = sheet_(ASK_SHEET, ASK_HEAD), f = find_(sh, 0, p.id);
   if (!f) return { ok: false, error: 'Хүсэлт олдсонгүй.' };
   if (!p.code) throw new Error('Код алга.');
-  sh.getRange(f.row, 8, 1, 5).setValues([['granted', String(p.code), String(p.until || ''),
-    String(f.v[10] || ''), String(Date.now())]]);
+  sh.getRange(f.row, 7, 1, 3).setValues([['granted', String(p.code), String(p.until || '')]]);
+  sh.getRange(f.row, 11).setValue(String(Date.now()));
   return { ok: true };
 }
 
@@ -1027,8 +1025,8 @@ function dropAsk_(p) {
   var sh = sheet_(ASK_SHEET, ASK_HEAD), f = find_(sh, 0, p.id);
   if (!f) return { ok: false, error: 'Хүсэлт олдсонгүй.' };
   if (p.erase) { sh.deleteRow(f.row); return { ok: true, erased: true }; }
-  sh.getRange(f.row, 8).setValue('denied');
-  sh.getRange(f.row, 12).setValue(String(Date.now()));
+  sh.getRange(f.row, 7).setValue('denied');
+  sh.getRange(f.row, 11).setValue(String(Date.now()));
   return { ok: true };
 }
 
@@ -3384,13 +3382,14 @@ $('#askCancel').addEventListener('click',()=>askMode('idle'));
 $('#askNew').addEventListener('click',()=>{lsSet(ASK_KEY,'');askMode('form');});
 $('#askCheck').addEventListener('click',()=>askPoll(true));
 $('#askSend').addEventListener('click',async()=>{
-  const m=$('#askMsg'),name=$('#askName').value.trim();
+  const m=$('#askMsg'),name=$('#askName').value.trim(),mail=$('#askEmail').value.trim();
   if(!name){m.style.color='var(--stain)';m.textContent='Нэрээ бичнэ үү.';$('#askName').focus();return;}
+  if(!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(mail)){m.style.color='var(--stain)';
+    m.textContent='И-мэйл хаягаа зөв бичнэ үү. Програмын эзэн танд үүгээр холбогдоно.';$('#askEmail').focus();return;}
   m.style.color='';m.textContent='Илгээж байна...';
   try{
     const r=await askCall({action:'askAccess',name:name,gender:askPick('askGender')[0]||'',
-      level:askPick('askLevel').join(', '),subject:$('#askSubject').value.trim(),
-      school:$('#askSchool').value.trim(),contact:$('#askContact').value.trim()});
+      level:askPick('askLevel').join(', '),subject:$('#askSubject').value.trim(),email:mail});
     lsSet(ASK_KEY,JSON.stringify({id:r.id,api:askApi(),name:name}));
     m.textContent='';askMode('wait');
     $('#askWaitMsg').textContent=r.again?'Таны хүсэлт аль хэдийн илгээгдсэн байна. Хариуг хүлээж байна.'
