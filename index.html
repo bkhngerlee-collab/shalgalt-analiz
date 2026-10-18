@@ -374,8 +374,8 @@ body.student #studentApp{display:block}
   </div>
 
   <div class="panel">
-    <h2>Утас ба компьютерийг холбох</h2>
-    <p class="hint">Утсаараа хариултын хуудас уншуулахад дүн нь компьютер дээрх анализ руу өөрөө орж ирэхийн тулд хоёр төхөөрөмжийг Google Sheets-ээр холбоно. Шинэ үгийн сорилд ашигладаг холболтыг ашиглана.</p>
+    <details class="collapsible" id="cPanel"><summary><span style="font-size:1.15rem">Утас ба компьютерийг холбох</span> <span id="cSum" style="font-weight:400;color:var(--muted);font-size:.9rem"></span></summary>
+    <p class="hint" style="margin-top:12px">Утсаараа хариултын хуудас уншуулахад дүн нь компьютер дээрх анализ руу өөрөө орж ирэхийн тулд хоёр төхөөрөмжийг Google Sheets-ээр холбоно. Шинэ үгийн сорилд ашигладаг холболтыг ашиглана. Нэг удаа тохируулахад хангалттай.</p>
     <ol style="margin:0 0 8px;padding-left:20px;font-size:.93rem">
       <li><b>Компьютер дээр:</b> доорх URL, нууц үгээ оруулаад "Үүлэнд илгээх" дарна. Шалгалт, анги, нэрс Google Sheets-д хуулагдана.</li>
       <li><b>Утсан дээр:</b> программын GitHub холбоосыг нээгээд мөн URL, нууц үгээ оруулж "Үүлнээс татах" дарна.</li>
@@ -396,6 +396,7 @@ body.student #studentApp{display:block}
     <div class="avgsum" style="margin-top:10px"><span id="cStatus">Холболтын төлөв: шалгаагүй</span></div>
     <div class="btns" style="margin-top:6px"><button class="btn ghost" id="cSync">Одоо илгээх / хүлээн авах</button>
       <button class="btn ghost" id="cPushAns">Энэ шалгалтын бүх хариултыг нөгөө төхөөрөмж рүү илгээх</button></div>
+    </details>
   </div>
 
   <div class="panel" id="invitePanel" hidden>
@@ -481,8 +482,8 @@ body.student #studentApp{display:block}
 <!-- ============ 3. ANALYSIS ============ -->
 <section id="tab-vocab" hidden>
   <div class="panel">
-    <h2>А. Google Sheets холболт</h2>
-    <p class="hint">Сурагчид QR код эсвэл холбоосоор гар утас, компьютерээсээ орж англи, монгол шинэ үгийн сорил өгнө. Хариулт Google Sheets хүснэгтэд хадгалагдаж, зөв хариултын тоо, дараа нь хурдаар нь эрэмбэлэгдэнэ. Эхлээд Google Sheets-ийг нэг удаа холбоно.</p>
+    <details class="collapsible" id="vPanel"><summary><span style="font-size:1.15rem">А. Google Sheets холболт</span> <span id="vSum" style="font-weight:400;color:var(--muted);font-size:.9rem"></span></summary>
+    <p class="hint" style="margin-top:12px">Сурагчид QR код эсвэл холбоосоор гар утас, компьютерээсээ орж англи, монгол шинэ үгийн сорил өгнө. Хариулт Google Sheets хүснэгтэд хадгалагдаж, зөв хариултын тоо, дараа нь хурдаар нь эрэмбэлэгдэнэ. Эхлээд Google Sheets-ийг нэг удаа холбоно.</p>
     <details class="collapsible" id="vGuide">
       <summary>Google Sheets холбох заавар (нэг удаа хийнэ)</summary>
       <ol style="margin:10px 0;padding-left:20px;font-size:.93rem">
@@ -508,6 +509,7 @@ body.student #studentApp{display:block}
     </div>
     <div class="btns"><button class="btn" id="vTest">Холболт шалгах</button></div>
     <div class="msg" id="vConnMsg" role="status"></div>
+    </details>
   </div>
 
   <div class="panel">
@@ -2511,7 +2513,11 @@ function renderCloud(){
   if(document.activeElement!==$('#cKey'))$('#cKey').value=c.key||'';
   $('#cAuto').checked=!!k.auto;cStatusRender();
   $('#invitePanel').hidden=!db.owner;   // зөвхөн программын эзний төхөөрөмж дээр харагдана
+  const set=!!(c.api&&c.key);
+  $('#cSum').textContent=set?('— тохируулсан'+(k.auto?', автоматаар хүлээн авна':'')):'— тохируулаагүй';
+  if(!cPanelOnce){cPanelOnce=true;$('#cPanel').open=!set;}  // тохируулаагүй үед л нээлттэй гарна
 }
+let cPanelOnce=false,vPanelOnce=false;
 ['cApi','cKey'].forEach(id=>$('#'+id).addEventListener('change',e=>{vcfg()[id==='cApi'?'api':'key']=e.target.value.trim();save();}));
 const cMsg=(t,bad)=>{$('#cMsg').style.color=bad?'var(--stain)':'';$('#cMsg').textContent=t;};
 function toast(t){const d=document.createElement('div');d.className='toast';d.textContent=t;document.body.appendChild(d);setTimeout(()=>d.remove(),4000);}
@@ -2956,6 +2962,9 @@ function renderVocab(){
   if(document.activeElement!==$('#vApi'))$('#vApi').value=c.api||'';
   if(document.activeElement!==$('#vKey'))$('#vKey').value=c.key||'';
   $('#vBaseRow').hidden=isPublicPage();$('#vBase').value=c.base||'';
+  const vset=!!(c.api&&c.key);
+  $('#vSum').textContent=vset?'— тохируулсан':'— тохируулаагүй';
+  if(!vPanelOnce){vPanelOnce=true;$('#vPanel').open=!vset;}
   const prev=new Set([...document.querySelectorAll('#vClasses input:checked')].map(x=>x.value));
   $('#vClasses').innerHTML=db.classes.length?db.classes.map(k=>`<label class="chip" style="display:inline-flex;gap:6px;align-items:center;margin:0"><input type="checkbox" value="${esc(k.name)}" style="width:auto"${prev.has(k.name)?' checked':''}> ${esc(k.name)} (${k.students.length})</label>`).join('')
     :'<span class="progress">"1. Шалгалт" хэсэгт анги, сурагчдын нэрс оруулна уу.</span>';
