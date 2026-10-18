@@ -398,7 +398,7 @@ body.student #studentApp{display:block}
       <button class="btn ghost" id="cPushAns">Энэ шалгалтын бүх хариултыг нөгөө төхөөрөмж рүү илгээх</button></div>
   </div>
 
-  <div class="panel">
+  <div class="panel" id="invitePanel" hidden>
     <h2>Багш нарыг урих</h2>
     <p class="hint">Энэ холбоосыг бусад багшид өгнө. Тэд нээхэд "Эрх хүсэх" товч гарч ирэх бөгөөд нэр, мэргэжлээ бичээд хүсэлт илгээнэ. Хүсэлт таны Google хүснэгтэд ирэх ба та код үүсгэгч дээрээсээ хараад баталгаажуулна.</p>
     <div class="btns" style="margin-top:0"><button class="btn" id="inviteBtn">Урих холбоос гаргах</button></div>
@@ -2510,6 +2510,7 @@ function renderCloud(){
   if(document.activeElement!==$('#cApi'))$('#cApi').value=c.api||'';
   if(document.activeElement!==$('#cKey'))$('#cKey').value=c.key||'';
   $('#cAuto').checked=!!k.auto;cStatusRender();
+  $('#invitePanel').hidden=!db.owner;   // зөвхөн программын эзний төхөөрөмж дээр харагдана
 }
 ['cApi','cKey'].forEach(id=>$('#'+id).addEventListener('change',e=>{vcfg()[id==='cApi'?'api':'key']=e.target.value.trim();save();}));
 const cMsg=(t,bad)=>{$('#cMsg').style.color=bad?'var(--stain)':'';$('#cMsg').textContent=t;};
@@ -3435,6 +3436,12 @@ function askInit(){
   clearInterval(askTimer);askTimer=setInterval(()=>{if(!$('#lock').hidden)askPoll();},15000);
 }
 async function licBoot(){const r=await licVerify(lsGet(LIC_KEY));if(r.ok){licApply(r.d);renderSetup();}else licLock(r);}
+
+// ?owner=1 гэж нэг удаа нээхэд энэ төхөөрөмж "эзний" горимд орно (урих хэсэг гарч ирнэ).
+// ?owner=0 гэвэл буцаана. Багш нарын төхөөрөмж дээр энэ хэсэг хэзээ ч гарахгүй.
+(function(){const o=new URLSearchParams(location.search).get('owner');
+  if(o==='1'&&!db.owner){db.owner=true;save();}
+  else if(o==='0'&&db.owner){db.owner=false;save();}})();
 
 if(new URLSearchParams(location.search).get('quiz'))startStudent();
 else licBoot();
