@@ -591,6 +591,7 @@ body.student #studentApp{display:block}
   <div id="askBox" hidden style="margin-top:16px;padding-top:14px;border-top:1px solid var(--line)">
     <p class="hint" style="margin:0 0 10px">Код байхгүй юу? Программын эзнээс эрх хүсье. Багш мөн эсэхийг тань хараад баталгаажуулна.</p>
     <div class="btns" style="margin:0"><button class="btn ghost" id="askOpen">Эрх хүсэх</button></div>
+    <p class="hint" style="margin:8px 0 0;font-size:.8rem" id="askWho"></p>
 
     <div id="askForm" hidden style="margin-top:12px">
       <label for="askName">Таны нэр</label><input id="askName" placeholder="Жишээ: Б. Сарнай" autocomplete="name">
@@ -3369,7 +3370,13 @@ async function askCall(body){
   let r;try{r=await fetch(api,{method:'POST',body:JSON.stringify(body)});}
   catch(e){throw new Error('Сервертэй холбогдож чадсангүй. Интернэтээ шалгана уу.');}
   let j;try{j=await r.json();}catch(e){throw new Error('Серверээс буруу хариу ирлээ.');}
-  if(!j.ok)throw new Error(j.error||'Тодорхойгүй алдаа');return j;
+  if(!j.ok){
+    // эзний Google скрипт хуучин бол "нууц үг буруу" гэж хариулдаг — үүнийг ойлгомжтой болгоё
+    if(/нууц үг|Тодорхойгүй үйлдэл/i.test(j.error||''))
+      throw new Error('Программын эзний Google холболт хуучин хувилбар байна. Эзэнд нь "Apps Script кодоо шинэчилж, Manage deployments → Edit → New version хий" гэж хэлнэ үү.');
+    throw new Error(j.error||'Тодорхойгүй алдаа');
+  }
+  return j;
 }
 const askPick=id=>[...document.querySelectorAll('#'+id+' .chip.done')].map(b=>b.dataset.v);
 function askMode(m){$('#askOpen').hidden=m!=='idle';$('#askForm').hidden=m!=='form';$('#askWait').hidden=m!=='wait';}
@@ -3420,6 +3427,8 @@ async function askPoll(manual){
 function askInit(){
   if(noSubtle()||!askApi())return;
   $('#askBox').hidden=false;
+  const sid=(/\/s\/([\w-]+)\//.exec(askApi())||[])[1]||'';
+  $('#askWho').textContent=sid?'Хүсэлт очих сервер: …'+sid.slice(-8)+' (эзний хаягтай таарч байгаа эсэхийг шалгаж болно)':'';
   const a=askSaved();
   if(a&&a.id){askMode('wait');$('#askWaitMsg').textContent='Хүсэлт илгээгдсэн. Шалгаж байна...';askPoll();}
   else askMode('idle');
