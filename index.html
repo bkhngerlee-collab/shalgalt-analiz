@@ -2512,7 +2512,9 @@ function renderCloud(){
   if(document.activeElement!==$('#cApi'))$('#cApi').value=c.api||'';
   if(document.activeElement!==$('#cKey'))$('#cKey').value=c.key||'';
   $('#cAuto').checked=!!k.auto;cStatusRender();
-  $('#invitePanel').hidden=!isOwner();  // зөвхөн программын эзний төхөөрөмж дээр харагдана
+  // Эзний компьютер дээр (localhost) үргэлж, интернэт хувилбар дээр зөвхөн ?owner=1 хийсэн бол.
+  // Багш нар GitHub холбоосоор ордог тул тэдэнд харагдахгүй.
+  $('#invitePanel').hidden=!(isOwner()||!isPublicPage());
   const set=!!(c.api&&c.key);
   $('#cSum').textContent=set?('— тохируулсан'+(k.auto?', автоматаар хүлээн авна':'')):'— тохируулаагүй';
   if(!cPanelOnce){cPanelOnce=true;$('#cPanel').open=!set;}  // тохируулаагүй үед л нээлттэй гарна
@@ -2601,7 +2603,11 @@ $('#inviteBtn').addEventListener('click',async()=>{
   if(!link){m.style.color='var(--stain)';box.innerHTML='';
     m.textContent=vcfg().api?'Эхлээд "5. Шинэ үгийн сорил" хэсэгт программын нийтэд нээлттэй хаягаа (GitHub Pages) оруулна уу.'
       :'Эхлээд дээрх Google Apps Script хаяг, нууц үгээ оруулж "Холболт шалгах" дарна уу.';return;}
-  m.style.color='';m.textContent='';
+  const baked=(/\/s\/([\w-]+)\//.exec(ASK_API_DEFAULT)||[])[1]||'',now=(/\/s\/([\w-]+)\//.exec(link)||/[?&]s=([\w-]+)/.exec(link)||[])[1]||'';
+  if(baked&&now&&baked!==now){m.style.color='var(--stain)';
+    m.innerHTML='Анхаар: программд шингэсэн хаяг (…'+esc(baked.slice(-8))+') таны одоогийн хаягтай (…'+esc(now.slice(-8))+') таарахгүй байна. '
+      +'Энгийн холбоосоор орсон багшийн "Эрх хүсэх" хуучин хаяг руу очно. Доорх урих холбоосыг ашиглана уу, эсвэл программын ASK_API_DEFAULT мөрийг шинэчлүүлнэ үү.';}
+  else{m.style.color='';m.textContent='';}
   box.innerHTML=`<div class="code-block" style="margin-top:10px;word-break:break-all;padding:10px;border:1px solid var(--line);border-radius:8px;background:var(--bg);font-family:ui-monospace,Consolas,monospace;font-size:.85rem">${esc(link)}</div>
     <div class="btns"><button class="btn ghost" id="inviteCopy">Холбоос хуулах</button><button class="btn ghost" id="inviteQr">QR харуулах</button></div><div id="inviteQrBox"></div>`;
   $('#inviteCopy').onclick=async()=>{try{await navigator.clipboard.writeText(link);m.textContent='Хуулагдлаа. Багш нартаа илгээнэ үү.';}catch(e){m.textContent='Хуулж чадсангүй, гараар тэмдэглээд хуулна уу.';}};
@@ -3374,11 +3380,16 @@ function licLock(r){
 }
 /* ---------- багш эрх хүсэх (урих холбоосоор ирсэн үед) ---------- */
 const ASK_KEY='shalgalt-ask';
+/* Программын эзний хаяг. Багш энгийн холбоосоор орсон ч "Эрх хүсэх" ажиллана.
+   Эзэн Apps Script-ээ ШИНЭ deployment болгон сольвол энэ мөрийг шинэчлэх шаардлагатай
+   ("Багш нарыг урих" хэсэг таарахгүй байвал анхааруулна). */
+const ASK_API_DEFAULT='https://script.google.com/macros/s/AKfycbwb-2WgOiSPugujtV365SEnNwzYpObZNtDGgun5AZ_-qkQhWIZDKbXDVpP1untpM6Fr/exec';
 function askApi(){
   const pr=new URLSearchParams(location.search),s=pr.get('s'),api=pr.get('api');
   if(api)return api;
   if(s)return'https://script.google.com/macros/s/'+s+'/exec';
-  const a=askSaved();return a&&a.api?a.api:'';
+  const a=askSaved();if(a&&a.api)return a.api;
+  return ASK_API_DEFAULT;
 }
 function askSaved(){try{return JSON.parse(lsGet(ASK_KEY)||'null');}catch(e){return null;}}
 async function askCall(body){
