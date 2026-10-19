@@ -402,7 +402,8 @@ body.student #studentApp{display:block}
   <div class="panel" id="invitePanel" hidden>
     <h2>Багш нарыг урих</h2>
     <p class="hint">Энэ холбоосыг бусад багшид өгнө. Тэд нээхэд "Эрх хүсэх" товч гарч ирэх бөгөөд нэр, мэргэжлээ бичээд хүсэлт илгээнэ. Хүсэлт таны Google хүснэгтэд ирэх ба та код үүсгэгч дээрээсээ хараад баталгаажуулна.</p>
-    <div class="btns" style="margin-top:0"><button class="btn" id="inviteBtn">Урих холбоос гаргах</button></div>
+    <div class="btns" style="margin-top:0"><button class="btn" id="inviteBtn">Урих холбоос гаргах</button>
+      <a class="btn ghost" id="genLink" href="kod-uusgegch.html" target="_blank" rel="noopener" hidden style="text-decoration:none">Код үүсгэгч, ирсэн хүсэлтүүд</a></div>
     <div id="inviteBox"></div>
     <div class="msg" id="inviteMsg" role="status"></div>
   </div>
@@ -515,6 +516,15 @@ body.student #studentApp{display:block}
   <div class="panel">
     <h2>Б. Шинэ сорил үүсгэх</h2>
     <p class="hint">Үгсээ доорх хүснэгтэд бичнэ, эсвэл Excel-ээс 2–3 баганаар нь хуулаад эхний нүдэнд дараад Ctrl + V дарж буулгана. Нэг үг хоёр зөв орчуулгатай бол хоёр дахийг нь 3-р баганад бичнэ, аль нь ч зөвд тооцогдоно.</p>
+    <div class="row" style="margin-bottom:4px">
+      <div style="flex:3 1 300px"><label for="vSetSel">Урьдчилан бэлдсэн сорилууд</label><select id="vSetSel"></select></div>
+    </div>
+    <div class="btns" style="margin-top:6px">
+      <button class="btn ghost" id="vSetLoad">Сонгосныг нээх</button>
+      <button class="btn ghost" id="vSetSave">Энэ сорилыг хадгалах</button>
+      <button class="btn danger" id="vSetDel">Хадгалсныг устгах</button>
+    </div>
+    <p class="hint" style="margin:6px 0 14px;font-size:.85rem">Үгсээ урьдчилан оруулаад "Энэ сорилыг хадгалах" дарвал энд жагсана (10 хүртэл). Хэрэгтэй үед нь сонгоод "Сонгосныг нээх" дарахад үгс, тохиргоо нь бүхэлдээ буцаж орно. Хадгалсан сорил зөвхөн энэ компьютерт байх ба сурагчдад харагдахгүй — "Сорил нийтлэх" дарж байж тэдэнд очно.</p>
     <div class="row"><div style="flex:3 1 300px"><label for="vTitle">Сорилын нэр</label><input id="vTitle" placeholder="Жишээ: Unit 3 шинэ үг"></div></div>
     <div class="scroll" style="margin-top:12px;max-height:440px;overflow-y:auto;border:1px solid var(--line);border-radius:6px">
       <table class="wgrid"><thead><tr><th>№</th><th>Англи үг</th><th>Монгол орчуулга</th><th>Өөр зөв хариулт (заавал биш)</th></tr></thead><tbody id="vGrid"></tbody></table>
@@ -2513,6 +2523,8 @@ function renderCloud(){
   if(document.activeElement!==$('#cKey'))$('#cKey').value=c.key||'';
   $('#cAuto').checked=!!k.auto;cStatusRender();
   $('#invitePanel').hidden=!ownerMode();
+  // Код үүсгэгч нь зөвхөн энэ компьютер дээр байдаг тул интернэт хувилбар дээр холбоос нь гарахгүй
+  $('#genLink').hidden=isPublicPage();
   const set=!!(c.api&&c.key);
   $('#cSum').textContent=set?('— тохируулсан'+(k.auto?', автоматаар хүлээн авна':'')):'— тохируулаагүй';
   if(!cPanelOnce){cPanelOnce=true;$('#cPanel').open=!set;}  // тохируулаагүй үед л нээлттэй гарна
@@ -2540,8 +2552,9 @@ $('#cPull').addEventListener('click',async()=>{
     const d=JSON.parse(r.data);
     if(!confirm('Энэ төхөөрөмж дээрх шалгалт, нэрсийг үүлэн дэх хуулбараар ('+d.exams.length+' шалгалт, '+(d.classes||[]).length+' анги) солих уу?'))return cMsg('');
     // энэ төхөөрөмжийн өөрийн тохиргоог үүлэн дэх хуулбар дарж бичихээс хамгаална
-    const keepV=db.vocab,keepC=db.cloud,keepCh=db.chart,keepE=db.entry,keepS=db.sheet;
+    const keepV=db.vocab,keepC=db.cloud,keepCh=db.chart,keepE=db.entry,keepS=db.sheet,keepVS=db.vsets;
     db=d;db.vocab=keepV;db.cloud=keepC;if(keepCh)db.chart=keepCh;if(keepE)db.entry=keepE;if(keepS)db.sheet=keepS;
+    if(keepVS&&keepVS.length)db.vsets=keepVS;
     db.classes=db.classes||[];db.classes.forEach(fixCodes);
     openExam(db.cur&&db.exams.some(e=>e.id===db.cur)?db.cur:db.exams[0].id);
     cMsg('Татлаа: '+db.exams.length+' шалгалт, '+db.classes.length+' анги.');
@@ -2953,6 +2966,53 @@ $('#vWordsFile').addEventListener('change',async e=>{
   }catch(err){m.style.color='var(--stain)';m.textContent=err.message;}
 });
 $('#vType').addEventListener('change',()=>{$('#vTolWrap').hidden=$('#vType').value!=='type';});
+
+/* ---------- урьдчилан бэлдсэн сорилууд (10 хүртэл, зөвхөн энэ компьютерт) ---------- */
+const VSET_MAX=10;
+function vsets(){db.vsets=db.vsets||[];return db.vsets;}
+const vSetFields=()=>({dir:$('#vDir').value,type:$('#vType').value,view:$('#vView').value,
+  time:$('#vTime').value,tol:$('#vTol').value,login:$('#vLogin').value,mode:$('#vMode').value,
+  cls:[...document.querySelectorAll('#vClasses input:checked')].map(x=>x.value)});
+function vSetRender(){
+  const sel=$('#vSetSel');if(!sel)return;const list=vsets();
+  sel.innerHTML=list.length
+    ? list.map(s=>`<option value="${esc(s.id)}">${esc(s.title||'Нэргүй сорил')} — ${s.rows.length} үг${s.saved?', '+esc(s.saved):''}</option>`).join('')
+    : '<option value="">Хадгалсан сорил алга</option>';
+  $('#vSetLoad').disabled=$('#vSetDel').disabled=!list.length;
+}
+$('#vSetSave').addEventListener('click',()=>{
+  const m=$('#vPubMsg'),rows=vGridData.filter(r=>r.some(x=>String(x).trim())).map(r=>r.slice(0,3));
+  if(!rows.length){m.style.color='var(--stain)';m.textContent='Хүснэгтэд үг оруулаагүй байна.';return;}
+  const title=$('#vTitle').value.trim()||'Нэргүй сорил',list=vsets();
+  const item={id:uid(),title,rows,saved:today(),...vSetFields()};
+  const i=list.findIndex(s=>(s.title||'')===title);
+  if(i>=0){if(!confirm('"'+title+'" нэртэй сорил аль хэдийн хадгалагдсан байна. Дээр нь бичих үү?'))return;item.id=list[i].id;list[i]=item;}
+  else{
+    if(list.length>=VSET_MAX){m.style.color='var(--stain)';
+      m.textContent=VSET_MAX+' сорил хадгалсан байна. Шинээр хадгалахын тулд аль нэгийг нь устгана уу.';return;}
+    list.push(item);
+  }
+  save();vSetRender();$('#vSetSel').value=item.id;
+  m.style.color='';m.textContent='"'+title+'" хадгалагдлаа ('+rows.length+' үг). Хэрэгтэй үед дээрээс сонгоод нээнэ.';
+});
+$('#vSetLoad').addEventListener('click',()=>{
+  const s=vsets().find(x=>x.id===$('#vSetSel').value),m=$('#vPubMsg');if(!s)return;
+  if(vGridData.some(r=>r.some(x=>String(x).trim()))&&!confirm('Одоогийн хүснэгтийг "'+(s.title||'')+'" сорилоор солих уу?'))return;
+  vGridData=s.rows.map(r=>r.slice(0,3));while(vGridData.length<s.rows.length+5)vGridData.push(['','','']);
+  vGridSave();vGridRender();
+  $('#vTitle').value=s.title||'';
+  [['vDir','dir'],['vType','type'],['vView','view'],['vTime','time'],['vTol','tol'],['vLogin','login'],['vMode','mode']]
+    .forEach(([id,k])=>{if(s[k]!=null)$('#'+id).value=s[k];});
+  $('#vTolWrap').hidden=$('#vType').value!=='type';
+  document.querySelectorAll('#vClasses input').forEach(x=>{x.checked=(s.cls||[]).includes(x.value);});
+  m.style.color='';m.textContent='"'+(s.title||'')+'" нээгдлээ: '+s.rows.length+' үг. Шалгаад "Сорил нийтлэх" дарна уу.';
+});
+$('#vSetDel').addEventListener('click',()=>{
+  const s=vsets().find(x=>x.id===$('#vSetSel').value),m=$('#vPubMsg');if(!s)return;
+  if(!confirm('"'+(s.title||'')+'" сорилыг хадгалсан жагсаалтаас устгах уу? Хүснэгт дэх үгс хэвээр үлдэнэ.'))return;
+  db.vsets=vsets().filter(x=>x.id!==s.id);save();vSetRender();
+  m.style.color='';m.textContent='"'+(s.title||'')+'" устлаа. Үлдсэн: '+vsets().length+'/'+VSET_MAX+'.';
+});
 /* localhost бол зөвхөн энэ компьютер дээр ажиллана — сурагчдын холбоос болгож болохгүй */
 const isLocalPage=()=>location.protocol==='file:'||/^(localhost|127\.0\.0\.1|\[?::1\]?)$/i.test(location.hostname)||/\.localhost$/i.test(location.hostname);
 const isPublicPage=()=>/^https?:$/.test(location.protocol)&&!isLocalPage();
@@ -2972,6 +3032,7 @@ function renderVocab(){
   const vset=!!(c.api&&c.key);
   $('#vSum').textContent=vset?'— тохируулсан':'— тохируулаагүй';
   if(!vPanelOnce){vPanelOnce=true;$('#vPanel').open=!vset;}
+  vSetRender();
   const prev=new Set([...document.querySelectorAll('#vClasses input:checked')].map(x=>x.value));
   $('#vClasses').innerHTML=db.classes.length?db.classes.map(k=>`<label class="chip" style="display:inline-flex;gap:6px;align-items:center;margin:0"><input type="checkbox" value="${esc(k.name)}" style="width:auto"${prev.has(k.name)?' checked':''}> ${esc(k.name)} (${k.students.length})</label>`).join('')
     :'<span class="progress">"1. Шалгалт" хэсэгт анги, сурагчдын нэрс оруулна уу.</span>';
