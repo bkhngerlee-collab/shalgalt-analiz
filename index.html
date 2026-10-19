@@ -2512,9 +2512,7 @@ function renderCloud(){
   if(document.activeElement!==$('#cApi'))$('#cApi').value=c.api||'';
   if(document.activeElement!==$('#cKey'))$('#cKey').value=c.key||'';
   $('#cAuto').checked=!!k.auto;cStatusRender();
-  // Эзний компьютер дээр (localhost) үргэлж, интернэт хувилбар дээр зөвхөн ?owner=1 хийсэн бол.
-  // Багш нар GitHub холбоосоор ордог тул тэдэнд харагдахгүй.
-  $('#invitePanel').hidden=!(isOwner()||!isPublicPage());
+  $('#invitePanel').hidden=!ownerMode();
   const set=!!(c.api&&c.key);
   $('#cSum').textContent=set?('— тохируулсан'+(k.auto?', автоматаар хүлээн авна':'')):'— тохируулаагүй';
   if(!cPanelOnce){cPanelOnce=true;$('#cPanel').open=!set;}  // тохируулаагүй үед л нээлттэй гарна
@@ -3335,6 +3333,12 @@ const LIC_KEY='shalgalt-license',LIC_SEEN='shalgalt-license-seen';
 // "Эзний горим" нь db-ээс тусдаа хадгалагдана — үүлнээс татахад ч арилахгүй
 const OWNER_KEY='shalgalt-owner';
 const isOwner=()=>{try{return localStorage.getItem(OWNER_KEY)==='1';}catch(e){return false;}};
+/* "Эзний горим" гурван тэмдгийн аль нэгээр тогтоогдоно:
+   1) ?owner=1 гэж нэг удаа нээсэн төхөөрөмж
+   2) программ энэ компьютерээс (localhost) ажиллаж байгаа
+   3) идэвхжүүлэх код нь нэргүй — эзэн өөртөө ийм код үүсгэдэг.
+      Багш нарт үргэлж НЭРТЭЙ код өгөөрэй, тэгвэл тэдэнд урих хэсэг гарахгүй. */
+const ownerMode=()=>isOwner()||!isPublicPage()||!!(licData&&!licData.n);
 const LIC_PUB={"kty":"EC","crv":"P-256","x":"SW-q6riyuCAN3HlcPiMU5orLFHWSWjH6PwYmNmvm4E8","y":"tMmhhYJxghR57d-BwICb0C09zmUv3XFCye7dTGhpSwU"};
 const lsGet=k=>{try{return localStorage.getItem(k)||'';}catch(e){return'';}};
 const lsSet=(k,v)=>{try{localStorage.setItem(k,v);}catch(e){}};
@@ -3352,8 +3356,9 @@ async function licVerify(code){
     return{ok:true,d,code};
   }catch(e){return{ok:false,why:'bad'};}
 }
+let licData=null;
 function licApply(d){
-  const t=licToday();lsSet(LIC_SEEN,t);
+  licData=d;const t=licToday();lsSet(LIC_SEEN,t);
   const left=Math.round((new Date(d.e+'T00:00:00')-new Date(t+'T00:00:00'))/864e5)+1;
   $('#curTitleWrap').innerHTML=d.e<'2090'?`<span class="licinfo">Ашиглах эрх: ${esc(d.e)} хүртэл (${left} хоног үлдсэн)${d.n?', '+esc(d.n):''}</span>`:'';
 }
