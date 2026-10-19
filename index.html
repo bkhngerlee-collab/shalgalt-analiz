@@ -2512,7 +2512,7 @@ function renderCloud(){
   if(document.activeElement!==$('#cApi'))$('#cApi').value=c.api||'';
   if(document.activeElement!==$('#cKey'))$('#cKey').value=c.key||'';
   $('#cAuto').checked=!!k.auto;cStatusRender();
-  $('#invitePanel').hidden=!db.owner;   // зөвхөн программын эзний төхөөрөмж дээр харагдана
+  $('#invitePanel').hidden=!isOwner();  // зөвхөн программын эзний төхөөрөмж дээр харагдана
   const set=!!(c.api&&c.key);
   $('#cSum').textContent=set?('— тохируулсан'+(k.auto?', автоматаар хүлээн авна':'')):'— тохируулаагүй';
   if(!cPanelOnce){cPanelOnce=true;$('#cPanel').open=!set;}  // тохируулаагүй үед л нээлттэй гарна
@@ -2539,7 +2539,10 @@ $('#cPull').addEventListener('click',async()=>{
     if(!r.data)return cMsg('Үүлэнд хадгалсан өгөгдөл алга. Эхлээд компьютерээсээ "Үүлэнд илгээх" дарна уу.',true);
     const d=JSON.parse(r.data);
     if(!confirm('Энэ төхөөрөмж дээрх шалгалт, нэрсийг үүлэн дэх хуулбараар ('+d.exams.length+' шалгалт, '+(d.classes||[]).length+' анги) солих уу?'))return cMsg('');
-    const keepV=db.vocab,keepC=db.cloud;db=d;db.vocab=keepV;db.cloud=keepC;db.classes=db.classes||[];db.classes.forEach(fixCodes);
+    // энэ төхөөрөмжийн өөрийн тохиргоог үүлэн дэх хуулбар дарж бичихээс хамгаална
+    const keepV=db.vocab,keepC=db.cloud,keepCh=db.chart,keepE=db.entry,keepS=db.sheet;
+    db=d;db.vocab=keepV;db.cloud=keepC;if(keepCh)db.chart=keepCh;if(keepE)db.entry=keepE;if(keepS)db.sheet=keepS;
+    db.classes=db.classes||[];db.classes.forEach(fixCodes);
     openExam(db.cur&&db.exams.some(e=>e.id===db.cur)?db.cur:db.exams[0].id);
     cMsg('Татлаа: '+db.exams.length+' шалгалт, '+db.classes.length+' анги.');
     if(ccfg().orphans&&ccfg().orphans.length)cloudPoll(true);
@@ -3323,6 +3326,9 @@ function sqResend(body){
 
 /* ---------- usage licence (time-limited activation codes) ---------- */
 const LIC_KEY='shalgalt-license',LIC_SEEN='shalgalt-license-seen';
+// "Эзний горим" нь db-ээс тусдаа хадгалагдана — үүлнээс татахад ч арилахгүй
+const OWNER_KEY='shalgalt-owner';
+const isOwner=()=>{try{return localStorage.getItem(OWNER_KEY)==='1';}catch(e){return false;}};
 const LIC_PUB={"kty":"EC","crv":"P-256","x":"SW-q6riyuCAN3HlcPiMU5orLFHWSWjH6PwYmNmvm4E8","y":"tMmhhYJxghR57d-BwICb0C09zmUv3XFCye7dTGhpSwU"};
 const lsGet=k=>{try{return localStorage.getItem(k)||'';}catch(e){return'';}};
 const lsSet=(k,v)=>{try{localStorage.setItem(k,v);}catch(e){}};
@@ -3446,11 +3452,11 @@ function askInit(){
 }
 async function licBoot(){const r=await licVerify(lsGet(LIC_KEY));if(r.ok){licApply(r.d);renderSetup();}else licLock(r);}
 
-// ?owner=1 гэж нэг удаа нээхэд энэ төхөөрөмж "эзний" горимд орно (урих хэсэг гарч ирнэ).
-// ?owner=0 гэвэл буцаана. Багш нарын төхөөрөмж дээр энэ хэсэг хэзээ ч гарахгүй.
 (function(){const o=new URLSearchParams(location.search).get('owner');
-  if(o==='1'&&!db.owner){db.owner=true;save();}
-  else if(o==='0'&&db.owner){db.owner=false;save();}})();
+  if(o==='1')lsSet(OWNER_KEY,'1');
+  else if(o==='0')lsSet(OWNER_KEY,'');
+  else if(db.owner&&!isOwner())lsSet(OWNER_KEY,'1');  // хуучин тохиргоог шилжүүлнэ
+})();
 
 if(new URLSearchParams(location.search).get('quiz'))startStudent();
 else licBoot();
