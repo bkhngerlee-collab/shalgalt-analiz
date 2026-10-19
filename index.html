@@ -185,6 +185,9 @@ tr.pick{cursor:pointer} tr.pick:hover{background:var(--bg)} tr.sel{background:va
 .qlabels{display:grid;grid-template-columns:28px 1fr 78px 78px;gap:8px;font-size:.8rem;color:var(--muted);padding:0 13px 4px}
 .qcard details{margin-top:8px}
 .qcard summary{cursor:pointer;font-size:.88rem;color:var(--leaf)}
+.qimg{margin-top:10px}
+.qimg img,.sheet-img{max-width:100%;max-height:230px;border:1px solid var(--line);border-radius:8px;background:#fff;display:block}
+.sheet-img{max-height:260px;margin:6px 0}
 .qcard textarea{min-height:60px;font-family:inherit;margin-top:8px}
 .optgrid{display:grid;grid-template-columns:22px 1fr;gap:6px 8px;align-items:center;margin-top:8px;font-weight:600}
 .optgrid input{font-weight:400}
@@ -1163,11 +1166,71 @@ function renderSetup(){
     ${p2?`<input data-i="${i}" data-f="key" value="${esc(q.key)}" placeholder="ACF" aria-label="${i+1}-р асуултын зөв хувилбарууд" style="text-transform:uppercase${q.key?'':';border-color:var(--stain)'}">`
       :`<select data-i="${i}" data-f="key" aria-label="${i+1}-р асуултын зөв хариулт">${OPTS.map(x=>`<option${x===q.key?' selected':''}>${x}</option>`).join('')}</select>`}
     <input data-i="${i}" data-f="points" type="number" min="0" step="0.5" value="${esc(q.points)}" aria-label="${i+1}-р асуултын оноо"></div>
-    <details${q.text?' open':''}><summary>${q.text?'Асуултын текст, хувилбарууд':'Асуултын текст, хувилбар нэмэх'}</summary>
+    <details${q.text||q.img?' open':''}><summary>${q.text||q.img?'Асуултын текст, зураг, хувилбарууд':'Асуултын текст, зураг, хувилбар нэмэх'}</summary>
       <textarea data-i="${i}" data-f="text" placeholder="Асуултын текст" aria-label="${i+1}-р асуултын текст">${esc(q.text||'')}</textarea>
+      <div class="qimg">
+        ${q.img?`<img src="${q.img}" alt="${i+1}-р асуултын зураг">`:''}
+        <div class="btns" style="margin-top:6px">
+          <label class="btn ghost" style="margin:0">${q.img?'Зургийг солих':'Зураг оруулах'}<input type="file" accept="image/*" data-i="${i}" data-f="img" hidden></label>
+          ${q.img?`<button type="button" class="btn danger" data-i="${i}" data-f="imgdel">Зургийг устгах</button>`:''}
+        </div>
+        <p class="hint" style="margin:4px 0 0;font-size:.8rem">Word, PDF-ээс зургаа хуулаад (Ctrl + C) энэ асуултын текстийн нүдэн дээр дарж <b>Ctrl + V</b> дарсан ч болно. Зураг автоматаар жижгэрч хадгалагдана.</p>
+      </div>
       <div class="optgrid">${qOpts(q).map((x,k)=>`<span>${x}</span><input data-i="${i}" data-f="opt" data-k="${k}" value="${esc(o[k]||'')}" aria-label="${i+1}-р асуултын ${x} хувилбар">`).join('')}</div>
     </details></div>`;}).join('')+`<datalist id="topics">${[...new Set(state.exam.questions.map(q=>q.topic.trim()).filter(Boolean))].map(t=>`<option value="${esc(t)}">`).join('')}</datalist>`;
 }
+/* ---------- асуултын зураг ---------- */
+const IMG_MAX_KB=140, DB_WARN_KB=3800;
+function dbKB(){try{return Math.round(JSON.stringify(db).length/1024);}catch(e){return 0;}}
+function saveChecked(){try{localStorage.setItem(KEY,JSON.stringify(db));mem=db;renderExams();return true;}catch(e){return false;}}
+function drawSmall(img,w,h,q){const cv=document.createElement('canvas');cv.width=w;cv.height=h;
+  const x=cv.getContext('2d');x.fillStyle='#fff';x.fillRect(0,0,w,h);x.drawImage(img,0,0,w,h);
+  return cv.toDataURL('image/jpeg',q);}
+async function shrinkImg(file){
+  const url=URL.createObjectURL(file),img=new Image();
+  try{
+    await new Promise((res,rej)=>{img.onload=res;img.onerror=()=>rej(new Error('Зургийг уншиж чадсангүй.'));img.src=url;});
+    let best='';
+    for(const[maxW,q]of[[860,.75],[700,.68],[560,.6],[460,.5]]){
+      const sc=Math.min(1,maxW/img.naturalWidth);
+      best=drawSmall(img,Math.round(img.naturalWidth*sc),Math.round(img.naturalHeight*sc),q);
+      if(best.length/1024<IMG_MAX_KB)break;
+    }
+    return best;
+  }finally{URL.revokeObjectURL(url);}
+}
+async function setQImg(i,file){
+  const m=$('#qbulkMsg');m.style.color='';m.textContent='Зургийг боловсруулж байна...';
+  try{
+    const data=await shrinkImg(file),q=state.exam.questions[i],old=q.img;
+    q.img=data;
+    if(!saveChecked()){q.img=old;saveChecked();
+      m.style.color='var(--stain)';
+      m.textContent='Санах ой дүүрчээ. Зураг хадгалагдсангүй. Хуучин шалгалтуудаа нөөцөлж устгаад дахин оролдоно уу.';return;}
+    renderSetup();
+    const kb=Math.round(data.length/1024),tot=dbKB();
+    const m2=$('#qbulkMsg');m2.style.color=tot>DB_WARN_KB?'var(--iodine)':'';
+    m2.textContent=(i+1)+'-р асуултад зураг орлоо ('+kb+' КБ). Нийт өгөгдөл: '+Math.round(tot/1024*10)/10+' МБ.'
+      +(tot>DB_WARN_KB?' Санах ой дүүрэхэд ойрхон байна — нөөц файлаа татаад хуучин шалгалтуудаа устгахыг зөвлөе.':'');
+  }catch(e){m.style.color='var(--stain)';m.textContent=e.message;}
+}
+$('#qtable').addEventListener('change',e=>{
+  const t=e.target;if(t.dataset.f!=='img'||!t.files||!t.files[0])return;
+  const f=t.files[0];t.value='';setQImg(+t.dataset.i,f);
+});
+$('#qtable').addEventListener('click',e=>{
+  const b=e.target.closest('[data-f="imgdel"]');if(!b)return;
+  if(!confirm((+b.dataset.i+1)+'-р асуултын зургийг устгах уу?'))return;
+  delete state.exam.questions[+b.dataset.i].img;save();renderSetup();
+});
+$('#qtable').addEventListener('paste',e=>{
+  const t=e.target.closest('[data-i]');if(!t)return;
+  const items=[...((e.clipboardData||window.clipboardData).items||[])];
+  const it=items.find(x=>x.kind==='file'&&/^image\//.test(x.type));if(!it)return;
+  const f=it.getAsFile();if(!f)return;
+  e.preventDefault();setQImg(+t.dataset.i,f);
+});
+
 $('#title').addEventListener('input',e=>{state.exam.title=e.target.value;save();});
 $('#title').addEventListener('change',renderSheetPanel);
 $('#edate').addEventListener('change',()=>setTimeout(renderSheetPanel));
@@ -1381,6 +1444,7 @@ function renderSheet(){
     const head=n2&&i===0?'<div class="part-head">I хэсэг</div>':n2&&i===n1?'<div class="part-head">II хэсэг <small>Нэг буюу хэд хэдэн хувилбар сонгож болно</small></div>':'';
     return`${head}<div class="qrow">
     <div class="qt"><b>${i+1}-р асуулт</b>${q.text?`<div class="qtext">${esc(q.text)}</div>`:''}
+      ${q.img?`<img class="sheet-img" src="${q.img}" alt="${i+1}-р асуултын зураг">`:''}
       ${o.some(Boolean)?`<ul class="qopts">${qOpts(q).map((x,k)=>o[k]?`<li>${x}. ${esc(o[k])}</li>`:'').join('')}</ul>`:''}</div>
     <div class="opts${p2?' wide':''}" role="group" aria-label="${i+1}-р асуултын хариулт">${qOpts(q).map(x=>
       `<button type="button" data-q="${i}" data-o="${x}" aria-pressed="${p2?(draft[i]||'').includes(x):draft[i]===x}">${x}</button>`).join('')}</div>
