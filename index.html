@@ -73,7 +73,7 @@ td input,td select{min-width:70px}
 .bar .val{text-align:right;font-variant-numeric:tabular-nums;font-weight:600;font-size:.9rem}
 .insights{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px;margin-bottom:18px}
 .ins{border-radius:var(--radius);padding:14px;border:1px solid var(--line)}
-.ins.up{background:var(--leaf-soft)} .ins.down{background:var(--stain-soft)}
+.ins.up{background:var(--leaf-soft)} .ins.down{background:var(--stain-soft)} .ins.star{background:var(--iodine-soft)}
 .ins h3{margin:0 0 4px;font-size:.9rem;font-weight:600}
 .ins p{margin:0;font-size:1.1rem;font-weight:700}
 .ins small{color:var(--muted)}
@@ -1788,6 +1788,17 @@ function renderAnalysis(){
   const levels=LEVELS.map(l=>({g:l[0],range:l[1]+'–'+l[2],who:d.rows.filter(r=>r.lv===l[0])}));
   const sel=d.rows.find(r=>r.s.id===selId);
 
+  // Бүрэн оноо авсан сурагчдыг дүгнэлтэд магтана
+  const perfect=d.rows.filter(r=>r.pct>=99.999),topRow=d.rows.slice().sort((a,b)=>b.pct-a.pct)[0];
+  const nm=r=>esc(r.s.name)+(filterCls||!r.s.cls?'':' ('+esc(r.s.cls)+')');
+  const starCard=perfect.length
+    ? `<div class="ins star"><h3>Бүрэн оноо авсан</h3><p>${perfect.map(nm).join(', ')}</p>
+       <small>${r1(d.total)} / ${r1(d.total)} оноо. Баяр хүргэе, цаашдын амжилтыг хүсье!</small></div>`
+    : (topRow&&topRow.pct>=80
+      ? `<div class="ins star"><h3>Хамгийн өндөр амжилт</h3><p>${nm(topRow)}</p>
+         <small>${Math.round(topRow.pct)}% буюу ${r1(topRow.score)} / ${r1(d.total)} оноо. Баяр хүргэе!</small></div>`
+      : '');
+
   let detail='';
   if(sel){
     const wrong=qs.map((q,i)=>i).filter(i=>!sel.ok[i]);
@@ -1824,6 +1835,7 @@ function renderAnalysis(){
     <div class="ins up"><h3>Хамгийн сайн эзэмшсэн агуулга</h3><p>${esc(best.t)}</p><small>${Math.round(best.pct)}% зөв хариулсан</small></div>
     <div class="ins down"><h3>Цаашид анхаарах агуулга</h3><p>${d.topics.length>1?esc(worst.t):'–'}</p>
       <small>${d.topics.length>1?Math.round(worst.pct)+'% зөв хариулсан':'Харьцуулахын тулд хоёроос дээш агуулга хэрэгтэй'}</small></div>
+    ${starCard}
   </div>
 
   <div class="panel" id="chartPanel"></div>
@@ -3403,6 +3415,14 @@ function renderVResults(){
     <div class="stat"><b>${R.fin.length?r1(avg/n*100):'–'}</b><span>Дундаж оноо (100-аас)</span></div>
     <div class="stat"><b>${R.fin.length?mmss(avgT):'–'}</b><span>Дундаж хугацаа</span></div>
   </div>
+  ${(()=>{const full=R.fin.filter(a=>a.total&&a.correct===a.total);
+    const nearly=R.fin.filter(a=>a.total&&a.correct<a.total&&a.correct/a.total>=.9);
+    if(full.length)return`<div class="ins star" style="margin:0 0 12px"><h3>Бүх үгийг зөв бичсэн</h3>
+      <p>${full.map(a=>esc(a.name)+(vCls?'':' ('+esc(a.cls)+')')).join(', ')}</p>
+      <small>${full[0].total} / ${full[0].total} зөв. Баяр хүргэе, цаашдын амжилтыг хүсье!</small></div>`;
+    if(nearly.length)return`<div class="ins star" style="margin:0 0 12px"><h3>Хамгийн өндөр амжилт</h3>
+      <p>${nearly.map(a=>esc(a.name)).join(', ')}</p><small>90%-аас дээш зөв хариулсан. Баяр хүргэе!</small></div>`;
+    return'';})()}
   <h3 style="margin:8px 0">Эрэмбэ <small style="font-weight:400;color:var(--muted)">зөв хариултын тоогоор, тэнцвэл хурдаар</small></h3>
   <div class="scroll"><table>
     <thead><tr><th>Байр</th><th>Анги</th><th>Код</th><th>Нэр</th><th class="num">Зөв</th><th class="num">Оноо (100)</th><th class="num">Хугацаа</th><th class="num">Түвшин</th><th class="num">Гарсан</th><th>Төлөв</th><th></th></tr></thead>
