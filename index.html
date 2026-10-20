@@ -453,6 +453,7 @@ body.student #studentApp{display:block}
         <li><b>Программ өөрөө хийнэ:</b> бүх хуудсыг уншиж, итгэлтэй уншсаныг шууд хадгална. Танд зөвхөн эргэлзээтэй хэдэн хуудсыг шалгах л үлдэнэ.</li>
       </ol>
     </div>
+    <div class="avgsum" id="omrExam" style="margin:0 0 10px"></div>
     <div class="btns">
       <label class="btn" style="margin:0">Зураг сонгох<input type="file" id="omrFiles" accept="image/*" multiple hidden></label>
       <button class="btn" id="liveBtn">Камераар шууд уншуулах</button>
@@ -494,7 +495,9 @@ body.student #studentApp{display:block}
     <h2>Оруулсан сурагчид <span id="count" style="color:var(--muted);font-weight:400"></span></h2>
     <p class="hint" id="listHint"></p>
     <div class="scroll"><table><tbody id="slist"></tbody></table></div>
-    <div class="btns"><button class="btn" data-go="analysis">Анализ харах</button></div>
+    <div class="btns"><button class="btn" data-go="analysis">Анализ харах</button>
+      <button class="btn danger" id="delClsAns" hidden>Энэ ангийн бүх хариултыг устгах</button></div>
+    <div class="msg" id="delMsg" role="status"></div>
   </div>
 </section>
 
@@ -1138,7 +1141,9 @@ function fixCodes(c){
 }
 db.classes.forEach(fixCodes);
 let entryCls='',editId=null,rosterCls='',entryVar=0;
-function openExam(id){state=db.exams.find(e=>e.id===id)||db.exams[0];db.cur=state.id;draft=[];selId=null;filterCls='';editId=null;save();renderSetup();}
+function openExam(id){state=db.exams.find(e=>e.id===id)||db.exams[0];db.cur=state.id;draft=[];selId=null;filterCls='';editId=null;
+  finalCls='';   // нэгдсэн анализ шинэ шалгалтын ангиас эхэлнэ
+  save();renderSetup();}
 function addExam(e){db.exams.push(e);openExam(e.id);}
 function examLabel(e){return(e.exam.title||'Нэргүй шалгалт')+(e.exam.date?', '+e.exam.date:'')+' ('+e.students.length+' сурагч)';}
 function renderExams(){
@@ -1563,7 +1568,15 @@ function pickStudent(n){
   $('#saveStudent').textContent=s?'Засварыг хадгалах':'Хариултыг хадгалах';
   renderSheet();renderRoster();
 }
-function renderEntry(){renderEntryClasses();renderRoster();renderVarPick();renderScanVar();renderSheet();renderList();$('#prefillKey').checked=!!ecfg().prefill;}
+function renderEntry(){renderEntryClasses();renderRoster();renderVarPick();renderScanVar();renderSheet();renderList();renderOmrExam();$('#prefillKey').checked=!!ecfg().prefill;}
+/* Уншуулахын өмнө аль шалгалт руу орох нь нүдэнд харагдаж байх ёстой —
+   буруу шалгалт сонгоод уншуулбал бүх дүн утгагүй болдог. */
+function renderOmrExam(){
+  const el=$('#omrExam');if(!el)return;
+  el.innerHTML=`Уншсан хуудас <b>"${esc(state.exam.title||'Нэргүй шалгалт')}"</b> шалгалтад орно `
+    +`(${state.exam.questions.length} асуулт${state.exam.date?', '+esc(state.exam.date):''}). `
+    +`<span class="hint">Өөр шалгалт руу оруулах бол "1. Шалгалт" хэсгээс эхлээд тэр шалгалтаа сонгоно уу.</span>`;
+}
 $('#scanVar').addEventListener('change',e=>{scanVar=+e.target.value;
   const m=$('#omrMsg');m.style.color='';m.textContent=VNAMES[scanVar]+' хувилбарын хуудсуудыг уншина.';});
 $('#prefillKey').addEventListener('change',e=>{ecfg().prefill=e.target.checked;save();
@@ -1656,6 +1669,8 @@ function renderList(){
   const list=entryCls?state.students.filter(s=>s.cls===entryCls):state.students;
   $('#count').textContent='('+list.length+')';
   $('#listHint').textContent=entryCls?entryCls+' ангийн сурагчид. Бусад ангийг дээрх "Анги" цэснээс сонгоно.':'';
+  const db2=$('#delClsAns');if(db2){db2.hidden=!(entryCls&&list.length);
+    db2.textContent=entryCls?entryCls+' ангийн '+list.length+' хариултыг устгах':'';}
   $('#slist').innerHTML=list.length?list.slice().sort((a,b)=>a.name.localeCompare(b.name,'mn')).map(s=>`<tr>
     <td>${esc(s.cls)}</td><td><b>${esc(s.name)}</b></td>
     <td style="font-family:ui-monospace,Consolas,monospace">${s.answers.map(a=>a||'–').join(' ')}</td>
@@ -1667,6 +1682,16 @@ $('#slist').addEventListener('click',e=>{
   const s=state.students.find(x=>x.id===b.dataset.del);
   if(!s||!confirm(s.name+'-ийн хариултыг энэ шалгалтаас устгах уу?'))return;
   state.students=state.students.filter(x=>x.id!==s.id);if(editId===s.id)editId=null;save();renderEntry();
+});
+
+$('#delClsAns').addEventListener('click',()=>{
+  const list=state.students.filter(s=>s.cls===entryCls),m=$('#delMsg');
+  if(!entryCls||!list.length)return;
+  if(!confirm(entryCls+' ангийн '+list.length+' сурагчийн хариултыг\n"'+(state.exam.title||'энэ шалгалт')+'" шалгалтаас бүгдийг устгах уу?\n\n'
+    +'Зөвхөн ЭНЭ шалгалтаас устана. Нэрсийн жагсаалт, бусад шалгалтын дүн хэвээрээ үлдэнэ.'))return;
+  state.students=state.students.filter(s=>s.cls!==entryCls);
+  editId=null;draft=[];save();renderEntry();
+  m.style.color='';m.textContent=entryCls+' ангийн '+list.length+' хариулт устлаа. Одоо хуудсуудаа дахин уншуулж болно.';
 });
 
 /* ---------- student list view: filter + sort ---------- */
@@ -2034,7 +2059,11 @@ function finalData(){
 function renderFinal(){
   const el=$('#finalBox'),classes=allClasses();
   if(!classes.length){el.innerHTML='<div class="panel"><div class="empty">Нэгдсэн анализ хийхийн тулд эхлээд шалгалтын хариулт оруулна уу.</div></div>';return;}
-  if(!classes.includes(finalCls))finalCls=classes[0];
+  // Сонгоогүй эсвэл хүчингүй бол нээлттэй байгаа шалгалтын ангиас эхэлнэ
+  if(!classes.includes(finalCls)){
+    const own=[...new Set(state.students.map(s=>s.cls).filter(Boolean))].sort();
+    finalCls=own.find(c=>classes.includes(c))||classes[0];
+  }
   const F=finalData(),R=F.res,n=F.rows.length;
   const exLabel=e=>(e.exam.date||'Огноогүй');
   const avgFin=n?F.rows.reduce((a,r)=>a+r.fin,0)/n:0,share=m=>n?Math.round(F.rows.filter(r=>r.fin>=m).length/n*100):0;
@@ -3267,7 +3296,7 @@ function renderVocab(){
 }
 function renderVQuizList(){
   const sel=$('#vQuizSel');
-  sel.innerHTML=vList.length?vList.map(q=>`<option value="${esc(q.id)}"${q.id===vSel?' selected':''}>${esc(q.title||'Нэргүй сорил')} (${q.count} оролдлого${q.open?'':', хаалттай'})</option>`).join('')
+  sel.innerHTML=vList.length?vList.map(q=>`<option value="${esc(q.id)}"${q.id===vSel?' selected':''}>${esc(q.title||'Нэргүй сорил')} — ${esc(String(q.created||'').slice(0,10)||'огноогүй')}, ${q.count} оролдлого${q.open?'':', хаалттай'}</option>`).join('')
     :'<option value="">'+(vcfg().api?'Сорил алга. "Холболт шалгах" дарж шинэчилнэ үү.':'Холболт шалгасны дараа жагсаалт гарна')+'</option>';
   const q=vList.find(x=>x.id===vSel);$('#vToggle').textContent=q&&!q.open?'Сорилыг нээх':'Сорилыг хаах';
 }
@@ -3299,7 +3328,7 @@ $('#vPublish').addEventListener('click',async()=>{
   if(type==='choice'&&words.length<4)return err('4 хувилбараас сонгох сорилд дор хаяж 4 үг хэрэгтэй.');
   if(!clsNames.length)return err('Оролцох ангиа сонгоно уу.');
   const classes=clsNames.map(n=>{const k=db.classes.find(x=>x.name===n);return{name:n,students:k.students.map(s=>({code:k.codes[s],name:s}))};});
-  const quiz={title:$('#vTitle').value.trim()||'Шинэ үгийн сорил',mode:$('#vMode').value,type,timeLimit:Math.max(0,+$('#vTime').value||0),
+  const quiz={title:$('#vTitle').value.trim()||('Шинэ үгийн сорил, '+todayStr()),mode:$('#vMode').value,type,timeLimit:Math.max(0,+$('#vTime').value||0),
     dir:$('#vDir').value,view:$('#vView').value,login:$('#vLogin').value,tol:type==='type'?+$('#vTol').value:0,maxScore:100,
     classes,questions:buildQuestions(words,$('#vDir').value,type),created:todayStr()};
   m.style.color='';m.textContent='Нийтэлж байна...';
