@@ -1788,6 +1788,17 @@ function renderAnalysis(){
   const levels=LEVELS.map(l=>({g:l[0],range:l[1]+'–'+l[2],who:d.rows.filter(r=>r.lv===l[0])}));
   const sel=d.rows.find(r=>r.s.id===selId);
 
+  /* Алдсан агуулгыг хуурай жагсаалт биш, авсан дүнд тохирсон зөвлөмж болгож бичнэ. */
+  function adviceHtml(pct,topics){
+    const list=topics.map(esc).join(', ');
+    if(!topics.length)return`<span class="g"><b>Бүх асуултад зөв хариулсан.</b> Маш сайн, амжилт хүсье!</span>`;
+    if(pct>=90)return`<span class="g">Маш сайн дүн. <b>${list}</b> — энэ агуулгыг нэг давтвал бүрэн эзэмшинэ.</span>`;
+    if(pct>=80)return`<span class="g">Сайн ажиллалаа. <b>${list}</b> дээр бага зэрэг алдсан тул дахин нэг уншаарай.</span>`;
+    if(pct>=60)return`<span class="m"><b>${list}</b> — энэ агуулгыг дахин уншиж, гол зүйлийг нь тэмдэглэж авах хэрэгтэй.</span>`;
+    if(pct>=40)return`<span class="m"><b>${list}</b> — энэ агуулгуудыг анхаарч, дасгал ажил хийж бататгах шаардлагатай.</span>`;
+    return`<span class="b"><b>${list}</b> — эдгээр агуулгыг эхнээс нь дахин үзэх хэрэгтэй. Багшаасаа тусламж аваарай.</span>`;
+  }
+
   // Бүрэн оноо авсан сурагчдыг дүгнэлтэд магтана
   const perfect=d.rows.filter(r=>r.pct>=99.999),topRow=d.rows.slice().sort((a,b)=>b.pct-a.pct)[0];
   const nm=r=>esc(r.s.name)+(filterCls||!r.s.cls?'':' ('+esc(r.s.cls)+')');
@@ -1804,9 +1815,10 @@ function renderAnalysis(){
     const wrong=qs.map((q,i)=>i).filter(i=>!sel.ok[i]);
     const wt=[...new Set(wrong.map(topicOf))];
     detail=`<div class="detail"><h3>${esc(sel.s.name)}${sel.s.cls?' ('+esc(sel.s.cls)+')':''}: ${r1(sel.score)} / ${r1(d.total)} оноо, ${Math.round(sel.pct)}%, ${sel.lv} түвшин, ангидаа ${sel.rank}-р байр</h3>
-      ${wrong.length?`<div><b>Алдсан агуулга:</b> ${wt.map(esc).join(', ')}</div><ul>${wrong.map(i=>
+      <div style="margin:6px 0 10px">${adviceHtml(sel.pct,wt)}</div>
+      ${wrong.length?`<ul>${wrong.map(i=>
         `<li>${i+1}-р асуулт (${esc(topicOf(i))}): ${sel.s.answers[i]?'хариулсан '+esc(sel.s.answers[i]):'хариулаагүй'}, зөв нь ${esc(qs[i].key)}</li>`).join('')}</ul>`
-      :'<div>Бүх асуултад зөв хариулсан.</div>'}</div>`;
+      :''}</div>`;
   }
 
   el.innerHTML=`
@@ -1875,7 +1887,7 @@ function renderAnalysis(){
     ${avgSummary(d.rows,r=>r.pct,d.avg,` (${r1(d.avg*d.total/100)} / ${r1(d.total)} оноо)`)}
     ${(()=>{VR=viewRows(d.rows,{pct:r=>r.pct,name:r=>r.s.name,cls:r=>r.s.cls,show:viewShow,sort:viewSort,avg:d.avg});return'';})()}
     <div class="scroll"><table>
-      <thead><tr><th>№</th><th>Анги</th><th>Код</th><th>Нэр</th><th>Асуултууд</th><th class="num">Оноо</th><th class="num">Хувь</th><th class="num">Дунджаас зөрүү</th><th class="num">Түвшин</th><th class="num">Ангидаа эзлэх байр</th><th>Алдсан агуулга</th></tr></thead>
+      <thead><tr><th>№</th><th>Анги</th><th>Код</th><th>Нэр</th><th>Асуултууд</th><th class="num">Оноо</th><th class="num">Хувь</th><th class="num">Дунджаас зөрүү</th><th class="num">Түвшин</th><th class="num">Ангидаа эзлэх байр</th><th>Дүгнэлт, зөвлөмж</th></tr></thead>
       <tbody id="stable">${VR.length?'':'<tr><td colspan="11" class="empty">Энэ нөхцөлд тохирох сурагч алга.</td></tr>'}${VR.map((r,k)=>{
         const wt=[...new Set(qs.map((q,i)=>i).filter(i=>!r.ok[i]).map(topicOf))];
         return avgRowAt(VR,x=>x.pct,d.avg,viewSort,viewShow,k,11)+`<tr class="pick${r.s.id===selId?' sel':''}" data-id="${r.s.id}" tabindex="0">
@@ -1883,7 +1895,7 @@ function renderAnalysis(){
           <td style="white-space:nowrap">${r.ok.map((o,i)=>`<span class="well ${o?'ok':r.part[i]?'pt':r.s.answers[i]?'no':'na'}" title="${i+1}-р асуулт">${i+1}</span>`).join('')}</td>
           <td class="num">${r1(r.score)}/${r1(d.total)}</td><td class="num"><b>${Math.round(r.pct)}%</b></td><td class="num">${diffHtml(r.pct,d.avg)}</td>
           <td class="num">${r.lv}</td><td class="num"><b>${r.rank}</b> / ${r.of}</td>
-          <td>${wt.length?wt.map(esc).join(', '):'–'}</td></tr>`;}).join('')}</tbody>
+          <td style="min-width:230px">${adviceHtml(r.pct,wt)}</td></tr>`;}).join('')}</tbody>
     </table></div>
     <div class="legend">Дүүрэн дугуй: зөв. Шар: хэсэгчлэн зөв. Хүрээтэй дугуй: буруу. Тасархай хүрээ: хариулаагүй.</div>
     ${detail}
