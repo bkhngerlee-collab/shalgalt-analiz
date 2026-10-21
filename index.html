@@ -3308,7 +3308,9 @@ function renderVocab(){
 }
 function renderVQuizList(){
   const sel=$('#vQuizSel');
-  sel.innerHTML=vList.length?vList.map(q=>`<option value="${esc(q.id)}"${q.id===vSel?' selected':''}>${esc(q.title||'Нэргүй сорил')} — ${esc(String(q.created||'').slice(0,10)||'огноогүй')}, ${q.count} оролдлого${q.open?'':', хаалттай'}</option>`).join('')
+  const when=c=>{const s=String(c||'');if(!s)return'огноогүй';
+    const d=new Date(s);return isNaN(d)?s.slice(0,10):s.slice(0,10)+' '+d.toTimeString().slice(0,5);};
+  sel.innerHTML=vList.length?vList.map(q=>`<option value="${esc(q.id)}"${q.id===vSel?' selected':''}>${esc(q.title||'Нэргүй сорил')} — ${esc(when(q.created))}, ${q.count} оролдлого${q.open?'':', хаалттай'}</option>`).join('')
     :'<option value="">'+(vcfg().api?'Сорил алга. "Холболт шалгах" дарж шинэчилнэ үү.':'Холболт шалгасны дараа жагсаалт гарна')+'</option>';
   const q=vList.find(x=>x.id===vSel);$('#vToggle').textContent=q&&!q.open?'Сорилыг нээх':'Сорилыг хаах';
 }
