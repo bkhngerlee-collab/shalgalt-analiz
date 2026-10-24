@@ -327,6 +327,8 @@ body.student #studentApp{display:block}
       <div id="qtable"></div>
     </div>
     <div class="btns">
+      <button class="btn ghost" id="addQ1">+ 1 асуулт нэмэх</button>
+      <button class="btn ghost" id="addQ5">+ 5 асуулт нэмэх</button>
       <button class="btn" data-go="entry">Хариулт оруулах руу шилжих</button>
       <button class="btn ghost" id="sample">Жишээ өгөгдөл ачаалах</button>
     </div>
@@ -1507,6 +1509,19 @@ function onCounts(){
   const n1=Math.max(1,Math.min(60,parseInt($('#qcount').value)||1)),n2=Math.max(0,Math.min(4,parseInt($('#qcount2').value)||0));
   resizeParts(n1,n2);draft=[];save();renderSetup();
 }
+/* Байгаа асуултуудыг хэвээр нь үлдээж, доор нь шинэ асуулт нэмнэ */
+function addQuestions(n){
+  const [n1,n2]=partCount(),want=Math.min(60,n1+n);
+  if(want===n1){const m=$('#qbulkMsg');m.style.color='var(--stain)';
+    m.textContent='I хэсэгт дээд тал нь 60 асуулт байж болно.';return;}
+  resizeParts(want,n2);draft=[];save();renderSetup();
+  const m=$('#qbulkMsg');m.style.color='';
+  m.textContent=(want-n1)+' асуулт нэмэгдлээ. Одоо I хэсэгт '+want+' асуулт байна. Шинэ асуултууд жагсаалтын төгсгөлд нэмэгдсэн.';
+  const cards=document.querySelectorAll('#qtable .qcard');
+  if(cards[n1])cards[n1].scrollIntoView({block:'center'});
+}
+$('#addQ1').addEventListener('click',()=>addQuestions(1));
+$('#addQ5').addEventListener('click',()=>addQuestions(5));
 $('#qcount').addEventListener('change',onCounts);
 $('#qcount2').addEventListener('change',onCounts);
 $('#p2mode').addEventListener('change',e=>{state.exam.p2mode=e.target.value;save();});
@@ -1788,6 +1803,44 @@ function renderAnalysis(){
   const levels=LEVELS.map(l=>({g:l[0],range:l[1]+'–'+l[2],who:d.rows.filter(r=>r.lv===l[0])}));
   const sel=d.rows.find(r=>r.s.id===selId);
 
+  /* Дүнгийн стандарт биелэлт: мөр бүр нэг анги, баганад түвшин I–VIII */
+  function stdTable(allCls){
+    const L=LEVELS.slice().reverse();            // I, II, ... VIII
+    const shown=filterCls?[filterCls]:allCls;
+    const row=(name,list)=>{
+      const c=db.classes.find(x=>x.name===name);
+      const roster=c?c.students.length:list.length;
+      const k=compute(list);
+      const cnt=L.map(l=>k.rows.filter(r=>r.lv===l[0]).length);
+      return{name,roster,took:list.length,succ:k.success,qual:k.quality,perf:k.avg,cnt};
+    };
+    const rows=shown.map(c=>row(c,state.students.filter(s=>s.cls===c)));
+    if(!rows.length)return'<p class="hint">Анги тодорхойгүй байна.</p>';
+    let all=null;
+    if(rows.length>1){
+      const list=state.students.filter(s=>shown.includes(s.cls)),k=compute(list);
+      all={name:'Нийт',roster:rows.reduce((a,r)=>a+r.roster,0),took:list.length,
+        succ:k.success,qual:k.quality,perf:k.avg,
+        cnt:L.map(l=>k.rows.filter(r=>r.lv===l[0]).length)};
+    }
+    const line=(r,i)=>`<tr${i==null?' style="font-weight:700;background:var(--leaf-soft)"':''}>
+      <td>${i==null?'':i+1}</td><td><b>${esc(r.name)}</b></td>
+      <td class="num">${r.roster}</td><td class="num">${r.took}</td>
+      <td class="num">${Math.round(r.succ)}</td><td class="num">${Math.round(r.qual)}</td><td class="num">${Math.round(r.perf)}</td>
+      ${r.cnt.map(n=>`<td class="num">${n||0}</td>`).join('')}</tr>`;
+    return`<table>
+      <thead>
+        <tr><th rowspan="2">№</th><th rowspan="2">Анги</th><th rowspan="2" class="num">Хамрагдах</th><th rowspan="2" class="num">Хамрагдсан</th>
+          <th rowspan="2" class="num">Амжилт</th><th rowspan="2" class="num">Чанар</th><th rowspan="2" class="num">Гүйцэтгэл</th>
+          <th colspan="8" style="text-align:center">Түвшин</th></tr>
+        <tr>${L.map(l=>`<th class="num" title="${l[1]}–${l[2]}%">${l[0]}</th>`).join('')}</tr>
+      </thead>
+      <tbody>${rows.map((r,i)=>line(r,i)).join('')}${all?line(all,null):''}</tbody></table>
+      <p class="hint" style="margin:8px 0 0;font-size:.82rem">Хамрагдах = нэрсийн жагсаалтад байгаа сурагчийн тоо.
+      Амжилт = 60%-аас дээш авсан сурагчийн хувь. Чанар = 80%-аас дээш. Гүйцэтгэл = дундаж хувь.
+      Түвшин: VIII (90–100), VII (80–89), VI (70–79), V (60–69), IV (50–59), III (40–49), II (30–39), I (0–29).</p>`;
+  }
+
   /* Алдсан агуулгыг хуурай жагсаалт биш, авсан дүнд тохирсон зөвлөмж болгож бичнэ. */
   function adviceHtml(pct,topics){
     const list=topics.map(esc).join(', ');
@@ -1872,6 +1925,11 @@ function renderAnalysis(){
         <td>${l.who.length?l.who.map(r=>esc(r.s.name)+(filterCls||!r.s.cls?'':' ('+esc(r.s.cls)+')')).join(', '):'–'}</td></tr>`).join('')}
       <tr><td colspan="2"><b>Нийт</b></td><td class="num"><b>${d.n}</b></td><td class="num"><b>100%</b></td><td></td></tr></tbody>
     </table></div>
+  </div>
+
+  <div class="panel"><h2>Дүнгийн стандарт биелэлт</h2>
+    <p class="hint">Анги бүрээр: хамрагдалт, амжилт, чанар, гүйцэтгэл болон түвшин тус бүрд хэдэн сурагч багтсан.</p>
+    <div class="scroll">${stdTable(classes)}</div>
   </div>
 
   <div class="panel"><div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap"><h2 style="margin:0">Дүнгийн хүснэгт</h2>
