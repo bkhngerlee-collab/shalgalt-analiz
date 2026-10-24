@@ -1824,13 +1824,13 @@ function renderAnalysis(){
         cnt:L.map(l=>k.rows.filter(r=>r.lv===l[0]).length)};
     }
     const line=(r,i)=>`<tr${i==null?' style="font-weight:700;background:var(--leaf-soft)"':''}>
-      <td>${i==null?'':i+1}</td><td><b>${esc(r.name)}</b></td>
+      <td>${i==null?'':i+1}</td><td>${i==null?'':esc(subjectName())}</td><td><b>${esc(r.name)}</b></td>
       <td class="num">${r.roster}</td><td class="num">${r.took}</td>
       <td class="num">${Math.round(r.succ)}</td><td class="num">${Math.round(r.qual)}</td><td class="num">${Math.round(r.perf)}</td>
       ${r.cnt.map(n=>`<td class="num">${n||0}</td>`).join('')}</tr>`;
     return`<table>
       <thead>
-        <tr><th rowspan="2">№</th><th rowspan="2">Анги</th><th rowspan="2" class="num">Хамрагдах</th><th rowspan="2" class="num">Хамрагдсан</th>
+        <tr><th rowspan="2">№</th><th rowspan="2">Хичээл</th><th rowspan="2">Анги</th><th rowspan="2" class="num">Хамрагдах</th><th rowspan="2" class="num">Хамрагдсан</th>
           <th rowspan="2" class="num">Амжилт</th><th rowspan="2" class="num">Чанар</th><th rowspan="2" class="num">Гүйцэтгэл</th>
           <th colspan="8" style="text-align:center">Түвшин</th></tr>
         <tr>${L.map(l=>`<th class="num" title="${l[1]}–${l[2]}%">${l[0]}</th>`).join('')}</tr>
@@ -2425,6 +2425,12 @@ function matrixSheet(name,title,note,list,qs,withCls){
   return{name,rows,freeze:7,freezeCol:F,heights:{5:Math.min(130,Math.max(40,8+5.5*Math.max(...qs.map((q,i)=>topicOf(i).length))))},
     widths:[5,...(withCls?[7]:[]),6,22,...qs.map(()=>6),10,11,9]};
 }
+/* Шалгалтын нэрнээс хичээлийн нэрийг салгаж авна: "Биологи, 9-р анги" -> "Биологи" */
+function subjectName(){
+  const t=String(state.exam.title||'').trim();
+  if(!t)return'Шалгалт';
+  return t.split(/[,–—|]/)[0].trim()||t;
+}
 /* Дүнгийн стандарт биелэлт — Excel */
 function stdRowsData(){
   const L=LEVELS.slice().reverse();
@@ -2448,17 +2454,13 @@ async function exportStdXlsx(){
   const{L,rows,all}=stdRowsData();
   if(!rows.length)throw new Error('сурагчийн хариулт алга');
   const title=(state.exam.title||'Шалгалт')+(filterCls?', '+filterCls+' анги':'');
-  const line=(r,i)=>[i==null?{v:'',s:'b'}:{v:i+1,s:'cc'},{v:r.name,s:'b'},
+  const line=(r,i)=>[i==null?{v:'',s:'b'}:{v:i+1,s:'cc'},{v:i==null?'':subjectName(),s:'c'},{v:r.name,s:'b'},
     {v:r.roster,s:'cc'},{v:r.took,s:'cc'},P(r.succ),P(r.qual),P(r.perf),...r.cnt.map(n=>({v:n||0,s:'cc'}))];
-  const sheet={name:'Стандарт биелэлт',freeze:5,widths:[5,14,12,13,10,10,12,...L.map(()=>6)],plainRows:3,
+  const sheet={name:'Стандарт биелэлт',freeze:2,widths:[5,18,16,13,14,11,11,13,...L.map(()=>7)],plainRows:1,
     rows:[
       [{v:'Дүнгийн стандарт биелэлт',s:'t'}],
-      [{v:title+'.  Огноо: '+(state.exam.date||'–')+'.  Татсан: '+todayStr(),s:'n'}],
-      [],
-      [{v:'№',s:'h'},{v:'Анги',s:'h'},{v:'Хамрагдах',s:'h'},{v:'Хамрагдсан',s:'h'},
+      [{v:'№',s:'h'},{v:'Хичээл',s:'h'},{v:'Анги',s:'h'},{v:'Хамрагдах',s:'h'},{v:'Хамрагдсан',s:'h'},
        {v:'Амжилт',s:'h'},{v:'Чанар',s:'h'},{v:'Гүйцэтгэл',s:'h'},...L.map(l=>({v:l[0],s:'h'}))],
-      [{v:'',s:'sub'},{v:'',s:'sub'},{v:'',s:'sub'},{v:'',s:'sub'},
-       {v:'60%+',s:'subv'},{v:'80%+',s:'subv'},{v:'дундаж',s:'subv'},...L.map(l=>({v:l[1]+'–'+l[2],s:'subv'}))],
       ...rows.map((r,i)=>line(r,i)),
       ...(all?[line(all,null)]:[])
     ]};
