@@ -1755,7 +1755,7 @@ function matrixHtml(list,qs,withCls){
     <tr>${pre('Агуулга')}${qs.map((q,i)=>`<th><span class="vt" title="${esc(topicOf(i))}">${esc(topicOf(i))}</span></th>`).join('')}<th></th><th></th><th></th></tr>
     <tr>${pre('Дээд оноо')}${qs.map(q=>`<th>${r1(+q.points||0)}</th>`).join('')}<th>${r1(max)}</th><th></th><th></th></tr>
   </thead>
-  <tbody>${list.map((r,k)=>`<tr><td class="s0">${k+1}</td><td class="s1"><b>${esc(r.s.name)}</b></td>${withCls?`<td>${esc(r.s.cls)}</td>`:''}<td>${codeOf(r.s.cls,r.s.name)||'–'}</td>
+  <tbody>${list.map((r,k)=>`<tr><td class="s0">${k+1}</td><td class="s1"><b>${esc(dName(r.s.cls,r.s.name))}</b></td>${withCls?`<td>${esc(r.s.cls)}</td>`:''}<td>${codeOf(r.s.cls,r.s.name)||'–'}</td>
     ${r.earn.map((e,i)=>`<td class="num ${r.ok[i]?'mx-ok':e>0?'mx-pt':'mx-no'}">${r1(e)}</td>`).join('')}
     <td class="num tot">${r1(r.score)}</td><td class="num tot">${pc(r.pct)}</td><td class="num tot">${r.lv}</td></tr>`).join('')}</tbody>
   <tfoot>
@@ -1854,7 +1854,7 @@ function renderAnalysis(){
 
   // Бүрэн оноо авсан сурагчдыг дүгнэлтэд магтана
   const perfect=d.rows.filter(r=>r.pct>=99.999),topRow=d.rows.slice().sort((a,b)=>b.pct-a.pct)[0];
-  const nm=r=>esc(r.s.name)+(filterCls||!r.s.cls?'':' ('+esc(r.s.cls)+')');
+  const nm=r=>esc(dName(r.s.cls,r.s.name))+(filterCls||!r.s.cls?'':' ('+esc(r.s.cls)+')');
   const starCard=perfect.length
     ? `<div class="ins star"><h3>Бүрэн оноо авсан</h3><p>${perfect.map(nm).join(', ')}</p>
        <small>${r1(d.total)} / ${r1(d.total)} оноо. Баяр хүргэе, цаашдын амжилтыг хүсье!</small></div>`
@@ -1867,7 +1867,7 @@ function renderAnalysis(){
   if(sel){
     const wrong=qs.map((q,i)=>i).filter(i=>!sel.ok[i]);
     const wt=[...new Set(wrong.map(topicOf))];
-    detail=`<div class="detail"><h3>${esc(sel.s.name)}${sel.s.cls?' ('+esc(sel.s.cls)+')':''}: ${r1(sel.score)} / ${r1(d.total)} оноо, ${Math.round(sel.pct)}%, ${sel.lv} түвшин, ангидаа ${sel.rank}-р байр</h3>
+    detail=`<div class="detail"><h3>${esc(dName(sel.s.cls,sel.s.name))}${sel.s.cls?' ('+esc(sel.s.cls)+')':''}:${r1(sel.score)} / ${r1(d.total)} оноо, ${Math.round(sel.pct)}%, ${sel.lv} түвшин, ангидаа ${sel.rank}-р байр</h3>
       <div style="margin:6px 0 10px">${adviceHtml(sel.pct,wt)}</div>
       ${wrong.length?`<ul>${wrong.map(i=>
         `<li>${i+1}-р асуулт (${esc(topicOf(i))}): ${sel.s.answers[i]?'хариулсан '+esc(sel.s.answers[i]):'хариулаагүй'}, зөв нь ${esc(qs[i].key)}</li>`).join('')}</ul>`
@@ -1880,7 +1880,11 @@ function renderAnalysis(){
       <div style="flex:3 1 240px"><h2>${esc(state.exam.title||'Шалгалтын анализ')}</h2>
         <p class="hint" style="margin:0">${qs.length} асуулт, нийт ${r1(d.total)} оноо</p></div>
       <div><label for="fcls">Анги</label><select id="fcls"><option value="">Бүх анги</option>${classes.map(c=>`<option${c===filterCls?' selected':''}>${esc(c)}</option>`).join('')}</select></div>
+      <div><label for="anonSel">Сурагчийг харуулах</label><select id="anonSel">
+        <option value="name"${anonOn()?'':' selected'}>Нэрээр</option>
+        <option value="code"${anonOn()?' selected':''}>Зөвхөн кодоор</option></select></div>
     </div>
+    ${anonOn()?'<p class="hint" style="margin:0">Сурагчдын нэр дэлгэц, график, хэвлэлт дээр код (№) болж харагдана. Код нь "Нэрс" хэсэгт сурагч бүрд өгсөн дугаар. <b>Татаж авсан Excel, Word файлд нэр хэвээр бичигдэнэ.</b></p>':''}
     <div class="btns noprint">
       <button class="btn" id="xXlsx">Excel файлаар татах</button>
       <button class="btn" id="xDocx">Word тайлангаар татах</button>
@@ -1922,7 +1926,7 @@ function renderAnalysis(){
       <thead><tr><th>Түвшин</th><th>Гүйцэтгэл</th><th class="num">Сурагчийн тоо</th><th class="num">Эзлэх хувь</th><th>Сурагчид</th></tr></thead>
       <tbody>${levels.map(l=>`<tr><td><b>${l.g}</b></td><td>${l.range}%</td><td class="num">${l.who.length}</td>
         <td class="num">${d.n?Math.round(l.who.length/d.n*100):0}%</td>
-        <td>${l.who.length?l.who.map(r=>esc(r.s.name)+(filterCls||!r.s.cls?'':' ('+esc(r.s.cls)+')')).join(', '):'–'}</td></tr>`).join('')}
+        <td>${l.who.length?l.who.map(r=>esc(dName(r.s.cls,r.s.name))+(filterCls||!r.s.cls?'':' ('+esc(r.s.cls)+')')).join(', '):'–'}</td></tr>`).join('')}
       <tr><td colspan="2"><b>Нийт</b></td><td class="num"><b>${d.n}</b></td><td class="num"><b>100%</b></td><td></td></tr></tbody>
     </table></div>
   </div>
@@ -1952,7 +1956,7 @@ function renderAnalysis(){
       <tbody id="stable">${VR.length?'':'<tr><td colspan="11" class="empty">Энэ нөхцөлд тохирох сурагч алга.</td></tr>'}${VR.map((r,k)=>{
         const wt=[...new Set(qs.map((q,i)=>i).filter(i=>!r.ok[i]).map(topicOf))];
         return avgRowAt(VR,x=>x.pct,d.avg,viewSort,viewShow,k,11)+`<tr class="pick${r.s.id===selId?' sel':''}" data-id="${r.s.id}" tabindex="0">
-          <td>${k+1}</td><td>${esc(r.s.cls)}</td><td>${codeOf(r.s.cls,r.s.name)||'–'}</td><td><b>${esc(r.s.name)}</b></td>
+          <td>${k+1}</td><td>${esc(r.s.cls)}</td><td>${codeOf(r.s.cls,r.s.name)||'–'}</td><td><b>${esc(dName(r.s.cls,r.s.name))}</b></td>
           <td style="white-space:nowrap">${r.ok.map((o,i)=>`<span class="well ${o?'ok':r.part[i]?'pt':r.s.answers[i]?'no':'na'}" title="${i+1}-р асуулт">${i+1}</span>`).join('')}</td>
           <td class="num">${r1(r.score)}/${r1(d.total)}</td><td class="num"><b>${Math.round(r.pct)}%</b></td><td class="num">${diffHtml(r.pct,d.avg)}</td>
           <td class="num">${r.lv}</td><td class="num"><b>${r.rank}</b> / ${r.of}</td>
@@ -1964,6 +1968,7 @@ function renderAnalysis(){
 
   lastD=d;renderChart();
   $('#fcls').addEventListener('change',e=>{filterCls=e.target.value;renderAnalysis();});
+  $('#anonSel').addEventListener('change',e=>{db.anon=e.target.value;save();renderAnalysis();});
   $('#aShow').addEventListener('change',e=>{viewShow=e.target.value;renderAnalysis();});
   $('#aSort').addEventListener('change',e=>{viewSort=e.target.value;renderAnalysis();});
   const pick=e=>{const tr=e.target.closest('tr[data-id]');if(!tr)return;
@@ -2158,14 +2163,17 @@ function renderFinal(){
   if(R.length){
     const S=finalChart==='trend'?{pct:true,items:R.map(r=>({l:exLabel(r.e),full:exLabel(r.e)+', '+(r.e.exam.title||''),v:r.d.avg}))}
       :finalChart==='topics'?{pct:true,items:F.topics.map(t=>({l:t.t,full:t.t,v:t.avg}))}
-      :{pct:true,items:F.rows.map(r=>({l:r.n,full:r.n,v:r.fin}))};
+      :{pct:true,items:F.rows.map(r=>({l:dName(finalCls,r.n),full:dName(finalCls,r.n),v:r.fin}))};
     chart=finalChart==='trend'&&R.length>1?svgBar(S,true):finalChart==='trend'?svgBar(S,false):finalChart==='topics'?svgHBar(S):svgBar(S,false);
   }
   el.innerHTML=`
   <div class="panel noprint">
     <h2>Нэгдсэн анализ</h2>
     <p class="hint">Ангиа сонгоод тооцох шалгалтуудаа чагтална. Жин нь шалгалт бүр эцсийн дүнд хэр нөлөөлөхийг заана: бүгд 1 бол энгийн дундаж. Жишээ нь явцын шалгалтуудыг 1, улирлын шалгалтыг 2 гэвэл улирлынх нь хоёр дахин их нөлөөлнө.</p>
-    <div class="row"><div style="max-width:260px"><label for="fcls2">Анги</label><select id="fcls2">${classes.map(c=>`<option${c===finalCls?' selected':''}>${esc(c)}</option>`).join('')}</select></div></div>
+    <div class="row"><div style="max-width:260px"><label for="fcls2">Анги</label><select id="fcls2">${classes.map(c=>`<option${c===finalCls?' selected':''}>${esc(c)}</option>`).join('')}</select></div>
+      <div style="max-width:260px"><label for="anonSel2">Сурагчийг харуулах</label><select id="anonSel2">
+        <option value="name"${anonOn()?'':' selected'}>Нэрээр</option>
+        <option value="code"${anonOn()?' selected':''}>Зөвхөн кодоор</option></select></div></div>
     ${F.exams.length?`<div class="scroll" style="margin-top:12px"><table class="exlist">
       <thead><tr><th></th><th>Огноо</th><th>Шалгалт</th><th class="num">Сурагч</th><th class="num">Ангийн дундаж</th><th class="num">Жин</th><th class="num">Нөлөө</th></tr></thead>
       <tbody>${F.exams.map(e=>{const on=F.cfg.ids.includes(e.id),r=R.find(x=>x.e.id===e.id),
@@ -2211,7 +2219,7 @@ function renderFinal(){
     <div class="scroll"><table>
       <thead><tr><th>№</th><th>Код</th><th>Нэр</th>${R.map(r=>`<th class="num" title="${esc(r.e.exam.title)}">${esc(exLabel(r.e))}</th>`).join('')}
         <th class="num">Эцсийн дүн</th><th class="num">Дунджаас зөрүү</th><th class="num">Түвшин</th><th class="num">Ангидаа эзлэх байр</th><th class="num">Ахиц</th></tr></thead>
-      <tbody>${FV.length?'':`<tr><td colspan="${R.length+8}" class="empty">Энэ нөхцөлд тохирох сурагч алга.</td></tr>`}${FV.map((r,k)=>avgRowAt(FV,x=>x.fin,avgFin,fSort,fShow,k,R.length+8)+`<tr><td>${k+1}</td><td>${codeOf(finalCls,r.n)||'–'}</td><td><b>${esc(r.n)}</b>${r.miss?` <small style="color:var(--muted)">(${r.miss} шалгалт өгөөгүй)</small>`:''}</td>
+      <tbody>${FV.length?'':`<tr><td colspan="${R.length+8}" class="empty">Энэ нөхцөлд тохирох сурагч алга.</td></tr>`}${FV.map((r,k)=>avgRowAt(FV,x=>x.fin,avgFin,fSort,fShow,k,R.length+8)+`<tr><td>${k+1}</td><td>${codeOf(finalCls,r.n)||'–'}</td><td><b>${esc(dName(finalCls,r.n))}</b>${r.miss?` <small style="color:var(--muted)">(${r.miss} шалгалт өгөөгүй)</small>`:''}</td>
         ${r.p.map(v=>`<td class="num">${pc(v)}</td>`).join('')}
         <td class="num"><b>${Math.round(r.fin)}%</b></td><td class="num">${diffHtml(r.fin,avgFin)}</td><td class="num">${r.lv}</td><td class="num"><b>${r.rank}</b> / ${n}</td>
         <td class="num">${r.ch==null?'–':`<span class="${r.ch>0?'g':r.ch<0?'b':''}">${r.ch>0?'+':''}${Math.round(r.ch)}%</span>`}</td></tr>`).join('')}</tbody>
@@ -2229,6 +2237,7 @@ $('#finalBox').addEventListener('change',e=>{
   const t=e.target;
   if(t.id==='fcls2'){finalCls=t.value;renderFinal();return;}
   if(t.id==='fchart'){finalChart=t.value;renderFinal();return;}
+  if(t.id==='anonSel2'){db.anon=t.value;save();renderFinal();return;}
   if(t.id==='fvShow'){fShow=t.value;renderFinal();return;}
   if(t.id==='fvSort'){fSort=t.value;renderFinal();return;}
   const cfg=db.final&&db.final[finalCls];if(!cfg)return;
@@ -2385,6 +2394,9 @@ function docxBuilder(){
 const lvColor=v=>v==null?'5C6B64':({good:'1F5A41',mid:'A96A12',bad:'B4314A'})[lvl(v)];
 const pctCell=v=>v==null?{t:'–',al:'right'}:{t:Math.round(v)+'%',color:lvColor(v),al:'right',b:true};
 const codeOf=(cls,name)=>{const c=db.classes.find(x=>x.name===cls);return c&&c.codes&&c.codes[name]?pad2(c.codes[name]):'';};
+/* Анализ дээр сурагчийн нэрийг нуух сонголт: db.anon==='code' бол нэрийн оронд код гарна */
+const anonOn=()=>db.anon==='code';
+const dName=(cls,name)=>{if(!anonOn())return String(name||'');const c=codeOf(cls,name);return c?'№'+c:'№–';};
 const todayStr=()=>new Date().toISOString().slice(0,10);
 /* --- single exam data --- */
 function examExportData(){
@@ -2935,8 +2947,9 @@ $('#cPull').addEventListener('click',async()=>{
     const d=JSON.parse(r.data);
     if(!confirm('Энэ төхөөрөмж дээрх шалгалт, нэрсийг үүлэн дэх хуулбараар ('+d.exams.length+' шалгалт, '+(d.classes||[]).length+' анги) солих уу?'))return cMsg('');
     // энэ төхөөрөмжийн өөрийн тохиргоог үүлэн дэх хуулбар дарж бичихээс хамгаална
-    const keepV=db.vocab,keepC=db.cloud,keepCh=db.chart,keepE=db.entry,keepS=db.sheet,keepVS=db.vsets;
+    const keepV=db.vocab,keepC=db.cloud,keepCh=db.chart,keepE=db.entry,keepS=db.sheet,keepVS=db.vsets,keepAn=db.anon;
     db=d;db.vocab=keepV;db.cloud=keepC;if(keepCh)db.chart=keepCh;if(keepE)db.entry=keepE;if(keepS)db.sheet=keepS;
+    if(keepAn)db.anon=keepAn;
     if(keepVS&&keepVS.length)db.vsets=keepVS;
     db.classes=db.classes||[];db.classes.forEach(fixCodes);
     openExam(db.cur&&db.exams.some(e=>e.id===db.cur)?db.cur:db.exams[0].id);
@@ -3119,7 +3132,7 @@ function series(d){
   if(chartData==='q')return{pct:true,items:qs.map((q,i)=>({l:String(i+1),full:(i+1)+'. '+topicOf(i),v:d.qPct[i]}))};
   if(chartData==='t')return{pct:true,items:d.topics.map(t=>({l:t.t,full:t.t,v:t.pct}))};
   if(chartData==='lv')return{pct:false,items:LEVELS.map(l=>({l:l[0],full:l[0]+' түвшин ('+l[1]+'–'+l[2]+'%)',v:d.rows.filter(r=>r.lv===l[0]).length}))};
-  if(chartData==='s')return{pct:true,items:d.rows.map(r=>({l:r.s.name,full:r.s.name+(r.s.cls?' ('+r.s.cls+')':''),v:r.pct}))};
+  if(chartData==='s')return{pct:true,items:d.rows.map(r=>{const nm=dName(r.s.cls,r.s.name);return{l:nm,full:nm+(r.s.cls?' ('+r.s.cls+')':''),v:r.pct};})};
   const cs=[...new Set(state.students.map(s=>s.cls||'Ангигүй'))].sort((a,b)=>a.localeCompare(b,'mn',{numeric:true}));
   return{pct:true,items:cs.map(c=>({l:c,full:c+' анги',v:compute(state.students.filter(s=>(s.cls||'Ангигүй')===c)).avg}))};
 }
