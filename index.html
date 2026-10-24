@@ -1927,7 +1927,10 @@ function renderAnalysis(){
     </table></div>
   </div>
 
-  <div class="panel"><h2>Дүнгийн стандарт биелэлт</h2>
+  <div class="panel"><div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap">
+      <h2 style="margin:0">Дүнгийн стандарт биелэлт</h2>
+      <button class="btn noprint" id="stdXlsx">Excel файлаар татах</button></div>
+    <div class="msg noprint" id="stdMsg" role="status"></div>
     <p class="hint">Анги бүрээр: хамрагдалт, амжилт, чанар, гүйцэтгэл болон түвшин тус бүрд хэдэн сурагч багтсан.</p>
     <div class="scroll">${stdTable(classes)}</div>
   </div>
@@ -1970,6 +1973,7 @@ function renderAnalysis(){
   $('#xXlsx').addEventListener('click',()=>runExport(exportExamXlsx,'#xMsg'));
   $('#xDocx').addEventListener('click',()=>runExport(exportExamDocx,'#xMsg'));
   $('#mxXlsx').addEventListener('click',()=>runExport(exportMatrixXlsx,'#mxMsg'));
+  $('#stdXlsx').addEventListener('click',()=>runExport(exportStdXlsx,'#stdMsg'));
 }
 
 /* ---------- answer sheet ---------- */
@@ -2420,6 +2424,46 @@ function matrixSheet(name,title,note,list,qs,withCls){
   gp[F+n+2]={f:lv(tc+(fr+3)),s:'fb'};rows.push(gp);
   return{name,rows,freeze:7,freezeCol:F,heights:{5:Math.min(130,Math.max(40,8+5.5*Math.max(...qs.map((q,i)=>topicOf(i).length))))},
     widths:[5,...(withCls?[7]:[]),6,22,...qs.map(()=>6),10,11,9]};
+}
+/* Дүнгийн стандарт биелэлт — Excel */
+function stdRowsData(){
+  const L=LEVELS.slice().reverse();
+  const classes=[...new Set(state.students.map(s=>s.cls).filter(Boolean))].sort();
+  const shown=filterCls?[filterCls]:classes;
+  const mk=(name,list)=>{
+    const c=db.classes.find(x=>x.name===name),k=compute(list);
+    return{name,roster:c?c.students.length:list.length,took:list.length,
+      succ:k.success,qual:k.quality,perf:k.avg,cnt:L.map(l=>k.rows.filter(r=>r.lv===l[0]).length)};
+  };
+  const rows=shown.map(c=>mk(c,state.students.filter(s=>s.cls===c)));
+  let all=null;
+  if(rows.length>1){
+    const list=state.students.filter(s=>shown.includes(s.cls)),k=compute(list);
+    all={name:'Нийт',roster:rows.reduce((a,r)=>a+r.roster,0),took:list.length,
+      succ:k.success,qual:k.quality,perf:k.avg,cnt:L.map(l=>k.rows.filter(r=>r.lv===l[0]).length)};
+  }
+  return{L,rows,all};
+}
+async function exportStdXlsx(){
+  const{L,rows,all}=stdRowsData();
+  if(!rows.length)throw new Error('сурагчийн хариулт алга');
+  const title=(state.exam.title||'Шалгалт')+(filterCls?', '+filterCls+' анги':'');
+  const line=(r,i)=>[i==null?{v:'',s:'b'}:{v:i+1,s:'cc'},{v:r.name,s:'b'},
+    {v:r.roster,s:'cc'},{v:r.took,s:'cc'},P(r.succ),P(r.qual),P(r.perf),...r.cnt.map(n=>({v:n||0,s:'cc'}))];
+  const sheet={name:'Стандарт биелэлт',freeze:5,widths:[5,14,12,13,10,10,12,...L.map(()=>6)],plainRows:3,
+    rows:[
+      [{v:'Дүнгийн стандарт биелэлт',s:'t'}],
+      [{v:title+'.  Огноо: '+(state.exam.date||'–')+'.  Татсан: '+todayStr(),s:'n'}],
+      [],
+      [{v:'№',s:'h'},{v:'Анги',s:'h'},{v:'Хамрагдах',s:'h'},{v:'Хамрагдсан',s:'h'},
+       {v:'Амжилт',s:'h'},{v:'Чанар',s:'h'},{v:'Гүйцэтгэл',s:'h'},...L.map(l=>({v:l[0],s:'h'}))],
+      [{v:'',s:'sub'},{v:'',s:'sub'},{v:'',s:'sub'},{v:'',s:'sub'},
+       {v:'60%+',s:'subv'},{v:'80%+',s:'subv'},{v:'дундаж',s:'subv'},...L.map(l=>({v:l[1]+'–'+l[2],s:'subv'}))],
+      ...rows.map((r,i)=>line(r,i)),
+      ...(all?[line(all,null)]:[])
+    ]};
+  const name=fileSafe(title+' standart bielelt')+'.xlsx';
+  saveBlob(buildXlsx([sheet]),name);return name;
 }
 async function exportMatrixXlsx(){
   const X=examExportData(),{d,qs}=X;if(!d.n)throw new Error('сурагчийн хариулт алга');
