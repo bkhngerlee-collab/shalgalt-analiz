@@ -367,10 +367,10 @@ body.student #studentApp{display:block}
       <p class="hint" style="margin-top:8px"><b>Жагсаалтаар:</b> асуулт бүрийг дугаартай, хувилбаруудыг A, B, C, D (эсвэл А, Б, В, Г) үсэгтэй бичнэ. Хүсвэл асуулт бүрийн доор "Хариулт:", "Агуулга:", "Оноо:" мөр нэмж болно. II хэсгийн асуултуудын өмнө "II хэсэг" гэсэн мөр бичээд, хувилбаруудыг A–H үсгээр, хариултыг "Хариулт: ACF" гэх мэтээр бичнэ.</p>
       <div class="row" style="margin:8px 0"><div style="max-width:420px"><label for="qbulkMode">Хариултын хувилбарууд хэрхэн бичигдсэн бэ</label>
         <select id="qbulkMode">
-          <option value="auto">Автоматаар таних</option>
-          <option value="line">Нэг мөрөнд дараалуулсан: A. … B. … C. … D. … E. …</option>
-          <option value="rows">Мөр бүрд нэг хувилбар</option></select>
-        <p class="hint" style="margin:6px 0 0;font-size:.82rem">Асуулт доторх "1. 2. 3." жагсаалт, харгалзуулах багана зэрэг нь <b>нэг мөрөнд дараалуулсан</b> горимд асуултын бие болж үлдэнэ — тусдаа асуулт болж хуваагдахгүй. Хувилбарын тоо (3, 4, 5) автоматаар тохируулагдана.</p></div></div>
+          <option value="auto">Автоматаар таних (зөвлөж байна)</option>
+          <option value="line">Асуултын дотор "1. 2. 3." жагсаалттай</option>
+          <option value="rows">Энгийн: асуулт бүр дугаартай</option></select>
+        <p class="hint" style="margin:6px 0 0;font-size:.82rem">Хувилбарууд нэг мөрөнд дараалсан ("A. … B. … C. …") эсвэл мөр бүрд тусад нь байсан ч таних. Асуулт доторх <b>"1. 2. 3." жагсаалт, харгалзуулах багана</b> тусдаа асуулт болохгүй, асуултын бие болж үлдэнэ. Хувилбарын тоо (3, 4, 5) автоматаар тохируулагдана.</p></div></div>
       <textarea id="qbulk" style="min-height:180px" placeholder="1. Ургамлын эсийн хана юунаас тогтдог вэ?&#10;A. Целлюлоз&#10;B. Хитин&#10;C. Уураг&#10;D. Липид&#10;Хариулт: A&#10;Агуулга: Эсийн бүтэц&#10;&#10;2. Фотосинтез эсийн аль органоидод явагддаг вэ?&#10;A. Митохондри&#10;B. Рибосом&#10;C. Хлоропласт&#10;D. Цөм&#10;Хариулт: C&#10;Агуулга: Фотосинтез"></textarea>
       <div class="btns"><button class="btn" id="qbulkBtn">Асуултуудыг оруулах</button></div>
       <div class="msg" id="qbulkMsg" role="status"></div>
@@ -803,7 +803,9 @@ body.student #studentApp{display:block}
     <table>
       <tr><th>Таних хэлбэр</th><th>Жишээ</th></tr>
       <tr><td>Том, жижиг латин үсэг</td><td><code>A.</code> <code>a)</code> <code>B:</code> <code>(c)</code></td></tr>
-      <tr><td>Кирилл үсэг</td><td><code>А.</code> <code>б)</code> <code>В -</code></td></tr>
+      <tr><td>Монгол цагаан толгой</td><td><code>А.</code> <code>Б.</code> <code>В.</code> <code>Г.</code> (= A B C D)</td></tr>
+      <tr><td>Кирилл, латинтай төстэй</td><td><code>А.</code> <code>В.</code> <code>С.</code> <code>D.</code> <code>E.</code> — холимог байсан ч таних</td></tr>
+      <tr><td>Мөр бүрд тусад нь</td><td>Хувилбар бүр өөрийн мөрөнд бичигдсэн байж болно</td></tr>
       <tr><td>Нэг мөрөнд дараалуулсан</td><td><code>A. Целлюлоз B. Хитин C. Уураг D. Липид</code></td></tr>
       <tr><td>Асуултын дугаар</td><td><code>1.</code> <code>2)</code> <code>№3</code> <code>Асуулт 4:</code></td></tr>
     </table>
@@ -1991,13 +1993,28 @@ function cleanLine(s){
     .replace(/[_]{2,}/g,' ').replace(/\.{3,}/g,' ')  // ____ ба ....
     .replace(/\s+/g,' ').trim();
 }
-const OPT_LET='[A-Ha-hА-За-з]';
-const optIdx=ch=>{const k=LET8.indexOf(String(ch).toUpperCase());return k<0?-1:k%8;};
+const OPT_LET='[A-Ha-hА-За-зСсНн]';
+/* Кирилл үсгийг хоёр янзаар уншиж болно:
+   "А В С D E" гэж латин үсэгтэй төстэйгөөр, эсвэл "А Б В Г Д" гэж монгол цагаан толгойгоор.
+   Тиймээс боломжит бүх утгыг буцаагаад, дараалалд нь тохирохыг нь сонгоно. */
+const LOOKI={'А':0,'В':1,'С':2,'Е':4,'Н':7};
+function optCands(ch){
+  const c=String(ch||'').toUpperCase(),out=[];
+  if(/^[A-H]$/.test(c))return[c.charCodeAt(0)-65];
+  if(LOOKI[c]!=null)out.push(LOOKI[c]);
+  const k=LET8.indexOf(c);
+  if(k>=8&&out.indexOf(k-8)<0)out.push(k-8);
+  return out;
+}
+const optIdx=ch=>{const a=optCands(ch);return a.length?a[0]:-1;};
 /* "A. Целлюлоз B. Хитин C. Уураг" гэж нэг мөрөнд бичсэнийг салгана */
 function splitOpts(line){
   const re=new RegExp('(?:^|\\s)[\\(\\[]?('+OPT_LET+')\\s*[\\).:\\-]\\s+','g');
   const hit=[];let m;
-  while((m=re.exec(line))){hit.push({at:m.index,from:re.lastIndex,k:optIdx(m[1])});}
+  while((m=re.exec(line))){const c=optCands(m[1]);if(!c.length)continue;
+    const want=hit.length?hit[hit.length-1].k+1:0;
+    const k=c.indexOf(want)>=0?want:c[0];
+    hit.push({at:m.index,from:re.lastIndex,k});}
   if(hit.length<2)return null;
   for(let j=1;j<hit.length;j++)if(hit[j].k!==hit[j-1].k+1)return null;  // A,B,C дараалсан байх
   if(hit[0].k>1)return null;
@@ -2008,41 +2025,69 @@ function splitOpts(line){
 function optRow(l){
   const re=new RegExp('(?:^|\\s)[\\(\\[]?('+OPT_LET+')[\\)\\]]?\\s*[.):\\-]\\s*','g');
   const hit=[];let m;
-  while((m=re.exec(l))){const k=optIdx(m[1]);
-    if(hit.length&&k!==hit[hit.length-1].k+1)continue;
-    if(!hit.length&&k!==0)continue;
-    hit.push({at:m.index,from:re.lastIndex,k});}
+  while((m=re.exec(l))){const want=hit.length?hit[hit.length-1].k+1:0;
+    if(optCands(m[1]).indexOf(want)<0)continue;
+    hit.push({at:m.index,from:re.lastIndex,k:want});}
   if(hit.length<3)return null;
   return hit.map((h,j)=>({k:h.k,text:l.slice(h.from,j+1<hit.length?hit[j+1].at:l.length).trim()}));
 }
-/* Асуулт бүр нэг буюу хэд хэдэн мөр, төгсгөлд нь хариултын мөр.
+/* Ганцаараа мөрөнд бичсэн хувилбар: "A. Целлюлоз", "б) Хитин", "(C) Уураг" */
+function oneOpt(l){
+  const m=l.match(new RegExp('^[\\(\\[]?('+OPT_LET+')[\\)\\]]?\\s*[.):\\-]\\s*(.+)$'));
+  if(!m)return null;
+  const ks=optCands(m[1]);
+  return ks.length?{ks,text:m[2].trim()}:null;
+}
+/* Асуулт бүр нэг буюу хэд хэдэн мөр, дараа нь хувилбарууд (нэг мөрөнд эсвэл мөр бүрд).
    "1. 2. 3." гэсэн дотоод жагсаалт, харгалзуулах багана бүгд асуултын биед үлдэнэ. */
 function parseBlocks(t){
   const lines=t.replace(/\t/g,'  ').split(/\r?\n/).map(cleanLine).filter(l=>l&&!/^[-–=.·_\s]+$/.test(l));
-  const qs=[];let buf=[],part=1;
-  const flush=opts=>{
-    if(!buf.length)return;
+  const qs=[];let buf=[],opts=[],raw=[],part=1,meta={},lastNum=null;
+  const flush=list=>{
+    if(!buf.length){opts=[];raw=[];meta={};return;}
     let head=buf[0].replace(/^(?:№\s*|асуулт\s*)?\d{1,3}\s*[.)\-:]\s*/i,''),pts=null;
     head=head.replace(/\/?\s*(\d+(?:[.,]\d+)?)\s*оноо\s*\/?/i,(mm,p)=>{pts=parseFloat(p.replace(',','.'));return' ';});
     const body=buf.slice(1).join('\n');
     const q=newQ(part);
     q.text=(head.replace(/\s+/g,' ').trim()+(body?'\n'+body:'')).trim();
     if(pts!=null&&pts>0)q.points=pts;
-    (opts||[]).forEach(o=>{if(o.k<q.opts.length)q.opts[o.k]=o.text;});
-    qs.push(q);buf=[];
+    (list||[]).forEach(o=>{if(o.k<q.opts.length)q.opts[o.k]=o.text;});
+    if(meta.topic)q.topic=meta.topic;
+    if(meta.points>0)q.points=meta.points;
+    if(meta.key){const k=keyNorm(meta.key);
+      if(part===2)q.key=k;else if(k&&OPTS.includes(k[0]))q.key=k[0];}
+    qs.push(q);buf=[];opts=[];raw=[];meta={};
   };
+  /* Хоёроос цөөн хувилбар цуглуулсан бол тэр нь жинхэнэ хувилбар биш — текст рүү нь буцаана */
+  const giveBack=()=>{if(opts.length&&opts.length<2){buf.push(...raw);}opts=[];raw=[];};
   lines.forEach(l=>{
-    if(/^(II|2|хоёр(дугаар)?)\s*[-.]?\s*(р\s*)?хэсэг/i.test(l)){flush(null);part=2;return;}
-    if(/^(I|1|нэг(дүгээр|дугаар)?)\s*[-.]?\s*(р\s*)?хэсэг/i.test(l)){flush(null);part=1;return;}
-    const o=optRow(l);
-    if(o&&buf.length){flush(o);return;}
+    if(/^(II|2|хоёр(дугаар)?)\s*[-.]?\s*(р\s*)?хэсэг/i.test(l)){if(opts.length>=2)flush(opts);else{giveBack();flush(null);}part=2;return;}
+    if(/^(I|1|нэг(дүгээр|дугаар)?)\s*[-.]?\s*(р\s*)?хэсэг/i.test(l)){if(opts.length>=2)flush(opts);else{giveBack();flush(null);}part=1;return;}
+    let mm;
+    if(buf.length){
+      if((mm=l.match(/^(?:зөв\s+)?(?:хариулт|answer|key)\s*[:\-]\s*([A-HА-З1-8][A-HА-З1-8 ,]*)/i))){meta.key=mm[1];return;}
+      if((mm=l.match(/^(?:агуулга|сэдэв|topic)\s*[:\-]\s*(.+)$/i))){meta.topic=mm[1];return;}
+      if((mm=l.match(/^(?:оноо|points?|score)\s*[:\-]\s*([\d.,]+)/i))){meta.points=parseFloat(mm[1].replace(',','.'))||0;return;}
+    }
+    const row=optRow(l);
+    if(row&&buf.length){giveBack();flush(row);return;}
+    const s=oneOpt(l),want=opts.length?opts[opts.length-1].k+1:0;
+    if(s&&buf.length&&want<8&&s.ks.indexOf(want)>=0){opts.push({k:want,text:s.text});raw.push(l);return;}
+    /* Дугаарласан шинэ асуулт эхэлсэн эсэх: өмнөх асуултын дугаараас яг нэгээр их бол тийм.
+       Асуулт доторх "1. 2. 3." жагсаалт нь энэ дараалалд таарахгүй тул биед нь үлдэнэ. */
+    const nm=l.match(/^(\d{1,3})\s*[.)]\s*\S/);
+    if(opts.length>=2)flush(opts);
+    else if(nm&&lastNum!=null&&+nm[1]===lastNum+1&&buf.length){giveBack();flush(null);}
+    else giveBack();
+    if(!buf.length&&nm)lastNum=+nm[1];
     buf.push(l);
   });
-  if(buf.join(' ').length>15)flush(null);
+  if(opts.length>=2)flush(opts);
+  else{giveBack();if(buf.join(' ').length>15)flush(null);}
   return qs;
 }
 function parseQuestions(t){
-  const qs=[];let cur=null,m,part=1;
+  const qs=[];let cur=null,m,part=1,lastK=-1;
   const put=(k,txt)=>{if(cur&&k>=0&&k<cur.opts.length)cur.opts[k]=txt;};
   t.replace(/\t/g,'\n').split(/\r?\n/).forEach(raw=>{const l=cleanLine(raw);
     if(!l||/^[-–=.·\s]+$/.test(l))return;                 // хоосон, зураасан мөр
@@ -2050,19 +2095,21 @@ function parseQuestions(t){
     if(/^(I|1|нэг(дүгээр|дугаар)?)\s*[-.]?\s*(р\s*)?хэсэг/i.test(l)){part=1;cur=null;return;}
     // "1.", "1)", "№1", "1-", "Асуулт 1:" — асуултын эхлэл
     if((m=l.match(/^(?:№\s*|асуулт\s*)?(\d{1,2})\s*[.)\-:]\s*(.+)$/i))&&!/^(оноо|хариулт|агуулга)/i.test(m[2])){
-      cur=newQ(part);cur.text=m[2].trim();qs.push(cur);return;}
+      cur=newQ(part);lastK=-1;
+      cur.text=m[2].replace(/\/?\s*(\d+(?:[.,]\d+)?)\s*оноо\s*\/?/i,(mm,p)=>{cur.points=parseFloat(p.replace(',','.'))||cur.points;return' ';}).replace(/\s+/g,' ').trim();
+      qs.push(cur);return;}
     if(!cur)return;
     if((m=l.match(/^(?:зөв\s+)?(?:хариулт|answer|key)\s*[:\-]\s*([A-HА-З1-8][A-HА-З1-8 ,]*)/i))){
       if(isP2(cur))cur.key=keyNorm(m[1]);else{const k=keyNorm(m[1].trim()[0]);if(k&&opts1().includes(k))cur.key=k;}return;}
     if((m=l.match(/^(?:агуулга|сэдэв|topic)\s*[:\-]\s*(.+)$/i))){cur.topic=m[1];return;}
     if((m=l.match(/^(?:оноо|points?|score)\s*[:\-]\s*([\d.,]+)/i))){cur.points=parseFloat(m[1].replace(',','.'))||1;return;}
     const many=splitOpts(l);
-    if(many){many.forEach(o=>put(o.k,o.text));return;}
+    if(many){many.forEach(o=>put(o.k,o.text));lastK=many[many.length-1].k;return;}
     // "A.", "a)", "(А)", "Б:" — нэг хувилбар
-    if((m=l.match(new RegExp('^[\\(\\[]?('+OPT_LET+')[\\)\\]]?\\s*[\\).:\\-]?\\s*(.*)$')))&&optIdx(m[1])>=0
+    if((m=l.match(new RegExp('^[\\(\\[]?('+OPT_LET+')[\\)\\]]?\\s*[\\).:\\-]?\\s*(.*)$')))
        &&(m[2]||/^[\(\[]?.[\)\].:\-]/.test(l))){
-      const k=optIdx(m[1]);
-      if(k<cur.opts.length&&(k===0||cur.opts[k-1]||!cur.opts.some(Boolean))){put(k,m[2].trim());return;}
+      const ks=optCands(m[1]),k=ks.indexOf(lastK+1)>=0?lastK+1:(ks.length?ks[0]:-1);
+      if(k>=0&&k<cur.opts.length&&(k===0||cur.opts[k-1]||!cur.opts.some(Boolean))){put(k,m[2].trim());lastK=k;return;}
     }
     if(cur.opts.every(o=>!o))cur.text+=' '+l;
   });
@@ -2071,8 +2118,13 @@ function parseQuestions(t){
 $('#qbulkBtn').addEventListener('click',()=>{
   const raw=$('#qbulk').value,m=$('#qbulkMsg'),mode=($('#qbulkMode')||{}).value||'auto';
   const tbl=parseTable(raw);
-  const hasRow=raw.split(/\r?\n/).some(l=>!!optRow(cleanLine(l)));
-  const qs=tbl||(mode==='line'||(mode==='auto'&&hasRow)?parseBlocks(raw):parseQuestions(raw));
+  /* Автомат горимд хоёр аргаар уншаад илүү сайн таньсныг нь сонгоно */
+  const good=qq=>qq.reduce((s,q)=>s+(q.opts.filter(Boolean).length>=2?3:0)+(q.text?1:0),0);
+  let qs;
+  if(tbl)qs=tbl;
+  else if(mode==='line')qs=parseBlocks(raw);
+  else if(mode==='rows')qs=parseQuestions(raw);
+  else{const a=parseBlocks(raw),b=parseQuestions(raw);qs=good(a)>=good(b)?a:b;}
   if(!qs.length){m.style.color='var(--stain)';m.textContent='Асуулт танигдсангүй. Асуулт бүрийг "1." гэх мэт дугаараар эхлүүлнэ үү, эсвэл хүснэгтийн толгойд "Асуулт", "Зөв хариулт" гэсэн багана байгаа эсэхийг шалгана уу.';return;}
   if(state.students.length&&!confirm('Энэ шалгалтад '+state.students.length+' сурагчийн хариулт орсон байна. Асуултуудыг солих уу? Хариултууд хэвээр үлдэнэ.'))return;
   let p1=qs.filter(q=>!isP2(q)),p2=qs.filter(isP2);const cut=p2.length>4;p2=p2.slice(0,4);
