@@ -195,6 +195,15 @@ tr.pick{cursor:pointer} tr.pick:hover{background:var(--bg)} tr.sel{background:va
   border:1px solid var(--line);background:var(--surface);color:var(--leaf)}
 .qbtn.del{color:var(--stain)}
 .qcard.p3{border-left:4px solid var(--iodine)}
+.qcard.p4{border-left:4px solid var(--leaf)}
+.tfgrid{display:grid;grid-template-columns:22px 1fr auto;gap:6px 8px;align-items:center;margin-top:10px}
+.tfno{color:var(--muted);font-size:.85rem;text-align:center}
+.tfpick{display:flex;gap:4px}
+.tfb{font:inherit;font-size:.85rem;padding:6px 12px;border-radius:999px;cursor:pointer;
+  border:1.5px solid var(--line);background:var(--surface);color:var(--muted)}
+.tfb[aria-pressed="true"]{background:var(--leaf);border-color:var(--leaf);color:#fff;font-weight:600}
+@media (prefers-color-scheme:dark){.tfb[aria-pressed="true"]{color:#0e1a15}}
+@media (max-width:560px){.tfgrid{grid-template-columns:22px 1fr}.tfpick{grid-column:2}}
 .p3bar{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin:8px 0;font-size:.85rem;color:var(--muted)}
 .p3bar span{display:inline-flex;align-items:center;justify-content:center;min-width:26px;height:26px;padding:0 8px;
   border:1.5px solid var(--line);border-radius:999px;color:var(--ink);font-size:.8rem}
@@ -355,7 +364,8 @@ body.student #studentApp{display:block}
       <div><label for="optn">I хэсэг: хувилбарын тоо</label><select id="optn">
         <option value="3">3 (A B C)</option><option value="4">4 (A B C D)</option><option value="5">5 (A B C D E)</option></select></div>
       <div><label for="qcount2">II хэсэг: асуултын тоо (0–4)</label><input id="qcount2" type="number" min="0" max="4"></div>
-      <div><label for="qcount3">III хэсэг: задгай даалгавар (0–6)</label><input id="qcount3" type="number" min="0" max="6"></div>
+      <div><label for="qcount4">III хэсэг: үнэн/худал (0–60)</label><input id="qcount4" type="number" min="0" max="60"></div>
+      <div><label for="qcount3">IV хэсэг: задгай даалгавар (0–6)</label><input id="qcount3" type="number" min="0" max="6"></div>
       <div><label for="vcount">Хувилбарын тоо</label><select id="vcount">
         <option value="1">1 хувилбар</option><option value="2">2 хувилбар (А, Б)</option>
         <option value="3">3 хувилбар (А, Б, В)</option><option value="4">4 хувилбар (А, Б, В, Г)</option></select></div>
@@ -774,7 +784,8 @@ body.student #studentApp{display:block}
         <tr><td>I хэсэг: асуултын тоо</td><td>Нэг зөв хариулттай ердийн тест. 60 хүртэл.</td></tr>
         <tr><td>I хэсэг: хувилбарын тоо</td><td><b>3 (A B C)</b>, <b>4 (A B C D)</b> эсвэл <b>5 (A B C D E)</b>. Хариултын хуудсан дээрх дугуйны тоо үүнийг дагана.</td></tr>
         <tr><td>II хэсэг: асуултын тоо</td><td>A–H хүртэл 8 хувилбартай, хэд хэдэн зөв хариулттай даалгавар. Хэрэггүй бол 0.</td></tr>
-        <tr><td>III хэсэг: задгай даалгавар</td><td>Сурагч гараар бичих даалгавар, 6 хүртэл. Доор тусад нь тайлбарласан.</td></tr>
+        <tr><td>III хэсэг: үнэн/худал</td><td>Нэг асуултад 4 мэдэгдэл, тус бүрд Ү эсвэл Х. 60 хүртэл.</td></tr>
+        <tr><td>IV хэсэг: задгай даалгавар</td><td>Сурагч гараар бичих даалгавар, 6 хүртэл. Доор тусад нь тайлбарласан.</td></tr>
         <tr><td>Хувилбарын тоо</td><td>Хуудсаа 2–4 хувилбараар (А, Б, В, Г) тараах бол. Доор тайлбарласан.</td></tr>
       </table></div></div>
     <div class="hp-step"><div class="hp-num">3</div><div><b>Асуулт бүрийн мөрийг бөглөх</b>
@@ -819,8 +830,31 @@ body.student #studentApp{display:block}
       • Нийт 4 асуулт устана
       • 24 сурагчийн 96 хариулт устана
       • Дүн, анализ шууд өөрчлөгдөнө</div>
-    <h3>III хэсэг: задгай даалгавар</h3>
-    <p>Сурагч <b>гараар бичиж</b> хариулах даалгавар — тайлбарла, жиш, бодолтоо харуул гэх мэт. Дээд талын <b>"III хэсэг: задгай даалгавар"</b> нүдэнд тоог нь (1–6) бичихэд улбар шар зураастай карт гарч ирнэ.</p>
+    <h3>III хэсэг: үнэн / худал</h3>
+    <p>Нэг асуултад <b>4 мэдэгдэл</b>, сурагч тус бүрийг нь <b>үнэн</b> эсвэл <b>худал</b> гэж үнэлнэ. Дээд талын "III хэсэг: үнэн/худал" нүдэнд тоог нь бичихэд ногоон зураастай карт гарч ирнэ.</p>
+    <p>Программд мэдэгдэл бүрийн текст, зөв хариултыг нь оруулна:</p>
+    <table>
+      <tr><th>№</th><th>Мэдэгдэл</th><th>Зөв нь</th></tr>
+      <tr><td>1</td><td>Бүх эс цөмтэй байдаг</td><td><b>Худал</b></td></tr>
+      <tr><td>2</td><td>Хлоропласт фотосинтез явуулна</td><td><b>Үнэн</b></td></tr>
+      <tr><td>3</td><td>Рибосом уураг нийлэгжүүлнэ</td><td><b>Үнэн</b></td></tr>
+      <tr><td>4</td><td>Митохондри эрчим хүч үүсгэнэ</td><td><b>Үнэн</b></td></tr>
+    </table>
+    <p>Зөв хариулт нь <b>ямар ч хослол</b> байж болно — дөрвүүлээ үнэн, дөрвүүлээ худал ч болно.</p>
+    <h4 style="margin:14px 0 4px;font-size:.95rem">Оноо — стандарт журмаар</h4>
+    <table>
+      <tr><th>Зөв тэмдэглэсэн</th><th>1.5 оноотой бол</th><th>Хувь</th></tr>
+      <tr><td>4 / 4</td><td><b>1.5 оноо</b></td><td>100%</td></tr>
+      <tr><td>3 / 4</td><td><b>0.9 оноо</b></td><td>60%</td></tr>
+      <tr><td>2 / 4</td><td><b>0.3 оноо</b></td><td>20%</td></tr>
+      <tr><td>1 / 4</td><td>0</td><td>0%</td></tr>
+      <tr><td>0 / 4</td><td>0</td><td>0%</td></tr>
+    </table>
+    <p>Энэ бол анхдагч горим ("Стандарт"). Хүсвэл <b>Пропорциональ</b> (3/4 → 75%) эсвэл <b>Бүгдийг зөв</b> (дөрвүүлээ зөв бол бүтэн оноо, үгүй бол 0) болгож сонгоно. Асуултын оноог өөрчлөхөд шатлал нь дагаж тооцогдоно.</p>
+    <div class="hp-ok">Хариултын хуудсан дээр мэдэгдэл бүрд <b>Ү</b> ба <b>Х</b> хос дугуй гарна — сурагч хосоос нэгийг нь будна. Нэг мөрөнд 2 асуулт багтана.</div>
+    <div class="hp-tip">Мэдэгдлийн <b>текст нь хариултын хуудсан дээр гарахгүй</b> — асуултын цаасан дээрээ байна. Хуудсанд зөвхөн дугаар, дугуй. Программ дотор бичсэн текст нь хариулт шалгах, анализ харахад танд харагдана.</div>
+    <h3>IV хэсэг: задгай даалгавар</h3>
+    <p>Сурагч <b>гараар бичиж</b> хариулах даалгавар — тайлбарла, жиш, бодолтоо харуул гэх мэт. Дээд талын <b>"IV хэсэг: задгай даалгавар"</b> нүдэнд тоог нь (1–6) бичихэд улбар шар зураастай карт гарч ирнэ.</p>
     <table>
       <tr><th>Талбар</th><th>Юу бичих</th></tr>
       <tr><td>Агуулга</td><td>Тестийнхтэй адил. Анализ дээр нэгтгэгдэнэ.</td></tr>
@@ -892,7 +926,7 @@ body.student #studentApp{display:block}
     <p>Программ <b>цаас хэмнэнэ</b>: задгай даалгаврыг эхлээд 1-р хуудасны үлдсэн зайд багтаахыг оролдоно. Багтахгүй бол л тусдаа хуудас нэмнэ.</p>
     <table>
       <tr><th>Шалгалт</th><th>Хэдэн хуудас</th></tr>
-      <tr><td>20 тест + 3 задгай (3 мөр)</td><td>2 (нэг нь 1-р хуудсанд багтана)</td></tr>
+      <tr><td>20 тест + 3 задгай (3 мөр)</td><td>2 (нэг нь 1-р хуудсанд багтана)</td></tr><tr><td>20 тест + 20 үнэн/худал</td><td>2</td></tr>
       <tr><td>50 тест + 3 задгай (3 мөр)</td><td>2</td></tr>
       <tr><td>20 тест + 2 задгай (6 мөр)</td><td>2</td></tr>
       <tr><td>40 тест + 6 задгай (3 мөр)</td><td>3</td></tr>
@@ -1638,12 +1672,28 @@ let mem=null;
 const today=()=>new Date().toISOString().slice(0,10);
 const OPTS8=['A','B','C','D','E','F','G','H'],LET8='ABCDEFGHАБВГДЕЖЗ';
 const newQ=(part)=>part===3?{part:3,topic:'',key:'',points:5,text:'',scale:'tier',lines:3}
+  :part===4?{part:4,topic:'',key:'ҮҮҮҮ',points:1.5,text:'',tfmode:'scale',stmts:['','','','']}
   :part===2?{part:2,topic:'',key:'',points:2,text:'',opts:Array(8).fill('')}
   :{topic:'',key:'A',points:1,text:'',opts:Array(5).fill('')};
 const isP2=q=>!!q&&q.part===2;
-/* III хэсэг: задгай даалгавар. Сурагч гараар бичнэ, багш уншаад оноог нь будна. */
+/* Задгай даалгавар (хуудсан дээр IV хэсэг). Сурагч гараар бичнэ, багш уншаад оноог нь будна. */
 const isP3=q=>!!q&&q.part===3;
-const isP1=q=>!isP2(q)&&!isP3(q);
+/* Үнэн/худал (хуудсан дээр III хэсэг). Нэг асуултад 4 мэдэгдэл, тус бүр Ү эсвэл Х. */
+const isP4=q=>!!q&&q.part===4;
+const isP1=q=>!isP2(q)&&!isP3(q)&&!isP4(q);
+const partLabel=q=>isP3(q)?'IV':isP4(q)?'III':isP2(q)?'II':'I';
+const TF_N=4;
+/* Стандарт шатлал: 4 зөв = 100%, 3 зөв = 60%, 2 зөв = 20%, 1 ба 0 зөв = 0 */
+const TF_SCALE=[0,0,.2,.6,1];
+/* Ямар ч бичиглэлийг Ү / Х болгож, 4 тэмдэгт болгоно. Хариулаагүйг "-" гэж тэмдэглэнэ. */
+function tfNorm(s){
+  const t=String(s||'').toUpperCase(),o=[];
+  for(let i=0;i<TF_N;i++){const ch=t[i]||'';
+    o.push(/[ҮУY1TТ]/.test(ch)?'Ү':/[ХX0FФ]/.test(ch)?'Х':'-');}
+  return o.join('');
+}
+const tfRight=(q,a)=>{const k=tfNorm(q.key),v=tfNorm(a);let c=0;
+  for(let i=0;i<TF_N;i++)if(v[i]!=='-'&&v[i]===k[i])c++;return c;};
 const TIER=[['0',0],['Бага',.25],['Дунд',.5],['Боломжийн',.75],['Бүтэн',1]];
 const p3Max=q=>Math.max(1,Math.min(10,Math.round(+q.points||5)));
 /* Хуудсан дээр гарах дугуйнууд. Оноо ҮРГЭЛЖ бүхэл тоо:
@@ -1656,10 +1706,16 @@ function p3Steps(q){
 }
 const qOpts=q=>isP2(q)?OPTS8:opts1();
 const keyNorm=v=>[...new Set(String(v||'').toUpperCase().split('').map(ch=>{const k=LET8.indexOf(ch);if(k>=0)return OPTS8[k%8];if(/[1-8]/.test(ch))return OPTS8[ch-1];return'';}).filter(Boolean))].sort().join('');
-const partCount=()=>{const q=state.exam.questions;return[q.filter(isP1).length,q.filter(isP2).length,q.filter(isP3).length];};
+/* [I хэсэг, II хэсэг, задгай (IV), үнэн/худал (III)] — массив дахь дараалал нь I, II, Ү/Х, задгай */
+const partCount=()=>{const q=state.exam.questions;
+  return[q.filter(isP1).length,q.filter(isP2).length,q.filter(isP3).length,q.filter(isP4).length];};
 function qEarn(q,a){
   const pts=+q.points||0;if(!a)return 0;
   if(isP3(q)){const st=p3Steps(q),i=parseInt(a,10);return isNaN(i)||i<0||i>=st.length?0:st[i].pts;}
+  if(isP4(q)){const c=tfRight(q,a),md=q.tfmode||'scale';
+    if(md==='all')return c===TF_N?pts:0;
+    if(md==='prop')return pts*c/TF_N;
+    return pts*TF_SCALE[c];}
   if(!isP2(q))return a===q.key?pts:0;
   const k=keyNorm(q.key),sel=keyNorm(a);if(!k)return 0;if(sel===k)return pts;
   if(state.exam.p2mode!=='partial')return 0;
@@ -1667,18 +1723,21 @@ function qEarn(q,a){
   return Math.max(0,(hit-(sel.length-hit))/k.length)*pts;
 }
 const qOk=(q,a)=>!!a&&(isP3(q)?parseInt(a,10)===p3Steps(q).length-1
+  :isP4(q)?tfRight(q,a)===TF_N
   :isP2(q)?keyNorm(a)===keyNorm(q.key)&&!!keyNorm(q.key):a===q.key);
-function resizeParts(n1,n2,n3){
-  const qs=state.exam.questions,[o1,o2,o3]=partCount();
-  if(n3==null)n3=o3;
-  const p1=qs.filter(isP1),p2=qs.filter(isP2),p3=qs.filter(isP3);
-  while(p1.length<n1)p1.push(newQ(1));while(p2.length<n2)p2.push(newQ(2));while(p3.length<n3)p3.push(newQ(3));
-  p1.length=n1;p2.length=n2;p3.length=n3;
-  state.exam.questions=[...p1,...p2,...p3];
+function resizeParts(n1,n2,n3,n4){
+  const qs=state.exam.questions,[o1,o2,o3,o4]=partCount();
+  if(n3==null)n3=o3;if(n4==null)n4=o4;
+  const p1=qs.filter(isP1),p2=qs.filter(isP2),p3=qs.filter(isP3),p4=qs.filter(isP4);
+  while(p1.length<n1)p1.push(newQ(1));while(p2.length<n2)p2.push(newQ(2));
+  while(p4.length<n4)p4.push(newQ(4));while(p3.length<n3)p3.push(newQ(3));
+  p1.length=n1;p2.length=n2;p3.length=n3;p4.length=n4;
+  state.exam.questions=[...p1,...p2,...p4,...p3];
   const fit=(a,n)=>{while(a.length<n)a.push('');a.length=n;return a;};
   state.students.forEach(s=>{
-    const a1=s.answers.slice(0,o1),a2=s.answers.slice(o1,o1+o2),a3=s.answers.slice(o1+o2,o1+o2+o3);
-    s.answers=[...fit(a1,n1),...fit(a2,n2),...fit(a3,n3)];});
+    const a1=s.answers.slice(0,o1),a2=s.answers.slice(o1,o1+o2),
+      a4=s.answers.slice(o1+o2,o1+o2+o4),a3=s.answers.slice(o1+o2+o4,o1+o2+o4+o3);
+    s.answers=[...fit(a1,n1),...fit(a2,n2),...fit(a4,n4),...fit(a3,n3)];});
 }
 function blank(n){return{id:uid(),exam:{title:'',date:today(),questions:Array.from({length:n},newQ)},students:[]};}
 function load(){
@@ -1779,14 +1838,15 @@ function matGuard(){
   renderSetup();return true;
 }
 /* Асуултын тоог багасгахад яг аль асуулт, хэдэн хариулт устахыг тоолно */
-function lostInfo(n1,n2,n3){
-  const [o1,o2,o3]=partCount(),idx=[],lines=[];
-  const add=(from,to,lab,fromN,toN)=>{if(to<=from)return;
+function lostInfo(n1,n2,n3,n4){
+  const [o1,o2,o3,o4]=partCount(),idx=[],lines=[];
+  const add=(from,to,lab,fromN,toN,base)=>{if(to<=from)return;
     for(let i=from;i<to;i++)idx.push(i);
-    lines.push('  '+lab+' хэсэг: '+toN+' → '+fromN+'  ('+(from-(lab==='I'?0:lab==='II'?o1:o1+o2)+1)+'–'+(to-(lab==='I'?0:lab==='II'?o1:o1+o2))+'-р асуулт устана)');};
-  add(n1,o1,'I',n1,o1);
-  add(o1+n2,o1+o2,'II',n2,o2);
-  add(o1+o2+n3,o1+o2+o3,'III',n3,o3);
+    lines.push('  '+lab+' хэсэг: '+toN+' → '+fromN+'  ('+(from-base+1)+'–'+(to-base)+'-р асуулт устана)');};
+  add(n1,o1,'I',n1,o1,0);
+  add(o1+n2,o1+o2,'II',n2,o2,o1);
+  add(o1+o2+n4,o1+o2+o4,'III',n4,o4,o1+o2);
+  add(o1+o2+o4+n3,o1+o2+o4+o3,'IV',n3,o3,o1+o2+o4);
   let ans=0;
   state.students.forEach(s=>idx.forEach(i=>{if(s.answers&&s.answers[i])ans++;}));
   return{idx,lines,ans,students:state.students.length};
@@ -1822,8 +1882,8 @@ function renderSetup(){
   $('#title').value=state.exam.title;
   $('#edate').value=state.exam.date||'';
   renderExams();renderRosterSetup();renderSheetPanel();renderVariants();if(typeof renderCloud==='function'&&$('#cApi'))renderCloud();
-  const [n1,n2,n3]=partCount();
-  $('#qcount').value=n1;$('#qcount2').value=n2;$('#qcount3').value=n3;$('#optn').value=optN();
+  const [n1,n2,n3,n4]=partCount();
+  $('#qcount').value=n1;$('#qcount2').value=n2;$('#qcount3').value=n3;$('#qcount4').value=n4;$('#optn').value=optN();
   $('#p2opts').hidden=!n2;$('#p2hint').hidden=false;$('#p2mode').value=state.exam.p2mode||'exact';
   /* Хариулт орсон шалгалтын материалыг түгжинэ */
   const nst=state.students.length,lk=matLocked();
@@ -1835,14 +1895,36 @@ function renderSetup(){
         <small>${nst} сурагчийн хариулт орсон шалгалт. Асуулт хасах, тоог өөрчлөхөд дүн шууд өөрчлөгдөнө.</small>
         <button type="button" class="btn ghost" id="matLockBtn">Дахин түгжих</button></div>`;
   ['#qcount','#qcount2','#qcount3','#optn','#vcount','#addQ1','#addQ5','#qbulkBtn'].forEach(s=>{const el=$(s);if(el)el.disabled=lk;});
-  const multi=n2||n3;
-  $('#qtable').innerHTML=state.exam.questions.map((q,i)=>{const p2=isP2(q),p3=isP3(q),o=q.opts||[];
+  const multi=n2||n3||n4;
+  $('#qtable').innerHTML=state.exam.questions.map((q,i)=>{const p2=isP2(q),p3=isP3(q),p4=isP4(q),o=q.opts||[];
     const head=!multi?''
-      :i===0?`<div class="part-head">I хэсэг <small>${opts1().join(' ')} — нэг зөв хариулттай тест</small></div>`
+      :i===0&&n1?`<div class="part-head">I хэсэг <small>${opts1().join(' ')} — нэг зөв хариулттай тест</small></div>`
       :i===n1&&n2?'<div class="part-head">II хэсэг <small>A–H, чадвар шаардсан даалгавар</small></div>'
-      :i===n1+n2&&n3?'<div class="part-head">III хэсэг <small>задгай даалгавар — сурагч гараар бичнэ, багш уншаад оноог нь будна</small></div>':'';
+      :i===n1+n2&&n4?'<div class="part-head">III хэсэг <small>үнэн/худал — нэг асуултад 4 мэдэгдэл</small></div>'
+      :i===n1+n2+n4&&n3?'<div class="part-head">IV хэсэг <small>задгай даалгавар — сурагч гараар бичнэ, багш уншаад оноог нь будна</small></div>':'';
     const nav=`<button type="button" class="qbtn" data-i="${i}" data-f="qins"${lk?' disabled title="Шалгалт түгжээтэй"':' title="Доор нь шинэ асуулт нэмэх"'}>＋</button>
       <button type="button" class="qbtn del" data-i="${i}" data-f="qdel"${lk?' disabled title="Шалгалт түгжээтэй"':' title="Энэ асуултыг хасах"'}>✕</button>`;
+    if(p4){const k=tfNorm(q.key),md=q.tfmode||'scale',P=+q.points||1.5;
+      const pt=c=>r1(md==='all'?(c===TF_N?P:0):md==='prop'?P*c/TF_N:P*TF_SCALE[c]);
+      return`${head}<div class="qcard p4">
+      <div class="qhead"><b>${i+1}</b>
+      <input data-i="${i}" data-f="topic" value="${esc(q.topic)}" placeholder="Асуултын агуулгаа бич" list="topics" aria-label="${i+1}-р асуултын агуулга">
+      <select data-i="${i}" data-f="tfmode" aria-label="${i+1}-р асуултын оноо тооцох журам">
+        <option value="scale"${md==='scale'?' selected':''}>Стандарт</option>
+        <option value="prop"${md==='prop'?' selected':''}>Пропорциональ</option>
+        <option value="all"${md==='all'?' selected':''}>Бүгдийг зөв</option></select>
+      <input data-i="${i}" data-f="points" type="number" min="0" step="0.5" value="${esc(q.points)}" aria-label="${i+1}-р асуултын оноо">
+      ${nav}</div>
+      <div class="p3bar"><small>4 зөв = ${pt(4)} оноо, 3 зөв = ${pt(3)}, 2 зөв = ${pt(2)}, 1 зөв = ${pt(1)}, 0 зөв = ${pt(0)}</small></div>
+      <textarea data-i="${i}" data-f="text" placeholder="Асуултын толгой. Жишээ: Эсийн тухай дараах мэдэгдлүүдийг үнэл." aria-label="${i+1}-р асуултын текст">${esc(q.text||'')}</textarea>
+      <div class="tfgrid">${Array.from({length:TF_N},(_,j)=>`
+        <span class="tfno">${j+1}</span>
+        <input data-i="${i}" data-f="stmt" data-j="${j}" value="${esc((q.stmts||[])[j]||'')}" placeholder="${j+1}-р мэдэгдэл" aria-label="${i+1}-р асуултын ${j+1}-р мэдэгдэл">
+        <span class="tfpick" role="group" aria-label="${j+1}-р мэдэгдлийн зөв хариулт">
+          <button type="button" class="tfb" data-i="${i}" data-f="tfkey" data-j="${j}" data-v="Ү" aria-pressed="${k[j]==='Ү'}">Үнэн</button>
+          <button type="button" class="tfb" data-i="${i}" data-f="tfkey" data-j="${j}" data-v="Х" aria-pressed="${k[j]==='Х'}">Худал</button>
+        </span>`).join('')}</div>
+      </div>`;}
     if(p3){const steps=p3Steps(q);
       return`${head}<div class="qcard p3">
       <div class="qhead"><b>${i+1}</b>
@@ -1914,10 +1996,10 @@ function renderScanVar(){
 }
 function vShuffleOrder(){
   const [n1,n2]=partCount(),mix=a=>{a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;};
-  const [,,n3]=partCount();
+  const [,,n3,n4]=partCount();
   const p1=mix(Array.from({length:n1},(_,i)=>i)),p2=mix(Array.from({length:n2},(_,i)=>n1+i));
-  const p3=Array.from({length:n3},(_,i)=>n1+n2+i);   // задгай даалгавар холигдохгүй
-  return [...p1,...p2,...p3];   // I ба II хэсэг хоорондоо холилдохгүй
+  const rest=Array.from({length:n4+n3},(_,i)=>n1+n2+i);   // Ү/Х ба задгай холигдохгүй
+  return [...p1,...p2,...rest];   // I ба II хэсэг хоорондоо холилдохгүй
 }
 function vSet(count){
   const list=[Array.from({length:state.exam.questions.length},(_,i)=>i)];
@@ -2012,6 +2094,11 @@ $('#matLock').addEventListener('click',e=>{
   if(e.target.id==='matLockBtn'){matOpen='';renderSetup();}
 });
 $('#qtable').addEventListener('click',e=>{
+  const tb=e.target.closest('[data-f="tfkey"]');if(tb){
+    const q=state.exam.questions[+tb.dataset.i],j=+tb.dataset.j;
+    const k=tfNorm(q.key).split('');k[j]=tb.dataset.v;q.key=k.join('');save();
+    [...tb.parentNode.querySelectorAll('.tfb')].forEach(x=>x.setAttribute('aria-pressed',x.dataset.v===tb.dataset.v));
+    return;}
   const b=e.target.closest('[data-f="imgdel"]');if(b){
     if(!confirm((+b.dataset.i+1)+'-р асуултын зургийг устгах уу?'))return;
     snap((+b.dataset.i+1)+'-р асуултын зураг');
@@ -2019,16 +2106,19 @@ $('#qtable').addEventListener('click',e=>{
     undoBar((+b.dataset.i+1)+'-р асуултын зураг устлаа.');return;}
   const a=e.target.closest('[data-f="qins"]');if(a){
     if(matGuard())return;
-    const i=+a.dataset.i,q=state.exam.questions[i],[n1,n2,n3]=partCount();
-    const part=isP3(q)?3:isP2(q)?2:1,lim=part===3?6:part===2?4:60,have=part===3?n3:part===2?n2:n1;
+    const i=+a.dataset.i,q=state.exam.questions[i],[n1,n2,n3,n4]=partCount();
+    const part=isP3(q)?3:isP4(q)?4:isP2(q)?2:1;
+    const lim=part===3?6:part===2?4:60,have=part===3?n3:part===4?n4:part===2?n2:n1;
     const m=$('#qbulkMsg');
     if(have>=lim){m.style.color='var(--stain)';
-      m.textContent=(part===3?'III':part===2?'II':'I')+' хэсэгт дээд тал нь '+lim+' асуулт байж болно.';return;}
+      m.textContent=partLabel(q)+' хэсэгт дээд тал нь '+lim+' асуулт байж болно.';return;}
     if(state.students.length&&!confirm((i+2)+'-р байранд шинэ асуулт нэмэх үү?\n\n'
       +'Энэ шалгалтад '+state.students.length+' сурагчийн хариулт орсон байна.\n'
       +'Дараагийн асуултууд нэгээр ухарч, сурагчдын хариулт хамт шилжинэ.'+UNDO_NOTE))return;
     snap((i+2)+'-р байранд асуулт нэмэх');
-    const nq=newQ(part);if(part===3){nq.scale=q.scale||'tier';nq.lines=q.lines==null?3:q.lines;nq.points=q.points||5;}
+    const nq=newQ(part);
+    if(part===3){nq.scale=q.scale||'tier';nq.lines=q.lines==null?3:q.lines;nq.points=q.points||5;}
+    if(part===4){nq.tfmode=q.tfmode||'scale';nq.points=q.points||1.5;}
     nq.topic=q.topic||'';
     state.exam.questions.splice(i+1,0,nq);
     state.students.forEach(s=>s.answers.splice(i+1,0,''));
@@ -2305,17 +2395,17 @@ $('#qbulkBtn').addEventListener('click',()=>{
   snap('асуултуудыг солих');
   let p1=qs.filter(q=>!isP2(q)),p2=qs.filter(isP2);const cut=p2.length>4;p2=p2.slice(0,4);
   if(!p1.length){m.style.color='var(--stain)';m.textContent='I хэсгийн асуулт олдсонгүй.';return;}
-  const keep3=state.exam.questions.filter(isP3);   // задгай даалгаврууд хэвээр үлдэнэ
+  const keep4=state.exam.questions.filter(isP4),keep3=state.exam.questions.filter(isP3);   // Ү/Х, задгай хэвээр үлдэнэ
   /* Хэдэн хувилбар орж ирснээр I хэсгийн хувилбарын тоог автоматаар тохируулна */
   const used=Math.max(...p1.map(q=>{const k=(q.opts||[]).map((o,i)=>o?i+1:0);return Math.max(0,...k);}),0);
   if(used>=2)state.exam.optN=Math.max(2,Math.min(5,used));
   const O=opts1();p1.forEach(q=>{if(!O.includes(q.key))q.key=O[0];});
-  const [o1,o2,o3]=partCount(),n12=p1.length+p2.length;
-  state.exam.questions=[...p1,...p2,...keep3];const n=n12+keep3.length;
+  const [o1,o2,o3,o4]=partCount(),n12=p1.length+p2.length;
+  state.exam.questions=[...p1,...p2,...keep4,...keep3];const n=n12+keep4.length+keep3.length;
   state.students.forEach(s=>{
-    const a3=s.answers.slice(o1+o2,o1+o2+o3);          // задгай онооны байрлал шилжинэ
+    const a4=s.answers.slice(o1+o2,o1+o2+o4),a3=s.answers.slice(o1+o2+o4,o1+o2+o4+o3);  // байрлал шилжинэ
     const a=s.answers.slice(0,n12);while(a.length<n12)a.push('');
-    s.answers=[...a,...a3];while(s.answers.length<n)s.answers.push('');s.answers.length=n;});
+    s.answers=[...a,...a4,...a3];while(s.answers.length<n)s.answers.push('');s.answers.length=n;});
   draft=[];save();refreshAll();$('#qbulk').value='';
   undoBar('Асуултууд солигдлоо ('+n+' асуулт).');
   m.style.color='';m.textContent=(tbl?'Хүснэгт танигдлаа. ':'')+'I хэсэгт '+p1.length+' асуулт'+(p2.length?', II хэсэгт '+p2.length+' асуулт':'')+' орлоо.'
@@ -2396,9 +2486,12 @@ $('#delCls').addEventListener('click',()=>{
 });
 function onCounts(){
   if(matGuard())return;
-  const n1=Math.max(1,Math.min(60,parseInt($('#qcount').value)||1)),n2=Math.max(0,Math.min(4,parseInt($('#qcount2').value)||0)),
-    n3=Math.max(0,Math.min(6,parseInt($('#qcount3').value)||0));
-  const L=lostInfo(n1,n2,n3);
+  let n1=Math.max(0,Math.min(60,parseInt($('#qcount').value)||0));
+  const n2=Math.max(0,Math.min(4,parseInt($('#qcount2').value)||0)),
+    n3=Math.max(0,Math.min(6,parseInt($('#qcount3').value)||0)),
+    n4=Math.max(0,Math.min(60,parseInt($('#qcount4').value)||0));
+  if(!n1&&!n2&&!n3&&!n4)n1=1;        // дор хаяж нэг асуулт байх ёстой
+  const L=lostInfo(n1,n2,n3,n4);
   if(L.idx.length){
     const msg='⚠ Асуултын тоог багасгаж байна.\n\n'+L.lines.join('\n')+'\n\n'
       +'  • Нийт '+L.idx.length+' асуулт устана\n'
@@ -2407,17 +2500,17 @@ function onCounts(){
     if(!confirm(msg)){renderSetup();return;}   // цуцалбал нүднүүд хуучин тоонд буцна
     snap(L.idx.length+' асуулт хасах');
   }
-  resizeParts(n1,n2,n3);draft=[];save();refreshAll();
+  resizeParts(n1,n2,n3,n4);draft=[];save();refreshAll();
   if(L.idx.length)undoBar(L.idx.length+' асуулт хасагдлаа'+(L.ans?' ('+L.ans+' хариулт устсан).':'.'));
 }
 /* Байгаа асуултуудыг хэвээр нь үлдээж, доор нь шинэ асуулт нэмнэ */
 function addQuestions(n){
   if(matGuard())return;
-  const [n1,n2,n3]=partCount(),want=Math.min(60,n1+n);
+  const [n1,n2,n3,n4]=partCount(),want=Math.min(60,n1+n);
   if(want===n1){const m=$('#qbulkMsg');m.style.color='var(--stain)';
     m.textContent='I хэсэгт дээд тал нь 60 асуулт байж болно.';return;}
   snap((want-n1)+' асуулт нэмэх');
-  resizeParts(want,n2,n3);draft=[];save();renderSetup();
+  resizeParts(want,n2,n3,n4);draft=[];save();renderSetup();
   undoBar((want-n1)+' асуулт нэмэгдлээ.');
   const m=$('#qbulkMsg');m.style.color='';
   m.textContent=(want-n1)+' асуулт нэмэгдлээ. Одоо I хэсэгт '+want+' асуулт байна. Шинэ асуултууд жагсаалтын төгсгөлд нэмэгдсэн.';
@@ -2429,6 +2522,7 @@ $('#addQ5').addEventListener('click',()=>addQuestions(5));
 $('#qcount').addEventListener('change',onCounts);
 $('#qcount2').addEventListener('change',onCounts);
 $('#qcount3').addEventListener('change',onCounts);
+$('#qcount4').addEventListener('change',onCounts);
 $('#p2mode').addEventListener('change',e=>{state.exam.p2mode=e.target.value;save();});
 $('#optn').addEventListener('change',e=>{
   if(matGuard())return;
@@ -2446,16 +2540,21 @@ $('#optn').addEventListener('change',e=>{
 $('#qtable').addEventListener('change',e=>{
   const f=e.target.dataset.f,i=e.target.dataset.i;
   if(f==='key'&&e.target.tagName==='INPUT'){const q=state.exam.questions[i];e.target.value=q.key;return;}
-  if(f==='scale'||f==='lines'){const q=state.exam.questions[i];
+  if(f==='scale'||f==='lines'||f==='tfmode'){const q=state.exam.questions[i];
     q[f]=f==='lines'?+e.target.value:e.target.value;save();renderSetup();renderSheetPanel();}
 });
 $('#qtable').addEventListener('input',e=>{
   const i=e.target.dataset.i,f=e.target.dataset.f;if(i==null)return;
   const q=state.exam.questions[i];
-  if(f==='opt'){q.opts=q.opts||[];q.opts[+e.target.dataset.k]=e.target.value;}
+  if(f==='stmt'){q.stmts=q.stmts||[];q.stmts[+e.target.dataset.j]=e.target.value;}
+  else if(f==='opt'){q.opts=q.opts||[];q.opts[+e.target.dataset.k]=e.target.value;}
   else if(f==='key'&&isP2(q)){q.key=keyNorm(e.target.value);e.target.style.borderColor=q.key?'':'var(--stain)';}
   else q[f]=f==='points'?(parseFloat(e.target.value)||0):e.target.value;
   if(f==='points'&&isP3(q))q.points=p3Max(q);   // задгай даалгаврын оноо үргэлж бүхэл
+  if(f==='points'&&isP4(q)){const b=e.target.closest('.qcard').querySelector('.p3bar small');
+    if(b){const md=q.tfmode||'scale',P=+q.points||0;
+      const pt=c=>r1(md==='all'?(c===TF_N?P:0):md==='prop'?P*c/TF_N:P*TF_SCALE[c]);
+      b.textContent='4 зөв = '+pt(4)+' оноо, 3 зөв = '+pt(3)+', 2 зөв = '+pt(2)+', 1 зөв = '+pt(1)+', 0 зөв = '+pt(0);}}
   if(f==='points'&&isP3(q)&&q.scale==='pts'){const b=e.target.closest('.qcard').querySelector('.p3bar');
     if(b)b.innerHTML='Хуудсан дээр: '+p3Steps(q).map(s=>`<span>${esc(s.label)}</span>`).join('')+'<small>Та авсан оноог нь шууд будна</small>';}
   save();
@@ -2502,7 +2601,7 @@ function renderRoster(){
   $('#progress').textContent=c.students.length?c.students.filter(n=>done.has(n)).length+' / '+c.students.length+' сурагчийн хариулт орсон':'';
 }
 function ecfg(){db.entry=db.entry||{prefill:false};return db.entry;}
-const keyDraft=()=>state.exam.questions.map(q=>isP3(q)?'':isP2(q)?keyNorm(q.key||''):(q.key||''));
+const keyDraft=()=>state.exam.questions.map(q=>isP3(q)?'':isP4(q)?tfNorm(q.key):isP2(q)?keyNorm(q.key||''):(q.key||''));
 function pickStudent(n){
   $('#name').value=n;
   const s=state.students.find(x=>x.cls===entryCls&&x.name===n),pre=!s&&ecfg().prefill;
@@ -2552,11 +2651,24 @@ $('#varChips').addEventListener('click',e=>{
 function renderSheet(){
   const n=state.exam.questions.length;
   if(draft.length!==n)draft=Array(n).fill('');
-  const [n1,n2,n3]=partCount(),ord=vOrder(entryVar);
-  $('#sheet').innerHTML=ord.map((i,pos)=>{const q=state.exam.questions[i],o=q.opts||[],p2=isP2(q),p3=isP3(q);
-    const head=!(n2||n3)?'':pos===0?'<div class="part-head">I хэсэг</div>'
+  const [n1,n2,n3,n4]=partCount(),ord=vOrder(entryVar);
+  $('#sheet').innerHTML=ord.map((i,pos)=>{const q=state.exam.questions[i],o=q.opts||[],p2=isP2(q),p3=isP3(q),p4=isP4(q);
+    const head=!(n2||n3||n4)?'':pos===0&&n1?'<div class="part-head">I хэсэг</div>'
       :pos===n1&&n2?'<div class="part-head">II хэсэг <small>Нэг буюу хэд хэдэн хувилбар сонгож болно</small></div>'
-      :pos===n1+n2&&n3?'<div class="part-head">III хэсэг <small>Задгай даалгавар — сурагчийн бичсэнийг уншаад оноог нь дарна</small></div>':'';
+      :pos===n1+n2&&n4?'<div class="part-head">III хэсэг <small>Үнэн/худал — мэдэгдэл бүрд Ү эсвэл Х</small></div>'
+      :pos===n1+n2+n4&&n3?'<div class="part-head">IV хэсэг <small>Задгай даалгавар — сурагчийн бичсэнийг уншаад оноог нь дарна</small></div>':'';
+    if(p4){const cur=tfNorm(draft[i]),k=tfNorm(q.key),st=q.stmts||[];
+      return`${head}<div class="qrow" style="flex-direction:column;align-items:stretch">
+      <div class="qt"><b>${pos+1}-р асуулт</b> <small style="color:var(--muted)">${r1(+q.points||0)} оноо</small>
+        ${q.text?`<div class="qtext">${esc(q.text)}</div>`:''}</div>
+      <div class="tfgrid" style="margin-top:6px">${Array.from({length:TF_N},(_,j)=>`
+        <span class="tfno">${j+1}</span>
+        <span style="font-size:.92rem">${esc(st[j]||'('+(j+1)+'-р мэдэгдэл)')}${k[j]!=='-'?` <small style="color:var(--muted)">зөв нь: ${k[j]==='Ү'?'үнэн':'худал'}</small>`:''}</span>
+        <span class="tfpick">
+          <button type="button" class="tfb" data-q="${i}" data-o="Ү" data-j="${j}" aria-pressed="${cur[j]==='Ү'}">Үнэн</button>
+          <button type="button" class="tfb" data-q="${i}" data-o="Х" data-j="${j}" aria-pressed="${cur[j]==='Х'}">Худал</button>
+        </span>`).join('')}</div>
+    </div>`;}
     if(p3){const sp=p3Steps(q);
       return`${head}<div class="qrow">
       <div class="qt"><b>${pos+1}-р даалгавар</b> <small style="color:var(--muted)">${r1(+q.points||0)} оноо</small>
@@ -2576,7 +2688,9 @@ function renderSheet(){
 $('#sheet').addEventListener('click',e=>{
   const b=e.target.closest('button[data-q]');if(!b)return;
   const i=+b.dataset.q,o=b.dataset.o,q=state.exam.questions[i];
-  if(isP2(q)){const cur=draft[i]||'';draft[i]=keyNorm(cur.includes(o)?cur.replace(o,''):cur+o);}
+  if(isP4(q)){const j=+b.dataset.j,v=tfNorm(draft[i]).split('');
+    v[j]=v[j]===o?'-':o;const s=v.join('');draft[i]=s==='-'.repeat(TF_N)?'':s;}
+  else if(isP2(q)){const cur=draft[i]||'';draft[i]=keyNorm(cur.includes(o)?cur.replace(o,''):cur+o);}
   else draft[i]=draft[i]===o?'':o;
   renderSheet();
 });
@@ -2692,11 +2806,11 @@ function matrixHtml(list,qs,withCls){
   const sum=i=>list.reduce((a,r)=>a+r.earn[i],0),tot=list.reduce((a,r)=>a+r.score,0);
   const pre=lbl=>`<th class="s0"></th><th class="s1" style="text-align:right">${lbl}</th>${withCls?'<th></th>':''}<th></th>`;
   const fpre=lbl=>`<td class="s0"></td><td class="s1" style="text-align:right">${lbl}</td>${withCls?'<td></td>':''}<td></td>`;
-  const has2=qs.some(q=>isP2(q)||isP3(q));
+  const has2=qs.some(q=>!isP1(q));
   return`<div class="scroll"><table class="matrix">
   <thead>
     <tr><th class="s0">№</th><th class="s1">Нэр</th>${withCls?'<th>Анги</th>':''}<th>Код</th>${qs.map((q,i)=>`<th>${i+1}</th>`).join('')}<th>Нийт оноо</th><th>Гүйцэтгэл</th><th>Түвшин</th></tr>
-    ${has2?`<tr>${pre('Хэсэг')}${qs.map(q=>`<th>${isP3(q)?'III':isP2(q)?'II':'I'}</th>`).join('')}<th></th><th></th><th></th></tr>`:''}
+    ${has2?`<tr>${pre('Хэсэг')}${qs.map(q=>`<th>${partLabel(q)}</th>`).join('')}<th></th><th></th><th></th></tr>`:''}
     <tr>${pre('Агуулга')}${qs.map((q,i)=>`<th><span class="vt" title="${esc(topicOf(i))}">${esc(topicOf(i))}</span></th>`).join('')}<th></th><th></th><th></th></tr>
     <tr>${pre('Дээд оноо')}${qs.map(q=>`<th>${r1(+q.points||0)}</th>`).join('')}<th>${r1(max)}</th><th></th><th></th></tr>
   </thead>
@@ -2833,7 +2947,7 @@ function renderAnalysis(){
     const neg=qs.map((q,i)=>i).filter(i=>d.qstat[i].D!=null&&d.qstat[i].D<0);
     const same=qs.map((q,i)=>i).filter(i=>d.qstat[i].D!=null&&flat(i));
     const row=(q,i)=>{const t=d.qstat[i],dl=DLAB(t.D,t),pl=PLAB(t.p);
-      return`<tr><td class="num">${i+1}</td><td>${isP3(q)?'III':isP2(q)?'II':'I'}</td><td>${esc(topicOf(i))}</td>
+      return`<tr><td class="num">${i+1}</td><td>${partLabel(q)}</td><td>${esc(topicOf(i))}</td>
         <td class="num"><b>${Math.round(t.p)}%</b></td><td><span class="${pl[1]}">${pl[0]}</span></td>
         <td class="num"><b class="${dl[1]}">${f2(t.D)}</b></td><td><span class="${dl[1]}">${dl[0]}</span></td>
         <td class="num">${f2(t.rpb)}</td></tr>`;};
@@ -3045,7 +3159,7 @@ function idGroupsSVG(L,st){
       if(st&&st[key]&&st[key][ci]!=null)h+=`<text x="${c.x}" y="63.3" font-size="4" text-anchor="middle" font-weight="700">${esc(st[key][ci])}</text>`;
       c.rows.forEach(rw=>{const f=fill(key,ci,rw.v);
         h+=`<circle cx="${c.x}" cy="${rw.y}" r="${r}" fill="${f?'#000':'#fff'}" stroke="#555" stroke-width=".25"/>`+
-          (f?'':`<text x="${c.x}" y="${rw.y+0.9}" font-size="2.5" fill="#888" text-anchor="middle">${esc(rw.v)}</text>`);});
+          (f?'':`<text x="${c.x}" y="${rw.y+0.9}" font-size="2.5" fill="#b0b0b0" text-anchor="middle">${esc(rw.v)}</text>`);});
     });
     return h;
   };
@@ -3082,25 +3196,26 @@ function sheetSVG(opts){
   if(L.q2.length){
     g+=`<line x1="14" y1="${L.y2}" x2="196" y2="${L.y2}" stroke="#000" stroke-width=".35"/><text x="16" y="${L.y2+5}" font-size="3.4" font-weight="700">II хэсэг</text>`;
     L.q2.forEach(q=>{g+=`<text x="${q.x+5}" y="${q.y+1.2}" font-size="3.2" font-weight="700" text-anchor="end">${q.n}</text>`;
-      q.opts.forEach(o=>g+=`<circle cx="${o.x}" cy="${o.y}" r="${r}" fill="#fff" stroke="#555" stroke-width=".25"/><text x="${o.x}" y="${o.y+0.9}" font-size="2.5" fill="#888" text-anchor="middle">${o.v}</text>`);});
+      q.opts.forEach(o=>g+=`<circle cx="${o.x}" cy="${o.y}" r="${r}" fill="#fff" stroke="#555" stroke-width=".25"/><text x="${o.x}" y="${o.y+0.9}" font-size="2.5" fill="#b0b0b0" text-anchor="middle">${o.v}</text>`);});
   }
   L.q.forEach(q=>{
     g+=`<text x="${q.x+5}" y="${q.y+1.2}" font-size="3.2" font-weight="700" text-anchor="end">${q.n}</text>`;
-    q.opts.forEach(o=>g+=`<circle cx="${o.x}" cy="${o.y}" r="${r}" fill="#fff" stroke="#555" stroke-width=".25"/><text x="${o.x}" y="${o.y+0.9}" font-size="2.5" fill="#888" text-anchor="middle">${o.v}</text>`);
+    q.opts.forEach(o=>g+=`<circle cx="${o.x}" cy="${o.y}" r="${r}" fill="#fff" stroke="#555" stroke-width=".25"/><text x="${o.x}" y="${o.y+0.9}" font-size="2.5" fill="#b0b0b0" text-anchor="middle">${o.v}</text>`);
   });
   const P0=sheet3Layout().page0;
-  if(P0.length){
-    const y0=P0[0].y-7;
+  g+=tfRowsSVG(P0,r);
+  if(P0.p3.length){
+    const y0=P0.p3[0].y-7;
     g+=`<line x1="14" y1="${y0}" x2="196" y2="${y0}" stroke="#000" stroke-width=".35"/>
-      <text x="16" y="${y0+4.2}" font-size="3.2" font-weight="700">III хэсэг: задгай даалгавар</text>
+      <text x="16" y="${y0+4.2}" font-size="3.2" font-weight="700">IV хэсэг: задгай даалгавар</text>
       <text x="194" y="${y0+4.2}" font-size="2.8" text-anchor="end" fill="#666">"Багшийн оноо"-г сурагч бөглөхгүй</text>`;
-    g+=p3ItemsSVG(P0,r);
+    g+=p3ItemsSVG(P0.p3,r);
   }
   if(st)g+=`<text x="105" y="290" font-size="2.6" fill="#666" text-anchor="middle">${esc(st.cls)} анги, код ${esc(st.code.join(''))}</text>`;
   const size=opts.print?'width="210mm" height="297mm"':'';
   return`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 210 297" ${size} font-family="Arial,Helvetica,sans-serif"><rect width="210" height="297" fill="#fff"/>${g}</svg>`;
 }
-/* ---------- III хэсэг: задгай даалгаврын хуудас ----------
+/* ---------- IV хэсэг: задгай даалгаврын хуудас ----------
    Сурагч гараар бичнэ. Багш уншаад оноог нь будна, камер тэрийг уншина.
    Анги/Бүлэг/Код блок нь 1-р хуудастай ижил байрлалтай тул хэн болох нь таних.
    Дээд дунд хэсгийн хар дөрвөлжин нь "энэ бол задгай хуудас" гэсэн тэмдэг. */
@@ -3125,7 +3240,7 @@ function p3IdSVG(st){
     g+=`<text x="17" y="${rw.y+1}" font-size="2.7">${H.labels[k]}</text>`;
     rw.cols.forEach(c=>{const f=of(key,ci,c.v);
       g+=`<circle cx="${c.x}" cy="${rw.y}" r="${r}" fill="${f?'#000':'#fff'}" stroke="#555" stroke-width=".25"/>`
-        +(f?'':`<text x="${c.x}" y="${rw.y+0.9}" font-size="2.5" fill="#888" text-anchor="middle">${esc(c.v)}</text>`);});
+        +(f?'':`<text x="${c.x}" y="${rw.y+0.9}" font-size="2.5" fill="#b0b0b0" text-anchor="middle">${esc(c.v)}</text>`);});
   });
   return g;
 }
@@ -3136,27 +3251,54 @@ function p3Item(x,y){
   const st=p3Steps(x.q),bw=x.q.scale==='pts'?13:30,bx=46,by=y+7+bh+7;
   return{i:x.i,q:x.q,y,bh,by,opts:st.map((s,k)=>({v:String(k),label:s.label,x:bx+k*bw,y:by}))};
 }
-/* Задгай даалгаврыг эхлээд 1-р хуудасны үлдсэн зайд багтаана (цаас хэмнэнэ),
-   багтахгүйг нь л тусдаа хуудсанд гаргана. */
+/* ---------- III хэсэг: үнэн / худал ----------
+   Нэг асуултад 4 мэдэгдэл, тус бүрд Ү ба Х хос дугуй. Нэг мөрөнд 2 асуулт. */
+const TFX=[11,16.5,25.5,31,40,45.5,54.5,60];   // 4 хосын байрлал
+const TFH=7.5, TFHEAD=10;
+function tfItem(x,bx,y){
+  return{i:x.i,q:x.q,x:bx,y,opts:TFX.map((dx,k)=>({v:k%2?'Х':'Ү',s:k>>1,x:bx+dx,y}))};
+}
+/* Үнэн/худал ба задгай даалгаврыг эхлээд 1-р хуудасны үлдсэн зайд багтаана
+   (цаас хэмнэнэ), багтахгүйг нь л тусдаа хуудсанд гаргана. */
 function sheet3Layout(){
-  const list=state.exam.questions.map((q,i)=>({q,i})).filter(x=>isP3(x.q));
-  if(!list.length)return{page0:[],extra:[]};
-  const L=sheetLayout(state.exam.questions,sheetLetters());
-  const page0=[];let y=L.bottom+9,k=0;
-  while(k<list.length&&y+p3Need(list[k].q)<=P3BOT){page0.push(p3Item(list[k],y));y+=p3Need(list[k].q)+5;k++;}
-  /* Нэмэлт хуудас: кодын блокийн доор (78–136) ба 143-р шугамын доор (150–273) */
+  const qs=state.exam.questions,tf=[],p3=[];
+  qs.forEach((q,i)=>{if(isP4(q))tf.push({q,i});else if(isP3(q))p3.push({q,i});});
+  const page0={tf:[],p3:[],tfTop:0},extra=[];
+  if(!tf.length&&!p3.length)return{page0,extra};
+  const L=sheetLayout(qs,sheetLetters());
   const BANDS=[[78,142],[150,P3BOT]];
-  const extra=[];let cur=[],b=0,y2=BANDS[0][0];
-  for(;k<list.length;k++){
-    const need=Math.min(p3Need(list[k].q),BANDS[1][1]-BANDS[1][0]);
-    let guard=0;
-    while(y2+need>BANDS[b][1]&&guard++<8){
-      b++;
-      if(b>=BANDS.length){if(cur.length)extra.push(cur);cur=[];b=0;}
-      y2=BANDS[b][0];}
-    cur.push(p3Item(list[k],y2));y2+=need+5;}
-  if(cur.length)extra.push(cur);
+  let target=page0,band=-1,y=L.bottom+9,end=P3BOT;
+  const nextRegion=()=>{
+    if(target!==page0&&band+1<BANDS.length){band++;}
+    else{target={tf:[],p3:[],tfTop:0};extra.push(target);band=0;}
+    y=BANDS[band][0];end=BANDS[band][1];};
+  const rows=[];for(let k=0;k<tf.length;k+=2)rows.push(tf.slice(k,k+2));
+  rows.forEach(r=>{
+    let need=TFH+(target.tf.length?0:TFHEAD),g=0;
+    while(y+need>end&&g++<40){nextRegion();need=TFH+(target.tf.length?0:TFHEAD);}
+    if(!target.tf.length){target.tfTop=y;y+=TFHEAD;}
+    target.tf.push({y,items:r.map((x,j)=>tfItem(x,16+j*92,y))});
+    y+=TFH;});
+  if(tf.length)y+=7;
+  p3.forEach(x=>{
+    const need=Math.min(p3Need(x.q),BANDS[1][1]-BANDS[1][0]);let g=0;
+    while(y+need>end&&g++<40)nextRegion();
+    target.p3.push(p3Item(x,y));y+=need+5;});
   return{page0,extra};
+}
+/* Үнэн/худал мөрүүдийн зураг */
+function tfRowsSVG(blk,r){
+  if(!blk.tf.length)return'';
+  let g=`<line x1="14" y1="${blk.tfTop}" x2="196" y2="${blk.tfTop}" stroke="#000" stroke-width=".35"/>
+    <text x="16" y="${blk.tfTop+4.2}" font-size="3.2" font-weight="700">III хэсэг: үнэн / худал</text>
+    <text x="194" y="${blk.tfTop+4.2}" font-size="2.8" text-anchor="end" fill="#666">Ү = үнэн,  Х = худал</text>`;
+  blk.tf[0].items.forEach(it=>{for(let s=0;s<TF_N;s++)
+    g+=`<text x="${it.x+(TFX[s*2]+TFX[s*2+1])/2}" y="${blk.tfTop+9}" font-size="2.6" fill="#666" text-anchor="middle">${s+1}</text>`;});
+  blk.tf.forEach(row=>row.items.forEach(it=>{
+    g+=`<text x="${it.x+8}" y="${it.y+1.2}" font-size="3.2" font-weight="700" text-anchor="end">${it.i+1}</text>`;
+    it.opts.forEach(o=>g+=`<circle cx="${o.x}" cy="${o.y}" r="${r}" fill="#fff" stroke="#555" stroke-width=".25"/>`
+      +`<text x="${o.x}" y="${o.y+0.9}" font-size="2.3" fill="#b0b0b0" text-anchor="middle">${o.v}</text>`);}));
+  return g;
 }
 /* Нэг задгай даалгаврын хүрээ, мөрүүд, багшийн онооны дугуйнууд */
 function p3ItemsSVG(items,r){
@@ -3181,13 +3323,18 @@ function sheet3SVG(page,pno,total,opts){
   L.fid.forEach(([x,y])=>g+=`<rect x="${x}" y="${y}" width="${L.fs}" height="${L.fs}" fill="#000"/>`);
   for(let k=0;k<Math.min(P3MARK.max,pno);k++)
     g+=`<rect x="${p3MarkX(k)}" y="${P3MARK.y}" width="${P3MARK.s}" height="${P3MARK.s}" fill="#000"/>`;
-  g+=`<text x="22" y="17" font-size="5.5" font-weight="700">Задгай даалгавар</text>
+  g+=`<text x="22" y="17" font-size="5.5" font-weight="700">${page.tf.length&&!page.p3.length?'Үнэн / худал':'Үргэлжлэл'}</text>
     <text x="188" y="17" font-size="3.2" text-anchor="end">${esc(state.exam.date||'')}</text>
     <text x="22" y="25" font-size="3.8">${esc(state.exam.title||'Шалгалт')}${total>1?' — '+pno+' / '+total:''}</text>
     <text x="120" y="25" font-size="2.8" fill="#666">Ангиа, бүлгээ, кодоо будна. "Багшийн оноо"-г сурагч бөглөхгүй.</text>`;
   g+=p3IdSVG(st);
   g+=`<line x1="14" y1="143" x2="196" y2="143" stroke="#000" stroke-width=".35"/>`;
-  g+=p3ItemsSVG(page,r);
+  g+=tfRowsSVG(page,r);
+  if(page.p3.length){
+    const y0=page.p3[0].y-7;
+    if(y0>150)g+=`<text x="16" y="${y0+4.2}" font-size="3.2" font-weight="700">IV хэсэг: задгай даалгавар</text>`;
+    g+=p3ItemsSVG(page.p3,r);
+  }
   if(st)g+=`<text x="105" y="286" font-size="2.6" fill="#666" text-anchor="middle">${esc(st.cls)} анги, код ${esc(st.code.join(''))}</text>`;
   const size=opts.print?'width="210mm" height="297mm"':'';
   return`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 210 297" ${size} font-family="Arial,Helvetica,sans-serif"><rect width="210" height="297" fill="#fff"/>${g}</svg>`;
@@ -3559,7 +3706,7 @@ function matrixSheet(name,title,note,list,qs,withCls){
   const r7=blank();r7[lab]={v:'Дээд оноо',s:'sub'};
   const rows=[[{v:title,s:'t'}],[{v:note,s:'n'}],[],
     [...hdr,...qs.map((q,i)=>({v:String(i+1),s:'h'})),{v:'Нийт оноо',s:'h'},{v:'Гүйцэтгэл',s:'h'},{v:'Түвшин',s:'h'}],
-    [...r5,...qs.map(q=>({v:isP3(q)?'III':isP2(q)?'II':'I',s:'sub'})),{v:'',s:'sub'},{v:'',s:'sub'},{v:'',s:'sub'}],
+    [...r5,...qs.map(q=>({v:partLabel(q),s:'sub'})),{v:'',s:'sub'},{v:'',s:'sub'},{v:'',s:'sub'}],
     [...r6,...qs.map((q,i)=>({v:topicOf(i),s:'subv'})),{v:'',s:'sub'},{v:'',s:'sub'},{v:'',s:'sub'}],
     [...r7,...qs.map(q=>({v:+q.points||0,s:'sub'})),{f:`SUM(${qc(0)}7:${qc(n-1)}7)`,cv:rnd(max),s:'sub'},{v:'',s:'sub'},{v:'',s:'sub'}]];
   list.forEach((r,k)=>{const row=first+k,pc2=max?r.score/max:0;
@@ -3658,7 +3805,7 @@ async function exportExamXlsx(){
     [],[{v:X.viewNote,s:'n'}]]};
   const qsh={name:'Асуултууд',freeze:1,widths:[5,8,24,9,10,10,...X.LT.map(()=>6),11,13,14,26,8],rows:[
     ['№','Хэсэг','Агуулга','Зөв хариулт','Бүрэн зөв','Хүндрэл (p)',...X.LT,'Хариулаагүй','Хүндрэлийн үнэлгээ','Ялгах чадвар (D)','D-ийн үнэлгээ','rpb'].map(v=>({v,s:'h'})),
-    ...qs.map((q,i)=>[i+1,isP3(q)?'III':isP2(q)?'II':'I',topicOf(i),q.key||'–',d.rows.filter(r=>r.ok[i]).length,P(d.qPct[i]),...X.LT.map(x=>isP2(q)||opts1().includes(x)?X.dist[i][x]:''),X.dist[i][''],
+    ...qs.map((q,i)=>[i+1,partLabel(q),topicOf(i),q.key||'–',d.rows.filter(r=>r.ok[i]).length,P(d.qPct[i]),...X.LT.map(x=>isP2(q)||opts1().includes(x)?X.dist[i][x]:''),X.dist[i][''],
       PLAB(d.qstat[i].p)[0],r2(d.qstat[i].D),DLAB(d.qstat[i].D,d.qstat[i])[0],r2(d.qstat[i].rpb)]),
     [],[{v:X.LT[0]+'–'+X.LT[X.LT.length-1]+' баганууд: тухайн хувилбарыг сонгосон сурагчийн тоо. "Бүрэн зөв" нь бүх зөв хувилбарыг яг таг будсан сурагчийн тоо. Буруу хувилбарыг олон сурагч сонгосон бол тэр ойлголтыг дахин тайлбарлах шаардлагатай байж болно.',s:'n'}],
     [{v:'Хүндрэл (p) = тэр асуултад зөв хариулсан хувь. Ялгах чадвар (D) = нийт оноогоор эрэмбэлсэн дээд '+(d.few?'хагас':'27%')+' ба доод '+(d.few?'хагас':'27%')+'-ийн зөв хариулсан хувийн зөрүү (бүлэг тус бүрд '+d.grp+' сурагч): 0.40+ маш сайн, 0.30–0.39 сайн, 0.20–0.29 засвар шаардлагатай, 0.20-аас доош муу, сөрөг бол зөв хариулт буруу тавигдсан эсэхийг шалга. rpb = асуултын оноо ба нийт онооны корреляц (0.20-аас дээш зохистой). KR-20 = '+(d.kr20==null?'–':r2(d.kr20))+' ('+KRLAB(d.kr20)[0]+'), "Тойм" хуудсанд.'+(d.few?' Сурагч '+d.n+' байгаа тул үзүүлэлтүүд чиг хандлага төдий — 20-оос дээш сурагчтай үед найдвартай.':''),s:'n'}]]};
@@ -3696,7 +3843,7 @@ async function exportExamDocx(){
   if(d.few)D.note('Сурагч '+d.n+' байгаа тул дээд/доод 27%-ийн оронд хагасаар тооцов (бүлэг тус бүрд '+d.grp+' сурагч). Эдгээр үзүүлэлт 20-оос дээш сурагчтай үед найдвартай — цөөн сурагчтай дүнг чиг хандлага төдийгөөр хар.');
   D.table(['№','Хэсэг','Агуулга','Хүндрэл (p)','Хүндрэлийн үнэлгээ','Ялгах чадвар (D)','D-ийн үнэлгээ','rpb'],
     qs.map((q,i)=>{const t=d.qstat[i],dl=DLAB(t.D,t),pl=PLAB(t.p);
-      return[{t:i+1,al:'center'},{t:isP3(q)?'III':isP2(q)?'II':'I',al:'center'},topicOf(i),pctCell(t.p),
+      return[{t:i+1,al:'center'},{t:partLabel(q),al:'center'},topicOf(i),pctCell(t.p),
         {t:pl[0],color:pl[2]||undefined},{t:f2(t.D),al:'right',b:true,color:dl[2]||undefined},
         {t:dl[0],color:dl[2]||undefined},{t:f2(t.rpb),al:'right'}];}),
     [0.5,0.6,2.1,1,1.4,1.1,2.4,0.7]);
@@ -3958,20 +4105,20 @@ function omrRead(im,qs,letters,opt){opt=opt||{};
     ring.sort((a,b)=>a-b);const paper=ring[Math.floor(ring.length*.75)];let dk=0,n=0;
     for(let dx=-1.6;dx<=1.61;dx+=.2)for(let dy=-1.6;dy<=1.61;dy+=.2){if(dx*dx+dy*dy>2.56)continue;n++;if(val(...map(cx+dx,cy+dy))<paper*.7)dk++;}
     return dk/n;};
-  const FILL=.15,MAYBE=.08;
+  const FILL=.15,STRONG=.25;
   /* Хоосон дугуй дотор нь хэвлэсэн үсэг, тоо байдаг тул огт будаагүй ч бага зэрэг
-     "харанхуй" гардаг. Тиймээс тухайн эгнээний СУУРЬ түвшинтэй харьцуулж шийднэ. */
-  const baseOf=vals=>{const s=vals.map(v=>v.sc).sort((a,b)=>a-b);return s[Math.floor(s.length*.3)]||0;};
+     "харанхуй" гардаг. Тиймээс нэг нүдийг дангаар нь биш, эгнээн дэх бусадтай нь
+     ХАРЬЦУУЛЖ шийднэ: жинхэнэ будсан дугуй нь хоосныхоос олон дахин бараан байдаг. */
   const pick1=vals=>{
-    const sc=vals.map(v=>v.sc),o=sc.map((v,i)=>i).sort((a,b)=>sc[b]-sc[a]),b0=sc[o[0]],b1=sc[o[1]]||0;
-    const base=baseOf(vals),hi=Math.max(FILL,base*2.6),lo=Math.max(MAYBE,base*1.9);
-    if(b0<hi)return{v:'',amb:b0>=lo};              // будаагүй (бүдэг бол шалгуулна)
-    if(b1<lo||b0>=2.2*b1)return{v:vals[o[0]].v,amb:false};
-    return{v:vals[o[0]].v,amb:true};};             // хоёр дугуй ойролцоо харанхуй
+    const sc=vals.map(v=>v.sc),o=sc.map((v,i)=>i).sort((a,b)=>sc[b]-sc[a]);
+    const b0=sc[o[0]],b1=sc[o[1]]||0;
+    if(b0>=STRONG&&b1>=STRONG)return{v:vals[o[0]].v,amb:true};        // хоёр дугуй будсан
+    if(b0>=Math.max(FILL,b1*2.2))return{v:vals[o[0]].v,amb:false};    // нэг нь тод
+    return{v:'',amb:b0>=Math.max(FILL*1.4,b1*1.45)};};                // будаагүй (бүдэг бол шалгуулна)
   const pickMulti=vals=>{
-    const mx=Math.max(...vals.map(v=>v.sc)),base=baseOf(vals);
-    if(mx<Math.max(FILL,base*2.6))return{v:'',amb:false};
-    const hi=Math.max(FILL,base*2.6,mx*.55),lo=Math.max(MAYBE,base*1.9,mx*.3);
+    const sc=vals.map(v=>v.sc),srt=sc.slice().sort((a,b)=>a-b);
+    const base=srt[Math.floor(sc.length*.25)]||0,mx=srt[srt.length-1];
+    const hi=Math.max(FILL,base*2.2,mx*.55),lo=Math.max(FILL*1.4,base*1.45,mx*.3);
     return{v:vals.filter(v=>v.sc>=hi).map(v=>v.v).join(''),amb:vals.some(v=>v.sc>=lo&&v.sc<hi)};};
   const marks=[];
   const readCol=col=>col.rows.map(rw=>{const sc=score(col.x,rw.y);marks.push({x:col.x,y:rw.y,sc});return{v:rw.v,sc};});
@@ -3989,19 +4136,28 @@ function omrRead(im,qs,letters,opt){opt=opt||{};
     cd=pno?H3.code.map(rw=>pick1(readRow(rw))):L.code.map(c=>pick1(readCol(c)));
   const answers=qs.map(()=>''),amb=qs.map(()=>false);
   const P3=sheet3Layout();
-  let p3idx=null,boxes=null;
+  let p3idx=null,tfidx=null,boxes=null;
   const readP3=pg=>{p3idx=p3idx||[];boxes=boxes||[];
     pg.forEach(it=>{const vals=it.opts.map(o=>{const sc=score(o.x,o.y);marks.push({x:o.x,y:o.y,sc});return{v:o.v,sc};});
       const rr=pick1(vals);answers[it.i]=rr.v;amb[it.i]=rr.amb;p3idx.push(it.i);
       boxes.push({i:it.i,y:it.y,by:it.by});});};
-  if(pno)readP3(P3.extra[pno-1]||[]);
+  /* Үнэн/худал: мэдэгдэл бүрийн Ү–Х хосыг тусад нь уншина */
+  const readTF=blk=>{tfidx=tfidx||[];
+    blk.tf.forEach(row=>row.items.forEach(it=>{
+      let v='',bad=false;
+      for(let s=0;s<TF_N;s++){
+        const pair=it.opts.filter(o=>o.s===s).map(o=>{const sc=score(o.x,o.y);marks.push({x:o.x,y:o.y,sc});return{v:o.v,sc};});
+        const rr=pick1(pair);v+=rr.v||'-';if(rr.amb)bad=true;}
+      answers[it.i]=v==='-'.repeat(TF_N)?'':v;amb[it.i]=bad;tfidx.push(it.i);}));};
+  if(pno){const pg=P3.extra[pno-1]||{tf:[],p3:[]};readTF(pg);readP3(pg.p3);}
   else{
     [...L.q,...L.q2].forEach((q,i)=>{const vals=q.opts.map(o=>{const sc=score(o.x,o.y);marks.push({x:o.x,y:o.y,sc});return{v:o.v,sc};});
       const r=isP2(qs[i])?pickMulti(vals):pick1(vals);answers[i]=r.v;amb[i]=r.amb;});
-    if(P3.page0.length)readP3(P3.page0);   // 1-р хуудсанд багтсан задгай даалгавар
+    readTF(P3.page0);                        // 1-р хуудсанд багтсан үнэн/худал
+    if(P3.page0.p3.length)readP3(P3.page0.p3);   // ба задгай даалгавар
   }
   const digits=a=>a.every(x=>x.v!=='')?a.map(x=>x.v).join(''):'';
-  const res={ok:true,grade:digits(g),letter:lt.v,code:digits(cd),idAmb:g.some(x=>x.amb)||lt.amb||cd.some(x=>x.amb),answers,amb,p3:pno,p3idx};
+  const res={ok:true,grade:digits(g),letter:lt.v,code:digits(cd),idAmb:g.some(x=>x.amb)||lt.amb||cd.some(x=>x.amb),answers,amb,p3:pno,p3idx,tfidx};
   if(opt.preview===false)return res;
   const S=3,cv=document.createElement('canvas');cv.width=210*S;cv.height=297*S;const cx=cv.getContext('2d'),out=cx.createImageData(cv.width,cv.height),od=out.data,src=im.data;
   for(let Y=0;Y<cv.height;Y++)for(let X=0;X<cv.width;X++){let[u,v]=map(X/S,Y/S);u=Math.round(u);v=Math.round(v);const o=4*(Y*cv.width+X);
@@ -4056,7 +4212,11 @@ function renderOmr(){
     const pick=`<div class="row" style="margin-top:6px"><div><label>Анги</label><select data-f="cls"><option value="">Сонгох</option>${db.classes.map(k=>`<option${k.name===it.cls?' selected':''}>${esc(k.name)}</option>`).join('')}</select></div>
         <div style="flex:2 1 200px"><label>Сурагч</label><select data-f="name"><option value="">Сонгох</option>${c?c.students.map(n=>`<option value="${esc(n)}"${n===it.name?' selected':''}>${pad2(c.codes[n])} ${esc(n)}</option>`).join(''):''}</select></div></div>`;
     const btns=`<div class="btns">${it.saved?`<span class="g">✓ Хадгалсан</span><button class="btn ghost" data-act="resave">Засвараа хадгалах</button><button class="btn ghost" data-act="close">Хураах</button>`:`<button class="btn" data-act="save"${it.cls&&it.name?'':' disabled'}>Хадгалах</button>`}<button class="btn danger" data-act="del">Хасах</button></div>`;
-    const idx3=r.p3idx||[];
+    const idx3=r.p3idx||[],idxTF=r.tfidx||[];
+    const tfBlock=()=>!idxTF.length?'':`<div style="margin-top:10px"><b style="font-size:.9rem">Үнэн/худал</b>
+      <div class="omr-ans">${idxTF.map(i=>`<label class="${r.amb[i]?'amb':''}">${i+1}
+        <input data-q="${i}" value="${esc(it.answers[i])}" style="width:72px;text-align:center" maxlength="4" placeholder="ҮХҮҮ"></label>`).join('')}</div>
+      <p class="hint" style="margin:4px 0 0;font-size:.8rem">Ү = үнэн, Х = худал. Хариулаагүйг "-" гэж бичнэ.</p></div>`;
     const p3Block=()=>!idx3.length?'':idx3.map(i=>{const q=qs[i],sp=p3Steps(q);
           return`<div style="margin-top:12px;padding-top:8px;border-top:1px solid var(--line)">
             <b>${i+1}. ${esc(q.topic||q.text||'Задгай даалгавар')}</b> <small style="color:var(--muted)">${p3Max(q)} оноо</small>
@@ -4072,10 +4232,10 @@ function renderOmr(){
       return`<div class="omr-card${it.saved?' saved':''}" data-id="${it.id}" style="display:block">
         <div class="omr-st"><b>Задгай даалгаврын хуудас${r.p3>1?', '+r.p3+'-р хэсэг':''}</b> <button class="btn ghost" data-act="zoom" style="padding:2px 8px;font-size:.8rem">Бүтэн хуудсыг харах</button></div>
         <div class="omr-st">${idTxt}${r.idAmb?' <span class="m">(эргэлзээтэй)</span>':''}</div>${warn}${pick}
-        ${p3Block()}
+        ${tfBlock()}${p3Block()}
         ${btns}</div>`;
     }
-    const qs1=qs.map((q,i)=>i).filter(i=>!isP3(qs[i]));
+    const qs1=qs.map((q,i)=>i).filter(i=>!isP3(qs[i])&&!isP4(qs[i]));
     return`<div class="omr-card${it.saved?' saved':''}" data-id="${it.id}"><img src="${r.preview}" alt="Тэгшилсэн хуудас" data-act="zoom">
       <div class="omr-body"><div class="omr-st">${idTxt}${r.idAmb?' <span class="m">(эргэлзээтэй)</span>':''}</div>${warn}
       <div class="row" style="margin-top:6px"><div><label>Анги</label><select data-f="cls"><option value="">Сонгох</option>${db.classes.map(k=>`<option${k.name===it.cls?' selected':''}>${esc(k.name)}</option>`).join('')}</select></div>
@@ -4090,7 +4250,7 @@ function renderOmr(){
       <div class="omr-ans">${qs1.map(i=>{const q=qs[i];return`<label class="${r.amb[i]?'amb':''}">${i+1}${isP2(q)
         ?`<input data-q="${i}" value="${esc(it.answers[i])}">`
         :`<select data-q="${i}"><option value="">–</option>${opts1().map(o=>`<option${o===it.answers[i]?' selected':''}>${o}</option>`).join('')}</select>`}</label>`;}).join('')}</div></details>
-      ${p3Block()}
+      ${tfBlock()}${p3Block()}
       <div class="omr-st">${amb?`<span class="m">${amb} эргэлзээтэй хариулт шалгана уу.</span> `:''}${empty?empty+' асуулт хариулаагүй. ':''}${ex&&!it.saved?'<span class="m">Энэ сурагчийн өмнө оруулсан хариулт солигдоно.</span>':''}</div>
       <div class="btns">${it.saved?`<span class="g">✓ Хадгалсан</span><button class="btn ghost" data-act="resave">Засвараа хадгалах</button><button class="btn ghost" data-act="close">Хураах</button>`:`<button class="btn" data-act="save"${it.cls&&it.name?'':' disabled'}>Хадгалах</button>`}<button class="btn danger" data-act="del">Хасах</button></div>
       </div></div>`;};
@@ -4104,21 +4264,23 @@ function renderOmr(){
     +(done.length?`<div class="omr-head"><b class="g">✓ Хадгалагдсан: ${done.length + opened.length}</b></div>`+done.map(mini).join(''):'');
 }
 const p3Index=()=>state.exam.questions.map((q,i)=>isP3(q)?i:-1).filter(i=>i>=0);
+const tfIndex=()=>state.exam.questions.map((q,i)=>isP4(q)?i:-1).filter(i=>i>=0);
 function omrSave(it){
   if(!it.cls||!it.name||it.saved)return false;
   const ex=state.students.find(x=>x.cls===it.cls&&x.name===it.name);
   const n=state.exam.questions.length;
   let ans;
   if(it.r.p3){
-    /* Задгай хуудас: зөвхөн энэ хуудасны даалгаврын оноог шинэчилнэ */
+    /* Нэмэлт хуудас: зөвхөн энэ хуудсан дээрх асуултуудын хариултыг шинэчилнэ */
     ans=ex?ex.answers.slice():[];
     while(ans.length<n)ans.push('');ans.length=n;
-    (it.r.p3idx||[]).forEach(i=>{ans[i]=it.answers[i]||'';});
+    (it.r.p3idx||[]).concat(it.r.tfidx||[]).forEach(i=>{ans[i]=it.answers[i]||'';});
   }else{
     const v=it.v||0;ans=toCanon(v,it.answers);
     while(ans.length<n)ans.push('');ans.length=n;
-    /* Тестийн хуудас задгай даалгаврын оноог дарж болохгүй */
+    /* Тестийн хуудас нөгөө хуудсан дээрх хариултыг дарж болохгүй */
     if(ex)p3Index().forEach(i=>{if(!ans[i]&&ex.answers[i])ans[i]=ex.answers[i];});
+    if(ex&&!(it.r.tfidx||[]).length)state.exam.questions.forEach((q,i)=>{if(isP4(q)&&!ans[i]&&ex.answers[i])ans[i]=ex.answers[i];});
     if(ex)ex.v=v;
   }
   if(ex)ex.answers=ans;else state.students.push({id:uid(),cls:it.cls,name:it.name,answers:ans,v:it.r.p3?0:(it.v||0)});
@@ -4132,7 +4294,9 @@ $('#omrList').addEventListener('change',e=>{
   const card=e.target.closest('.omr-card');if(!card)return;const it=omrItems.find(x=>x.id===card.dataset.id);if(!it)return;
   if(e.target.dataset.f==='cls'){it.cls=e.target.value;it.name='';}
   else if(e.target.dataset.f==='name')it.name=e.target.value;
-  else if(e.target.dataset.q!=null){const i=+e.target.dataset.q;it.answers[i]=isP2(state.exam.questions[i])?keyNorm(e.target.value):e.target.value;it.r.amb[i]=false;}
+  else if(e.target.dataset.q!=null){const i=+e.target.dataset.q,q=state.exam.questions[i];
+    it.answers[i]=isP2(q)?keyNorm(e.target.value):isP4(q)?tfNorm(e.target.value).replace(/^-+$/,''):e.target.value;
+    it.r.amb[i]=false;}
   renderOmr();
 });
 $('#omrList').addEventListener('click',e=>{
