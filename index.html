@@ -962,7 +962,17 @@ body.student #studentApp{display:block}
       Сурагчийн бичсэнийг уншаад, <b>"Багшийн оноо"</b> эгнээнээс тохирох дугуйг үзгээрээ будна. Дараа нь 2-р хуудсыг бусадтай хамт уншуулахад оноо нь өөрөө орно. Таны будсан нь зөв уншигдсан эсэхийг программ дэлгэц дээр <b>тэр хэсгийн зургийг таслаж</b> үзүүлнэ.</div></div>
     <div class="hp-step"><div class="hp-num">2</div><div><b>Программ дээр шууд өгөх</b>
       "2. Хариулт оруулах" → сурагчаа сонгоход доод талд задгай даалгавар бүр гарна. <b>Зөв хариултын санаа</b> тань хажууд нь харагдана. Оноогоо товшиж өгөөд хадгална.</div></div>
-    <div class="hp-tip">Задгай даалгаврын оноо болон тестийн оноо <b>тусдаа хадгалагдана</b>. Тиймээс эхлээд тестийн хуудсыг уншуулаад, дараа нь задгай хуудсыг уншуулсан ч (эсвэл эсрэгээр) хоёулаа нэг сурагч дээр нийлнэ.</div>
+    <h3>Хариултын хуудас 2 болсон үед</h3>
+    <p>Асуулт олон бол (үнэн/худал, задгай даалгавар багтахгүй бол) хуудас <b>2 болж</b> хэвлэгдэнэ. Толгой хэсэгт нь <b>"1 / 2 хуудас"</b>, <b>"2 / 2 хуудас"</b> гэж бичигдэнэ. 2-р хуудсан дээр ч анги, бүлэг, код будах нүд байгаа тул программ хэний хуудас болохыг таньдаг.</p>
+    <table>
+      <tr><th>Асуулт</th><th>Хариулт</th></tr>
+      <tr><td>Хоёуланг нь уншуулах ёстой юу?</td><td><b>Тийм.</b> Сурагч бүрийн <b>2 хуудсыг хоёуланг нь</b> уншуулна.</td></tr>
+      <tr><td>Дараалал нь чухал юу?</td><td><b>Үгүй.</b> 1-р, 2-р хуудсыг ямар ч дарааллаар, нэг нэгээр нь ч, бүгдийг нь зэрэг ч уншуулж болно.</td></tr>
+      <tr><td>Хоёулаа нийлэх үү?</td><td><b>Нийлнэ.</b> Хуудас бүр зөвхөн <b>өөрийнхөө асуултыг</b> шинэчилнэ. 2-р хуудас 1-р хуудсыг дардаггүй.</td></tr>
+      <tr><td>Утас, компьютер хоёрт хуваагдвал?</td><td>Бас нийлнэ. Утсаар 2-р хуудсыг, компьютер дээр 1-р хуудсыг уншуулсан ч нэг дүн болно.</td></tr>
+    </table>
+    <div class="hp-warn">Хэн нэгний 2-р хуудас уншуулагдаагүй бол программ өөрөө сануулна: уншуулах цонхонд болон <b>"3. Анализ"</b>-ын дээд талд <b>улаан анхааруулга</b> гарч, хэний хуудас дутууг нэрээр нь бичнэ. Тэр үед анализ дутуу гарч байгаа тул заавал нөхөж уншуулаарай.</div>
+    <div class="hp-tip">Задгай даалгаврын оноо, үнэн/худлын хариулт, тестийн оноо <b>тус тусдаа хадгалагдана</b>. Тиймээс эхлээд тестийн хуудсыг уншуулаад, дараа нь нөгөө хуудсыг уншуулсан ч (эсвэл эсрэгээр) хоёулаа нэг сурагч дээр нийлнэ.</div>
     <h3>Г. Excel файлаар</h3>
     <p><b>"Хариултын Excel загвар татах"</b> → ангийн сурагчид бэлэн бичигдсэн файл татагдана → хариултыг бөглөнө → <b>"Excel файлаас оруулах"</b>.</p>
     <h3>Буруу орсон хариултыг устгах</h3>
@@ -2998,7 +3008,12 @@ function renderAnalysis(){
       :''}</div>`;
   }
 
-  el.innerHTML=`
+  const gaps=pageGaps();
+  el.innerHTML=(gaps.length?`<div class="panel noprint" style="border-left:4px solid var(--stain)">
+    <b class="m">Анхаар: ${gaps.length} сурагчийн нэмэлт хуудас уншуулагдаагүй байна.</b>
+    <p class="hint" style="margin:4px 0 0">Тэдний сүүлийн хуудасны асуултууд бүгд хоосон байгаа тул анализ дутуу гарч байна.
+    "2. Хариулт оруулах" хэсэгт тэр хуудсуудыг нь уншуулбал нэг дүнд нийлнэ:
+    ${esc(gaps.slice(0,10).map(x=>x.name+' ('+x.cls+', '+x.miss.join(', ')+'-р хуудас)').join('; '))}${gaps.length>10?' ба бусад':''}.</p></div>`:'')+`
   <div class="panel">
     <div class="row">
       <div style="flex:3 1 240px"><h2>${esc(state.exam.title||'Шалгалтын анализ')}</h2>
@@ -3172,7 +3187,7 @@ function sheetSVG(opts){
   L.fid.forEach(([x,y])=>g+=`<rect x="${x}" y="${y}" width="${L.fs}" height="${L.fs}" fill="#000"/>`);
   g+=`<text x="22" y="17" font-size="5.5" font-weight="700">Хариултын хуудас</text>
     <text x="188" y="17" font-size="3.2" text-anchor="end">${esc(state.exam.date||'')}</text>
-    <text x="22" y="25" font-size="3.8">${esc(state.exam.title||'Шалгалт')}</text>
+    <text x="22" y="25" font-size="3.8">${esc(state.exam.title||'Шалгалт')}${(()=>{const n=sheet3Layout().extra.length;return n?' — 1 / '+(n+1)+' хуудас':'';})()}</text>
     ${vCount()>1?`<rect x="150" y="20" width="38" height="8" fill="none" stroke="#000" stroke-width=".4" rx="1.5"/>
       <text x="169" y="26" font-size="4.6" font-weight="700" text-anchor="middle">${esc(VNAMES[opts.v||0])} хувилбар</text>`:''}
     <text x="22" y="38" font-size="3.6">Нэр:</text>
@@ -3325,8 +3340,9 @@ function sheet3SVG(page,pno,total,opts){
     g+=`<rect x="${p3MarkX(k)}" y="${P3MARK.y}" width="${P3MARK.s}" height="${P3MARK.s}" fill="#000"/>`;
   g+=`<text x="22" y="17" font-size="5.5" font-weight="700">${page.tf.length&&!page.p3.length?'Үнэн / худал':'Үргэлжлэл'}</text>
     <text x="188" y="17" font-size="3.2" text-anchor="end">${esc(state.exam.date||'')}</text>
-    <text x="22" y="25" font-size="3.8">${esc(state.exam.title||'Шалгалт')}${total>1?' — '+pno+' / '+total:''}</text>
-    <text x="120" y="25" font-size="2.8" fill="#666">Ангиа, бүлгээ, кодоо будна. "Багшийн оноо"-г сурагч бөглөхгүй.</text>`;
+    <text x="22" y="25" font-size="3.8">${esc(state.exam.title||'Шалгалт')} — ${pno+1} / ${total+1} хуудас</text>
+    <text x="120" y="22" font-size="2.8" fill="#666">Ангиа, бүлгээ, кодоо будна. "Багшийн оноо"-г сурагч бөглөхгүй.</text>
+    <text x="120" y="26" font-size="2.8" fill="#666">Энэ хуудсыг 1-р хуудастай хамт уншуулна — хоёул нийлж нэг дүн болно.</text>`;
   g+=p3IdSVG(st);
   g+=`<line x1="14" y1="143" x2="196" y2="143" stroke="#000" stroke-width=".35"/>`;
   g+=tfRowsSVG(page,r);
@@ -4192,7 +4208,7 @@ async function omrAdd(files){
     if(!it.dup)omrItems.push(it);renderOmr();}
   save();renderRoster();renderList();
   const need=omrItems.filter(i=>!i.saved).length;
-  m.style.color='';m.textContent=files.length+' зураг уншлаа.'+(autoN?' '+autoN+' хуудас шууд хадгалагдлаа.':'')+(need?' '+need+' хуудсыг доор шалгаж хадгална уу.':' Бүгд хадгалагдлаа.');
+  m.style.color='';m.textContent=files.length+' зураг уншлаа.'+(autoN?' '+autoN+' хуудас шууд хадгалагдлаа.':'')+(need?' '+need+' хуудсыг доор шалгаж хадгална уу.':' Бүгд хадгалагдлаа.')+(need?'':gapMsg());
   if(need){const f=document.querySelector('.omr-card:not(.saved)');if(f)f.scrollIntoView({behavior:'smooth',block:'start'});}
 }
 const omrScore=it=>{const qs=state.exam.questions,e=qs.reduce((s,q,i)=>s+qEarn(q,it.answers[i]),0),t=qs.reduce((s,q)=>s+(+q.points||0),0);return{e,t,p:t?e/t*100:0};};
@@ -4230,7 +4246,9 @@ function renderOmr(){
           :'<span class="g">Бүх задгай даалгавар үнэлэгдсэн.</span>'}</div>`;
     if(r.p3){
       return`<div class="omr-card${it.saved?' saved':''}" data-id="${it.id}" style="display:block">
-        <div class="omr-st"><b>Задгай даалгаврын хуудас${r.p3>1?', '+r.p3+'-р хэсэг':''}</b> <button class="btn ghost" data-act="zoom" style="padding:2px 8px;font-size:.8rem">Бүтэн хуудсыг харах</button></div>
+        <div class="omr-st"><b>${r.p3+1}-р хуудас${(()=>{const a=idx3.concat(idxTF).sort((x,y)=>x-y);return a.length?' — '+idxRange(a):'';})()}</b>
+        <span style="color:var(--muted)">(1-р хуудастай нь нийлж нэг дүн болно)</span>
+        <button class="btn ghost" data-act="zoom" style="padding:2px 8px;font-size:.8rem">Бүтэн хуудсыг харах</button></div>
         <div class="omr-st">${idTxt}${r.idAmb?' <span class="m">(эргэлзээтэй)</span>':''}</div>${warn}${pick}
         ${tfBlock()}${p3Block()}
         ${btns}</div>`;
@@ -4255,37 +4273,76 @@ function renderOmr(){
       <div class="btns">${it.saved?`<span class="g">✓ Хадгалсан</span><button class="btn ghost" data-act="resave">Засвараа хадгалах</button><button class="btn ghost" data-act="close">Хураах</button>`:`<button class="btn" data-act="save"${it.cls&&it.name?'':' disabled'}>Хадгалах</button>`}<button class="btn danger" data-act="del">Хасах</button></div>
       </div></div>`;};
   const mini=it=>{
-    const idx=it.r.p3?(it.r.p3idx||[]):qs.map((q,i)=>i);
+    const idx=it.r.p3?[].concat(it.r.p3idx||[],it.r.tfidx||[]).sort((a,b)=>a-b):qs.map((q,i)=>i);
     const e=idx.reduce((s,i)=>s+qEarn(qs[i],it.answers[i]),0),t=idx.reduce((s,i)=>s+(+qs[i].points||0),0),p=t?e/t*100:0;
     return`<div class="omr-mini" data-id="${it.id}"><span class="g">✓</span><span>${pad2(+(db.classes.find(c=>c.name===it.cls)||{codes:{}}).codes[it.name]||0)} <b>${esc(it.name)}</b> (${esc(it.cls)})</span>
-    <span>${it.r.p3?'задгай: ':''}${r1(e)} / ${r1(t)} оноо, <b class="${({good:'g',mid:'m',bad:'b'})[lvl(p)]}">${Math.round(p)}%</b></span><button data-act="open">Харах</button></div>`;};
+    <span>${it.r.p3?(it.r.p3+1)+'-р хуудас: ':''}${r1(e)} / ${r1(t)} оноо, <b class="${({good:'g',mid:'m',bad:'b'})[lvl(p)]}">${Math.round(p)}%</b></span><button data-act="open">Харах</button></div>`;};
   box.innerHTML=(todo.length?`<div class="omr-head"><b class="m">Шалгах шаардлагатай: ${todo.length}</b></div>`+todo.map(card).join(''):'')
     +opened.map(card).join('')
     +(done.length?`<div class="omr-head"><b class="g">✓ Хадгалагдсан: ${done.length + opened.length}</b></div>`+done.map(mini).join(''):'');
 }
 const p3Index=()=>state.exam.questions.map((q,i)=>isP3(q)?i:-1).filter(i=>i>=0);
 const tfIndex=()=>state.exam.questions.map((q,i)=>isP4(q)?i:-1).filter(i=>i>=0);
+/* Нэмэлт хуудас бүр дээр ЯМАР асуултууд байгаа вэ (2-р хуудас, 3-р хуудас...) */
+function extraIdx(){
+  try{return sheet3Layout().extra.map(pg=>
+    [].concat(...pg.tf.map(r=>r.items.map(x=>x.i)),pg.p3.map(x=>x.i)).sort((a,b)=>a-b));}
+  catch(e){return[];}
+}
+const idxRange=idx=>!idx.length?'':idx.length===1?(idx[0]+1)+'-р асуулт'
+  :(idx[0]+1)+'–'+(idx[idx.length-1]+1)+'-р асуулт';
+/* Хэний нэмэлт хуудас уншуулагдаагүй байна вэ */
+function pageGaps(){
+  const ex=extraIdx();if(!ex.length)return[];
+  const out=[];
+  state.students.forEach(s=>{
+    if(!s.answers||!s.answers.some(Boolean))return;
+    const miss=[];ex.forEach((idx,k)=>{if(idx.length&&idx.every(i=>!s.answers[i]))miss.push(k+2);});
+    if(miss.length)out.push({name:s.name,cls:s.cls,miss});});
+  return out;
+}
+const gapMsg=()=>{const g=pageGaps();if(!g.length)return'';
+  const who=g.slice(0,6).map(x=>x.name+' ('+x.miss.join(', ')+'-р хуудас)').join(', ');
+  return' ⚠ '+g.length+' сурагчийн нэмэлт хуудас уншуулагдаагүй байна: '+who+(g.length>6?' ба бусад.':'.');};
+/* Нэг ХУУДСЫГ сурагчийн өмнө хадгалсан хариулттай НИЙЛҮҮЛНЭ.
+   Тухайн хуудсан дээр байгаагүй асуултын хариулт хэвээрээ үлдэнэ — ингэснээр
+   1-р ба 2-р хуудсыг ямар ч дарааллаар уншуулсан нэг дүн болж нийлнэ. */
+function mergeAns(r,ans,ex,n){
+  const old=(ex&&ex.answers)||[];
+  let out;
+  if(r.p3){
+    /* Нэмэлт хуудас: зөвхөн энэ хуудсан дээрх асуултуудыг шинэчилнэ */
+    out=old.slice();
+    while(out.length<n)out.push('');out.length=n;
+    [].concat(r.p3idx||[],r.tfidx||[]).forEach(i=>{out[i]=ans[i]||'';});
+  }else{
+    out=(ans||[]).slice();
+    while(out.length<n)out.push('');out.length=n;
+    /* 1-р хуудас: нэмэлт хуудсаар ирсэн үнэн/худал, задгай даалгаврыг дарахгүй */
+    const here=new Set([].concat(r.p3idx||[],r.tfidx||[]));
+    state.exam.questions.forEach((q,i)=>{
+      if((isP3(q)||isP4(q))&&!here.has(i)&&old[i])out[i]=old[i];});
+  }
+  return out;
+}
+/* Үүлэнд илгээхэд: энэ хуудас ХАМРААГҮЙ бөгөөд хоосон байгаа асуултыг null гэж
+   тэмдэглэнэ. Хүлээн авагч тал null дээр өөрийн хариултаа хэвээр үлдээнэ —
+   ингэснээр утас, компьютер хоёр нэг нэгнийхээ хуудсыг дарахгүй. */
+function cloudAns(r,ans){
+  if(!r)return ans.slice();
+  const here=new Set([].concat(r.p3idx||[],r.tfidx||[]));
+  if(!r.p3)state.exam.questions.forEach((q,i)=>{if(!isP3(q)&&!isP4(q))here.add(i);});
+  return ans.map((a,i)=>(a!==''&&a!=null)?a:(here.has(i)?'':null));
+}
 function omrSave(it){
   if(!it.cls||!it.name||it.saved)return false;
   const ex=state.students.find(x=>x.cls===it.cls&&x.name===it.name);
   const n=state.exam.questions.length;
-  let ans;
-  if(it.r.p3){
-    /* Нэмэлт хуудас: зөвхөн энэ хуудсан дээрх асуултуудын хариултыг шинэчилнэ */
-    ans=ex?ex.answers.slice():[];
-    while(ans.length<n)ans.push('');ans.length=n;
-    (it.r.p3idx||[]).concat(it.r.tfidx||[]).forEach(i=>{ans[i]=it.answers[i]||'';});
-  }else{
-    const v=it.v||0;ans=toCanon(v,it.answers);
-    while(ans.length<n)ans.push('');ans.length=n;
-    /* Тестийн хуудас нөгөө хуудсан дээрх хариултыг дарж болохгүй */
-    if(ex)p3Index().forEach(i=>{if(!ans[i]&&ex.answers[i])ans[i]=ex.answers[i];});
-    if(ex&&!(it.r.tfidx||[]).length)state.exam.questions.forEach((q,i)=>{if(isP4(q)&&!ans[i]&&ex.answers[i])ans[i]=ex.answers[i];});
-    if(ex)ex.v=v;
-  }
-  if(ex)ex.answers=ans;else state.students.push({id:uid(),cls:it.cls,name:it.name,answers:ans,v:it.r.p3?0:(it.v||0)});
+  const ans=mergeAns(it.r,it.r.p3?it.answers:toCanon(it.v||0,it.answers),ex,n);
+  if(ex){ex.answers=ans;if(!it.r.p3)ex.v=it.v||0;}
+  else state.students.push({id:uid(),cls:it.cls,name:it.name,answers:ans,v:it.r.p3?0:(it.v||0)});
   it.saved=true;
-  if(vcfg().api&&vcfg().key){ccfg().queue.push({id:uid(),examId:state.id,cls:it.cls,name:it.name,answers:ans.slice()});setTimeout(cloudPoll,300);}
+  if(vcfg().api&&vcfg().key){ccfg().queue.push({id:uid(),examId:state.id,cls:it.cls,name:it.name,answers:cloudAns(it.r,ans)});setTimeout(cloudPoll,300);}
   return true;
 }
 $('#omrFiles').addEventListener('change',e=>{const f=[...e.target.files];e.target.value='';if(f.length)omrAdd(f);});
@@ -4305,14 +4362,14 @@ $('#omrList').addEventListener('click',e=>{
   if(b.dataset.act==='open'){it.open=true;renderOmr();return;}
   if(b.dataset.act==='close'){it.open=false;renderOmr();return;}
   if(b.dataset.act==='resave'){it.saved=false;omrSave(it);it.open=false;save();renderOmr();renderRoster();renderList();$('#omrMsg').textContent=it.name+'-ийн засвар хадгалагдлаа.';return;}
-  if(b.dataset.act==='save'){omrSave(it);save();renderOmr();renderRoster();renderList();$('#omrMsg').textContent=it.name+'-ийн хариулт хадгалагдлаа.';}
+  if(b.dataset.act==='save'){omrSave(it);save();renderOmr();renderRoster();renderList();$('#omrMsg').style.color='';$('#omrMsg').textContent=it.name+'-ийн хариулт хадгалагдлаа.'+gapMsg();}
   if(b.dataset.act==='zoom'){const d=document.createElement('div');d.className='qr-full';d.innerHTML=`<img src="${it.r.preview}" style="max-height:92vh;max-width:96vw">`;d.onclick=()=>d.remove();document.body.appendChild(d);}
 });
 $('#omrSaveAll').addEventListener('click',()=>{
   const ready=omrItems.filter(it=>it.r.ok&&!it.saved&&it.cls&&it.name&&!it.r.amb.some(Boolean)&&!it.r.idAmb);
   const skip=omrItems.filter(it=>it.r.ok&&!it.saved).length-ready.length;
   ready.forEach(omrSave);save();renderOmr();renderRoster();renderList();
-  $('#omrMsg').style.color='';$('#omrMsg').textContent=ready.length+' хуудас хадгалагдлаа.'+(skip?' '+skip+' хуудсыг шалгаж, тус тусад нь хадгална уу (эргэлзээтэй эсвэл сурагч тодорхойгүй).':'');
+  $('#omrMsg').style.color='';$('#omrMsg').textContent=ready.length+' хуудас хадгалагдлаа.'+(skip?' '+skip+' хуудсыг шалгаж, тус тусад нь хадгална уу (эргэлзээтэй эсвэл сурагч тодорхойгүй).':gapMsg());
 });
 
 /* ---------- cloud sync between phone and computer ---------- */
@@ -4371,8 +4428,10 @@ function applyScans(list){
   let n=0,unk=0;const other={},orph=[];
   list.forEach(sc=>{const ex=db.exams.find(e=>e.id===sc.examId);if(!ex){unk++;orph.push(sc);return;}
     if(ex!==state)other[ex.exam.title||'Нэргүй шалгалт']=(other[ex.exam.title||'Нэргүй шалгалт']||0)+1;
-    const L=ex.exam.questions.length,a=(sc.answers||[]).slice(0,L);while(a.length<L)a.push('');
-    const st=ex.students.find(x=>x.cls===sc.cls&&x.name===sc.name);
+    const L=ex.exam.questions.length,raw=(sc.answers||[]).slice(0,L);
+    const st=ex.students.find(x=>x.cls===sc.cls&&x.name===sc.name),old=(st&&st.answers)||[];
+    /* null = "энэ хуудсан дээр байгаагүй" — хуучин хариултыг нь хэвээр үлдээнэ */
+    const a=[];for(let i=0;i<L;i++){const v=raw[i];a.push(v==null?(old[i]||''):String(v));}
     if(st)st.answers=a;else ex.students.push({id:uid(),cls:sc.cls,name:sc.name,answers:a});
     ensureRoster(sc.cls,sc.name);n++;});
   return{n,unk,other,orph};
@@ -4503,14 +4562,19 @@ function liveTick(){
       if(it.r.ok){omrMatch(it);it.answers=it.r.answers.slice();omrItems.push(it);}};
     if(!id.name||r.idAmb){liveBanner(`<big>Сурагч танигдсангүй</big>Хуудсан дээр: ${idTxt}. Шалгах жагсаалтад нэмлээ, дараа нь гараар сонгоно.`,'warn');if(LS.stable>=3)flag();return;}
     if(nAmb){liveBanner(`<big>${esc(id.name)}</big>${nAmb} асуулт эргэлзээтэй (${r.amb.map((a,i)=>a?i+1:0).filter(Boolean).join(', ')}). Гэрэлтэй газар тэгш барина уу.`+(LS.stable>=5?' Шалгах жагсаалтад нэмлээ.':''),'warn');if(LS.stable>=5)flag();return;}
-    const ans=toCanon(scanVar,r.answers);   // хуудасны дарааллаас үндсэн дараалалд
+    /* Нэмэлт хуудас нь ӨӨРИЙН асуултаа л авчирна — 1-р хуудсаа дарж болохгүй */
+    const raw=r.p3?r.answers:toCanon(scanVar,r.answers);   // хуудасны дарааллаас үндсэн дараалалд
+    const sk=id.cls+'|'+id.name,pk=sk+'|'+(r.p3||0);
+    if(LS.saved[pk]===key){liveBanner(`<big>✓ ${pad2(+r.code)} ${esc(id.name)}</big>${(r.p3||0)+1}-р хуудас хадгалагдсан. Дараагийн хуудсаа харуулна уу.`,'ok');return;}
+    const ex=state.students.find(s=>s.cls===id.cls&&s.name===id.name),again=!!LS.saved[pk]||!!ex;
+    const ans=mergeAns(r,raw,ex,qs.length);
     const earned=qs.reduce((s,q,i)=>s+qEarn(q,ans[i]),0),total=qs.reduce((s,q)=>s+(+q.points||0),0),pct=total?earned/total*100:0;
-    const sk=id.cls+'|'+id.name,info=`<big>✓ ${pad2(+r.code)} ${esc(id.name)}</big>${r1(earned)} / ${r1(total)} оноо, ${Math.round(pct)}%, ${levelOf(pct)} түвшин`;
-    if(LS.saved[sk]===key){liveBanner(info+'<br><small>Хадгалсан. Дараагийн хуудсаа харуулна уу.</small>','ok');return;}
-    const ex=state.students.find(s=>s.cls===id.cls&&s.name===id.name),again=!!LS.saved[sk]||!!ex;
-    if(ex){ex.answers=ans.slice();ex.v=scanVar;}else state.students.push({id:uid(),cls:id.cls,name:id.name,answers:ans.slice(),v:scanVar});
-    LS.saved[sk]=key;LS.count++;save();
-    ccfg().queue.push({id:uid(),examId:state.id,cls:id.cls,name:id.name,answers:ans.slice()});save();
+    const pgN=extraIdx().length?`<small>${(r.p3||0)+1}-р хуудас уншлаа${r.p3?'':(extraIdx().length?' — дараа нь 2-р хуудсыг харуул':'')}</small><br>`:'';
+    const info=`<big>✓ ${pad2(+r.code)} ${esc(id.name)}</big>${pgN}${r1(earned)} / ${r1(total)} оноо, ${Math.round(pct)}%, ${levelOf(pct)} түвшин`;
+    if(ex)ex.answers=ans.slice();else state.students.push({id:uid(),cls:id.cls,name:id.name,answers:ans.slice(),v:r.p3?0:scanVar});
+    if(ex&&!r.p3)ex.v=scanVar;
+    LS.saved[pk]=key;LS.count++;save();
+    ccfg().queue.push({id:uid(),examId:state.id,cls:id.cls,name:id.name,answers:cloudAns(r,ans)});save();
     if(navigator.vibrate)navigator.vibrate(80);beep();
     $('#lsCount').textContent='Уншсан: '+LS.count;
     liveBanner(info+'<br><small>'+(again?'Шинэчлэгдлээ.':'Хадгаллаа.')+' Дараагийн хуудсаа харуулна уу.</small>','ok');
