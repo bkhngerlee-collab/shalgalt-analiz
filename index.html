@@ -31,15 +31,46 @@
 *{box-sizing:border-box}
 body{margin:0;background:var(--bg);color:var(--ink);
   font-family:"Segoe UI",Roboto,"Noto Sans","Helvetica Neue",Arial,sans-serif;font-size:16px;line-height:1.5}
-header{background:var(--leaf);color:#fff;padding:20px 20px 0}
+header{background:var(--leaf);color:#fff;padding:20px 20px 0;position:sticky;top:0;z-index:30}
 @media (prefers-color-scheme:dark){header{background:#143526}}
+/* Доош гүйлгэхэд толгой хэсэг агшиж, цэс нь дэлгэцэн дээр үлдэнэ */
+body.sc header{padding-top:9px;box-shadow:0 2px 10px rgba(0,0,0,.16)}
+body.sc header h1{font-size:1.05rem}
+body.sc header p{display:none}
+body.sc nav button{padding:8px 14px;font-size:.93rem}
 .wrap{max-width:1000px;margin:0 auto}
 h1{margin:0;font-size:1.6rem;font-weight:700;letter-spacing:-.01em}
 header p{margin:4px 0 16px;opacity:.85;font-size:.95rem}
 nav{display:flex;gap:4px;overflow-x:auto}
 nav button{font:inherit;border:0;background:transparent;color:#fff;opacity:.75;padding:10px 16px;
   border-radius:8px 8px 0 0;cursor:pointer;white-space:nowrap}
-nav button[aria-selected="true"]{background:var(--bg);color:var(--ink);opacity:1;font-weight:600}
+nav button:hover{opacity:1;background:rgba(255,255,255,.14)}
+nav button[aria-selected="true"],nav button[aria-selected="true"]:hover{background:var(--bg);color:var(--ink);opacity:1;font-weight:600}
+/* Цонх доторх хэсгүүд рүү шилжих цэс */
+.secnav{display:flex;gap:6px;flex-wrap:wrap;position:sticky;top:var(--hdr,112px);z-index:20;
+  background:var(--bg);padding:10px 0;margin:-6px 0 10px;border-bottom:1px solid var(--line)}
+.secnav a{font-size:.87rem;color:var(--leaf);text-decoration:none;background:var(--surface);
+  border:1px solid var(--line);border-radius:999px;padding:6px 14px;white-space:nowrap;line-height:1.3}
+.secnav a:hover{background:var(--leaf-soft);border-color:var(--leaf)}
+.secnav a.on{background:var(--leaf);border-color:var(--leaf);color:#fff;font-weight:600}
+@media (prefers-color-scheme:dark){.secnav a.on{color:#0e1a15}}
+main>section>.panel,.omr-card{scroll-margin-top:calc(var(--hdr,112px) + 56px)}
+/* Утсан дээр цэс нэг мөрөнд багтаж, хажуу тийш гүйлгэнэ */
+@media(max-width:660px){
+  .secnav{flex-wrap:nowrap;overflow-x:auto;padding:8px 0;scrollbar-width:none;-ms-overflow-style:none}
+  .secnav::-webkit-scrollbar{display:none}
+  .secnav a{font-size:.84rem;padding:6px 12px;flex:0 0 auto}
+  header{padding:14px 14px 0}
+  body.sc header{padding-top:7px}
+  h1{font-size:1.3rem}
+  header p{margin:3px 0 12px;font-size:.88rem}
+  nav button{padding:9px 13px;font-size:.93rem}
+  body.sc nav button{padding:7px 12px;font-size:.88rem}
+  main{padding:14px}
+}
+/* Хэсэг бүрийн гарчгийг ялгаруулах */
+main .panel>h2{display:flex;align-items:center;gap:9px}
+main .panel>h2::before{content:"";flex:0 0 4px;width:4px;height:19px;border-radius:2px;background:var(--leaf)}
 main{padding:20px}
 section[hidden]{display:none}
 .panel{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:18px;margin-bottom:18px}
@@ -259,8 +290,10 @@ td input,td select{min-width:70px}
 .avgrow td{background:var(--iodine-soft);color:var(--iodine);font-weight:700;font-size:.85rem;text-align:center;padding:4px}
 .avgsum{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 6px}
 .avgsum span{background:var(--bg);border:1px solid var(--line);border-radius:999px;padding:4px 12px;font-size:.88rem}
-.part-head{margin:16px 0 8px;font-weight:700;color:var(--leaf)}
-.part-head small{font-weight:400;color:var(--muted)}
+.part-head{margin:22px 0 10px;font-weight:800;color:var(--leaf);background:var(--leaf-soft);
+  border-left:4px solid var(--leaf);border-radius:0 8px 8px 0;padding:8px 12px;font-size:.96rem}
+.part-head:first-child{margin-top:8px}
+.part-head small{font-weight:400;color:var(--muted);margin-left:4px}
 .opts.wide{flex-wrap:wrap;max-width:420px}
 .well.na{border:2px dashed var(--line);color:var(--muted)}
 tr.pick{cursor:pointer} tr.pick:hover{background:var(--bg)} tr.sel{background:var(--iodine-soft)}
@@ -277,6 +310,14 @@ tr.pick{cursor:pointer} tr.pick:hover{background:var(--bg)} tr.sel{background:va
 .qcard{border:1px solid var(--line);border-radius:8px;padding:10px 12px;margin-bottom:10px}
 .qhead{display:grid;grid-template-columns:28px 1fr 78px 78px 32px 32px;gap:8px;align-items:center}
 .qlabels{display:grid;grid-template-columns:28px 1fr 78px 78px 32px 32px;gap:8px;font-size:.8rem;color:var(--muted);padding:0 13px 4px}
+.qhead>*,.qlabels>*{min-width:0}
+.qlabels>*{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+@media(max-width:560px){
+  .qhead,.qlabels{grid-template-columns:22px 1fr 56px 50px 28px 28px;gap:5px}
+  .qlabels{font-size:.73rem;padding:0 11px 4px}
+  .qcard{padding:9px 10px}
+  .qbtn{width:28px;height:28px;font-size:.9rem}
+}
 .qbtn{font:inherit;font-size:1rem;line-height:1;width:32px;height:32px;border-radius:8px;cursor:pointer;
   border:1px solid var(--line);background:var(--surface);color:var(--leaf)}
 .qbtn.del{color:var(--stain)}
@@ -395,6 +436,7 @@ body.student #studentApp{display:block}
 .hp-toc a{color:var(--leaf);text-decoration:none;font-size:.93rem;padding:3px 0}
 .hp-toc a:hover{text-decoration:underline}
 @media print{header nav,.btns,.noprint,#tab-setup,#tab-entry{display:none!important}body{background:#fff}
+  header{position:static!important;box-shadow:none!important}
   #tab-help .hp-step,#tab-help table,#tab-help .hp-ok,#tab-help .hp-warn,#tab-help .hp-tip{break-inside:avoid}
   #tab-help .panel{border:0;padding:0 0 10px;margin-bottom:10px}
   #tab-help .hp-sec>summary::before{display:none}
@@ -427,7 +469,15 @@ body.student #studentApp{display:block}
 <main class="wrap">
 <!-- ============ 1. SETUP ============ -->
 <section id="tab-setup">
-  <div class="panel">
+  <nav class="secnav noprint" aria-label="Шалгалт цонхны хэсгүүд">
+    <a href="#s-exams">Миний шалгалтууд</a>
+    <a href="#s-mat">Шалгалтын материал</a>
+    <a href="#s-sheet">Хариултын хуудас</a>
+    <a href="#s-cls">Ангиуд, нэрс</a>
+    <a href="#s-back">Нөөц</a>
+    <a href="#s-cloud">Утас холбох</a>
+  </nav>
+  <div class="panel" id="s-exams">
     <h2>Миний шалгалтууд</h2>
     <p class="hint">Шалгалт бүр асуулт, хариулт, анализынхаа хамт тусдаа хадгалагдана. Жагсаалтаас сонгоход өмнөх шалгалтын анализ буцаж нээгдэнэ.</p>
     <label for="examSel">Нээлттэй шалгалт</label>
@@ -439,7 +489,7 @@ body.student #studentApp{display:block}
     </div>
   </div>
 
-  <div class="panel">
+  <div class="panel" id="s-mat">
     <h2>Шалгалтын материал</h2>
     <p class="hint">Асуулт бүрийн агуулга (сэдэв), зөв хариулт, оноог оруулна. Асуултын текст, хариултын хувилбаруудыг оруулбал сурагч хариулт бөглөхдөө асуултаа харж бөглөнө. Ижил агуулгатай асуултууд анализ дээр нэгтгэгдэнэ.</p>
     <div id="matLock"></div>
@@ -492,7 +542,7 @@ body.student #studentApp{display:block}
     </div>
   </div>
 
-  <div class="panel">
+  <div class="panel" id="s-sheet">
     <h2>Хариултын хуудас</h2>
     <p class="hint">Энэ шалгалтын асуултын тоонд тохирсон хариултын хуудас хэвлэнэ. Сурагч ангиа (2 оронтой тоо), бүлгээ (үсэг), өөрийн кодыг (2 оронтой тоо) дугуй будаж тэмдэглэнэ. Жишээ нь 11С ангийн 7-р кодтой сурагч ангид 1 ба 1, бүлэгт С, кодод 0 ба 7-г будна.</p>
     <div class="row">
@@ -508,7 +558,7 @@ body.student #studentApp{display:block}
     <div class="msg" id="sMsg" role="status"></div>
   </div>
 
-  <div class="panel">
+  <div class="panel" id="s-cls">
     <h2>Ангиуд, сурагчдын нэрс</h2>
     <p class="hint">Анги бүрийн сурагчдын нэрсийг нэг удаа оруулахад бүх шалгалтад ашиглагдана. Сурагч бүр ангидаа давхцахгүй 2 оронтой кодтой бөгөөд хариултын хуудсан дээр түүнийгээ будна. Нэрсийг Excel эсвэл Word-оос хуулж буулгана. Дугаартай хуулбал ("7. Анужин") тэр дугаар нь код болно, дугааргүй бол код автоматаар өгөгдөнө.</p>
     <div class="row">
@@ -535,7 +585,7 @@ body.student #studentApp{display:block}
     <div class="msg" id="rosterMsg" role="status"></div>
   </div>
 
-  <div class="panel">
+  <div class="panel" id="s-back">
     <h2>Нөөц хадгалах</h2>
     <p class="hint">Өгөгдөл энэ компьютерийн хөтөч дотор хадгалагддаг. Хөтчийн түүх цэвэрлэх, өөр компьютер ашиглахад алдагдахаас сэргийлж нөөц файлаа үе үе татаж, флаш эсвэл Google Drive-даа хадгалаарай. Өөр компьютер дээр тэр файлаас сэргээгээд үргэлжлүүлж болно.</p>
     <div class="btns" style="margin-top:0">
@@ -545,7 +595,7 @@ body.student #studentApp{display:block}
     <div class="msg" id="backupMsg" role="status"></div>
   </div>
 
-  <div class="panel">
+  <div class="panel" id="s-cloud">
     <details class="collapsible" id="cPanel"><summary><span style="font-size:1.15rem">Утас ба компьютерийг холбох</span> <span id="cSum" style="font-weight:400;color:var(--muted);font-size:.9rem"></span></summary>
     <p class="hint" style="margin-top:12px">Утсаараа хариултын хуудас уншуулахад дүн нь компьютер дээрх анализ руу өөрөө орж ирэхийн тулд хоёр төхөөрөмжийг Google Sheets-ээр холбоно. Шинэ үгийн сорилд ашигладаг холболтыг ашиглана. Нэг удаа тохируулахад хангалттай.</p>
     <ol style="margin:0 0 8px;padding-left:20px;font-size:.93rem">
@@ -583,7 +633,13 @@ body.student #studentApp{display:block}
 
 <!-- ============ 2. ENTRY ============ -->
 <section id="tab-entry" hidden>
-  <div class="panel">
+  <nav class="secnav noprint" aria-label="Хариулт оруулах цонхны хэсгүүд">
+    <a href="#e-fill">Гараар бөглөх</a>
+    <a href="#e-scan">Зургаас унших</a>
+    <a href="#e-xlsx">Excel-ээр оруулах</a>
+    <a href="#e-list">Оруулсан сурагчид</a>
+  </nav>
+  <div class="panel" id="e-fill">
     <h2>Хариултын хуудас бөглөх</h2>
     <p class="hint">Ангиа сонгоод сурагчийн нэр дээр дарж хариултыг нь оруулна. Ногоон нэртэй сурагчийн хариулт орсон, дарвал засаж болно. Хадгалсны дараа дараагийн сурагч автоматаар сонгогдоно.</p>
     <div class="row">
@@ -603,7 +659,7 @@ body.student #studentApp{display:block}
     <div class="msg" id="entryMsg" role="status"></div>
   </div>
 
-  <div class="panel">
+  <div class="panel" id="e-scan">
     <h2>Хариултын хуудасны зургаас унших</h2>
     <div class="detail" style="margin:0 0 12px">
       <h3>Хамгийн хурдан арга (30 хуудас 5 минутад)</h3>
@@ -630,7 +686,7 @@ body.student #studentApp{display:block}
     <div id="omrList"></div>
   </div>
 
-  <div class="panel">
+  <div class="panel" id="e-xlsx">
     <h2>Excel файлаар оруулах</h2>
     <p class="hint">Олон сурагчийн хариултыг Excel дээр цэгцтэй бөглөөд нэг дор оруулна.</p>
     <ol style="margin:0 0 6px;padding-left:20px;font-size:.93rem">
@@ -651,7 +707,7 @@ body.student #studentApp{display:block}
     <div class="msg" id="bulkMsg" role="status"></div>
   </div>
 
-  <div class="panel">
+  <div class="panel" id="e-list">
     <h2>Оруулсан сурагчид <span id="count" style="color:var(--muted);font-weight:400"></span></h2>
     <p class="hint" id="listHint"></p>
     <div class="scroll"><table><tbody id="slist"></tbody></table></div>
@@ -1281,7 +1337,7 @@ body.student #studentApp{display:block}
     <div class="hp-step"><div class="hp-num">2</div><div>Баруун дээд булангийн <b>⋮</b> цэс → <b>"Нүүр дэлгэцэд нэмэх"</b> (Add to Home screen) → <b>Нэмэх</b>.</div></div>
     <div class="hp-step"><div class="hp-num">3</div><div>Дэлгэцэн дээр ногоон дүрс үүснэ. Дараа нь <b>дүрс дээрээ л дарна</b>.</div></div>
     <h3>iPhone дээр</h3>
-    <p><b>Safari</b>-гаар нээнэ (Chrome биш) → доод талын <b>⬆</b> товч → <b>"Add to Home Screen"</b>.</p>
+    <p><b>Safari</b>-гаар нээнэ (Chrome биш) → доод талын <b>Хуваалцах</b> (Share) товч → <b>"Add to Home Screen"</b>.</p>
     <h3>Компьютер дээр (Chrome, Edge)</h3>
     <div class="hp-step"><div class="hp-num">1</div><div>Холбоосоо нээгээд <b>⋮</b> цэс → <b>"Хадгалах, хуваалцах"</b> → <b>"Товчлол үүсгэх…"</b> (Save and share → Create shortcut…).</div></div>
     <div class="hp-step"><div class="hp-num">2</div><div><b>"Цонх болгон нээх"</b> (Open as window) гэдгийг <b>чагтална</b> → Үүсгэх. Ширээн дээр дүрс гарна.
@@ -2096,6 +2152,8 @@ function go(tab){
   if(tab==='vocab')renderVocab();
   if(tab==='setup')renderCloud();
   window.scrollTo(0,0);
+  document.body.classList.remove('sc');
+  if(window.secMark)setTimeout(window.secMark,0);
 }
 document.addEventListener('click',e=>{
   const t=e.target.closest('[data-tab],[data-go]');
@@ -3176,7 +3234,7 @@ function renderAnalysis(){
         <td class="num"><b>${Math.round(t.p)}%</b></td><td><span class="${pl[1]}">${pl[0]}</span></td>
         <td class="num"><b class="${dl[1]}">${f2(t.D)}</b></td><td><span class="${dl[1]}">${dl[0]}</span></td>
         <td class="num">${f2(t.rpb)}</td></tr>`;};
-    return`<div class="panel"><h2>Асуултын чанарын шинжилгээ</h2>
+    return`<div class="panel" data-sec="Чанар"><h2>Асуултын чанарын шинжилгээ</h2>
       <p class="hint">Сурагчдын дүнг биш, <b>асуулт өөрөө хэр сайн бичигдсэнийг</b> үнэлнэ. Аль асуултыг хэвээр үлдээж, алийг дахин бичихийг эндээс харна.</p>
       <div class="stats" style="margin-bottom:12px">
         <div class="stat"><b class="${kr[1]}">${d.kr20==null?'–':f2(d.kr20)}</b><span>KR-20 найдвартай байдал — ${kr[0]}</span></div>
@@ -3229,7 +3287,7 @@ function renderAnalysis(){
     <p class="hint" style="margin:4px 0 0">Тэдний сүүлийн хуудасны асуултууд бүгд хоосон байгаа тул анализ дутуу гарч байна.
     "2. Хариулт оруулах" хэсэгт тэр хуудсуудыг нь уншуулбал нэг дүнд нийлнэ:
     ${esc(gaps.slice(0,10).map(x=>x.name+' ('+x.cls+', '+x.miss.join(', ')+'-р хуудас)').join('; '))}${gaps.length>10?' ба бусад':''}.</p></div>`:'')+`
-  <div class="panel">
+  <div class="panel" data-sec="Ерөнхий">
     <div class="row">
       <div style="flex:3 1 240px"><h2>${esc(state.exam.title||'Шалгалтын анализ')}</h2>
         <p class="hint" style="margin:0">${qs.length} асуулт, нийт ${r1(d.total)} оноо</p></div>
@@ -3261,9 +3319,9 @@ function renderAnalysis(){
     ${starCard}
   </div>
 
-  <div class="panel" id="chartPanel"></div>
+  <div class="panel" id="chartPanel" data-sec="График"></div>
 
-  <div class="panel"><h2>Асуулт тус бүрийн гүйцэтгэл</h2>
+  <div class="panel" data-sec="Асуулт бүрээр"><h2>Асуулт тус бүрийн гүйцэтгэл</h2>
     <p class="hint">Тухайн асуултад зөв хариулсан сурагчдын хувь.</p>
     ${qs.map((q,i)=>bar((i+1)+'. '+topicOf(i),d.qPct[i])).join('')}
     <div class="legend">Ногоон: 80%-аас дээш. Шар: 60–79%. Улаан: 60%-аас доош.</div>
@@ -3271,12 +3329,12 @@ function renderAnalysis(){
 
   ${qualityHtml()}
 
-  <div class="panel"><h2>Агуулга тус бүрийн гүйцэтгэл</h2>
+  <div class="panel" data-sec="Агуулга"><h2>Агуулга тус бүрийн гүйцэтгэл</h2>
     <p class="hint">Ижил агуулгатай асуултуудын дундаж, сайнаас сул руу эрэмбэлсэн.</p>
     ${d.topics.map(t=>bar(t.t+' ('+t.idx.length+' асуулт)',t.pct)).join('')}
   </div>
 
-  <div class="panel"><h2>Түвшний үнэлгээ</h2>
+  <div class="panel" data-sec="Түвшин"><h2>Түвшний үнэлгээ</h2>
     <p class="hint">Гүйцэтгэлийн хувиар тогтоосон түвшин бүрд хэдэн сурагч багтсан.</p>
     <div class="scroll"><table>
       <thead><tr><th>Түвшин</th><th>Гүйцэтгэл</th><th class="num">Сурагчийн тоо</th><th class="num">Эзлэх хувь</th><th>Сурагчид</th></tr></thead>
@@ -3287,7 +3345,7 @@ function renderAnalysis(){
     </table></div>
   </div>
 
-  <div class="panel"><div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap">
+  <div class="panel" data-sec="Стандарт биелэлт"><div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap">
       <h2 style="margin:0">Дүнгийн стандарт биелэлт</h2>
       <button class="btn noprint" id="stdXlsx">Excel файлаар татах</button></div>
     <div class="msg noprint" id="stdMsg" role="status"></div>
@@ -3295,14 +3353,14 @@ function renderAnalysis(){
     <div class="scroll">${stdTable(classes)}</div>
   </div>
 
-  <div class="panel"><div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap"><h2 style="margin:0">Дүнгийн хүснэгт</h2>
+  <div class="panel" data-sec="Дүнгийн хүснэгт"><div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap"><h2 style="margin:0">Дүнгийн хүснэгт</h2>
     <button class="btn noprint" id="mxXlsx">Дүнгийн хүснэгтийг Excel-ээр татах</button></div>
     <div class="msg noprint" id="mxMsg" role="status"></div>
     <p class="hint">Мөр бүр сурагч, багана бүр асуулт. Нүдэнд тухайн асуултаар авсан оноо: ногоон нь бүтэн оноо, шар нь хэсэгчилсэн, улаан нь 0. Доод мөрүүдэд асуулт бүрийн ангийн нийт авах оноо, авсан оноо, дундаж, гүйцэтгэл гарна. Доорх "Харуулах", "Эрэмбэлэх" сонголт энэ хүснэгтэд ч хамаарна.</p>
     ${matrixHtml(viewRows(d.rows,{pct:r=>r.pct,name:r=>r.s.name,cls:r=>r.s.cls,show:viewShow,sort:viewSort,avg:d.avg}),qs,!filterCls)}
   </div>
 
-  <div class="panel"><h2>Сурагч тус бүрийн дүн</h2>
+  <div class="panel" data-sec="Сурагч бүрээр"><h2>Сурагч тус бүрийн дүн</h2>
     <p class="hint">Байр нь тухайн сурагчийн өөрийн ангид оноогоороо эзэлж буй байр. "Дунджаас зөрүү" нь сурагчийн хувь ${filterCls?'ангийн':'сонгосон бүх сурагчийн'} дунджаас хэдэн хувиар дээш, доош байгааг заана. Мөр дээр дарвал ямар агуулга дээр алдсан нь харагдана.</p>
     ${viewControls('a',viewShow,viewSort)}
     ${avgSummary(d.rows,r=>r.pct,d.avg,` (${r1(d.avg*d.total/100)} / ${r1(d.total)} оноо)`)}
@@ -3322,6 +3380,7 @@ function renderAnalysis(){
     ${detail}
   </div>`;
 
+  buildSecNav(el);
   lastD=d;renderChart();
   $('#fcls').addEventListener('change',e=>{filterCls=e.target.value;renderAnalysis();});
   $('#anonSel').addEventListener('change',e=>{db.anon=e.target.value;save();renderAnalysis();});
@@ -5495,6 +5554,62 @@ const hpAll=o=>document.querySelectorAll('#tab-help details').forEach(d=>d.open=
 $('#hpOpen').addEventListener('click',()=>hpAll(true));
 $('#hpClose').addEventListener('click',()=>hpAll(false));
 $('#hpPrint').addEventListener('click',()=>{hpAll(true);setTimeout(()=>window.print(),80);});
+
+/* data-sec гэж тэмдэглэсэн хэсгүүдээс шилжих цэсийг өөрөө угсарна.
+   Байхгүй хэсэг (жишээ нь чанарын шинжилгээ) бол цэсэнд ч гарахгүй. */
+function buildSecNav(box){
+  if(!box)return;
+  const old=box.firstElementChild;
+  if(old&&old.classList.contains('secnav'))old.remove();
+  const secs=[...box.children].filter(e=>e.dataset&&e.dataset.sec);
+  if(secs.length<3)return;
+  const nav=document.createElement('nav');
+  nav.className='secnav noprint';nav.setAttribute('aria-label','Цонхны хэсгүүд');
+  secs.forEach((s,i)=>{
+    if(!s.id)s.id='sec-'+(box.id||'x')+'-'+i;
+    const a=document.createElement('a');a.href='#'+s.id;a.textContent=s.dataset.sec;nav.appendChild(a);});
+  box.insertBefore(nav,box.firstChild);
+}
+/* ---------- Толгой цэс байрандаа үлдэж, доош гүйлгэхэд агшина ----------
+   Нэг цонх 8000 цэг хүртэл урт байдаг тул цэс нь үргэлж харагдаж байх хэрэгтэй. */
+(function(){
+  const hd=document.querySelector('header'),b=document.body,root=document.documentElement;
+  const hdrH=()=>parseInt(getComputedStyle(root).getPropertyValue('--hdr'))||112;
+  const setH=()=>root.style.setProperty('--hdr',Math.round(hd.getBoundingClientRect().height)+'px');
+  const onScroll=()=>{
+    const y=window.scrollY||root.scrollTop;
+    if(!b.classList.contains('sc')&&y>90)b.classList.add('sc');
+    else if(b.classList.contains('sc')&&y<24)b.classList.remove('sc');
+    setH();
+  };
+  /* Цонх доторх хэсэг рүү шилжих */
+  document.addEventListener('click',e=>{
+    const a=e.target.closest('.secnav a');if(!a)return;
+    e.preventDefault();
+    const el=document.querySelector(a.getAttribute('href'));if(!el)return;
+    /* Эхлээд толгойг агшаагаад ДАРАА нь хэмжинэ — тэгэхгүй бол байрлал зөрнө */
+    b.classList.add('sc');void hd.offsetHeight;setH();
+    const sn=a.closest('.secnav'),gap=hd.getBoundingClientRect().height+sn.getBoundingClientRect().height+12;
+    window.scrollTo(0,Math.max(0,el.getBoundingClientRect().top+window.scrollY-gap));
+    setH();mark();
+  });
+  /* Одоо хаана явааг цэсэнд тодруулах */
+  const mark=()=>{
+    const sn=[...document.querySelectorAll('.secnav')].find(n=>n.offsetParent!==null);
+    if(!sn)return;
+    const links=[...sn.querySelectorAll('a')],lim=hdrH()+sn.getBoundingClientRect().height+24;
+    let cur=links[0];
+    links.forEach(a=>{const el=document.querySelector(a.getAttribute('href'));
+      if(el&&el.getBoundingClientRect().top<=lim)cur=a;});
+    /* Хуудасны ёроолд хүрвэл сүүлийн хэсгийг тодруулна */
+    if(innerHeight+scrollY>=document.body.scrollHeight-6)cur=links[links.length-1];
+    links.forEach(a=>a.classList.toggle('on',a===cur));
+  };
+  addEventListener('scroll',()=>{onScroll();mark();},{passive:true});
+  addEventListener('resize',()=>{setH();mark();});
+  setH();onScroll();setTimeout(mark,120);
+  window.secMark=mark;
+})();
 
 /* ---------- usage licence (time-limited activation codes) ---------- */
 const LIC_KEY='shalgalt-license',LIC_SEEN='shalgalt-license-seen';
