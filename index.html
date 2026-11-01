@@ -1194,6 +1194,7 @@ body.student #studentApp{display:block}
     <div class="hp-tip">Шинэ багшид программаа танилцуулах бол <b>зүгээр л холбоосоо</b> илгээчихэд болно. Тэр хүн нээхэд танилцуулга хуудас нь гарч, доороос нь <b>"Эрх хүсэх"</b> дарж шууд хүсэлт илгээнэ.</div>
     <h3>Кодоо хаанаас авах</h3>
     <ul>
+      <li><b>Идэвхжүүлэх холбоосоор (хамгийн амар):</b> эзэн танд <code>…/#k=…</code> гэж төгссөн холбоос илгээнэ. Түүн дээр дарахад л болоо — программ өөрөө нээгдэнэ, юу ч хуулах шаардлагагүй. Холбоос тань кодоо агуулж байгаа тул <b>бусдад дамжуулж болохгүй</b>.</li>
       <li><b>Эзнээс шууд:</b> чат, и-мэйлээр урт код ирнэ (<code>eyJ…</code> гэж эхэлж, дунд нь цэгтэй).</li>
       <li><b>Өөрөө хүсэлт илгээх:</b> эзний өгсөн <b>урих холбоосоор</b> орж, түгжээт цонхны доорх <b>"Эрх хүсэх"</b> дарж нэр, хүйс, түвшин, мэргэжил, и-мэйлээ бичнэ. Эзэн баталмагц <b>хуудас өөрөө нээгдэнэ</b> — 15 секунд тутам шалгаж байдаг.</li>
     </ul>
@@ -5786,7 +5787,25 @@ document.addEventListener('click',e=>{
     if(box&&!box.hidden&&o&&$('#askForm').hidden&&$('#askWait').hidden)o.click();
     else if(box&&box.hidden){const m=$('#lockErr');if(m)m.textContent='Хүсэлт илгээх холбоос тохируулагдаагүй байна. Программын эзнээс кодоо шууд аваарай.';}},450);
 });
-async function licBoot(){const r=await licVerify(lsGet(LIC_KEY));if(r.ok){licApply(r.d);renderSetup();}else licLock(r);}
+/* Идэвхжүүлэх холбоос: …/?k=КОД эсвэл …/#k=КОД
+   Багш кодоо хуулж буулгах шаардлагагүй — холбоос дээр дарахад өөрөө идэвхжинэ. */
+function linkCode(){
+  const q=new URLSearchParams(location.search).get('k');if(q)return q;
+  const m=/[#&?]k=([^&]+)/.exec(location.hash||'');
+  try{return m?decodeURIComponent(m[1]):'';}catch(e){return m?m[1]:'';}
+}
+function linkClean(){
+  try{const u=new URL(location.href);u.searchParams.delete('k');
+    if(/[#&?]k=/.test(u.hash))u.hash=u.hash.replace(/[#&?]k=[^&]*/,'').replace(/^[#&?]+$/,'');
+    history.replaceState(null,'',u.pathname+u.search+u.hash);}catch(e){}
+}
+async function licBoot(){
+  const k=linkCode();
+  if(k){const v=await licVerify(k);
+    if(v.ok){lsSet(LIC_KEY,v.code);linkClean();licApply(v.d);renderSetup();
+      setTimeout(()=>{try{toast('Эрх идэвхжлээ. Программ бэлэн.');}catch(e){}},400);return;}
+    linkClean();}
+  const r=await licVerify(lsGet(LIC_KEY));if(r.ok){licApply(r.d);renderSetup();}else licLock(r);}
 
 (function(){const o=new URLSearchParams(location.search).get('owner');
   if(o==='1')lsSet(OWNER_KEY,'1');
