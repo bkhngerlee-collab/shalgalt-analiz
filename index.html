@@ -157,10 +157,84 @@ td input,td select{min-width:70px}
 .clsbtn{font:inherit;font-weight:700;font-size:1.05rem;padding:10px 18px;border-radius:10px;border:2px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer}
 .clsbtn[aria-pressed="true"]{background:var(--leaf);border-color:var(--leaf);color:#fff}
 .vdet td{font-size:.88rem}
-.lock{position:fixed;inset:0;background:var(--bg);z-index:40;display:flex;align-items:center;justify-content:center;padding:20px;overflow:auto}
+.lock{position:fixed;inset:0;background:var(--bg);z-index:40;display:block;padding:0;overflow:auto}
 .lock[hidden]{display:none}
-.lock .panel{max-width:540px;width:100%}
+.lock .panel{max-width:560px;width:100%;margin:0 auto}
 .lock textarea{min-height:90px;font-size:.85rem;word-break:break-all}
+/* ---------- Танилцуулга хуудас (идэвхжүүлээгүй үед гарна) ---------- */
+.lp-top{position:sticky;top:0;z-index:5;background:var(--surface);color:var(--ink);padding:0;border-bottom:1px solid var(--line)}
+@media (prefers-color-scheme:dark){.lp-top{background:var(--surface)}}
+.lp-top-in{max-width:1080px;margin:0 auto;display:flex;align-items:center;gap:14px;padding:11px 20px}
+.lp-logo{display:flex;align-items:center;gap:10px;font-size:1.02rem;font-weight:800;letter-spacing:-.01em;white-space:nowrap}
+.lp-mark{width:34px;height:34px;border-radius:9px;background:var(--leaf);color:#fff;display:grid;place-items:center;flex:0 0 34px}
+.lp-mark svg{width:19px;height:19px;fill:none;stroke:#fff;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.lp-nav{display:flex;gap:2px;margin-left:auto}
+.lp-nav a{color:var(--muted);text-decoration:none;font-size:.92rem;padding:8px 12px;border-radius:8px}
+.lp-nav a:hover{background:var(--leaf-soft);color:var(--leaf)}
+.lp-cta{display:flex;gap:8px;margin-left:auto}
+.lp-nav+.lp-cta{margin-left:0}
+.lp-btn{font:inherit;font-weight:700;font-size:.92rem;border:1px solid var(--leaf);background:var(--leaf);color:#fff;
+  padding:9px 18px;border-radius:9px;cursor:pointer;white-space:nowrap}
+@media (prefers-color-scheme:dark){.lp-btn{color:#0e1a15}}
+.lp-btn.ghost{background:transparent;color:var(--leaf)}
+.lp-main{max-width:1080px;margin:0 auto;padding:0 20px 10px}
+.lp-hero{padding:54px 0 10px;text-align:center}
+.lp-tag{display:inline-block;background:var(--leaf-soft);color:var(--leaf);font-size:.82rem;font-weight:700;
+  padding:6px 14px;border-radius:999px;margin-bottom:18px}
+.lp-hero h1{font-size:2.5rem;line-height:1.14;margin:0 0 14px;letter-spacing:-.025em}
+.lp-hero h1 em{font-style:normal;color:var(--leaf)}
+.lp-hero>p{color:var(--muted);font-size:1.06rem;max-width:60ch;margin:0 auto 24px}
+.lp-hero .lp-btn{padding:12px 26px;font-size:1rem}
+.lp-hero .lp-cta{justify-content:center;margin:0}
+.lp-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin:36px 0 0}
+.lp-stat{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:16px 10px}
+.lp-stat b{display:block;font-size:1.45rem;color:var(--leaf);letter-spacing:-.02em;line-height:1.2}
+.lp-stat span{font-size:.81rem;color:var(--muted)}
+.lp-sec{padding:44px 0 0}
+.lp-sec h2{font-size:1.85rem;margin:0 0 6px;letter-spacing:-.02em}
+.lp-sec>p{color:var(--muted);margin:0 0 22px;max-width:64ch}
+.lp-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+.lp-card{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:18px;display:flex;gap:14px;align-items:flex-start}
+.lp-card:hover{border-color:var(--leaf)}
+.lp-ico{flex:0 0 40px;width:40px;height:40px;border-radius:11px;background:var(--leaf-soft);color:var(--leaf);display:grid;place-items:center}
+.lp-ico svg{width:21px;height:21px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+.lp-card h3{margin:0 0 4px;font-size:1.01rem;line-height:1.3}
+.lp-card p{margin:0;color:var(--muted);font-size:.875rem;line-height:1.45}
+.lp-steps{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+.lp-step{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:18px}
+.lp-step b{width:30px;height:30px;border-radius:50%;background:var(--leaf);color:#fff;display:grid;place-items:center;
+  font-size:.9rem;margin-bottom:10px}
+@media (prefers-color-scheme:dark){.lp-step b{color:#0e1a15}}
+.lp-step h3{margin:0 0 4px;font-size:.98rem}
+.lp-step p{margin:0;color:var(--muted);font-size:.86rem}
+.lp-sheets{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+.lp-sheet{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:18px}
+.lp-sheet b{color:var(--leaf);font-size:.78rem;letter-spacing:.04em}
+.lp-sheet h3{margin:4px 0 6px;font-size:1.02rem}
+.lp-sheet p{margin:0 0 10px;color:var(--muted);font-size:.87rem}
+.lp-bub{display:flex;gap:5px;flex-wrap:wrap}
+.lp-bub span{width:22px;height:22px;border-radius:50%;border:1.5px solid var(--line);display:grid;place-items:center;
+  font-size:.7rem;color:var(--muted)}
+.lp-bub span.on{background:var(--leaf);border-color:var(--leaf);color:#fff}
+.lp-more{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:16px 18px;margin-top:14px;
+  color:var(--muted);font-size:.88rem}
+.lp-more b{color:var(--ink)}
+.lp-foot{text-align:center;color:var(--muted);font-size:.85rem;padding:26px 0;border-top:1px solid var(--line);margin-top:44px}
+@media(max-width:900px){.lp-grid,.lp-steps,.lp-sheets{grid-template-columns:repeat(2,1fr)}.lp-stats{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:660px){
+  .lp-nav{display:none}
+  .lp-top-in{padding:10px 14px;gap:10px}
+  .lp-logo{font-size:.95rem;min-width:0;overflow:hidden}
+  .lp-btn{padding:8px 13px;font-size:.86rem}
+  .lp-top .lp-btn.ghost{display:none}
+  .lp-main{padding:0 14px 10px}
+  .lp-hero{padding:32px 0 6px}
+  .lp-hero h1{font-size:1.72rem}
+  .lp-hero>p{font-size:.97rem}
+  .lp-grid,.lp-steps,.lp-sheets{grid-template-columns:1fr}
+  .lp-sec{padding:34px 0 0}
+  .lp-sec h2{font-size:1.38rem}
+}
 .licinfo{font-size:.8rem;opacity:.85;margin-left:6px}
 .confetti{position:fixed;inset:0;pointer-events:none;z-index:50;overflow:hidden}
 .confetti span{position:absolute;top:-40px;animation-name:fall;animation-timing-function:linear;animation-fill-mode:forwards}
@@ -1047,7 +1121,8 @@ body.student #studentApp{display:block}
 
   <details class="panel hp hp-sec" id="h-act">
     <summary><span>7. Программыг идэвхжүүлэх</span> <small>код оруулах, олон төхөөрөмж</small></summary>
-    <p>Программыг шинэ хөтөч, шинэ төхөөрөмж дээр нээхэд <b>"Программыг идэвхжүүлэх"</b> цонх гарна. Энэ бол алдаа биш — эзэмшигчийн өгсөн кодыг хүсэж байна.</p>
+    <p>Программыг шинэ хөтөч, шинэ төхөөрөмж дээр нээхэд эхлээд <b>танилцуулга хуудас</b> гарна: программ юу хийдэг, ямар боломжтой, хариултын хуудас нь ямар байдгийг харуулна. Доод талд нь <b>"Программыг идэвхжүүлэх"</b> хэсэг байна. Энэ бол алдаа биш — эзэмшигчийн өгсөн кодыг хүсэж байна.</p>
+    <div class="hp-tip">Шинэ багшид программаа танилцуулах бол <b>зүгээр л холбоосоо</b> илгээчихэд болно. Тэр хүн нээхэд танилцуулга хуудас нь гарч, доороос нь <b>"Эрх хүсэх"</b> дарж шууд хүсэлт илгээнэ.</div>
     <h3>Кодоо хаанаас авах</h3>
     <ul>
       <li><b>Эзнээс шууд:</b> чат, и-мэйлээр урт код ирнэ (<code>eyJ…</code> гэж эхэлж, дунд нь цэгтэй).</li>
@@ -1209,7 +1284,102 @@ body.student #studentApp{display:block}
 </main>
 <div id="printArea"></div>
 <div id="studentApp"></div>
-<div id="lock" class="lock" hidden><div class="panel">
+<div id="lock" class="lock" hidden>
+<header class="lp-top"><div class="lp-top-in">
+  <div class="lp-logo"><span class="lp-mark"><svg viewBox="0 0 24 24"><path d="M4 19V9M9.5 19V5M15 19v-7M20.5 19v-4"/></svg></span>Шалгалтын анализ</div>
+  <nav class="lp-nav">
+    <a href="#lp-feat">Боломжууд</a>
+    <a href="#lp-how">Хэрхэн ажиллах</a>
+    <a href="#lp-sheet">Хариултын хуудас</a>
+  </nav>
+  <div class="lp-cta">
+    <button class="lp-btn ghost" data-lp="act">Код оруулах</button>
+    <button class="lp-btn" data-lp="ask">Эрх хүсэх</button>
+  </div>
+</div></header>
+
+<main class="lp-main">
+  <section class="lp-hero">
+    <span class="lp-tag">Багш нарт зориулав</span>
+    <h1>Шалгалтаа аваад <em>10 секундэд</em><br>бүрэн анализтай болно</h1>
+    <p>Хариултын хуудсаа утасныхаа камерт харуулахад л болоо. Ангийн дундаж, асуулт бүрийн гүйцэтгэл,
+       хамгийн сул агуулга, түвшингийн тархалт, сурагч бүрийн дүгнэлт — бүгд өөрөө бэлдэнэ.
+       Excel, Word болж татагдана.</p>
+    <div class="lp-cta">
+      <button class="lp-btn" data-lp="ask">Эрх хүсэх</button>
+      <button class="lp-btn ghost" data-lp="act">Надад код байгаа</button>
+    </div>
+    <div class="lp-stats">
+      <div class="lp-stat"><b>10 сек</b><span>нэг шалгалтын анализ</span></div>
+      <div class="lp-stat"><b>30 хуудас</b><span>≈ 5 минутад уншина</span></div>
+      <div class="lp-stat"><b>3 төрөл</b><span>тест, үнэн/худал, задгай</span></div>
+      <div class="lp-stat"><b>Excel · Word</b><span>тайлан шууд татна</span></div>
+    </div>
+  </section>
+
+  <section class="lp-sec" id="lp-how">
+    <h2>Дөрвөн алхам</h2>
+    <p>Шалгалтаа авсан байхад л болоо. Бусдыг нь программ хийнэ.</p>
+    <div class="lp-steps">
+      <div class="lp-step"><b>1</b><h3>Шалгалтаа оруулна</h3><p>Асуулт, зөв хариулт, оноогоо бичнэ. Word-оос хуулж буулгасан ч таньж авна.</p></div>
+      <div class="lp-step"><b>2</b><h3>Хуудсаа хэвлэнэ</h3><p>Сурагчдын нэрсээр нэрлэсэн, эсвэл хоосон хариултын хуудас өөрөө бэлдэгдэнэ.</p></div>
+      <div class="lp-step"><b>3</b><h3>Камерт харуулна</h3><p>Утасны ердийн камераар дараалан уншуулна. Эргэлзээтэйг нь зургаар нь үзүүлж асууна.</p></div>
+      <div class="lp-step"><b>4</b><h3>Анализ бэлэн</h3><p>График, хүснэгт, дүгнэлт тэр дор нь гарна. Хэвлэх, татах л үлдэнэ.</p></div>
+    </div>
+  </section>
+
+  <section class="lp-sec" id="lp-feat">
+    <h2>Үндсэн боломжууд</h2>
+    <p>Багшийн гараар хийдэг бүх тооцоог программ хийнэ.</p>
+    <div class="lp-grid">
+      <div class="lp-card"><div class="lp-ico"><svg viewBox="0 0 24 24"><path d="M3 20h18M6 20V10M12 20V4M18 20v-7"/></svg></div>
+        <div><h3>Ангийн дундаж гүйцэтгэл</h3><p>Анги бүрийн дундаж оноо, хувь, чанар, амжилт. Хэд хэдэн ангийг зэрэг харьцуулна.</p></div></div>
+      <div class="lp-card"><div class="lp-ico"><svg viewBox="0 0 24 24"><path d="M4 18V7M9 18v-6M14 18V5M19 18v-9"/><path d="M3 21h18"/></svg></div>
+        <div><h3>Асуулт бүрийн гүйцэтгэл</h3><p>Аль асуултыг хэдэн сурагч зөв хийснийг хувиар харуулна. Хамгийн хэцүү асуулт тодроно.</p></div></div>
+      <div class="lp-card"><div class="lp-ico"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 3v9l6 4"/></svg></div>
+        <div><h3>Агуулгын шинжилгээ</h3><p>Сэдэв бүрээр гүйцэтгэлийг эрэмбэлж, <b>хамгийн бага хувьтай агуулгыг</b> нэрээр нь гаргана.</p></div></div>
+      <div class="lp-card"><div class="lp-ico"><svg viewBox="0 0 24 24"><path d="M4 20V6M10 20v-9M16 20v-5M4 20h16"/><path d="M8 4l4 3 4-3"/></svg></div>
+        <div><h3>Түвшингийн гүйцэтгэл</h3><p>I–VIII түвшин тус бүрт хэдэн сурагч байгаа, ангийн түвшингийн зураглал.</p></div></div>
+      <div class="lp-card"><div class="lp-ico"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 10h18M9 10v10"/></svg></div>
+        <div><h3>Стандарт биелэлт</h3><p>Анги × түвшингийн хүснэгт, чанар, амжилтын хувь — тайланд шууд тавихад бэлэн.</p></div></div>
+      <div class="lp-card"><div class="lp-ico"><svg viewBox="0 0 24 24"><path d="M12 3l2.4 5.2 5.6.7-4.1 3.9 1 5.6L12 15.7 7.1 18.4l1-5.6L4 8.9l5.6-.7z"/></svg></div>
+        <div><h3>Анхаарал татсан сурагчид</h3><p>Хоцорсон болон онцгой амжилттай сурагчдыг өөрөө ялгана. <b>Нэрээр</b> эсвэл <b>зөвхөн кодоор</b> харуулна.</p></div></div>
+      <div class="lp-card"><div class="lp-ico"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 9h18M3 14h18M8 4v16M14 4v16"/></svg></div>
+        <div><h3>Нэгдсэн анализ хүснэгт</h3><p>Бүх сурагч × бүх асуулт нэг хүснэгтэд. Зөв, буруу нь өнгөөр ялгарсан матриц.</p></div></div>
+      <div class="lp-card"><div class="lp-ico"><svg viewBox="0 0 24 24"><path d="M6 3h9l4 4v14H6z"/><path d="M15 3v4h4M9 12h6M9 16h4"/></svg></div>
+        <div><h3>Сурагч бүрийн дүгнэлт</h3><p>Хүүхэд бүрт оноо, хувь, түвшин, алдсан асуулт, сул агуулга, зөвлөмж.</p></div></div>
+      <div class="lp-card"><div class="lp-ico"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="8.5" cy="12" r="2"/><circle cx="15.5" cy="12" r="2"/></svg></div>
+        <div><h3>Гурван төрлийн хариултын хуудас</h3><p>Тест (A–E, олон сонголт), үнэн/худал, задгай даалгавар — нэг хуудсанд хольж болно.</p></div></div>
+      <div class="lp-card"><div class="lp-ico"><svg viewBox="0 0 24 24"><rect x="3" y="6" width="18" height="13" rx="2"/><circle cx="12" cy="12.5" r="3.4"/><path d="M8 6l1.5-2h5L16 6"/></svg></div>
+        <div><h3>Камераар уншуулах</h3><p>Утасны ердийн камер хангалттай. 30 хуудас ≈ 5 минут. Эргэлзвэл будсан дугуйг нь зургаар үзүүлнэ.</p></div></div>
+      <div class="lp-card"><div class="lp-ico"><svg viewBox="0 0 24 24"><path d="M3 17l5-5 4 3 5-7 4 4"/><path d="M3 21h18"/></svg></div>
+        <div><h3>Улирал, жилийн нэгдсэн дүн</h3><p>Хэд хэдэн шалгалтыг жин өгч нэгтгэнэ. Явцын, улирлын шалгалтын нөлөөг өөрөө тохируулна.</p></div></div>
+      <div class="lp-card"><div class="lp-ico"><svg viewBox="0 0 24 24"><path d="M4 5h7a2 2 0 012 2v12a2 2 0 00-2-2H4z"/><path d="M20 5h-7a2 2 0 00-2 2v12a2 2 0 012-2h7z"/></svg></div>
+        <div><h3>Шинэ үгийн сорил</h3><p>Үгийн тайлбар, утгыг оруулахад сурагчид утаснаасаа онлайнаар өгнө. Дүн нь өөрөө бүртгэгдэнэ.</p></div></div>
+    </div>
+    <div class="lp-more"><b>Бас:</b> олон анги, олон шалгалт нэг бүртгэлд · шалгалтын 4 хувилбар (А, Б, В, Г) · нэрсийг нэг удаа оруулаад дахин ашиглах ·
+      Excel-ээр хариулт оруулах · бүх хүснэгт, графикийг <b>Excel, Word, PDF</b>-ээр татах · утас ↔ компьютерийн холбоо · нөөц хадгалалт ·
+      интернэтгүй үед ч ажиллана.</div>
+  </section>
+
+  <section class="lp-sec" id="lp-sheet">
+    <h2>Хариултын хуудасны хувилбарууд</h2>
+    <p>Гурвыг нь нэг шалгалтад хольж болно. Программ хуудсыг өөрөө зурж, камераар өөрөө уншина.</p>
+    <div class="lp-sheets">
+      <div class="lp-sheet"><b>I–II ХЭСЭГ</b><h3>Тест</h3>
+        <p>Нэг зөв хариулттай (A–E) болон олон зөв хариулттай (A–H) асуулт. Нэг шалгалтад 50 хүртэл.</p>
+        <div class="lp-bub"><span>A</span><span class="on">B</span><span>C</span><span>D</span><span>E</span></div></div>
+      <div class="lp-sheet"><b>III ХЭСЭГ</b><h3>Үнэн / худал</h3>
+        <p>Нэг асуултад 4 мэдэгдэл, тус бүрд Ү эсвэл Х. Стандарт оноо: 4 зөв = 1.5, 3 зөв = 0.9, 2 зөв = 0.3.</p>
+        <div class="lp-bub"><span class="on">Ү</span><span>Х</span><span>Ү</span><span class="on">Х</span><span class="on">Ү</span><span>Х</span><span class="on">Ү</span><span>Х</span></div></div>
+      <div class="lp-sheet"><b>IV ХЭСЭГ</b><h3>Задгай даалгавар</h3>
+        <p>Сурагч гараар бичнэ. Багш уншаад оноог нь будахад камер тэрийг уншиж авна. Бодлого, эссэ, орчуулга бүгд болно.</p>
+        <div class="lp-bub"><span>0</span><span>2</span><span>3</span><span class="on">4</span><span>5</span></div></div>
+    </div>
+  </section>
+
+  <section class="lp-sec" id="lp-act">
+  <div class="panel">
   <h2>Программыг идэвхжүүлэх</h2>
   <p class="hint" id="lockMsg"></p>
   <label for="lockCode">Идэвхжүүлэх код</label>
@@ -1244,7 +1414,12 @@ body.student #studentApp{display:block}
       <div class="btns"><button class="btn ghost" id="askCheck">Одоо шалгах</button><button class="btn ghost" id="askNew">Шинэ хүсэлт</button></div>
     </div>
   </div>
-</div></div>
+  </div>
+  </section>
+
+  <div class="lp-foot">Шалгалтын анализ · багшийн ширээний программ · өгөгдөл тань зөвхөн таны төхөөрөмж дээр хадгалагдана</div>
+</main>
+</div>
 <script type="text/plain" id="gsCode">/**
  * Шалгалтын анализ: Google Sheets сервер (хувилбар 5)
  * Шинэ үгийн сорил, утас ба компьютерийн холбоо, багш нарын хандалтын хүсэлт
@@ -5419,6 +5594,21 @@ function askInit(){
   else askMode('idle');
   clearInterval(askTimer);askTimer=setInterval(()=>{if(!$('#lock').hidden)askPoll();},15000);
 }
+/* Танилцуулга хуудасны товчнууд.
+   #lock нь position:fixed тул scrollIntoView ажиллахгүй — өөрсдөө гүйлгэнэ. */
+function lpGo(id){const L=$('#lock'),el=$('#'+id);if(!L||!el)return;
+  const y=L.scrollTop+el.getBoundingClientRect().top-L.getBoundingClientRect().top-56;
+  L.scrollTop=Math.max(0,y);}
+document.addEventListener('click',e=>{
+  const a=e.target.closest('.lp-nav a');
+  if(a&&a.getAttribute('href').startsWith('#')){e.preventDefault();lpGo(a.getAttribute('href').slice(1));return;}
+  const b=e.target.closest('[data-lp]');if(!b)return;
+  lpGo('lp-act');
+  if(b.dataset.lp==='act'){setTimeout(()=>{const t=$('#lockCode');if(t&&!t.disabled)t.focus();},450);return;}
+  setTimeout(()=>{const box=$('#askBox'),o=$('#askOpen');
+    if(box&&!box.hidden&&o&&$('#askForm').hidden&&$('#askWait').hidden)o.click();
+    else if(box&&box.hidden){const m=$('#lockErr');if(m)m.textContent='Хүсэлт илгээх холбоос тохируулагдаагүй байна. Программын эзнээс кодоо шууд аваарай.';}},450);
+});
 async function licBoot(){const r=await licVerify(lsGet(LIC_KEY));if(r.ok){licApply(r.d);renderSetup();}else licLock(r);}
 
 (function(){const o=new URLSearchParams(location.search).get('owner');
