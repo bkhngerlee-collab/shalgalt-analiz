@@ -5703,6 +5703,7 @@ function authErr(j){
   if(/invalid login credentials/i.test(m))return'И-мэйл эсвэл нууц үг буруу байна.';
   if(/already registered|already exists/i.test(m))return'Энэ и-мэйлээр бүртгэл аль хэдийн байна. "Нэвтрэх" хэсгээр орно уу.';
   if(/at least 6|password.*short|weak/i.test(m))return'Нууц үг 6-аас доошгүй тэмдэгттэй байна.';
+  if(/different from the old/i.test(m))return'Шинэ нууц үг хуучнаасаа өөр байх ёстой.';
   if(/invalid format|validate email/i.test(m))return'И-мэйл хаяг буруу бичигдсэн байна.';
   if(/rate limit|too many/i.test(m))return'Хэт олон оролдлого хийлээ. Түр хүлээгээд дахин оролдоно уу.';
   if(/refresh token/i.test(m))return'Нэвтрэлтийн хугацаа дууссан. Дахин нэвтэрнэ үү.';
@@ -5951,10 +5952,39 @@ function authHeader(){
   if(AUTH.owner)lic='эзэн';
   else if(AUTH.expires){const left=Math.round((new Date(AUTH.expires+'T00:00:00')-new Date(localDay()+'T00:00:00'))/864e5)+1;
     lic=AUTH.expires+' хүртэл ('+left+' хоног)';}
-  w.innerHTML=`<span class="licinfo">👤 ${esc(nm)}${lic?' · '+esc(lic):''} · <a href="#" id="hdrOut" style="color:inherit">Гарах</a></span>`
+  w.innerHTML=`<span class="licinfo">👤 ${esc(nm)}${lic?' · '+esc(lic):''} · <a href="#" id="hdrPw" style="color:inherit">Нууц үг солих</a> · <a href="#" id="hdrOut" style="color:inherit">Гарах</a></span>`
     +`<span class="sync-pill" id="syncPill" hidden></span>`;
   $('#hdrOut').onclick=e=>{e.preventDefault();authLogout();};
+  $('#hdrPw').onclick=e=>{e.preventDefault();pwDialog();};
   syncUi();
+}
+/* Нэвтэрсэн хэрэглэгч өөрийн нууц үгээ солино */
+function pwDialog(){
+  if(!AUTH.sess)return;
+  const d=document.createElement('div');
+  d.style.cssText='position:fixed;inset:0;z-index:60;background:rgba(0,0,0,.45);display:flex;align-items:center;justify-content:center;padding:16px';
+  d.innerHTML=`<form class="panel" style="max-width:380px;width:100%;margin:0" novalidate>
+    <h2>Нууц үг солих</h2>
+    <p class="hint" style="margin:0 0 6px">${esc(AUTH.sess.user.email)}</p>
+    <label for="pwN1">Шинэ нууц үг (6+ тэмдэгт)</label><input id="pwN1" type="password" autocomplete="new-password">
+    <label for="pwN2" style="margin-top:10px">Дахин бичих</label><input id="pwN2" type="password" autocomplete="new-password">
+    <div class="btns"><button class="btn" type="submit">Хадгалах</button><button class="btn ghost" type="button" data-x>Болих</button></div>
+    <div class="msg" id="pwMsg" role="status" style="color:var(--stain)"></div></form>`;
+  document.body.appendChild(d);
+  const f=d.querySelector('form'),m=d.querySelector('#pwMsg'),close=()=>d.remove();
+  d.querySelector('[data-x]').onclick=close;
+  d.addEventListener('click',e=>{if(e.target===d)close();});
+  d.querySelector('#pwN1').focus();
+  f.addEventListener('submit',async e=>{
+    e.preventDefault();
+    const p1=d.querySelector('#pwN1').value,p2=d.querySelector('#pwN2').value,btn=f.querySelector('[type=submit]');
+    if(p1.length<6)return m.textContent='Нууц үг 6-аас доошгүй тэмдэгттэй байна.';
+    if(p1!==p2)return m.textContent='Хоёр нууц үг таарахгүй байна.';
+    btn.disabled=true;m.style.color='';m.textContent='Хадгалж байна…';
+    try{await sbReq('/auth/v1/user',{method:'PUT',body:JSON.stringify({password:p1})});
+      close();toast('Нууц үг солигдлоо. Дараа нь шинэ нууц үгээрээ нэвтэрнэ.');}
+    catch(x){m.style.color='var(--stain)';m.textContent=authErr({msg:x.message});btn.disabled=false;}
+  });
 }
 
 /* ---------- нэвтрэх, бүртгүүлэх, хүлээх ---------- */
