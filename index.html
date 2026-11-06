@@ -294,6 +294,27 @@ td input,td select{min-width:70px}
   .lp-sec h2{font-size:1.38rem}
 }
 .licinfo{font-size:.8rem;opacity:.85;margin-left:6px}
+/* нэвтрэх, бүртгүүлэх */
+.auth-tabs{display:flex;gap:4px;background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:4px;margin-bottom:14px}
+.auth-tabs[hidden]{display:none}
+.auth-tab{flex:1;font:inherit;font-weight:600;border:0;background:transparent;color:var(--muted);padding:9px;border-radius:7px;cursor:pointer}
+.auth-tab.on{background:var(--surface);color:var(--leaf);box-shadow:0 1px 3px rgba(0,0,0,.1)}
+#authIn label,#authUp label{margin-top:10px}
+#authIn[hidden],#authUp[hidden],#authWait[hidden]{display:none}
+.sync-pill{display:inline-block;margin-left:8px;font-size:.76rem;padding:2px 9px;border-radius:999px;background:rgba(255,255,255,.16);white-space:nowrap}
+.sync-pill.ok{background:rgba(255,255,255,.2)}
+.sync-pill.warn{background:#E2B25C;color:#2a1d05}
+.sync-pill.bad{background:#EF8098;color:#2a0a10}
+.sync-pill[hidden]{display:none}
+body.sc .sync-pill{font-size:.7rem}
+/* эзний самбар: багш нарын жагсаалт */
+.t-list{display:grid;gap:8px}
+.t-row{display:grid;grid-template-columns:1fr auto;gap:6px 12px;align-items:center;border:1px solid var(--line);border-radius:10px;padding:10px 12px;background:var(--surface)}
+.t-who small{display:block;color:var(--muted);font-size:.8rem}
+.t-st{text-align:right;font-size:.9rem}
+.t-act{grid-column:1/-1;display:flex;flex-wrap:wrap;gap:6px}
+.t-act .btn{padding:5px 10px;font-size:.84rem}
+@media(max-width:560px){.t-row{grid-template-columns:1fr}.t-st{text-align:left}}
 .confetti{position:fixed;inset:0;pointer-events:none;z-index:50;overflow:hidden}
 .confetti span{position:absolute;top:-40px;animation-name:fall;animation-timing-function:linear;animation-fill-mode:forwards}
 @keyframes fall{to{transform:translateY(110vh) rotate(540deg)}}
@@ -637,12 +658,14 @@ body.student #studentApp{display:block}
   </div>
 
   <div class="panel" id="invitePanel" hidden>
-    <h2>Багш нарыг урих</h2>
-    <p class="hint">Энэ холбоосыг бусад багшид өгнө. Тэд нээхэд "Эрх хүсэх" товч гарч ирэх бөгөөд нэр, мэргэжлээ бичээд хүсэлт илгээнэ. Хүсэлт таны Google хүснэгтэд ирэх ба та код үүсгэгч дээрээсээ хараад баталгаажуулна.</p>
-    <div class="btns" style="margin-top:0"><button class="btn" id="inviteBtn">Урих холбоос гаргах</button>
-      <a class="btn ghost" id="genLink" href="kod-uusgegch.html" target="_blank" rel="noopener" hidden style="text-decoration:none">Код үүсгэгч, ирсэн хүсэлтүүд</a></div>
+    <h2>Багш нарын эрх</h2>
+    <p class="hint">Багш программын холбоосыг нээгээд <b>"Бүртгүүлэх"</b> дарна. Тэр энд гарч ирэхэд нь хугацаа сонгож батална.
+      Та багш нарын <b>сурагчдын дүнг харахгүй</b> — зөвхөн нэр, мэргэжил, эрхийн мэдээлэл.</p>
+    <div class="btns" style="margin-top:0"><button class="btn" id="tRefresh">Жагсаалт шинэчлэх</button>
+      <button class="btn ghost" id="inviteBtn">Урих холбоос</button></div>
     <div id="inviteBox"></div>
     <div class="msg" id="inviteMsg" role="status"></div>
+    <div id="tList" style="margin-top:12px"></div>
   </div>
 </section>
 
@@ -855,7 +878,7 @@ body.student #studentApp{display:block}
       <a href="#h-scan">4. Хариултыг оруулах, уншуулах</a>
       <a href="#h-ana">5. Анализ хэрхэн бүтдэг</a>
       <a href="#h-fin">6. Нэгдсэн анализ</a>
-      <a href="#h-act">7. Программыг идэвхжүүлэх</a>
+      <a href="#h-act">7. Бүртгүүлэх, нэвтрэх</a>
       <a href="#h-link">8. Утас, компьютерийг холбох</a>
       <a href="#h-vocab">9. Шинэ үгийн сорил</a>
       <a href="#h-back">10. Нөөцлөх, өгөгдлөө хамгаалах</a>
@@ -1204,29 +1227,30 @@ body.student #studentApp{display:block}
   </details>
 
   <details class="panel hp hp-sec" id="h-act">
-    <summary><span>7. Программыг идэвхжүүлэх</span> <small>код оруулах, олон төхөөрөмж</small></summary>
-    <p>Программыг шинэ хөтөч, шинэ төхөөрөмж дээр нээхэд эхлээд <b>танилцуулга хуудас</b> гарна: программ юу хийдэг, ямар боломжтой, хариултын хуудас нь ямар байдгийг харуулна. Доод талд нь <b>"Программыг идэвхжүүлэх"</b> хэсэг байна. Энэ бол алдаа биш — эзэмшигчийн өгсөн кодыг хүсэж байна.</p>
-    <div class="hp-tip">Шинэ багшид программаа танилцуулах бол <b>зүгээр л холбоосоо</b> илгээчихэд болно. Тэр хүн нээхэд танилцуулга хуудас нь гарч, доороос нь <b>"Эрх хүсэх"</b> дарж шууд хүсэлт илгээнэ.</div>
-    <h3>Кодоо хаанаас авах</h3>
-    <ul>
-      <li><b>Идэвхжүүлэх холбоосоор (хамгийн амар):</b> эзэн танд <code>…/#k=…</code> гэж төгссөн холбоос илгээнэ. Түүн дээр дарахад л болоо — программ өөрөө нээгдэнэ, юу ч хуулах шаардлагагүй. Холбоос тань кодоо агуулж байгаа тул <b>бусдад дамжуулж болохгүй</b>.</li>
-      <li><b>Эзнээс шууд:</b> чат, и-мэйлээр урт код ирнэ (<code>eyJ…</code> гэж эхэлж, дунд нь цэгтэй).</li>
-      <li><b>Өөрөө хүсэлт илгээх:</b> эзний өгсөн <b>урих холбоосоор</b> орж, түгжээт цонхны доорх <b>"Эрх хүсэх"</b> дарж нэр, хүйс, түвшин, мэргэжил, и-мэйлээ бичнэ. Эзэн баталмагц <b>хуудас өөрөө нээгдэнэ</b> — 15 секунд тутам шалгаж байдаг.</li>
-    </ul>
-    <h3>Кодыг оруулах</h3>
-    <div class="hp-step"><div class="hp-num">1</div><div><b>Кодоо бүтнээр хуулна</b> (Ctrl + C, утсан дээр удаан дараад "Copy").
-      <div class="hp-warn">Гараар бичихгүй. Нэг ч үсэг зөрвөл "Код буруу байна" гэнэ.</div></div></div>
-    <div class="hp-step"><div class="hp-num">2</div><div><b>Том нүдэнд буулгана</b> (Ctrl + V / "Paste") → <b>"Идэвхжүүлэх"</b>.
-      <div class="hp-ok">Толгой хэсэгт <b>"Ашиглах эрх: … хүртэл (N хоног үлдсэн)"</b> гарвал боллоо. Тэр хөтөч дээр дахиж асуухгүй.</div></div></div>
-    <h3>Нэг код — олон төхөөрөмж</h3>
-    <p>Код нь төхөөрөмжид биш, <b>хугацаанд</b> холбогддог. Яг нэг кодыг сургуулийн компьютер, гар утас, гэрийн компьютер — бүгдэд ашиглана.</p>
-    <div class="hp-tip">Кодоо и-мэйл эсвэл Messenger-ийн "Saved messages"-дээ <b>хадгалж аваарай</b>. Шинэ төхөөрөмж нэмэх, хөтчөө цэвэрлэх бүрд хэрэг болно.</div>
+    <summary><span>7. Бүртгүүлэх, нэвтрэх</span> <small>данс, олон төхөөрөмж, үүлэн хадгалалт</small></summary>
+    <p>Программыг нээхэд эхлээд <b>танилцуулга хуудас</b> гарна. Доод талд нь <b>"Нэвтрэх / Бүртгүүлэх"</b> хэсэг байна.</p>
+    <h3>Анх удаа</h3>
+    <div class="hp-step"><div class="hp-num">1</div><div><b>"Бүртгүүлэх"</b> дарж нэр, мэргэжил, и-мэйл, нууц үгээ (6+ тэмдэгт) бичнэ.</div></div>
+    <div class="hp-step"><div class="hp-num">2</div><div><b>Эзэн батлахыг хүлээнэ.</b> "Батлахыг хүлээж байна" гэсэн цонх гарна. Эзэн баталмагц <b>хуудас өөрөө нээгдэнэ</b> — 20 секунд тутам шалгадаг.
+      <div class="hp-ok">Толгой хэсэгт <b>👤 таны нэр</b> болон <b>"✓ Үүлэнд хадгалагдсан"</b> гарвал боллоо.</div></div></div>
+    <h3>Нэг данс — олон төхөөрөмж</h3>
+    <p>Сургуулийн компьютер, гар утас, гэрийн компьютер — <b>ижил и-мэйл, нууц үгээр</b> нэвтрэхэд хаанаас ч ижил шалгалт, ижил дүн харагдана. Утсаар уншуулсан дүн компьютер дээр <b>20 секундын дотор</b> өөрөө орж ирнэ.</p>
+    <h3>Толгой хэсгийн тэмдэг</h3>
+    <table>
+      <tr><th>Тэмдэг</th><th>Утга</th></tr>
+      <tr><td>✓ Үүлэнд хадгалагдсан</td><td>Бүх зүйл аюулгүй хадгалагдсан.</td></tr>
+      <tr><td>… Хадгалах гэж байна</td><td>Сая засвар хийсэн, 1–2 секундын дараа илгээнэ.</td></tr>
+      <tr><td>⚠ Офлайн</td><td>Интернэт алга. Программ хэвийн ажиллана, интернэт ормогц <b>өөрөө илгээнэ</b>.</td></tr>
+      <tr><td>⚠ Хадгалж чадсангүй</td><td>Хулганаа дээр нь аваачвал шалтгаан гарна. Эрх тань хаагдсан эсвэл дууссан байж болно.</td></tr>
+    </table>
     <h3>Анхаарах зүйлс</h3>
     <ul>
-      <li><b>Хөтчийн түүх цэвэрлэвэл</b> идэвхжүүлэлт арилна — кодоо дахин оруулна. Таны шалгалт, нэрс ч бас устахыг анхаараарай.</li>
-      <li><b>Нууцлалтай (Incognito) цонх</b> бүрд дахин асууна — ердийн цонхоор ажиллаарай.</li>
-      <li><b>Файлыг давхар товшиж нээвэл</b> код шалгагдахгүй, камер ажиллахгүй. Заавал <code>https://</code> холбоосоор, эсвэл <b>"Программ нээх"</b> товчлолоор (<code>localhost</code>) нээнэ.</li>
-      <li><b>Эрх дуусахад өгөгдөл устахгүй.</b> Шинэ код оруулахад бүх шалгалт, дүн хэвээрээ үргэлжилнэ.</li>
+      <li><b>Хоёр төхөөрөмж зэрэг засвар хийсэн ч</b> юу ч алга болохгүй — программ хоёуланг нь нэгтгэнэ.</li>
+      <li><b>Хөтчийн түүх цэвэрлэсэн ч</b> өгөгдөл тань алга болохгүй — үүлэнд байгаа. Дахин нэвтрэхэд л буцаж ирнэ.</li>
+      <li><b>Хамтын компьютер дээр</b> ажилласны дараа толгой хэсгийн <b>"Гарах"</b>-ыг заавал дарна. Гарахад таны өгөгдөл тэр компьютерээс арилна (үүлэнд үлдэнэ).</li>
+      <li><b>Нууц үгээ мартсан бол</b> программын эзэнд хэлнэ — танд шинэ түр нууц үг өгнө.</li>
+      <li><b>Эрх дуусахад өгөгдөл устахгүй.</b> Эзэн сунгамагц бүх шалгалт, дүн хэвээрээ үргэлжилнэ. Энэ хооронд <b>"Өгөгдлөө нөөц файлаар татах"</b> боломжтой.</li>
+      <li><b>Таны сурагчдын дүнг зөвхөн та харна.</b> Программын эзэн ч харахгүй — зөвхөн таны нэр, эрхийн хугацааг хардаг.</li>
     </ul>
   </details>
 
@@ -1403,8 +1427,8 @@ body.student #studentApp{display:block}
     <a href="#lp-sheet">Хариултын хуудас</a>
   </nav>
   <div class="lp-cta">
-    <button class="lp-btn ghost" data-lp="act">Код оруулах</button>
-    <button class="lp-btn" data-lp="ask">Эрх хүсэх</button>
+    <button class="lp-btn ghost" data-lp="in">Нэвтрэх</button>
+    <button class="lp-btn" data-lp="up">Бүртгүүлэх</button>
   </div>
 </div></header>
 
@@ -1416,8 +1440,8 @@ body.student #studentApp{display:block}
        хамгийн сул агуулга, түвшингийн тархалт, сурагч бүрийн дүгнэлт — бүгд өөрөө бэлдэнэ.
        Excel, Word болж татагдана.</p>
     <div class="lp-cta">
-      <button class="lp-btn" data-lp="ask">Эрх хүсэх</button>
-      <button class="lp-btn ghost" data-lp="act">Надад код байгаа</button>
+      <button class="lp-btn" data-lp="up">Бүртгүүлэх</button>
+      <button class="lp-btn ghost" data-lp="in">Надад бүртгэл байгаа</button>
     </div>
     <div class="lp-stats">
       <div class="lp-stat"><b>10 сек</b><span>нэг шалгалтын анализ</span></div>
@@ -1491,45 +1515,57 @@ body.student #studentApp{display:block}
   </section>
 
   <section class="lp-sec" id="lp-act">
-  <div class="panel">
-  <h2>Программыг идэвхжүүлэх</h2>
+  <div class="panel" id="authPanel">
+  <div class="auth-tabs" id="authTabs" role="tablist">
+    <button type="button" class="auth-tab on" data-auth="in" role="tab">Нэвтрэх</button>
+    <button type="button" class="auth-tab" data-auth="up" role="tab">Бүртгүүлэх</button>
+  </div>
   <p class="hint" id="lockMsg"></p>
-  <label for="lockCode">Идэвхжүүлэх код</label>
-  <textarea id="lockCode" placeholder="Программын эзнээс авсан кодоо энд буулгана (Ctrl + V)" spellcheck="false"></textarea>
-  <div class="btns"><button class="btn" id="lockGo">Идэвхжүүлэх</button><button class="btn ghost" id="lockBackup" hidden>Өгөгдлөө нөөц файлаар татах</button></div>
-  <div class="msg" id="lockErr" role="status" style="color:var(--stain)"></div>
 
-  <div id="askBox" hidden style="margin-top:16px;padding-top:14px;border-top:1px solid var(--line)">
-    <p class="hint" style="margin:0 0 10px">Код байхгүй юу? Программын эзнээс эрх хүсье. Багш мөн эсэхийг тань хараад баталгаажуулна.</p>
-    <div class="btns" style="margin:0"><button class="btn ghost" id="askOpen">Эрх хүсэх</button></div>
-    <p class="hint" style="margin:8px 0 0;font-size:.8rem" id="askWho"></p>
+  <form id="authIn" autocomplete="on" novalidate>
+    <label for="inEmail">И-мэйл</label>
+    <input id="inEmail" type="email" autocomplete="username" placeholder="jishee@gmail.com">
+    <label for="inPass">Нууц үг</label>
+    <input id="inPass" type="password" autocomplete="current-password">
+    <div class="btns"><button class="btn" type="submit" id="inGo">Нэвтрэх</button></div>
+    <p class="hint" style="margin:10px 0 0;font-size:.82rem">Нууц үгээ мартсан бол программын эзэнд хэлээрэй — танд шинэ түр нууц үг өгнө.</p>
+  </form>
 
-    <div id="askForm" hidden style="margin-top:12px">
-      <label for="askName">Таны нэр</label><input id="askName" placeholder="Жишээ: Б. Сарнай" autocomplete="name">
-      <div style="margin-top:10px"><label>Хүйс</label><div class="roster" id="askGender">
+  <form id="authUp" autocomplete="on" novalidate hidden>
+    <label for="upName">Таны нэр</label>
+    <input id="upName" autocomplete="name" placeholder="Жишээ: Б. Сарнай">
+    <div class="row">
+      <div><label for="upSubject">Мэргэжил, хичээл</label><input id="upSubject" placeholder="Жишээ: физик"></div>
+      <div><label>Хүйс</label><div class="roster" id="upGender">
         <button type="button" class="chip" data-v="Эр">Эр</button>
         <button type="button" class="chip" data-v="Эм">Эм</button></div></div>
-      <div style="margin-top:6px"><label>Аль ангид ордог вэ (хэдийг ч сонгож болно)</label><div class="roster" id="askLevel">
-        <button type="button" class="chip" data-v="Бага">Бага</button>
-        <button type="button" class="chip" data-v="Дунд">Дунд</button>
-        <button type="button" class="chip" data-v="Ахлах">Ахлах</button></div></div>
-      <div class="row" style="margin-top:10px">
-        <div><label for="askSubject">Мэргэжил, хичээл</label><input id="askSubject" placeholder="Жишээ: физик"></div>
-        <div><label for="askEmail">И-мэйл хаяг</label><input id="askEmail" type="email" placeholder="jishee@gmail.com" autocomplete="email"></div>
-      </div>
-      <div class="btns"><button class="btn" id="askSend">Хүсэлт илгээх</button><button class="btn ghost" id="askCancel">Болих</button></div>
-      <div class="msg" id="askMsg" role="status"></div>
     </div>
+    <label>Аль ангид ордог вэ (хэдийг ч сонгож болно)</label>
+    <div class="roster" id="upLevel">
+      <button type="button" class="chip" data-v="Бага">Бага</button>
+      <button type="button" class="chip" data-v="Дунд">Дунд</button>
+      <button type="button" class="chip" data-v="Ахлах">Ахлах</button></div>
+    <label for="upEmail">И-мэйл</label>
+    <input id="upEmail" type="email" autocomplete="email" placeholder="jishee@gmail.com">
+    <div class="row">
+      <div><label for="upPass">Нууц үг (6+ тэмдэгт)</label><input id="upPass" type="password" autocomplete="new-password"></div>
+      <div><label for="upPass2">Нууц үгээ давтах</label><input id="upPass2" type="password" autocomplete="new-password"></div>
+    </div>
+    <div class="btns"><button class="btn" type="submit" id="upGo">Бүртгүүлэх</button></div>
+    <p class="hint" style="margin:10px 0 0;font-size:.82rem">Бүртгүүлсний дараа программын эзэн таныг багш мөн эсэхийг хараад батална. Батлагдмагц энэ хуудас өөрөө нээгдэнэ.</p>
+  </form>
 
-    <div id="askWait" hidden style="margin-top:12px">
-      <div class="avgsum"><span id="askWaitMsg">Хүсэлт илгээгдлээ.</span></div>
-      <div class="btns"><button class="btn ghost" id="askCheck">Одоо шалгах</button><button class="btn ghost" id="askNew">Шинэ хүсэлт</button></div>
-    </div>
+  <div id="authWait" hidden>
+    <div class="avgsum"><span id="authWaitMsg"></span></div>
+    <div class="btns"><button class="btn ghost" type="button" id="authCheck">Одоо шалгах</button><button class="btn ghost" type="button" id="authOut">Гарах</button></div>
   </div>
+
+  <div class="btns"><button class="btn ghost" type="button" id="lockBackup" hidden>Өгөгдлөө нөөц файлаар татах</button></div>
+  <div class="msg" id="lockErr" role="status" style="color:var(--stain)"></div>
   </div>
   </section>
 
-  <div class="lp-foot">Шалгалтын анализ · багшийн ширээний программ · өгөгдөл тань зөвхөн таны төхөөрөмж дээр хадгалагдана</div>
+  <div class="lp-foot">Шалгалтын анализ · багшийн программ · таны өгөгдлийг зөвхөн та харна, хамгаалагдсан үүлэнд хадгалагдана</div>
 </main>
 </div>
 <script type="text/plain" id="gsCode">/**
@@ -2041,7 +2077,7 @@ function load(){
   try{const r=localStorage.getItem(KEY);if(r)return JSON.parse(r);
     const o=localStorage.getItem(OLDKEY);if(o){const e=JSON.parse(o);e.id=uid();e.exam.date=e.exam.date||today();return{cur:e.id,exams:[e]};}
   }catch(e){}return mem;}
-function save(){mem=db;try{localStorage.setItem(KEY,JSON.stringify(db));}catch(e){}renderExams();}
+function save(){mem=db;try{localStorage.setItem(KEY,JSON.stringify(db));}catch(e){}renderExams();cloudDirty();}
 const $=s=>document.querySelector(s);
 const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,7);
@@ -4669,9 +4705,9 @@ function renderCloud(){
   if(document.activeElement!==$('#cApi'))$('#cApi').value=c.api||'';
   if(document.activeElement!==$('#cKey'))$('#cKey').value=c.key||'';
   $('#cAuto').checked=!!k.auto;cStatusRender();
-  $('#invitePanel').hidden=!ownerMode();
-  // Код үүсгэгч нь зөвхөн энэ компьютер дээр байдаг тул интернэт хувилбар дээр холбоос нь гарахгүй
-  $('#genLink').hidden=isPublicPage();
+  const own=ownerMode(),ip=$('#invitePanel');
+  if(own&&ip.hidden)setTimeout(()=>teachersLoad(),0);   // эзэнд анх харагдахад жагсаалтаа татна
+  ip.hidden=!own;
   const set=!!(c.api&&c.key);
   $('#cSum').textContent=set?('— тохируулсан'+(k.auto?', автоматаар хүлээн авна':'')):'— тохируулаагүй';
   if(!cPanelOnce){cPanelOnce=true;$('#cPanel').open=!set;}  // тохируулаагүй үед л нээлттэй гарна
@@ -4757,26 +4793,12 @@ $('#cPushAns').addEventListener('click',async()=>{
   cMsg('Илгээж байна...');await cloudPoll(true);const k=ccfg();
   cMsg(k.queue.length?'Илгээж чадсангүй. Интернэт, URL-ээ шалгана уу.':state.students.length+' сурагчийн хариулт илгээгдлээ. Нөгөө төхөөрөмж дээр "Одоо илгээх / хүлээн авах" дарвал шууд орж ирнэ.',!!k.queue.length);
 });
-function inviteLink(){
-  const c=vcfg();let base=isPublicPage()?location.origin+location.pathname:(c.base||'').trim();
-  if(!base)return'';if(!/\.html?$/.test(base)&&!base.endsWith('/'))base+='/';
-  const m=/^https:\/\/script\.google\.com\/macros\/s\/([\w-]+)\/exec\/?$/i.exec((c.api||'').trim());
-  /* Хэрэв хаяг нь программд аль хэдийн шингэсэнтэй ижил бол "?s=..." хэсэг нь
-     дэмий урт болгоод байх тул хасна — энгийн богино холбоос ижилхэн ажиллана. */
-  const baked=(/\/s\/([\w-]+)\//.exec(ASK_API_DEFAULT)||[])[1]||'';
-  if(!c.api||(m&&m[1]===baked))return base;
-  return m?base+'?s='+m[1]:base+'?api='+encodeURIComponent(c.api);
-}
+/* Багш нар бүртгүүлэхдээ нээх хаяг. Нийтэд нээлттэй хувилбар дээр яг тэр хаяг өөрөө. */
+const APP_URL='https://bkhngerlee-collab.github.io/shalgalt-analiz/';
+function inviteLink(){return isPublicPage()?location.origin+location.pathname:APP_URL;}
 $('#inviteBtn').addEventListener('click',async()=>{
   const m=$('#inviteMsg'),box=$('#inviteBox'),link=inviteLink();
-  if(!link){m.style.color='var(--stain)';box.innerHTML='';
-    m.textContent=vcfg().api?'Эхлээд "5. Шинэ үгийн сорил" хэсэгт программын нийтэд нээлттэй хаягаа (GitHub Pages) оруулна уу.'
-      :'Эхлээд дээрх Google Apps Script хаяг, нууц үгээ оруулж "Холболт шалгах" дарна уу.';return;}
-  const baked=(/\/s\/([\w-]+)\//.exec(ASK_API_DEFAULT)||[])[1]||'',now=(/\/s\/([\w-]+)\//.exec(link)||/[?&]s=([\w-]+)/.exec(link)||[])[1]||'';
-  if(baked&&now&&baked!==now){m.style.color='var(--stain)';
-    m.innerHTML='Анхаар: программд шингэсэн хаяг (…'+esc(baked.slice(-8))+') таны одоогийн хаягтай (…'+esc(now.slice(-8))+') таарахгүй байна. '
-      +'Энгийн холбоосоор орсон багшийн "Эрх хүсэх" хуучин хаяг руу очно. Доорх урих холбоосыг ашиглана уу, эсвэл программын ASK_API_DEFAULT мөрийг шинэчлүүлнэ үү.';}
-  else{m.style.color='';m.textContent='';}
+  m.style.color='';m.textContent='';
   box.innerHTML=`<div class="code-block" style="margin-top:10px;word-break:break-all;padding:10px;border:1px solid var(--line);border-radius:8px;background:var(--bg);font-family:ui-monospace,Consolas,monospace;font-size:.85rem">${esc(link)}</div>
     <div class="btns"><button class="btn ghost" id="inviteCopy">Холбоос хуулах</button><button class="btn ghost" id="inviteQr">QR харуулах</button></div><div id="inviteQrBox"></div>`;
   $('#inviteCopy').onclick=async()=>{try{await navigator.clipboard.writeText(link);m.textContent='Хуулагдлаа. Багш нартаа илгээнэ үү.';}catch(e){m.textContent='Хуулж чадсангүй, гараар тэмдэглээд хуулна уу.';}};
@@ -5641,7 +5663,7 @@ const isOwner=()=>{try{return localStorage.getItem(OWNER_KEY)==='1';}catch(e){re
    2) программ энэ компьютерээс (localhost) ажиллаж байгаа
    3) идэвхжүүлэх код нь нэргүй — эзэн өөртөө ийм код үүсгэдэг.
       Багш нарт үргэлж НЭРТЭЙ код өгөөрэй, тэгвэл тэдэнд урих хэсэг гарахгүй. */
-const ownerMode=()=>isOwner()||!isPublicPage()||!!(licData&&!licData.n);
+/* ownerMode() — доорх үүлэн сангийн хэсэгт (эзэн эсэхийг серверээс авна) */
 const LIC_PUB={"kty":"EC","crv":"P-256","x":"SW-q6riyuCAN3HlcPiMU5orLFHWSWjH6PwYmNmvm4E8","y":"tMmhhYJxghR57d-BwICb0C09zmUv3XFCye7dTGhpSwU"};
 const lsGet=k=>{try{return localStorage.getItem(k)||'';}catch(e){return'';}};
 const lsSet=(k,v)=>{try{localStorage.setItem(k,v);}catch(e){}};
@@ -5659,116 +5681,474 @@ async function licVerify(code){
     return{ok:true,d,code};
   }catch(e){return{ok:false,why:'bad'};}
 }
-let licData=null;
-function licApply(d){
-  licData=d;const t=licToday();lsSet(LIC_SEEN,t);
-  const left=Math.round((new Date(d.e+'T00:00:00')-new Date(t+'T00:00:00'))/864e5)+1;
-  $('#curTitleWrap').innerHTML=d.e<'2090'?`<span class="licinfo">Ашиглах эрх: ${esc(d.e)} хүртэл (${left} хоног үлдсэн)${d.n?', '+esc(d.n):''}</span>`:'';
+/* ======================================================================
+   ҮҮЛЭН САН (Supabase) — нэвтрэх, эрх шалгах, өгөгдөл хадгалах
+   Гаднын сан ашиглахгүй: Supabase-ийн REST, Auth-ийг энгийн fetch-ээр дуудна.
+   Багш бүрийн бүх db нэг JSON баримт (teachers.data). "rev" дугаар нь хоёр
+   төхөөрөмж зэрэг хадгалахад нэг нь нөгөөгөө дарахаас сэргийлнэ.
+   localStorage нь офлайн нөөц хэвээр — интернэт тасарвал дараа нь илгээнэ.
+   ====================================================================== */
+const SB_URL='https://jmaqwtbyyfdgasgtspgl.supabase.co';
+const SB_KEY='sb_publishable_Lf_cFeqPJcEn_zf9O21tXA_SH79pU-m';   // нийтэд ил байх зориулалттай түлхүүр
+const SESS_KEY='shalgalt-session',SYNC_KEY='shalgalt-sync',STAT_KEY='shalgalt-status',BACKUP_KEY='shalgalt-analiz-v2-backup';
+/* Энэ төхөөрөмжийн өөрийн тохиргоо — үүлэнд явуулахгүй (Google холболтын нууц үг гэх мэт) */
+const LOCAL_ONLY=['vocab','cloud','cur'];
+var AUTH={sess:null,owner:false,approved:false,expires:null,name:'',email:'',offline:false};
+var SYNC={rev:-1,base:null,dirty:false,ver:0,busy:false,timer:null,loop:null,err:'',at:0};
+
+/* ---------- Supabase руу хүсэлт ---------- */
+const netErr=e=>e instanceof TypeError||!navigator.onLine;
+function authErr(j){
+  const m=String((j&&(j.msg||j.error_description||j.message||j.error))||'');
+  if(/invalid login credentials/i.test(m))return'И-мэйл эсвэл нууц үг буруу байна.';
+  if(/already registered|already exists/i.test(m))return'Энэ и-мэйлээр бүртгэл аль хэдийн байна. "Нэвтрэх" хэсгээр орно уу.';
+  if(/at least 6|password.*short|weak/i.test(m))return'Нууц үг 6-аас доошгүй тэмдэгттэй байна.';
+  if(/invalid format|validate email/i.test(m))return'И-мэйл хаяг буруу бичигдсэн байна.';
+  if(/rate limit|too many/i.test(m))return'Хэт олон оролдлого хийлээ. Түр хүлээгээд дахин оролдоно уу.';
+  if(/refresh token/i.test(m))return'Нэвтрэлтийн хугацаа дууссан. Дахин нэвтэрнэ үү.';
+  return m||'Тодорхойгүй алдаа гарлаа.';
 }
-const NOCRYPTO='Энэ хуудсыг хөтөч кодыг шалгаж чадахгүй байдлаар нээсэн байна (файл дээр давхар товшсон бол ингэдэг). '
-  +'Хавтас доторх <b>"Программ нээх.cmd"</b>-ээр нээнэ үү, эсвэл программынхаа <b>https://</b>-ээр эхэлсэн интернэт холбоосоор орно уу. Таны код зөв, зүгээр л энд шалгагдаж чадахгүй байна.';
-const noSubtle=()=>!(window.crypto&&window.crypto.subtle);
-function licLock(r){
-  const L=$('#lock');L.hidden=false;
-  if(noSubtle())r={why:'nocrypto'};
-  $('#lockMsg').innerHTML=r.why==='expired'
-    ?`Ашиглах эрхийн хугацаа <b>${esc(r.d.e)}</b>-нд дууссан байна. Сунгуулахын тулд программын эзэнтэй холбогдож шинэ код аваарай. Таны оруулсан анги, нэрс, дүн устаагүй, шинэ код оруулахад хэвээрээ үргэлжилнэ.`
-    :r.why==='nocrypto'?NOCRYPTO
-    :'Энэ программыг ашиглахын тулд идэвхжүүлэх код хэрэгтэй. Кодыг программын эзнээс авна уу.';
-  $('#lockCode').disabled=noSubtle();$('#lockGo').disabled=noSubtle();
-  askInit();
-  $('#lockBackup').hidden=!(db&&db.exams&&db.exams.some(e=>e.students.length)||(db&&db.classes&&db.classes.length));
-  $('#lockGo').onclick=async()=>{const c=$('#lockCode').value,v=await licVerify(c),err=$('#lockErr');
-    if(v.ok){lsSet(LIC_KEY,v.code);L.hidden=true;err.textContent='';licApply(v.d);renderSetup();return;}
-    if(v.why==='nocrypto'){err.innerHTML=NOCRYPTO;return;}
-    err.textContent=v.why==='expired'?'Энэ кодын хугацаа '+v.d.e+'-нд дууссан байна.':v.why==='none'?'Кодоо буулгана уу.':'Код буруу байна. Бүтэн хуулсан эсэхээ шалгана уу.';};
-  $('#lockBackup').onclick=()=>{const a=document.createElement('a');
-    a.href=URL.createObjectURL(new Blob([JSON.stringify({app:'shalgalt-analiz',version:2,saved:new Date().toISOString(),...db},null,1)],{type:'application/json'}));
-    a.download='shalgalt-nooc-'+localDay()+'.json';document.body.appendChild(a);a.click();a.remove();};
-}
-/* ---------- багш эрх хүсэх (урих холбоосоор ирсэн үед) ---------- */
-const ASK_KEY='shalgalt-ask';
-/* Программын эзний хаяг. Багш энгийн холбоосоор орсон ч "Эрх хүсэх" ажиллана.
-   Эзэн Apps Script-ээ ШИНЭ deployment болгон сольвол энэ мөрийг шинэчлэх шаардлагатай
-   ("Багш нарыг урих" хэсэг таарахгүй байвал анхааруулна). */
-const ASK_API_DEFAULT='https://script.google.com/macros/s/AKfycbwb-2WgOiSPugujtV365SEnNwzYpObZNtDGgun5AZ_-qkQhWIZDKbXDVpP1untpM6Fr/exec';
-function askApi(){
-  const pr=new URLSearchParams(location.search),s=pr.get('s'),api=pr.get('api');
-  if(api)return api;
-  if(s)return'https://script.google.com/macros/s/'+s+'/exec';
-  const a=askSaved();if(a&&a.api)return a.api;
-  return ASK_API_DEFAULT;
-}
-function askSaved(){try{return JSON.parse(lsGet(ASK_KEY)||'null');}catch(e){return null;}}
-async function askCall(body){
-  const api=askApi();if(!api)throw new Error('Урих холбоос алга. Программын эзнээс холбоосоо дахин авна уу.');
-  let r;try{r=await fetch(api,{method:'POST',body:JSON.stringify(body)});}
-  catch(e){throw new Error('Сервертэй холбогдож чадсангүй. Интернэтээ шалгана уу.');}
-  let j;try{j=await r.json();}catch(e){throw new Error('Серверээс буруу хариу ирлээ.');}
-  if(!j.ok){
-    // эзний Google скрипт хуучин бол "нууц үг буруу" гэж хариулдаг — үүнийг ойлгомжтой болгоё
-    if(/нууц үг|Тодорхойгүй үйлдэл/i.test(j.error||''))
-      throw new Error('Программын эзний Google холболт хуучин хувилбар байна. Эзэнд нь "Apps Script кодоо шинэчилж, Manage deployments → Edit → New version хий" гэж хэлнэ үү.');
-    throw new Error(j.error||'Тодорхойгүй алдаа');
-  }
+async function sbAuth(path,body,tok){
+  let r;
+  try{r=await fetch(SB_URL+'/auth/v1/'+path,{method:'POST',
+    headers:Object.assign({apikey:SB_KEY,'Content-Type':'application/json'},tok?{Authorization:'Bearer '+tok}:{}),
+    body:JSON.stringify(body||{})});}
+  catch(e){throw new Error('Интернэт холболт алга. Шалгаад дахин оролдоно уу.');}
+  const j=await r.json().catch(()=>({}));
+  if(!r.ok){const e=new Error(authErr(j));e.status=r.status;throw e;}
   return j;
 }
-const askPick=id=>[...document.querySelectorAll('#'+id+' .chip.done')].map(b=>b.dataset.v);
-function askMode(m){$('#askOpen').hidden=m!=='idle';$('#askForm').hidden=m!=='form';$('#askWait').hidden=m!=='wait';}
-['askGender','askLevel'].forEach(id=>document.getElementById(id).addEventListener('click',e=>{
-  const b=e.target.closest('.chip');if(!b)return;
-  if(id==='askGender')[...document.querySelectorAll('#askGender .chip')].forEach(x=>{if(x!==b)x.classList.remove('done');});
-  b.classList.toggle('done');}));
-$('#askOpen').addEventListener('click',()=>{askMode('form');$('#askName').focus();});
-$('#askCancel').addEventListener('click',()=>askMode('idle'));
-$('#askNew').addEventListener('click',()=>{lsSet(ASK_KEY,'');askMode('form');});
-$('#askCheck').addEventListener('click',()=>askPoll(true));
-$('#askSend').addEventListener('click',async()=>{
-  const m=$('#askMsg'),name=$('#askName').value.trim(),mail=$('#askEmail').value.trim();
-  if(!name){m.style.color='var(--stain)';m.textContent='Нэрээ бичнэ үү.';$('#askName').focus();return;}
-  if(!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(mail)){m.style.color='var(--stain)';
-    m.textContent='И-мэйл хаягаа зөв бичнэ үү. Програмын эзэн танд үүгээр холбогдоно.';$('#askEmail').focus();return;}
-  m.style.color='';m.textContent='Илгээж байна...';
+function sessFrom(j){
+  if(!j||!j.access_token)return null;
+  return{access_token:j.access_token,refresh_token:j.refresh_token,
+    expires_at:j.expires_at||Math.floor(Date.now()/1000)+(j.expires_in||3600),
+    user:{id:j.user.id,email:j.user.email}};
+}
+function sessSave(){lsSet(SESS_KEY,AUTH.sess?JSON.stringify(AUTH.sess):'');}
+let tokP=null;
+async function sbToken(){
+  const s=AUTH.sess;if(!s)throw Object.assign(new Error('Нэвтрээгүй байна.'),{status:401});
+  if(s.expires_at-90>Date.now()/1000)return s.access_token;
+  if(!tokP)tokP=sbAuth('token?grant_type=refresh_token',{refresh_token:s.refresh_token})
+    .then(j=>{AUTH.sess=sessFrom(j);sessSave();return AUTH.sess.access_token;})
+    .finally(()=>{tokP=null;});
+  return tokP;
+}
+async function sbReq(path,opt){
+  opt=opt||{};const tok=await sbToken();let r;
+  try{r=await fetch(SB_URL+path,Object.assign({},opt,{headers:Object.assign(
+    {apikey:SB_KEY,Authorization:'Bearer '+tok,'Content-Type':'application/json'},opt.headers||{})}));}
+  catch(e){throw Object.assign(new Error('Интернэт холболт алга.'),{net:true});}
+  const t=await r.text();let j=null;try{j=t?JSON.parse(t):null;}catch(e){}
+  if(!r.ok){const e=new Error((j&&(j.message||j.msg||j.error_description))||('Серверийн алдаа ('+r.status+')'));e.status=r.status;throw e;}
+  return j;
+}
+const sbGet=p=>sbReq('/rest/v1/'+p);
+const sbRpc=(f,a)=>sbReq('/rest/v1/rpc/'+f,{method:'POST',body:JSON.stringify(a||{})});
+
+/* ---------- өгөгдлийн хувилбар, нэгтгэх ---------- */
+const h32=s=>{let h=0x811c9dc5;for(let i=0;i<s.length;i++){h^=s.charCodeAt(i);h=Math.imul(h,16777619);}return(h>>>0).toString(36);};
+function cloudDoc(){const d={};for(const k in db)if(!LOCAL_ONLY.includes(k))d[k]=db[k];return d;}
+/* Сүүлд үүлтэй тааруулсан үеийн "хурууны хээ": түлхүүр бүр, шалгалт бүрийн хэш */
+function baseOf(d){
+  const b={k:{},x:{}};d=d||{};
+  for(const k in d){if(k==='exams')(d.exams||[]).forEach(e=>{b.x[e.id]=h32(JSON.stringify(e));});
+    else b.k[k]=h32(JSON.stringify(d[k]));}
+  return b;
+}
+function sameBase(a,b){
+  if(!a||!b)return false;
+  const eq=(p,q)=>{const ka=Object.keys(p),kb=Object.keys(q);return ka.length===kb.length&&ka.every(k=>p[k]===q[k]);};
+  return eq(a.k,b.k)&&eq(a.x,b.x);
+}
+const meaningful=d=>!!d&&((d.classes||[]).length>0||(d.exams||[]).some(e=>
+  (e.students||[]).length||((e.exam&&e.exam.questions)||[]).some(q=>(q.topic||'').trim()||(q.text||'').trim())));
+const clone=o=>JSON.parse(JSON.stringify(o));
+/* Нэг шалгалтыг хоёр төхөөрөмж зэрэг засвал: энэ төхөөрөмжийнхийг үндэс болгоод,
+   нөгөөд нь байгаа сурагч, хариултыг нэмж оруулна — юу ч алга болохгүй. */
+function mergeExam(a,b){
+  const r=clone(a),key=s=>(s.cls||'')+'\u0001'+(s.name||''),m=new Map(r.students.map(s=>[key(s),s]));
+  (b.students||[]).forEach(s=>{const t=m.get(key(s));
+    if(!t){r.students.push(clone(s));return;}
+    t.answers=t.answers||[];(s.answers||[]).forEach((v,i)=>{if(v&&!t.answers[i])t.answers[i]=v;});});
+  return r;
+}
+function mergeClasses(a,b){
+  const r=clone(a||[]),m=new Map(r.map(c=>[c.name,c]));
+  (b||[]).forEach(c=>{const t=m.get(c.name);
+    if(!t){r.push(clone(c));return;}
+    t.students=t.students||[];t.codes=t.codes||{};
+    (c.students||[]).forEach(n=>{if(!t.students.includes(n)){t.students.push(n);
+      if(c.codes&&c.codes[n]!=null&&t.codes[n]==null)t.codes[n]=c.codes[n];}});});
+  return r;
+}
+/* Гурван талт нэгтгэл: L = энэ төхөөрөмж, S = үүлэн дэх, B = сүүлд тааруулсан хээ */
+function merge3(L,S,B){
+  B=B||{k:{},x:{}};const out={};
+  new Set([...Object.keys(L),...Object.keys(S)]).forEach(k=>{
+    if(k==='exams')return;
+    const inL=k in L,inS=k in S,hB=B.k[k]||null;
+    const lc=(inL?h32(JSON.stringify(L[k])):null)!==hB,sc=(inS?h32(JSON.stringify(S[k])):null)!==hB;
+    if(lc&&sc&&k==='classes')out[k]=mergeClasses(L[k],S[k]);
+    else if(lc){if(inL)out[k]=L[k];}
+    else if(sc){if(inS)out[k]=S[k];}
+    else if(inL)out[k]=L[k];
+  });
+  const Lx=L.exams||[],Sx=S.exams||[],byS=new Map(Sx.map(e=>[e.id,e])),seen=new Set(),ex=[];
+  const pick=(id,eL,eS)=>{
+    const hB=B.x[id]||null,lc=(eL?h32(JSON.stringify(eL)):null)!==hB,sc=(eS?h32(JSON.stringify(eS)):null)!==hB;
+    if(lc&&sc)return eL&&eS?mergeExam(eL,eS):(eL||eS);   // нэг нь устгаж, нөгөө нь засвал — хадгална
+    if(lc)return eL;   // null бол энд устгасан
+    if(sc)return eS;   // null бол нөгөө төхөөрөмж дээр устгасан
+    return eL||eS;
+  };
+  Lx.forEach(e=>{seen.add(e.id);const r=pick(e.id,e,byS.get(e.id));if(r)ex.push(r);});
+  Sx.forEach(e=>{if(seen.has(e.id))return;const r=pick(e.id,null,e);if(r)ex.push(r);});
+  out.exams=ex;return out;
+}
+/* Үүлнээс ирсэн баримтыг программд тавина. Нээлттэй шалгалт, хэрэглэгчийн байрлал хэвээр. */
+function applyDoc(d){
+  const keep={};LOCAL_ONLY.forEach(k=>{if(k in db)keep[k]=db[k];});
+  const cur=db.cur;
+  db=Object.assign({},clone(d||{}),keep);
+  if(!db.exams||!db.exams.length){const e=blank(5);db.exams=[e];}
+  db.classes=db.classes||[];db.classes.forEach(fixCodes);
+  const id=db.exams.some(e=>e.id===cur)?cur:db.exams[0].id;
+  state=db.exams.find(e=>e.id===id);db.cur=id;
+  mem=db;try{localStorage.setItem(KEY,JSON.stringify(db));}catch(e){}
+  refreshAll();
+}
+function syncSave(){try{localStorage.setItem(SYNC_KEY,JSON.stringify(
+  {uid:AUTH.sess&&AUTH.sess.user.id,rev:SYNC.rev,base:SYNC.base,dirty:SYNC.dirty}));}catch(e){}}
+function syncLoad(){try{return JSON.parse(localStorage.getItem(SYNC_KEY)||'null');}catch(e){return null;}}
+function backupLocal(tag){
+  try{localStorage.setItem(BACKUP_KEY,JSON.stringify({saved:new Date().toISOString(),tag:tag||'',db}));}catch(e){}
+}
+
+/* ---------- хадгалах, татах ---------- */
+/* save() бүрд дуудагдана: үнэхээр өөрчлөгдсөн бол 1.5 секундын дараа үүлэнд илгээнэ */
+function cloudDirty(){
+  if(!AUTH||!AUTH.sess||!AUTH.approved)return;
+  SYNC.ver++;SYNC.dirty=true;syncUi();
+  clearTimeout(SYNC.timer);SYNC.timer=setTimeout(cloudPush,1500);
+}
+async function cloudPush(){
+  if(!AUTH.sess||!AUTH.approved||SYNC.busy||!SYNC.dirty)return;
+  const doc=cloudDoc();
+  if(SYNC.base&&sameBase(baseOf(doc),SYNC.base)){SYNC.dirty=false;syncSave();syncUi();return;}
+  SYNC.busy=true;syncUi();
+  const v=SYNC.ver;
   try{
-    const r=await askCall({action:'askAccess',name:name,gender:askPick('askGender')[0]||'',
-      level:askPick('askLevel').join(', '),subject:$('#askSubject').value.trim(),email:mail});
-    lsSet(ASK_KEY,JSON.stringify({id:r.id,api:askApi(),name:name}));
-    m.textContent='';askMode('wait');
-    $('#askWaitMsg').textContent=r.again?'Таны хүсэлт аль хэдийн илгээгдсэн байна. Хариуг хүлээж байна.'
-      :'Хүсэлт илгээгдлээ. Программын эзэн баталмагц энэ хуудас өөрөө нээгдэнэ.';
-    askPoll();
-  }catch(e){m.style.color='var(--stain)';m.textContent=e.message;}
-});
-let askTimer=null;
-async function askPoll(manual){
-  const a=askSaved();if(!a||!a.id)return;
-  const w=$('#askWaitMsg');
-  if(manual)w.textContent='Шалгаж байна...';
-  try{
-    const r=await askCall({action:'askStatus',id:a.id});
-    if(r.status==='granted'&&r.code){
-      const v=await licVerify(r.code);
-      if(v.ok){clearInterval(askTimer);lsSet(LIC_KEY,v.code);lsSet(ASK_KEY,'');
-        $('#lock').hidden=true;licApply(v.d);renderSetup();
-        toast&&toast('Эрх баталгаажлаа. Программ бэлэн.');return;}
-      w.textContent='Код ирсэн боловч шалгагдсангүй. Программын эзэнтэй холбогдоно уу.';return;
+    let row=(await sbRpc('save_db',{p_data:doc,p_rev:SYNC.rev}))[0];
+    let sent=doc;
+    if(!row.ok){
+      /* өөр төхөөрөмж түрүүлж хадгалсан — хоёуланг нь нэгтгээд дахин илгээнэ */
+      const S=row.data||{};
+      const merged=merge3(doc,S,SYNC.base);
+      SYNC.rev=row.rev;SYNC.base=baseOf(S);
+      applyDoc(merged);sent=cloudDoc();
+      row=(await sbRpc('save_db',{p_data:sent,p_rev:SYNC.rev}))[0];
+      if(!row.ok)throw new Error('Өөр төхөөрөмж зэрэг хадгалж байна. Дахин оролдоно.');
+      toast('Өөр төхөөрөмж дээрх өөрчлөлттэй нэгтгэлээ.');
     }
-    if(r.status==='denied'){clearInterval(askTimer);
-      w.textContent='Хүсэлт батлагдаагүй байна. Программын эзэнтэй холбогдоно уу.';return;}
-    w.textContent='Хүлээгдэж байна: '+(a.name||'')+'. Батлагдмагц энэ хуудас өөрөө нээгдэнэ.'
-      +(manual?' (сая шалгалаа)':'');
-  }catch(e){w.textContent=e.message;}
+    SYNC.rev=row.rev;SYNC.base=baseOf(sent);SYNC.err='';SYNC.at=Date.now();AUTH.offline=false;
+    if(SYNC.ver===v)SYNC.dirty=false;
+  }catch(e){
+    SYNC.err=e.net||netErr(e)?'offline':e.message;
+    if(e.status===401)return authExpired();
+  }finally{
+    SYNC.busy=false;syncSave();syncUi();
+    if(SYNC.dirty){clearTimeout(SYNC.timer);SYNC.timer=setTimeout(cloudPush,SYNC.err?15000:800);}
+  }
 }
-function askInit(){
-  if(noSubtle()||!askApi())return;
-  $('#askBox').hidden=false;
-  const sid=(/\/s\/([\w-]+)\//.exec(askApi())||[])[1]||'';
-  $('#askWho').textContent=sid?'Хүсэлт очих сервер: …'+sid.slice(-8)+' (эзний хаягтай таарч байгаа эсэхийг шалгаж болно)':'';
-  const a=askSaved();
-  if(a&&a.id){askMode('wait');$('#askWaitMsg').textContent='Хүсэлт илгээгдсэн. Шалгаж байна...';askPoll();}
-  else askMode('idle');
-  clearInterval(askTimer);askTimer=setInterval(()=>{if(!$('#lock').hidden)askPoll();},15000);
+/* Хэрэглэгч ямар нэг нүдэнд бичиж байх үед дэлгэцийг солихгүй */
+const typing=()=>{const a=document.activeElement;return!!a&&/^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName)&&!$('#lock').contains(a);};
+async function cloudPull(force){
+  if(!AUTH.sess||!AUTH.approved||SYNC.busy||SYNC.dirty)return;
+  if(!force&&(typing()||document.visibilityState!=='visible'))return;
+  try{
+    const uidq='id=eq.'+AUTH.sess.user.id;
+    const a=(await sbGet('teachers?select=rev&'+uidq))[0];
+    if(AUTH.offline||SYNC.err==='offline'){AUTH.offline=false;SYNC.err='';syncUi();}
+    if(!a||a.rev===SYNC.rev)return;
+    const row=(await sbGet('teachers?select=rev,data&'+uidq))[0];
+    if(SYNC.dirty||!row)return;   // энэ хооронд засвар хийсэн бол push нэгтгэнэ
+    SYNC.rev=row.rev;SYNC.base=baseOf(row.data||{});SYNC.err='';
+    applyDoc(row.data||{});syncSave();syncUi();
+    toast('Өөр төхөөрөмжөөс шинэчлэгдлээ.');
+  }catch(e){
+    if(e.status===401)return authExpired();
+    SYNC.err=e.net||netErr(e)?'offline':e.message;syncUi();
+  }
 }
+/* Нэвтэрсний дараа анх удаа: энэ төхөөрөмж ба үүлийг тааруулна */
+async function cloudFirstLoad(){
+  const uid=AUTH.sess.user.id;
+  const row=(await sbGet('teachers?select=rev,data&id=eq.'+uid))[0]||{rev:0,data:{}};
+  const S=row.data||{},L=cloudDoc(),st=syncLoad();
+  if(st&&st.uid===uid){
+    /* энэ төхөөрөмж энэ данстай өмнө нь тааруулсан */
+    SYNC.base=st.base;SYNC.rev=st.rev;SYNC.dirty=!!st.dirty;
+    if(row.rev!==st.rev){
+      if(st.dirty){const m=merge3(L,S,st.base);SYNC.rev=row.rev;SYNC.base=baseOf(S);applyDoc(m);SYNC.dirty=true;}
+      else{SYNC.rev=row.rev;SYNC.base=baseOf(S);applyDoc(S);}
+    }
+  }else if(st&&st.uid&&st.uid!==uid){
+    /* өмнө нь ӨӨР багш энэ төхөөрөмжөөр орж байсан — түүний өгөгдлийг хольж болохгүй */
+    if(meaningful(L))backupLocal('other:'+st.uid);
+    SYNC.rev=row.rev;SYNC.base=baseOf(S);SYNC.dirty=false;applyDoc(S);
+  }else if(!meaningful(L)){
+    SYNC.rev=row.rev;SYNC.base=baseOf(S);SYNC.dirty=false;
+    if(meaningful(S))applyDoc(S);
+  }else if(!meaningful(S)){
+    /* энэ төхөөрөмж дээрх хуучин өгөгдлийг шинэ данс руу шилжүүлнэ */
+    SYNC.rev=row.rev;SYNC.base=baseOf(S);SYNC.dirty=true;
+    toast('Энэ төхөөрөмж дээрх '+(L.exams||[]).length+' шалгалтыг таны данс руу шилжүүлж байна...');
+  }else{
+    /* хоёуланд нь өгөгдөл байна */
+    const go=confirm('Энэ төхөөрөмж дээр '+(L.exams||[]).length+' шалгалт, '+(L.classes||[]).length+' анги байна.\n'
+      +'Таны дансанд ч '+(S.exams||[]).length+' шалгалт, '+(S.classes||[]).length+' анги байна.\n\n'
+      +'Хоёуланг нь НЭГТГЭЖ таны дансанд хадгалах уу?\n\n'
+      +'OK — нэгтгэнэ (юу ч устахгүй)\nCancel — зөвхөн дансан дахийг харуулна (энд байсныг нөөцөлнө)');
+    backupLocal('premerge');
+    SYNC.rev=row.rev;SYNC.base=baseOf(S);
+    if(go){applyDoc(merge3(L,S,{k:{},x:{}}));SYNC.dirty=true;}
+    else{applyDoc(S);SYNC.dirty=false;}
+  }
+  syncSave();
+  if(SYNC.dirty)await cloudPush();
+}
+function startSyncLoop(){
+  if(SYNC.loop)return;
+  SYNC.loop=setInterval(()=>{if(SYNC.dirty)cloudPush();else cloudPull();},20000);
+  addEventListener('online',async()=>{
+    SYNC.err='';syncUi();
+    /* офлайн байх хооронд эрхийг хаасан байж болно — дахин шалгана */
+    try{await authStatus();if(!AUTH.approved)return authLock('wait');}catch(e){if(e.status===401)return authExpired();}
+    syncUi();cloudPush();cloudPull(true);});
+  addEventListener('offline',()=>{SYNC.err='offline';syncUi();});
+  document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'){if(SYNC.dirty)cloudPush();else cloudPull();}});
+  addEventListener('beforeunload',e=>{if(SYNC.dirty&&navigator.onLine&&AUTH.approved){e.preventDefault();e.returnValue='';}});
+}
+
+/* ---------- толгой хэсэг: хэрэглэгч, хадгалалтын төлөв ---------- */
+function syncUi(){
+  const p=$('#syncPill');if(!p)return;
+  let t,c='';
+  if(!AUTH.sess||!AUTH.approved){p.hidden=true;return;}
+  p.hidden=false;
+  if(SYNC.busy){t='⟳ Хадгалж байна…';}
+  else if(SYNC.err==='offline'||AUTH.offline){t=SYNC.dirty?'⚠ Офлайн — интернэт орвол илгээнэ':'⚠ Офлайн';c='warn';}
+  else if(SYNC.err){t='⚠ Хадгалж чадсангүй';c='bad';p.title=SYNC.err;}
+  else if(SYNC.dirty){t='… Хадгалах гэж байна';}
+  else{t='✓ Үүлэнд хадгалагдсан';c='ok';p.title=SYNC.at?('Сүүлд: '+new Date(SYNC.at).toLocaleTimeString()):'';}
+  p.textContent=t;p.className='sync-pill'+(c?' '+c:'');
+}
+function authHeader(){
+  const w=$('#curTitleWrap');if(!w)return;
+  const nm=AUTH.name||(AUTH.sess&&AUTH.sess.user.email)||'';
+  let lic='';
+  if(AUTH.owner)lic='эзэн';
+  else if(AUTH.expires){const left=Math.round((new Date(AUTH.expires+'T00:00:00')-new Date(localDay()+'T00:00:00'))/864e5)+1;
+    lic=AUTH.expires+' хүртэл ('+left+' хоног)';}
+  w.innerHTML=`<span class="licinfo">👤 ${esc(nm)}${lic?' · '+esc(lic):''} · <a href="#" id="hdrOut" style="color:inherit">Гарах</a></span>`
+    +`<span class="sync-pill" id="syncPill" hidden></span>`;
+  $('#hdrOut').onclick=e=>{e.preventDefault();authLogout();};
+  syncUi();
+}
+
+/* ---------- нэвтрэх, бүртгүүлэх, хүлээх ---------- */
+function statusSave(){lsSet(STAT_KEY,JSON.stringify({uid:AUTH.sess.user.id,approved:AUTH.approved,
+  expires:AUTH.expires,owner:AUTH.owner,name:AUTH.name,email:AUTH.email}));}
+async function authStatus(){
+  const s=(await sbRpc('my_status'))[0];
+  if(!s)throw new Error('Багшийн бүртгэл олдсонгүй.');
+  Object.assign(AUTH,{approved:!!s.approved,expires:s.expires||null,owner:!!s.is_owner,name:s.name||'',email:s.email||'',offline:false});
+  statusSave();return s;
+}
+const authMsg=(t,bad)=>{const m=$('#lockErr');m.style.color=bad===false?'':'var(--stain)';m.textContent=t||'';};
+function authTab(t){
+  document.querySelectorAll('#authTabs .auth-tab').forEach(b=>b.classList.toggle('on',b.dataset.auth===t));
+  $('#authTabs').hidden=t==='wait';
+  $('#authIn').hidden=t!=='in';$('#authUp').hidden=t!=='up';$('#authWait').hidden=t!=='wait';
+}
+let waitTimer=null;
+function authLock(mode,msg){
+  $('#lock').hidden=false;
+  const exp=AUTH.expires&&AUTH.expires<localDay();
+  $('#lockMsg').innerHTML=mode==='wait'
+    ?(exp?`Таны эрхийн хугацаа <b>${esc(AUTH.expires)}</b>-нд дууссан байна. Программын эзэнд хэлж сунгуулаарай. Таны өгөгдөл устаагүй, сунгамагц хэвээрээ үргэлжилнэ.`
+       :'Бүртгэл тань үүслээ. Программын эзэн таныг багш мөн эсэхийг хараад батлах ёстой.')
+    :'Программыг ашиглахын тулд нэвтэрнэ үү. Анх удаа бол <b>"Бүртгүүлэх"</b> дарна.';
+  authTab(mode);
+  authMsg(msg||'');
+  $('#lockBackup').hidden=!(meaningful(db)||(AUTH.sess&&mode==='wait'));
+  clearInterval(waitTimer);
+  if(mode==='wait'){
+    $('#authWaitMsg').textContent=(AUTH.name||AUTH.email||'')+(exp?' — хугацаа дууссан.':' — батлахыг хүлээж байна. Батлагдмагц энэ хуудас өөрөө нээгдэнэ.');
+    waitTimer=setInterval(()=>authRecheck(false),20000);
+  }
+}
+async function authRecheck(manual){
+  if(manual)$('#authWaitMsg').textContent='Шалгаж байна…';
+  try{await authStatus();
+    if(AUTH.approved){clearInterval(waitTimer);toast('Эрх батлагдлаа. Программ бэлэн.');return authEnter();}
+    authLock('wait');
+  }catch(e){if(e.status===401)return authExpired();$('#authWaitMsg').textContent=e.message;}
+}
+async function authEnter(){
+  $('#lock').hidden=true;authHeader();
+  try{await cloudFirstLoad();}
+  catch(e){SYNC.err=e.net||netErr(e)?'offline':e.message;}
+  renderSetup();syncUi();startSyncLoop();
+}
+async function authAfterLogin(j){
+  AUTH.sess=sessFrom(j);
+  if(!AUTH.sess)throw new Error('Бүртгэл үүссэн ч нэвтэрч чадсангүй. "Нэвтрэх" хэсгээр дахин оролдоно уу.');
+  sessSave();await authStatus();
+  if(AUTH.approved)return authEnter();
+  authLock('wait');
+}
+function authExpired(){
+  AUTH.sess=null;AUTH.approved=false;sessSave();
+  SYNC.loop&&clearInterval(SYNC.loop);SYNC.loop=null;
+  authLock('in','Нэвтрэлтийн хугацаа дууссан. Дахин нэвтэрнэ үү.');
+}
+async function authLogout(){
+  if(SYNC.dirty)await cloudPush();
+  if(SYNC.dirty&&!confirm('Зарим өөрчлөлт үүлэнд хадгалагдаж амжаагүй байна (интернэт алга?).\n'
+    +'Гарвал тэдгээр зөвхөн энэ төхөөрөмж дээр үлдэж, дараа нь та нэвтрэхэд илгээгдэнэ.\n\nГарах уу?'))return;
+  try{if(AUTH.sess)await sbAuth('logout',{},AUTH.sess.access_token);}catch(e){}
+  const clean=!SYNC.dirty;
+  AUTH.sess=null;sessSave();lsSet(STAT_KEY,'');
+  if(clean){
+    /* бүх зүйл үүлэнд байгаа тул энэ төхөөрөмжөөс арилгана — дараагийн хүн харахгүй */
+    const e=blank(5);db={cur:e.id,exams:[e],classes:[]};
+    try{localStorage.setItem(KEY,JSON.stringify(db));localStorage.removeItem(SYNC_KEY);}catch(x){}
+  }
+  location.reload();
+}
+async function authBoot(){
+  try{AUTH.sess=JSON.parse(lsGet(SESS_KEY)||'null');}catch(e){AUTH.sess=null;}
+  if(!AUTH.sess||!AUTH.sess.user)return authLock('in');
+  try{await authStatus();}
+  catch(e){
+    if(e.status===401||/refresh token/i.test(e.message))return authExpired();
+    /* интернэт алга: сүүлд мэдэгдсэн эрхээр офлайн ажиллуулна, интернэт орвол илгээнэ */
+    let c=null;try{c=JSON.parse(lsGet(STAT_KEY)||'null');}catch(x){}
+    if(c&&c.uid===AUTH.sess.user.id&&c.approved&&(!c.expires||c.expires>=localDay())){
+      Object.assign(AUTH,{approved:true,expires:c.expires,owner:!!c.owner,name:c.name,email:c.email,offline:true});
+      const st=syncLoad();if(st&&st.uid===c.uid){SYNC.rev=st.rev;SYNC.base=st.base;SYNC.dirty=!!st.dirty;}
+      $('#lock').hidden=true;authHeader();renderSetup();SYNC.err='offline';syncUi();startSyncLoop();
+      return;
+    }
+    return authLock('in',e.message);
+  }
+  if(!AUTH.approved)return authLock('wait');
+  authEnter();
+}
+const upPick=id=>[...document.querySelectorAll('#'+id+' .chip.done')].map(b=>b.dataset.v);
+['upGender','upLevel'].forEach(id=>document.getElementById(id).addEventListener('click',e=>{
+  const b=e.target.closest('.chip');if(!b)return;
+  if(id==='upGender')document.querySelectorAll('#upGender .chip').forEach(x=>{if(x!==b)x.classList.remove('done');});
+  b.classList.toggle('done');}));
+$('#authTabs').addEventListener('click',e=>{const b=e.target.closest('[data-auth]');if(!b)return;authTab(b.dataset.auth);authMsg('');});
+$('#authIn').addEventListener('submit',async e=>{
+  e.preventDefault();
+  const em=$('#inEmail').value.trim(),pw=$('#inPass').value,btn=$('#inGo');
+  if(!em||!pw)return authMsg('И-мэйл, нууц үгээ бичнэ үү.');
+  btn.disabled=true;authMsg('Нэвтэрч байна…',false);
+  try{await authAfterLogin(await sbAuth('token?grant_type=password',{email:em,password:pw}));authMsg('');$('#inPass').value='';}
+  catch(x){authMsg(x.message);}
+  finally{btn.disabled=false;}
+});
+$('#authUp').addEventListener('submit',async e=>{
+  e.preventDefault();
+  const name=$('#upName').value.trim(),em=$('#upEmail').value.trim(),pw=$('#upPass').value,pw2=$('#upPass2').value,btn=$('#upGo');
+  if(!name){$('#upName').focus();return authMsg('Нэрээ бичнэ үү.');}
+  if(!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(em)){$('#upEmail').focus();return authMsg('И-мэйл хаягаа зөв бичнэ үү.');}
+  if(pw.length<6){$('#upPass').focus();return authMsg('Нууц үг 6-аас доошгүй тэмдэгттэй байна.');}
+  if(pw!==pw2){$('#upPass2').focus();return authMsg('Хоёр нууц үг таарахгүй байна.');}
+  btn.disabled=true;authMsg('Бүртгэж байна…',false);
+  try{
+    const j=await sbAuth('signup',{email:em,password:pw,data:{name,subject:$('#upSubject').value.trim(),
+      gender:upPick('upGender')[0]||'',level:upPick('upLevel').join(', ')}});
+    $('#upPass').value=$('#upPass2').value='';authMsg('');
+    await authAfterLogin(j);
+  }catch(x){authMsg(x.message);}
+  finally{btn.disabled=false;}
+});
+$('#authCheck').addEventListener('click',()=>authRecheck(true));
+$('#authOut').addEventListener('click',()=>authLogout());
+$('#lockBackup').addEventListener('click',async()=>{
+  let data=db;
+  if(AUTH.sess){try{const r=(await sbGet('teachers?select=data&id=eq.'+AUTH.sess.user.id))[0];
+    if(r&&meaningful(r.data))data=r.data;}catch(e){}}
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(new Blob([JSON.stringify(Object.assign({app:'shalgalt-analiz',version:2,saved:new Date().toISOString()},data),null,1)],{type:'application/json'}));
+  a.download='shalgalt-nooc-'+localDay()+'.json';document.body.appendChild(a);a.click();a.remove();
+});
+
+/* ---------- эзний самбар: багш нарын эрх ---------- */
+const ownerMode=()=>!!(AUTH&&AUTH.owner);
+const T_DUR=[[30,'1 сар'],[90,'3 сар'],[180,'6 сар'],[365,'1 жил'],[0,'Хугацаагүй']];
+const ymdPlus=n=>{const d=new Date();d.setDate(d.getDate()+n);return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');};
+let tRows=[];
+async function teachersLoad(){
+  if(!ownerMode())return;
+  const box=$('#tList');if(!box)return;
+  box.innerHTML='<p class="hint">Ачаалж байна…</p>';
+  try{tRows=await sbRpc('admin_list_teachers')||[];teachersRender();}
+  catch(e){box.innerHTML=`<p class="hint" style="color:var(--stain)">${esc(e.message)}</p>`;}
+}
+function teachersRender(){
+  const box=$('#tList'),me=AUTH.sess&&AUTH.sess.user.id,today=localDay();
+  if(!tRows.length){box.innerHTML='<p class="hint">Одоогоор бүртгүүлсэн багш алга.</p>';return;}
+  const wait=tRows.filter(t=>!t.approved&&!t.expires&&t.id!==me).length;
+  box.innerHTML=(wait?`<div class="avgsum" style="margin-bottom:10px"><b class="m">${wait} багш батлахыг хүлээж байна</b></div>`:'')
+    +'<div class="t-list">'+tRows.map(t=>{
+      const self=t.id===me,exp=t.expires&&t.expires<today;
+      const st=self?'<b class="g">Эзэн (та)</b>'
+        :!t.approved&&t.expires?'<b class="b">Хаагдсан</b>'
+        :!t.approved?'<b class="m">Хүлээгдэж байна</b>'
+        :exp?`<b class="b">Дууссан (${esc(t.expires)})</b>`
+        :`<b class="g">✓ ${t.expires?esc(t.expires)+' хүртэл':'Хугацаагүй'}</b>`;
+      const info=[t.subject,t.level,t.gender].filter(Boolean).map(esc).join(' · ');
+      return`<div class="t-row" data-id="${esc(t.id)}">
+        <div class="t-who"><b>${esc(t.name||'(нэргүй)')}</b>${info?`<small>${info}</small>`:''}
+          <small>${esc(t.email||'')} · бүртгүүлсэн ${esc(String(t.created_at||'').slice(0,10))}${t.exams?` · ${t.exams} шалгалт`:''}</small></div>
+        <div class="t-st">${st}</div>
+        ${self?'':`<div class="t-act">
+          ${T_DUR.map(([d,l])=>`<button class="btn ghost" data-t="ok" data-d="${d}">${l}</button>`).join('')}
+          ${t.approved?'<button class="btn danger" data-t="no">Хаах</button>':''}
+          <button class="btn ghost" data-t="pw">Нууц үг</button></div>`}
+      </div>`;}).join('')+'</div>';
+}
+$('#tRefresh').addEventListener('click',teachersLoad);
+$('#tList').addEventListener('click',async e=>{
+  const b=e.target.closest('[data-t]');if(!b)return;
+  const row=b.closest('.t-row'),id=row.dataset.id,t=tRows.find(x=>x.id===id)||{},m=$('#inviteMsg');
+  m.style.color='';
+  try{
+    if(b.dataset.t==='ok'){
+      const d=+b.dataset.d,until=d?ymdPlus(d):null;
+      await sbRpc('admin_set_access',{p_id:id,p_approved:true,p_expires:until});
+      m.textContent=(t.name||'Багш')+' — '+(until?until+' хүртэл':'хугацаагүй')+' батлагдлаа. Түүний хуудас 20 секундын дотор өөрөө нээгдэнэ.';
+    }else if(b.dataset.t==='no'){
+      if(!confirm((t.name||'Энэ багш')+'-ийн эрхийг хаах уу?\n\nӨгөгдөл нь устахгүй — дахин батлахад хэвээрээ үргэлжилнэ.'))return;
+      /* хугацааг нь хадгална — "Хаагдсан" гэж "Хүлээгдэж байна"-аас ялгагдана */
+      await sbRpc('admin_set_access',{p_id:id,p_approved:false,p_expires:t.expires||localDay()});
+      m.textContent=(t.name||'Багш')+'-ийн эрхийг хаалаа.';
+    }else if(b.dataset.t==='pw'){
+      const p=prompt((t.name||'Багш')+'-д өгөх ШИНЭ түр нууц үг (6+ тэмдэгт).\nДараа нь энэ нууц үгээ тэр багшид хэлээрэй.');
+      if(p==null)return;
+      if(p.length<6){m.style.color='var(--stain)';m.textContent='Нууц үг 6-аас доошгүй тэмдэгттэй байна.';return;}
+      await sbRpc('admin_reset_password',{p_id:id,p_password:p});
+      m.textContent=(t.name||'Багш')+'-ийн нууц үгийг солилоо. Шинэ нууц үгээ тэр багшид хэлээрэй.';
+    }
+    teachersLoad();
+  }catch(x){m.style.color='var(--stain)';m.textContent=x.message;}
+});
 /* ---------- Нүүр дэлгэцэд суулгах (аппликейшн шиг нээгдэх) ----------
    Программыг нэг файл хэвээр нь үлдээхийн тулд manifest-ийг тусдаа файл болгохгүй,
    энд үүсгэж хавсаргана. Дүрснүүдийг <head> дэх <link>-үүдээс авна. */
@@ -5801,39 +6181,12 @@ document.addEventListener('click',e=>{
   if(a&&a.getAttribute('href').startsWith('#')){e.preventDefault();lpGo(a.getAttribute('href').slice(1));return;}
   const b=e.target.closest('[data-lp]');if(!b)return;
   lpGo('lp-act');
-  if(b.dataset.lp==='act'){setTimeout(()=>{const t=$('#lockCode');if(t&&!t.disabled)t.focus();},450);return;}
-  setTimeout(()=>{const box=$('#askBox'),o=$('#askOpen');
-    if(box&&!box.hidden&&o&&$('#askForm').hidden&&$('#askWait').hidden)o.click();
-    else if(box&&box.hidden){const m=$('#lockErr');if(m)m.textContent='Хүсэлт илгээх холбоос тохируулагдаагүй байна. Программын эзнээс кодоо шууд аваарай.';}},450);
+  if($('#authWait').hidden)authTab(b.dataset.lp==='up'?'up':'in');
+  setTimeout(()=>{const f=$(b.dataset.lp==='up'?'#upName':'#inEmail');if(f&&!f.closest('[hidden]'))f.focus();},120);
 });
-/* Идэвхжүүлэх холбоос: …/?k=КОД эсвэл …/#k=КОД
-   Багш кодоо хуулж буулгах шаардлагагүй — холбоос дээр дарахад өөрөө идэвхжинэ. */
-function linkCode(){
-  const q=new URLSearchParams(location.search).get('k');if(q)return q;
-  const m=/[#&?]k=([^&]+)/.exec(location.hash||'');
-  try{return m?decodeURIComponent(m[1]):'';}catch(e){return m?m[1]:'';}
-}
-function linkClean(){
-  try{const u=new URL(location.href);u.searchParams.delete('k');
-    if(/[#&?]k=/.test(u.hash))u.hash=u.hash.replace(/[#&?]k=[^&]*/,'').replace(/^[#&?]+$/,'');
-    history.replaceState(null,'',u.pathname+u.search+u.hash);}catch(e){}
-}
-async function licBoot(){
-  const k=linkCode();
-  if(k){const v=await licVerify(k);
-    if(v.ok){lsSet(LIC_KEY,v.code);linkClean();licApply(v.d);renderSetup();
-      setTimeout(()=>{try{toast('Эрх идэвхжлээ. Программ бэлэн.');}catch(e){}},400);return;}
-    linkClean();}
-  const r=await licVerify(lsGet(LIC_KEY));if(r.ok){licApply(r.d);renderSetup();}else licLock(r);}
-
-(function(){const o=new URLSearchParams(location.search).get('owner');
-  if(o==='1')lsSet(OWNER_KEY,'1');
-  else if(o==='0')lsSet(OWNER_KEY,'');
-  else if(db.owner&&!isOwner())lsSet(OWNER_KEY,'1');  // хуучин тохиргоог шилжүүлнэ
-})();
 
 if(new URLSearchParams(location.search).get('quiz'))startStudent();
-else licBoot();
+else authBoot();
 </script>
 </body>
 </html>
