@@ -760,7 +760,8 @@ body.student #studentApp{display:block}
 
 <!-- ============ 3. ANALYSIS ============ -->
 <section id="tab-vocab" hidden>
-  <div class="panel">
+  <!-- Хуучин Google холболт. Дансаар нэвтэрсэн бол сорил Supabase-аар ажиллах тул нуугдана. -->
+  <div class="panel" id="vGooglePanel">
     <details class="collapsible" id="vPanel"><summary><span style="font-size:1.15rem">А. Google Sheets холболт</span> <span id="vSum" style="font-weight:400;color:var(--muted);font-size:.9rem"></span></summary>
     <p class="hint" style="margin-top:12px">Сурагчид QR код эсвэл холбоосоор гар утас, компьютерээсээ орж англи, монгол шинэ үгийн сорил өгнө. Хариулт Google Sheets хүснэгтэд хадгалагдаж, зөв хариултын тоо, дараа нь хурдаар нь эрэмбэлэгдэнэ. Эхлээд Google Sheets-ийг нэг удаа холбоно.</p>
     <details class="collapsible" id="vGuide">
@@ -1267,12 +1268,12 @@ body.student #studentApp{display:block}
       <tr><td>4</td><td>Компьютер</td><td>Юу ч дарахгүй — дүн <b>20 секундын дотор</b> өөрөө гарч ирнэ. "3. Анализ" дээр бэлэн.</td></tr>
     </table>
     <div class="hp-tip"><b>Шинэ анги, шинэ шалгалт нэмсэн ч</b> дахин юу ч хийх шаардлагагүй — нөгөө төхөөрөмж дээр өөрөө гарна.</div>
-    <div class="hp-ok">Өмнө нь энд Google хүснэгт тохируулж, "Үүлэнд илгээх / Үүлнээс татах" дардаг байсан. Одоо <b>хэрэггүй</b>. Google холболт зөвхөн <b>"5. Шинэ үгийн сорил"</b>-д хэрэгтэй хэвээр (9-р хэсэг).</div>
+    <div class="hp-ok">Өмнө нь энд Google хүснэгт тохируулж, "Үүлэнд илгээх / Үүлнээс татах" дардаг байсан. Одоо <b>хэрэггүй</b> — шинэ үгийн сорилд ч Google холболт хэрэггүй болсон.</div>
   </details>
 
   <details class="panel hp hp-sec" id="h-vocab">
     <summary><span>9. Шинэ үгийн сорил</span> <small>сурагчид утаснаасаа онлайнаар</small></summary>
-    <p>Сурагчид QR код эсвэл холбоосоор орж англи, монгол шинэ үгийн сорил өгнө. Дүн нь Google хүснэгтэд хадгалагдаж, багшид эрэмбэтэй гарна. Эхлээд 8-р хэсгийн <b>Google Sheets холболт</b> хийгдсэн байх шаардлагатай.</p>
+    <p>Сурагчид QR код эсвэл холбоосоор орж англи, монгол шинэ үгийн сорил өгнө. Дүн нь таны дансанд (үүлэнд) хадгалагдаж, багшид эрэмбэтэй гарна. <b>Нэвтэрсэн бол ямар ч тохиргоо хэрэггүй</b> — Google хүснэгт холбох шаардлагагүй.</p>
     <div class="hp-step"><div class="hp-num">1</div><div><b>Үгсээ оруулна</b>
       "Б. Шинэ сорил үүсгэх" хүснэгтэд англи үг, монгол орчуулга бичнэ. Excel-ээс 2–3 баганаар хуулж эхний нүдэнд <b>Ctrl + V</b> дарж болно. Нэг үг хоёр зөв орчуулгатай бол 3-р баганад нөгөөг бичнэ — аль нь ч зөвд тооцогдоно.</div></div>
     <div class="hp-step"><div class="hp-num">2</div><div><b>Тохиргоо</b>
@@ -1296,15 +1297,10 @@ body.student #studentApp{display:block}
 
   <details class="panel hp hp-sec" id="h-back">
     <summary><span>10. Нөөцлөх, өгөгдлөө хамгаалах</span> <small>хамгийн чухал хэсэг</small></summary>
-    <p>Бүх шалгалт, нэрс, дүн нь <b>таны хөтчийн дотор</b> хадгалагдана — интернэтэд биш. Энэ нь хурдан, нууцлалтай боловч дараах тохиолдолд алдагдаж болно:</p>
-    <ul>
-      <li>Хөтчийн түүх, өгөгдлийг цэвэрлэх</li>
-      <li>Компьютер эвдрэх, шинэчлэх</li>
-      <li>Өөр компьютер, өөр хөтчөөр нээх (тэнд өгөгдөл байхгүй)</li>
-    </ul>
-    <div class="hp-ok"><b>Сар бүр:</b> "1. Шалгалт" → <b>"Нөөц хадгалах"</b> → <b>"Нөөц файл татах"</b>. Татсан файлаа Google Drive, флаш эсвэл и-мэйлээр өөр рүүгээ илгээж тавина.</div>
-    <p>Сэргээх: шинэ компьютер дээр программаа нээгээд <b>"Нөөц файлаас сэргээх"</b> дарж тэр файлаа сонгоно. Бүх шалгалт, нэрс, дүн буцаж орно.</p>
-    <div class="hp-tip">Таны өгөгдөл <b>үүлэнд байнга хадгалагддаг</b> тул хөтчөө цэвэрлэсэн ч, компьютер солисон ч дансаараа нэвтрэхэд бүгд буцаж орно. Нөөц файл нь нэмэлт хамгаалалт — жилд нэг ч болов татаж аваарай.</div>
+    <p>Бүх шалгалт, нэрс, дүн нь <b>таны дансанд, үүлэнд</b> байнга хадгалагдана. Хөтчөө цэвэрлэсэн ч, компьютер солисон ч дансаараа нэвтрэхэд бүгд буцаж орно. Толгойд <b>"✓ Үүлэнд хадгалагдсан"</b> гэж байвал бүх зүйл аюулгүй.</p>
+    <div class="hp-ok"><b>Нэмэлт хамгаалалт (улиралд нэг):</b> "1. Шалгалт" → <b>"Нөөц хадгалах"</b> → <b>"Нөөц файл татах"</b>. Татсан файлаа Google Drive, флаш эсвэл и-мэйлээр өөр рүүгээ илгээж тавина.</div>
+    <p>Сэргээх: программаа нээгээд <b>"Нөөц файлаас сэргээх"</b> дарж тэр файлаа сонгоно. Бүх шалгалт, нэрс, дүн буцаж орно.</p>
+    <div class="hp-tip">Интернэт тасарсан үед хийсэн өөрчлөлт тэр төхөөрөмж дээрээ хадгалагдаж, интернэт ормогц өөрөө үүл рүү илгээгдэнэ. Тиймээс интернэтгүй үед <b>"Гарах"</b> дарахгүй байх нь зүйтэй.</div>
   </details>
 
   <details class="panel hp hp-sec" id="h-app">
@@ -4650,7 +4646,7 @@ function renderCloud(){
   $('#cSum').textContent=set?('— тохируулсан'+(k.auto?', автоматаар хүлээн авна':'')):'— тохируулаагүй';
   if(!cPanelOnce){cPanelOnce=true;$('#cPanel').open=!set;}  // тохируулаагүй үед л нээлттэй гарна
 }
-let cPanelOnce=false,vPanelOnce=false;
+let cPanelOnce=false,vPanelOnce=false,vSbLoaded=false;
 ['cApi','cKey'].forEach(id=>$('#'+id).addEventListener('change',e=>{vcfg()[id==='cApi'?'api':'key']=e.target.value.trim();save();}));
 const cMsg=(t,bad)=>{$('#cMsg').style.color=bad?'var(--stain)':'';$('#cMsg').textContent=t;};
 function toast(t){const d=document.createElement('div');d.className='toast';d.textContent=t;document.body.appendChild(d);setTimeout(()=>d.remove(),4000);}
@@ -5015,7 +5011,25 @@ async function qrSvg(text){
 /* ---------- vocabulary quiz: teacher ---------- */
 let vList=[],vSel='',vRes=null,vCls='',vTimer=null;
 function vcfg(){db.vocab=db.vocab||{api:'',key:'',base:''};return db.vocab;}
+/* Шинэ үгийн сорил: дансаар нэвтэрсэн бол Supabase-аар (Google хэрэггүй).
+   Хариултын хэлбэр нь хуучин Google серверийнхтэй яг ижил тул бусад код хөндөгдөхгүй. */
+const vSb=()=>!!(window.AUTH&&AUTH.sess&&AUTH.approved);
+async function vCallSb(body){
+  const map={
+    ping:async()=>({ok:true,teacher:true,version:9}),
+    listQuizzes:()=>sbRpc('quiz_list'),
+    saveQuiz:()=>sbRpc('quiz_save',{p_id:(body.quiz&&body.quiz.id)||null,p_quiz:body.quiz}),
+    results:()=>sbRpc('quiz_results',{p_id:body.quizId}),
+    resetAttempt:()=>sbRpc('quiz_reset',{p_att:body.attemptId}),
+    setOpen:()=>sbRpc('quiz_set_open',{p_id:body.quizId,p_open:!!body.open}),
+    deleteQuiz:()=>sbRpc('quiz_delete',{p_id:body.quizId})};
+  if(!map[body.action])throw new Error('Энэ үйлдэл одоо хэрэггүй болсон.');
+  const j=await map[body.action]();
+  if(!j||j.ok===false)throw new Error((j&&j.error)||'Тодорхойгүй алдаа');
+  return j;
+}
 async function vCall(body){
+  if(vSb())return vCallSb(body);
   const c=vcfg();if(!c.api)throw new Error('Эхлээд Web app URL-ээ оруулна уу.');
   let r;try{r=await fetch(c.api,{method:'POST',body:JSON.stringify({...body,key:c.key})});}
   catch(e){throw new Error('Сервертэй холбогдож чадсангүй. Интернэт болон URL-ээ шалгана уу.');}
@@ -5145,8 +5159,10 @@ $('#vSetDel').addEventListener('click',()=>{
 const isLocalPage=()=>location.protocol==='file:'||/^(localhost|127\.0\.0\.1|\[?::1\]?)$/i.test(location.hostname)||/\.localhost$/i.test(location.hostname);
 const isPublicPage=()=>/^https?:$/.test(location.protocol)&&!isLocalPage();
 function vLink(id){
-  const c=vcfg();let base=isPublicPage()?location.origin+location.pathname:(c.base||'').trim();
+  const c=vcfg();let base=isPublicPage()?location.origin+location.pathname:((c.base||'').trim()||(vSb()?APP_URL:''));
   if(!base)return'';if(!/\.html?$/.test(base)&&!base.endsWith('/'))base+='/';
+  /* Supabase сорилын холбоос богино: зөвхөн сорилын дугаар */
+  if(vSb())return base+'?quiz='+encodeURIComponent(id);
   // Apps Script хаягийг бүтнээр нь биш, зөвхөн дугаарыг нь бичвэл холбоос богиносож QR уншихад хялбар болно
   const m=/^https:\/\/script\.google\.com\/macros\/s\/([\w-]+)\/exec\/?$/i.exec((c.api||'').trim());
   return base+'?quiz='+encodeURIComponent(id)+(m?'&s='+m[1]:'&api='+encodeURIComponent(c.api));
@@ -5159,7 +5175,10 @@ function renderVocab(){
   $('#vBaseRow').hidden=isPublicPage();$('#vBase').value=c.base||'';
   const vset=!!(c.api&&c.key);
   $('#vSum').textContent=vset?'— тохируулсан':'— тохируулаагүй';
-  if(!vPanelOnce){vPanelOnce=true;$('#vPanel').open=!vset;}
+  if(!vPanelOnce){vPanelOnce=true;$('#vPanel').open=!vset&&!vSb();}
+  /* дансаар нэвтэрсэн бол Google тохиргоо хэрэггүй — нууж, сорилуудаа шууд ачаална */
+  $('#vGooglePanel').hidden=vSb();
+  if(vSb()&&!vSbLoaded){vSbLoaded=true;vLoadList().then(()=>{if(vSel)vShowQuiz();}).catch(e=>{vSbLoaded=false;const m=$('#vResMsg');if(m){m.style.color='var(--stain)';m.textContent=e.message;}});}
   vSetRender();
   const prev=new Set([...document.querySelectorAll('#vClasses input:checked')].map(x=>x.value));
   $('#vClasses').innerHTML=db.classes.length?db.classes.map(k=>`<label class="chip" style="display:inline-flex;gap:6px;align-items:center;margin:0"><input type="checkbox" value="${esc(k.name)}" style="width:auto"${prev.has(k.name)?' checked':''}> ${esc(k.name)} (${k.students.length})</label>`).join('')
@@ -5171,7 +5190,7 @@ function renderVQuizList(){
   const when=c=>{const s=String(c||'');if(!s)return'огноогүй';
     const d=new Date(s);return isNaN(d)?s.slice(0,10):s.slice(0,10)+' '+d.toTimeString().slice(0,5);};
   sel.innerHTML=vList.length?vList.map(q=>`<option value="${esc(q.id)}"${q.id===vSel?' selected':''}>${esc(q.title||'Нэргүй сорил')} — ${esc(when(q.created))}, ${q.count} оролдлого${q.open?'':', хаалттай'}</option>`).join('')
-    :'<option value="">'+(vcfg().api?'Сорил алга. "Холболт шалгах" дарж шинэчилнэ үү.':'Холболт шалгасны дараа жагсаалт гарна')+'</option>';
+    :'<option value="">'+(vSb()?'Сорил алга. Доорх "Б. Шинэ сорил үүсгэх"-ээр нэмнэ үү.':vcfg().api?'Сорил алга. "Холболт шалгах" дарж шинэчилнэ үү.':'Холболт шалгасны дараа жагсаалт гарна')+'</option>';
   const q=vList.find(x=>x.id===vSel);$('#vToggle').textContent=q&&!q.open?'Сорилыг нээх':'Сорилыг хаах';
 }
 async function vLoadList(){const r=await vCall({action:'listQuizzes'});vList=r.quizzes||[];if(!vList.find(q=>q.id===vSel))vSel=vList[0]?vList[0].id:'';renderVQuizList();}
@@ -5327,7 +5346,7 @@ $('#vToggle').addEventListener('click',async()=>{
   catch(e){$('#vResMsg').textContent=e.message;}
 });
 $('#vDelete').addEventListener('click',async()=>{
-  const q=vList.find(x=>x.id===vSel);if(!q||!confirm('"'+q.title+'" сорил болон бүх хариултыг Google Sheets-ээс устгах уу?'))return;
+  const q=vList.find(x=>x.id===vSel);if(!q||!confirm('"'+q.title+'" сорил болон бүх сурагчийн хариултыг бүрмөсөн устгах уу?\n\nДараа нь сэргээх боломжгүй.'))return;
   try{await vCall({action:'deleteQuiz',quizId:vSel});vSel='';vRes=null;await vLoadList();vShowQuiz();}catch(e){$('#vResMsg').textContent=e.message;}
 });
 $('#vXlsx').addEventListener('click',()=>runExport(async()=>{
@@ -5345,8 +5364,23 @@ $('#vXlsx').addEventListener('click',()=>runExport(async()=>{
 /* ---------- vocabulary quiz: student page ---------- */
 const SQ={api:'',quizId:'',quiz:null,sel:{cls:'',c1:'',c2:''},who:null,att:null,order:[],opt:{},i:0,answers:[],leaves:0,done:false,tick:null,offset:0,lastLeave:0,warnPending:false,inQuiz:false};
 const sqEl=()=>$('#studentApp');
-async function sqGet(params){const u=SQ.api+(SQ.api.includes('?')?'&':'?')+new URLSearchParams(params);const r=await fetch(u);return r.json();}
-async function sqPost(body,keepalive){const r=await fetch(SQ.api,{method:'POST',body:JSON.stringify(body),keepalive:!!keepalive});return r.json();}
+/* Холбоосонд Google хаяг (&s= эсвэл &api=) байхгүй бол сорил Supabase дээр байна.
+   Сурагч нэвтрэхгүй — зөвхөн хамгаалагдсан функцуудыг дуудна, зөв хариулт хэзээ ч ирэхгүй. */
+async function sqSb(p,keepalive){
+  const call=(f,args)=>fetch(SB_URL+'/rest/v1/rpc/'+f,{method:'POST',keepalive:!!keepalive,
+      headers:{apikey:SB_KEY,'Content-Type':'application/json'},body:JSON.stringify(args)})
+    .then(r=>r.json()).then(j=>j&&j.ok===undefined&&j.message?{ok:false,error:j.message}:j);
+  switch(p.action){
+    case'quiz':return call('quiz_public',{p_id:p.quizId});
+    case'who':return call('quiz_who',{p_id:p.quizId,p_cls:p.cls,p_code:String(p.code)});
+    case'start':return call('quiz_start',{p_id:p.quizId,p_cls:p.cls,p_code:String(p.code)});
+    case'leave':return call('quiz_leave',{p_att:p.attemptId});
+    case'submit':return call('quiz_submit',{p_att:p.attemptId,p_answers:p.answers||[],p_reason:p.reason||'done',p_leaves:+p.leaves||0});
+  }
+  return{ok:false,error:'Тодорхойгүй үйлдэл'};
+}
+async function sqGet(params){if(!SQ.api)return sqSb(params);const u=SQ.api+(SQ.api.includes('?')?'&':'?')+new URLSearchParams(params);const r=await fetch(u);return r.json();}
+async function sqPost(body,keepalive){if(!SQ.api)return sqSb(body,keepalive);const r=await fetch(SQ.api,{method:'POST',body:JSON.stringify(body),keepalive:!!keepalive});return r.json();}
 function sqHead(sub){return`<div class="sq-head"><h1>${esc(SQ.quiz?SQ.quiz.title:'Шинэ үгийн сорил')}</h1>${sub?`<p>${sub}</p>`:''}</div>`;}
 function sqMsg(title,body,cls){sqEl().innerHTML=sqHead()+`<div class="panel" style="text-align:center"><h2 class="${cls||''}">${title}</h2>${body||''}</div>`;}
 async function startStudent(){
