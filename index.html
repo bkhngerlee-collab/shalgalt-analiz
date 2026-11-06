@@ -5322,7 +5322,13 @@ const subCost=(x,y)=>x===y?0:NEAR.some(p=>(p[0]===x&&p[1]===y)||(p[0]===y&&p[1]=
 function levD(a,b){if(a===b)return 0;const m=a.length,n=b.length;let prev=[...Array(n+1).keys()];
   for(let i=1;i<=m;i++){const cur=[i];for(let j=1;j<=n;j++)cur[j]=Math.min(prev[j]+1,cur[j-1]+1,prev[j-1]+subCost(a[i-1],b[j-1]));prev=cur;}return prev[n];}
 const tolAllowed=(t,tol)=>tol>=2&&t.length>=6?2:tol>=1&&t.length>=4?1:0;
-const vOvr=()=>{const c=vcfg();c.ovr=c.ovr||{};return c.ovr;};
+/* "Зөв болгох" засварууд дансанд хадгалагдаж бүх төхөөрөмжид харагдана (db.vocab нь зөвхөн энэ төхөөрөмжийнх).
+   Хуучин db.vocab.ovr-д байсныг нэг удаа шилжүүлнэ. */
+const vOvr=()=>{
+  db.vovr=db.vovr||{};const c=db.vocab;
+  if(c&&c.ovr){for(const k in c.ovr)db.vovr[k]=Object.assign({},c.ovr[k],db.vovr[k]);delete c.ovr;}
+  return db.vovr;
+};
 function vMatch(q,ans,tol){const a=vNorm(ans);if(!a)return 0;
   for(const y of(q.accepted||[q.answer])){const t=vNorm(y);if(t===a)return 2;if(tol>0&&levD(t,a)<=tolAllowed(t,tol))return 1;}return 0;}
 function vRegrade(){
@@ -5757,9 +5763,11 @@ async function sbAuth(path,body,tok){
     body:JSON.stringify(body||{})});}
   catch(e){throw new Error('Интернэт холболт алга. Шалгаад дахин оролдоно уу.');}
   const j=await r.json().catch(()=>({}));
-  if(!r.ok){const e=new Error(authErr(j));e.status=r.status;throw e;}
+  if(!r.ok){const e=new Error(r.status>=500?SRV_DOWN:authErr(j));e.status=r.status;throw e;}
   return j;
 }
+/* Сервер унтарсан, түр зогссон (үнэгүй төсөл 7 хоног ашиглагдаагүй) үед ойлгомжтой мэдэгдэл */
+const SRV_DOWN='Сервер түр ажиллахгүй байна. Хэдэн минутын дараа дахин оролдоно уу. Удаан үргэлжилбэл программын эзэнд хэлээрэй.';
 function sessFrom(j){
   if(!j||!j.access_token)return null;
   return{access_token:j.access_token,refresh_token:j.refresh_token,
@@ -5793,7 +5801,7 @@ async function sbReq(path,opt){
     {apikey:SB_KEY,Authorization:'Bearer '+tok,'Content-Type':'application/json'},opt.headers||{})}));}
   catch(e){throw Object.assign(new Error('Интернэт холболт алга.'),{net:true});}
   const t=await r.text();let j=null;try{j=t?JSON.parse(t):null;}catch(e){}
-  if(!r.ok){const e=new Error((j&&(j.message||j.msg||j.error_description))||('Серверийн алдаа ('+r.status+')'));e.status=r.status;throw e;}
+  if(!r.ok){const e=new Error(r.status>=500&&!(j&&j.code)?SRV_DOWN:(j&&(j.message||j.msg||j.error_description))||('Серверийн алдаа ('+r.status+')'));e.status=r.status;throw e;}
   return j;
 }
 const sbGet=p=>sbReq('/rest/v1/'+p);
