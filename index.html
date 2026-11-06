@@ -511,7 +511,6 @@ body.student #studentApp{display:block}
     <a href="#s-sheet">Хариултын хуудас</a>
     <a href="#s-cls">Ангиуд, нэрс</a>
     <a href="#s-back">Нөөц</a>
-    <a href="#s-cloud">Утас холбох</a>
     <a href="#invitePanel" id="secOwn" hidden>Багш нарын эрх</a>
   </nav>
   <div class="panel" id="s-exams">
@@ -632,7 +631,9 @@ body.student #studentApp{display:block}
     <div class="msg" id="backupMsg" role="status"></div>
   </div>
 
-  <div class="panel" id="s-cloud">
+  <!-- Хуучин Google-ээр утас ↔ компьютер холбох хэсэг. Одоо данс (Supabase) өөрөө
+       синк хийдэг тул хэрэггүй — нуусан. Шинэ үгийн сорил 5-р табын өөрийн тохиргоог ашиглана. -->
+  <div class="panel" id="s-cloud" hidden>
     <details class="collapsible" id="cPanel"><summary><span style="font-size:1.15rem">Утас ба компьютерийг холбох</span> <span id="cSum" style="font-weight:400;color:var(--muted);font-size:.9rem"></span></summary>
     <p class="hint" style="margin-top:12px">Утсаараа хариултын хуудас уншуулахад дүн нь компьютер дээрх анализ руу өөрөө орж ирэхийн тулд хоёр төхөөрөмжийг Google Sheets-ээр холбоно. Шинэ үгийн сорилд ашигладаг холболтыг ашиглана. Нэг удаа тохируулахад хангалттай.</p>
     <ol style="margin:0 0 8px;padding-left:20px;font-size:.93rem">
@@ -919,7 +920,7 @@ body.student #studentApp{display:block}
     <h3>Хэдэн цонх юу хийдэг вэ</h3>
     <table>
       <tr><th>Цонх</th><th>Юунд хэрэглэх</th></tr>
-      <tr><td><b>1. Шалгалт</b></td><td>Шалгалт үүсгэх, асуулт, зөв хариулт, оноо оруулах. Анги, сурагчдын нэрс. Хариултын хуудас хэвлэх. Нөөц. Утас холбох.</td></tr>
+      <tr><td><b>1. Шалгалт</b></td><td>Шалгалт үүсгэх, асуулт, зөв хариулт, оноо оруулах. Анги, сурагчдын нэрс. Хариултын хуудас хэвлэх. Нөөц. Эзэнд: багш нарын эрх.</td></tr>
       <tr><td><b>2. Хариулт оруулах</b></td><td>Сурагчдын хариултыг гараар, зургаар, камераар эсвэл Excel-ээр оруулах.</td></tr>
       <tr><td><b>3. Анализ</b></td><td>Нэг шалгалтын бүх дүн, график, дүгнэлт, Excel, Word тайлан.</td></tr>
       <tr><td><b>4. Нэгдсэн анализ</b></td><td>Хэд хэдэн шалгалтыг нэгтгэж улирлын, жилийн дүн гаргах.</td></tr>
@@ -1002,7 +1003,6 @@ body.student #studentApp{display:block}
       <tr><td>Шалгалт бүхэлд нь устгах</td></tr>
       <tr><td>Ангийн нэрс устгах, ангиудыг цэгцлэх</td></tr>
       <tr><td>Нэг сурагчийн эсвэл бүтэн ангийн хариулт устгах</td></tr>
-      <tr><td>"Үүлнээс татах" (бүх өгөгдөл солигдох)</td></tr>
     </table>
     <div class="hp-warn"><b>Анхаар:</b> буцаах түүх зөвхөн <b>санах ойд</b> байдаг. Хуудсаа хаавал, шинэчлэвэл (F5) арилна. Тиймээс <b>"Нөөц файл татах"</b> хэвээрээ хамгийн найдвартай хамгаалалт.</div>
     <p>Устгахын өмнө гарах сануулга нь хэдэн сурагчийн хэдэн хариулт устахыг нарийн хэлнэ:</p>
@@ -1257,81 +1257,17 @@ body.student #studentApp{display:block}
   </details>
 
   <details class="panel hp hp-sec" id="h-link">
-    <summary><span>8. Утас, компьютерийг холбох</span> <small>нэг удаа, 15 минут</small></summary>
-    <p>Утас, компьютер хоёр <b>шууд</b> холбогддоггүй. Хооронд нь <b>Google хүснэгт</b> шуудангийн хайрцаг шиг ажиллана: утас тийш бичнэ, компьютер тэндээс авна.</p>
-    <svg viewBox="0 0 760 250" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Утас, Google хүснэгт, компьютерийн холболт">
-      <defs><marker id="hpar2" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto">
-        <path d="M0,0 L10,4 L0,8 z" fill="currentColor"/></marker></defs>
-      <g fill="none" stroke-width="2">
-        <rect x="30" y="60" width="110" height="150" rx="14" fill="#DCEBE3" stroke="#1F5A41"/>
-        <rect x="48" y="80" width="74" height="100" rx="4" fill="#fff" stroke="#1F5A41"/>
-        <circle cx="85" cy="195" r="6" fill="#1F5A41" stroke="none"/>
-        <path d="M320 95 a38 38 0 0 1 72 -14 a30 30 0 0 1 28 44 h-104 a30 30 0 0 1 4 -30 z" fill="#F5E8CF" stroke="#A96A12"/>
-        <rect x="600" y="70" width="140" height="95" rx="8" fill="#DCEBE3" stroke="#1F5A41"/>
-        <rect x="614" y="84" width="112" height="67" rx="3" fill="#fff" stroke="#1F5A41"/>
-        <path d="M640 175 h60 l10 20 h-80 z" fill="#DCEBE3" stroke="#1F5A41"/>
-        <path d="M150 110 H300" stroke="#1F5A41" marker-end="url(#hpar2)" color="#1F5A41"/>
-        <path d="M440 110 H590" stroke="#1F5A41" marker-end="url(#hpar2)" color="#1F5A41"/>
-        <path d="M590 150 H440" stroke="#B4314A" marker-end="url(#hpar2)" color="#B4314A" stroke-dasharray="6 4"/>
-        <path d="M300 150 H150" stroke="#B4314A" marker-end="url(#hpar2)" color="#B4314A" stroke-dasharray="6 4"/>
-      </g>
-      <g font-family="Segoe UI,Arial" font-size="13" fill="#16241E" text-anchor="middle">
-        <text x="85" y="235" font-weight="700">Утас</text>
-        <text x="376" y="70" font-weight="700">Google хүснэгт</text>
-        <text x="376" y="150" font-size="11" fill="#5C6B64">(шуудангийн хайрцаг)</text>
-        <text x="670" y="212" font-weight="700">Компьютер</text>
-        <text x="225" y="100" font-size="11" fill="#1F5A41">уншсан хуудас →</text>
-        <text x="515" y="100" font-size="11" fill="#1F5A41">→ дүн орж ирнэ</text>
-        <text x="515" y="170" font-size="11" fill="#B4314A">← шалгалт, нэрс</text>
-        <text x="225" y="170" font-size="11" fill="#B4314A">← утсанд ирнэ</text>
-      </g>
-    </svg>
-    <h3>А. Google хүснэгт бэлдэх (нэг удаа)</h3>
-    <div class="hp-step"><div class="hp-num">1</div><div><b>Шинэ хүснэгт</b>
-      Хаягийн мөрөнд <code>sheets.new</code> гэж бичээд Enter. "Шалгалтын холболт" гэж нэрлэнэ.</div></div>
-    <div class="hp-step"><div class="hp-num">2</div><div><b>Apps Script нээх</b>
-      Дээд цэс → <b>Extensions</b> → <b>Apps Script</b>.</div></div>
-    <div class="hp-step"><div class="hp-num">3</div><div><b>Кодыг хуулах</b>
-      Программын <b>"5. Шинэ үгийн сорил" → "А. Google Sheets холболт" → "Google Sheets холбох заавар"</b> нээгээд <b>"Кодыг хуулах"</b> дарна.</div></div>
-    <div class="hp-step"><div class="hp-num">4</div><div><b>Буулгах</b>
-      Apps Script цонхондоо <b>Ctrl + A</b> → <b>Delete</b> → <b>Ctrl + V</b>.</div></div>
-    <div class="hp-step"><div class="hp-num">5</div><div><b>Нууц үгээ бичих</b>
-      Кодын дээд талд <code>ENE-NUUTS-UGIIG-SOLINO</code> гэж байгааг өөрийн зохиосон үгээр солино (жишээ: <code>bagsh-oyun-2026</code>). Дараа нь <b>Ctrl + S</b>.</div></div>
-    <div class="hp-step"><div class="hp-num">6</div><div><b>Deploy</b>
-      <b>Deploy → New deployment</b> → ⚙️ → <b>Web app</b> → Execute as: <b>Me</b>, Who has access: <b>Anyone</b> → <b>Deploy</b>.</div></div>
-    <div class="hp-step"><div class="hp-num">7</div><div><b>Google-ийн зөвшөөрөл</b>
-      Authorize access → бүртгэлээ сонгох → "Google hasn't verified this app" гэвэл <b>Advanced</b> → <b>Go to … (unsafe)</b> → <b>Allow</b>.
-      <div class="hp-ok">Айх зүйл алга — энэ таны өөрийн код, таны өөрийн хүснэгт дээр ажиллана.</div></div></div>
-    <div class="hp-step"><div class="hp-num">8</div><div><b>Хаягаа хадгалах</b>
-      <b>Web app URL</b> (<code>https://script.google.com/macros/s/…/exec</code>) хуулаад өөр рүүгээ чатаар илгээж тавина — утсан дээр хэрэг болно.</div></div>
-    <div class="hp-warn"><b>Хожим кодоо шинэчлэх үед:</b> <b>Deploy → Manage deployments → ✏️ → Version: New version → Deploy</b>.
-      <b>"New deployment" дарж болохгүй</b> — шинэ хаяг үүсч, утас болон тараасан бүх холбоос тасарна.</div>
-    <h3>Б. Компьютераа холбох</h3>
-    <ol>
-      <li>"1. Шалгалт" цонх → <b>"Утас ба компьютерийг холбох"</b> мөрийг дарж нээнэ.</li>
-      <li><b>URL</b> ба <b>Багшийн нууц үг</b> талбарыг бөглөнө (А хэсгийн 8 ба 5-р алхам).</li>
-      <li><b>"Холболт шалгах"</b> → "Амжилттай холбогдлоо" гарах ёстой.</li>
-      <li><b>"Үүлэнд илгээх"</b> — шалгалт, анги, нэрс Google хүснэгт рүү хуулагдана.</li>
-      <li><b>"Утаснаас ирэх хариултыг автоматаар хүлээн авах"</b> чагтыг тавина (компьютер дээр, утсан дээр биш).</li>
-    </ol>
-    <h3>В. Утсаа холбох</h3>
-    <ol>
-      <li>Утсандаа Chrome нээж программын интернэт холбоосыг оруулна (<code>https://таны-нэр.github.io/shalgalt-analiz/</code> маягийн). <b>Файлаар нээж болохгүй.</b></li>
-      <li>Код асуувал компьютер дээрхтэй <b>яг ижил</b> кодоо буулгана.</li>
-      <li>Компьютер дээрээсээ URL-аа хуулж (Ctrl + A, Ctrl + C) чатаар утас руугаа илгээнэ. <b>Гараар бичиж болохгүй.</b></li>
-      <li>Утсан дээрээ "1. Шалгалт" → "Утас ба компьютерийг холбох" → URL-аа буулгаад нууц үгээ бичиж <b>"Холболт шалгах"</b>.</li>
-      <li><b>"Үүлнээс татах"</b> → "Солих уу?" гэвэл OK. Гарч ирэх тоо (жишээ "2 шалгалт, 4 анги") компьютер дээрхтэй таарч байх ёстой.</li>
-      <li>Chrome цэс → <b>"Add to Home screen"</b> хийвэл дэлгэцэн дээр дүрс үүснэ.</li>
-    </ol>
-    <h3>Г. Шалгалтын өдөр</h3>
+    <summary><span>8. Утас, компьютерийг холбох</span> <small>одоо автомат — тохиргоо хэрэггүй</small></summary>
+    <p>Утас, компьютер хоёр <b>ижил дансаар</b> нэвтэрсэн бол өөр юу ч хийх шаардлагагүй. Бүх шалгалт, нэрс, дүн <b>үүлээр дамжин өөрөө</b> тааралдана.</p>
     <table>
-      <tr><th>Хэзээ</th><th>Хаана</th><th>Юу дарах</th></tr>
-      <tr><td>1</td><td>Компьютер</td><td>Шалгалтаа нээлттэй болгоод <b>"Үүлэнд илгээх"</b></td></tr>
-      <tr><td>2</td><td>Утас</td><td><b>"Үүлнээс татах"</b></td></tr>
-      <tr><td>3</td><td>Утас</td><td>"2. Хариулт оруулах" → <b>"Камераар шууд уншуулах"</b> → хуудсуудыг харуулна</td></tr>
-      <tr><td>4</td><td>Компьютер</td><td>Юу ч дарахгүй — "Утаснаас N хуудасны хариулт ирлээ" гэж гарна. "3. Анализ" дээр дүн бэлэн.</td></tr>
+      <tr><th>Хэзээ</th><th>Хаана</th><th>Юу хийх</th></tr>
+      <tr><td>1</td><td>Компьютер</td><td>Шалгалтаа үүсгэж, асуулт, зөв хариултаа оруулна. Толгойд <b>"✓ Үүлэнд хадгалагдсан"</b> гарахыг хүлээнэ.</td></tr>
+      <tr><td>2</td><td>Утас</td><td>Программыг нээгээд <b>ижил и-мэйл, нууц үгээр</b> нэвтэрнэ — шалгалт, нэрс өөрөө орж ирсэн байна.</td></tr>
+      <tr><td>3</td><td>Утас</td><td>"2. Хариулт оруулах" → <b>"Камераар шууд уншуулах"</b> → хуудсуудыг харуулна.</td></tr>
+      <tr><td>4</td><td>Компьютер</td><td>Юу ч дарахгүй — дүн <b>20 секундын дотор</b> өөрөө гарч ирнэ. "3. Анализ" дээр бэлэн.</td></tr>
     </table>
-    <div class="hp-tip"><b>Санамж:</b> шинэ анги нэмсэн, нэрс өөрчилсөн, шинэ шалгалт үүсгэсэн бүрд <b>1 → 2-р алхмыг</b> дахин хийнэ. Эс бөгөөс утас хуучин жагсаалттайгаа үлдэнэ.</div>
+    <div class="hp-tip"><b>Шинэ анги, шинэ шалгалт нэмсэн ч</b> дахин юу ч хийх шаардлагагүй — нөгөө төхөөрөмж дээр өөрөө гарна.</div>
+    <div class="hp-ok">Өмнө нь энд Google хүснэгт тохируулж, "Үүлэнд илгээх / Үүлнээс татах" дардаг байсан. Одоо <b>хэрэггүй</b>. Google холболт зөвхөн <b>"5. Шинэ үгийн сорил"</b>-д хэрэгтэй хэвээр (9-р хэсэг).</div>
   </details>
 
   <details class="panel hp hp-sec" id="h-vocab">
@@ -1368,7 +1304,7 @@ body.student #studentApp{display:block}
     </ul>
     <div class="hp-ok"><b>Сар бүр:</b> "1. Шалгалт" → <b>"Нөөц хадгалах"</b> → <b>"Нөөц файл татах"</b>. Татсан файлаа Google Drive, флаш эсвэл и-мэйлээр өөр рүүгээ илгээж тавина.</div>
     <p>Сэргээх: шинэ компьютер дээр программаа нээгээд <b>"Нөөц файлаас сэргээх"</b> дарж тэр файлаа сонгоно. Бүх шалгалт, нэрс, дүн буцаж орно.</p>
-    <div class="hp-tip">Google Sheets холболт тохируулсан бол <b>"Үүлэнд илгээх"</b> нь бас нөөцийн үүрэг гүйцэтгэнэ: өөр төхөөрөмж дээр "Үүлнээс татах" дарахад шалгалт, нэрс буцаж орно.</div>
+    <div class="hp-tip">Таны өгөгдөл <b>үүлэнд байнга хадгалагддаг</b> тул хөтчөө цэвэрлэсэн ч, компьютер солисон ч дансаараа нэвтрэхэд бүгд буцаж орно. Нөөц файл нь нэмэлт хамгаалалт — жилд нэг ч болов татаж аваарай.</div>
   </details>
 
   <details class="panel hp hp-sec" id="h-app">
@@ -1408,8 +1344,8 @@ body.student #studentApp{display:block}
       <tr><td>Сурагчийн нэр "Ийм кодтой сурагч алга" гэж гарна</td><td>Тэр код нэрсэд байхгүй, эсвэл сурагч буруу будсан</td><td>Тэр хуудсан дээрх кодыг хараад жагсаалтаас сурагчаа гараар сонгох. Эсвэл нэрсээ шалгах</td></tr>
       <tr><td>"Сервертэй холбогдож чадсангүй"</td><td>URL буруу, эсвэл интернэт алга</td><td>URL <code>/exec</code>-ээр төгссөн эсэхийг шалгах. Компьютероосоо дахин хуулж авах</td></tr>
       <tr><td>"Багшийн нууц үг буруу байна"</td><td>Apps Script дотор бичсэн үг ба программд бичсэн үг зөрүүтэй, эсвэл код шинэчилсний дараа Deploy хийгээгүй</td><td>Хоёуланг яг ижил болгох. Deploy → Manage deployments → ✏️ → New version</td></tr>
-      <tr><td>Утсан дээр шалгалт гарахгүй</td><td>Компьютер "Үүлэнд илгээх" хийгээгүй</td><td>Компьютер дээрээ илгээгээд утсан дээрээ "Үүлнээс татах"</td></tr>
-      <tr><td>Дүн компьютер дээр ирэхгүй</td><td>Автоматаар хүлээн авах чагт тавиагүй</td><td>Компьютер дээрх чагтыг тавих, эсвэл "Одоо илгээх / хүлээн авах" дарах</td></tr>
+      <tr><td>Утсан дээр шалгалт гарахгүй</td><td>Утас, компьютер өөр дансаар нэвтэрсэн, эсвэл компьютер дээр "⚠ Офлайн" байна</td><td>Хоёулаа <b>ижил и-мэйлээр</b> нэвтэрсэн эсэхийг толгойн 👤 нэрээс шалгах. Компьютер дээр "✓ Үүлэнд хадгалагдсан" гарахыг хүлээх</td></tr>
+      <tr><td>Дүн компьютер дээр ирэхгүй</td><td>Утас интернэтгүй байна (толгойд "⚠ Офлайн")</td><td>Утсанд интернэт орохыг хүлээх — өөрөө илгээнэ. Компьютер дээр 20 секунд хүлээх эсвэл хуудсаа шинэчлэх</td></tr>
       <tr><td>Анализ хоосон</td><td>Тэр шалгалтад хариулт ороогүй, эсвэл өөр шалгалт нээлттэй</td><td>"1. Шалгалт" дээр жагсаалтаас зөв шалгалтаа сонгох</td></tr>
       <tr><td>Нэг анги хоёр болж харагдана</td><td>Ангийн нэрийг хоёр янзаар бичсэн ("10б анги" ба "10Б")</td><td>"Ангиуд, сурагчдын нэрс" → <b>"Ангиудыг цэгцлэх"</b> дарах</td></tr>
       <tr><td>Шинэчлэлт утсан дээр гарахгүй</td><td>Хөтөч хуучин хувилбарыг хадгалсан</td><td>Хуудсыг доош татаж шинэчлэх, эсвэл компьютер дээр <b>Ctrl + F5</b></td></tr>
@@ -4771,7 +4707,11 @@ function cStatusRender(){const el=$('#cStatus');if(!el)return;const k=ccfg();
     (k.orphans&&k.orphans.length?`. <b class="m">Энэ төхөөрөмжид байхгүй шалгалтын ${k.orphans.length} хуудас хүлээгдэж байна</b>`:'');}
 let pollBusy=false;
 async function cloudPoll(force){
-  const c=vcfg(),k=ccfg();if(pollBusy||!c.api||!c.key)return;pollBusy=true;
+  const c=vcfg(),k=ccfg();
+  /* Дансаар нэвтэрсэн бол утас ↔ компьютерийг Supabase өөрөө синк хийнэ —
+     хуучин Google дамжуулалт хэрэггүй, хүлээгдэж буй дарааллыг цэвэрлэнэ */
+  if(window.AUTH&&AUTH.sess){if(k.queue.length){k.queue.length=0;}return;}
+  if(pollBusy||!c.api||!c.key)return;pollBusy=true;
   try{
     if(k.queue.length){const r=await vCall({action:'addScans',scans:k.queue});const done=new Set(r.ids||[]);k.queue=k.queue.filter(x=>!done.has(x.id));save();}
     if((k.auto||force)&&(document.visibilityState==='visible'||force)&&!LS){
