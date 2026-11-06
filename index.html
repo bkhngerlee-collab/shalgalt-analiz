@@ -512,6 +512,7 @@ body.student #studentApp{display:block}
     <a href="#s-cls">Ангиуд, нэрс</a>
     <a href="#s-back">Нөөц</a>
     <a href="#s-cloud">Утас холбох</a>
+    <a href="#invitePanel" id="secOwn" hidden>Багш нарын эрх</a>
   </nav>
   <div class="panel" id="s-exams">
     <h2>Миний шалгалтууд</h2>
@@ -659,8 +660,9 @@ body.student #studentApp{display:block}
 
   <div class="panel" id="invitePanel" hidden>
     <h2>Багш нарын эрх</h2>
-    <p class="hint">Багш программын холбоосыг нээгээд <b>"Бүртгүүлэх"</b> дарна. Тэр энд гарч ирэхэд нь хугацаа сонгож батална.
-      Та багш нарын <b>сурагчдын дүнг харахгүй</b> — зөвхөн нэр, мэргэжил, эрхийн мэдээлэл.</p>
+    <p class="hint">Шинэ багш программын холбоосыг нээгээд <b>"Бүртгүүлэх"</b> дарахад энд <b>"⏳ Шинэ хүсэлт"</b> болж гарч ирнэ,
+      толгой хэсэгт <b>🔔</b> тэмдэг асна. Хугацааг нь сонгоход л эрх нь нээгдэнэ.
+      Та багш нарын <b>сурагчдын дүнг харахгүй</b> — зөвхөн нэр, мэргэжил, эрхийн мэдээллийг харна.</p>
     <div class="btns" style="margin-top:0"><button class="btn" id="tRefresh">Жагсаалт шинэчлэх</button>
       <button class="btn ghost" id="inviteBtn">Урих холбоос</button></div>
     <div id="inviteBox"></div>
@@ -4707,7 +4709,7 @@ function renderCloud(){
   $('#cAuto').checked=!!k.auto;cStatusRender();
   const own=ownerMode(),ip=$('#invitePanel');
   if(own&&ip.hidden)setTimeout(()=>teachersLoad(),0);   // эзэнд анх харагдахад жагсаалтаа татна
-  ip.hidden=!own;
+  ip.hidden=!own;$('#secOwn').hidden=!own;
   const set=!!(c.api&&c.key);
   $('#cSum').textContent=set?('— тохируулсан'+(k.auto?', автоматаар хүлээн авна':'')):'— тохируулаагүй';
   if(!cPanelOnce){cPanelOnce=true;$('#cPanel').open=!set;}  // тохируулаагүй үед л нээлттэй гарна
@@ -5642,7 +5644,7 @@ function buildSecNav(box){
     const links=[...sn.querySelectorAll('a')],lim=hdrH()+sn.getBoundingClientRect().height+24;
     let cur=links[0];
     links.forEach(a=>{const el=document.querySelector(a.getAttribute('href'));
-      if(el&&el.getBoundingClientRect().top<=lim)cur=a;});
+      if(el&&el.offsetParent!==null&&el.getBoundingClientRect().top<=lim)cur=a;});
     /* Хуудасны ёроолд хүрвэл сүүлийн хэсгийг тодруулна */
     if(innerHeight+scrollY>=document.body.scrollHeight-6)cur=links[links.length-1];
     links.forEach(a=>a.classList.toggle('on',a===cur));
@@ -5922,6 +5924,7 @@ async function cloudFirstLoad(){
 function startSyncLoop(){
   if(SYNC.loop)return;
   SYNC.loop=setInterval(()=>{if(SYNC.dirty)cloudPush();else cloudPull();},20000);
+  reqCheck();setInterval(reqCheck,60000);   // эзэнд шинэ хүсэлт минут тутам
   addEventListener('online',async()=>{
     SYNC.err='';syncUi();
     /* офлайн байх хооронд эрхийг хаасан байж болно — дахин шалгана */
@@ -5953,10 +5956,23 @@ function authHeader(){
   else if(AUTH.expires){const left=Math.round((new Date(AUTH.expires+'T00:00:00')-new Date(localDay()+'T00:00:00'))/864e5)+1;
     lic=AUTH.expires+' хүртэл ('+left+' хоног)';}
   w.innerHTML=`<span class="licinfo">👤 ${esc(nm)}${lic?' · '+esc(lic):''} · <a href="#" id="hdrPw" style="color:inherit">Нууц үг солих</a> · <a href="#" id="hdrOut" style="color:inherit">Гарах</a></span>`
-    +`<span class="sync-pill" id="syncPill" hidden></span>`;
+    +`<span class="sync-pill" id="syncPill" hidden></span>`
+    +`<a href="#" class="sync-pill warn" id="hdrReq" hidden style="text-decoration:none"></a>`;
   $('#hdrOut').onclick=e=>{e.preventDefault();authLogout();};
   $('#hdrPw').onclick=e=>{e.preventDefault();pwDialog();};
-  syncUi();
+  $('#hdrReq').onclick=e=>{e.preventDefault();go('setup');setTimeout(()=>{const a=$('#secOwn');if(a)a.click();},60);};
+  syncUi();reqBadge();
+}
+/* Эзэнд: батлахыг хүлээж буй багшийн тоог толгойд харуулна */
+function reqBadge(){
+  const b=$('#hdrReq');if(!b)return;
+  const n=AUTH.owner?tRows.filter(t=>!t.approved&&!t.expires&&!(AUTH.sess&&t.id===AUTH.sess.user.id)).length:0;
+  b.hidden=!n;b.textContent='🔔 '+n+' шинэ хүсэлт';b.title='Бүртгүүлсэн багш таны баталгааг хүлээж байна';
+}
+async function reqCheck(){
+  if(!AUTH.owner||!AUTH.sess||document.visibilityState!=='visible')return;
+  try{tRows=await sbRpc('admin_list_teachers')||[];reqBadge();
+    if(!$('#invitePanel').hidden&&$('#tList'))teachersRender();}catch(e){}
 }
 /* Нэвтэрсэн хэрэглэгч өөрийн нууц үгээ солино */
 function pwDialog(){
@@ -6007,22 +6023,27 @@ function authLock(mode,msg){
   $('#lock').hidden=false;
   const exp=AUTH.expires&&AUTH.expires<localDay();
   $('#lockMsg').innerHTML=mode==='wait'
-    ?(exp?`Таны эрхийн хугацаа <b>${esc(AUTH.expires)}</b>-нд дууссан байна. Программын эзэнд хэлж сунгуулаарай. Таны өгөгдөл устаагүй, сунгамагц хэвээрээ үргэлжилнэ.`
-       :'Бүртгэл тань үүслээ. Программын эзэн таныг багш мөн эсэхийг хараад батлах ёстой.')
-    :'Программыг ашиглахын тулд нэвтэрнэ үү. Анх удаа бол <b>"Бүртгүүлэх"</b> дарна.';
+    ?(exp?`Таны ашиглах эрхийн хугацаа <b>${esc(AUTH.expires)}</b>-нд дууслаа. Программын эзэнд хэлж сунгуулна уу.<br>`
+          +`Санаа зоволтгүй — таны шалгалт, дүн бүгд хадгалагдаж байгаа, эрх сунгамагц яг хэвээрээ үргэлжилнэ.`
+       :'Бүртгэл амжилттай үүслээ. Программын эзэн таны мэдээллийг шалгаад эрх нээж өгнө.<br>'
+          +'Эрх нээгдмэгц энэ хуудас <b>өөрөө</b> нээгдэнэ — дахин нэвтрэх шаардлагагүй.')
+    :'Тавтай морил! Өөрийн и-мэйл, нууц үгээрээ нэвтэрнэ үү.<br>Анх удаа орж байгаа бол <b>"Бүртгүүлэх"</b>-ийг сонгоно уу.';
   authTab(mode);
   authMsg(msg||'');
   $('#lockBackup').hidden=!(meaningful(db)||(AUTH.sess&&mode==='wait'));
   clearInterval(waitTimer);
   if(mode==='wait'){
-    $('#authWaitMsg').textContent=(AUTH.name||AUTH.email||'')+(exp?' — хугацаа дууссан.':' — батлахыг хүлээж байна. Батлагдмагц энэ хуудас өөрөө нээгдэнэ.');
+    const who=AUTH.name||AUTH.email||'';
+    $('#authWaitMsg').textContent=exp
+      ?'⌛ '+who+': эрхийн хугацаа дууссан. Сунгуулахыг хүлээж байна.'
+      :'⏳ '+who+', таны хүсэлтийг хүлээж авлаа. Эрх нээгдэхийг хүлээж байна…';
     waitTimer=setInterval(()=>authRecheck(false),20000);
   }
 }
 async function authRecheck(manual){
   if(manual)$('#authWaitMsg').textContent='Шалгаж байна…';
   try{await authStatus();
-    if(AUTH.approved){clearInterval(waitTimer);toast('Эрх батлагдлаа. Программ бэлэн.');return authEnter();}
+    if(AUTH.approved){clearInterval(waitTimer);toast('🎉 Эрх нээгдлээ! Программыг ашиглахад бэлэн.');return authEnter();}
     authLock('wait');
   }catch(e){if(e.status===401)return authExpired();$('#authWaitMsg').textContent=e.message;}
 }
@@ -6132,26 +6153,29 @@ async function teachersLoad(){
   catch(e){box.innerHTML=`<p class="hint" style="color:var(--stain)">${esc(e.message)}</p>`;}
 }
 function teachersRender(){
+  reqBadge();
   const box=$('#tList'),me=AUTH.sess&&AUTH.sess.user.id,today=localDay();
-  if(!tRows.length){box.innerHTML='<p class="hint">Одоогоор бүртгүүлсэн багш алга.</p>';return;}
+  if(!tRows.length){box.innerHTML='<p class="hint">Одоогоор бүртгүүлсэн багш алга. Программын холбоосыг багш нартаа илгээхэд тэд энд гарч ирнэ.</p>';return;}
   const wait=tRows.filter(t=>!t.approved&&!t.expires&&t.id!==me).length;
-  box.innerHTML=(wait?`<div class="avgsum" style="margin-bottom:10px"><b class="m">${wait} багш батлахыг хүлээж байна</b></div>`:'')
+  box.innerHTML=(wait?`<div class="avgsum" style="margin-bottom:10px"><b class="m">🔔 ${wait} шинэ хүсэлт ирсэн байна.</b> Доороос хугацааг нь сонгоход эрх нь нээгдэнэ.</div>`:'')
     +'<div class="t-list">'+tRows.map(t=>{
-      const self=t.id===me,exp=t.expires&&t.expires<today;
-      const st=self?'<b class="g">Эзэн (та)</b>'
-        :!t.approved&&t.expires?'<b class="b">Хаагдсан</b>'
-        :!t.approved?'<b class="m">Хүлээгдэж байна</b>'
-        :exp?`<b class="b">Дууссан (${esc(t.expires)})</b>`
-        :`<b class="g">✓ ${t.expires?esc(t.expires)+' хүртэл':'Хугацаагүй'}</b>`;
+      const self=t.id===me,exp=t.expires&&t.expires<today,fresh=!t.approved&&!t.expires;
+      const st=self?'<b class="g">👑 Эзэн (та)</b>'
+        :!t.approved&&t.expires?'<b class="b">⛔ Эрх хаагдсан</b>'
+        :fresh?'<b class="m">⏳ Шинэ хүсэлт</b>'
+        :exp?`<b class="b">⌛ Хугацаа дууссан (${esc(t.expires)})</b>`
+        :`<b class="g">✓ Эрхтэй · ${t.expires?esc(t.expires)+' хүртэл':'хугацаагүй'}</b>`;
       const info=[t.subject,t.level,t.gender].filter(Boolean).map(esc).join(' · ');
+      const verb=fresh?'Эрх нээх:':(!t.approved?'Дахин нээх:':'Сунгах:');
       return`<div class="t-row" data-id="${esc(t.id)}">
         <div class="t-who"><b>${esc(t.name||'(нэргүй)')}</b>${info?`<small>${info}</small>`:''}
-          <small>${esc(t.email||'')} · бүртгүүлсэн ${esc(String(t.created_at||'').slice(0,10))}${t.exams?` · ${t.exams} шалгалт`:''}</small></div>
+          <small>${esc(t.email||'')} · бүртгүүлсэн ${esc(String(t.created_at||'').slice(0,10))}${t.exams?` · ${t.exams} шалгалттай`:''}</small></div>
         <div class="t-st">${st}</div>
         ${self?'':`<div class="t-act">
-          ${T_DUR.map(([d,l])=>`<button class="btn ghost" data-t="ok" data-d="${d}">${l}</button>`).join('')}
-          ${t.approved?'<button class="btn danger" data-t="no">Хаах</button>':''}
-          <button class="btn ghost" data-t="pw">Нууц үг</button></div>`}
+          <span style="align-self:center;font-size:.84rem;color:var(--muted)">${verb}</span>
+          ${T_DUR.map(([d,l])=>`<button class="btn ${fresh?'':'ghost'}" data-t="ok" data-d="${d}">${l}</button>`).join('')}
+          ${t.approved?'<button class="btn danger" data-t="no">Эрх хаах</button>':''}
+          <button class="btn ghost" data-t="pw">Нууц үг сэргээх</button></div>`}
       </div>`;}).join('')+'</div>';
 }
 $('#tRefresh').addEventListener('click',teachersLoad);
@@ -6163,18 +6187,18 @@ $('#tList').addEventListener('click',async e=>{
     if(b.dataset.t==='ok'){
       const d=+b.dataset.d,until=d?ymdPlus(d):null;
       await sbRpc('admin_set_access',{p_id:id,p_approved:true,p_expires:until});
-      m.textContent=(t.name||'Багш')+' — '+(until?until+' хүртэл':'хугацаагүй')+' батлагдлаа. Түүний хуудас 20 секундын дотор өөрөө нээгдэнэ.';
+      m.textContent='✓ '+(t.name||'Багш')+': '+(until?until+' хүртэл':'хугацаагүй')+' эрх нээлээ. Түүний хуудас 20 секундын дотор өөрөө нээгдэнэ.';
     }else if(b.dataset.t==='no'){
-      if(!confirm((t.name||'Энэ багш')+'-ийн эрхийг хаах уу?\n\nӨгөгдөл нь устахгүй — дахин батлахад хэвээрээ үргэлжилнэ.'))return;
-      /* хугацааг нь хадгална — "Хаагдсан" гэж "Хүлээгдэж байна"-аас ялгагдана */
+      if(!confirm('Багш: '+(t.name||'(нэргүй)')+'\n\nЭрхийг нь хаах уу?\n\nТүүний шалгалт, дүн устахгүй — дахин нээхэд яг хэвээрээ үргэлжилнэ.'))return;
+      /* хугацааг нь хадгална — "Эрх хаагдсан" гэж "Шинэ хүсэлт"-ээс ялгагдана */
       await sbRpc('admin_set_access',{p_id:id,p_approved:false,p_expires:t.expires||localDay()});
-      m.textContent=(t.name||'Багш')+'-ийн эрхийг хаалаа.';
+      m.textContent='⛔ '+(t.name||'Багш')+': эрх хаагдлаа. Өгөгдөл нь хадгалагдсан хэвээр.';
     }else if(b.dataset.t==='pw'){
-      const p=prompt((t.name||'Багш')+'-д өгөх ШИНЭ түр нууц үг (6+ тэмдэгт).\nДараа нь энэ нууц үгээ тэр багшид хэлээрэй.');
+      const p=prompt('Багш: '+(t.name||'(нэргүй)')+'\n\nТүүнд өгөх шинэ түр нууц үгийг бичнэ үү (6+ тэмдэгт).\nДараа нь энэ нууц үгийг тэр багшид хэлж өгөөрэй — тэр нэвтэрсний дараа "Нууц үг солих"-оор өөрийнхөөрөө сольж болно.');
       if(p==null)return;
-      if(p.length<6){m.style.color='var(--stain)';m.textContent='Нууц үг 6-аас доошгүй тэмдэгттэй байна.';return;}
+      if(p.length<6){m.style.color='var(--stain)';m.textContent='Нууц үг 6-аас доошгүй тэмдэгттэй байх ёстой.';return;}
       await sbRpc('admin_reset_password',{p_id:id,p_password:p});
-      m.textContent=(t.name||'Багш')+'-ийн нууц үгийг солилоо. Шинэ нууц үгээ тэр багшид хэлээрэй.';
+      m.textContent='🔑 '+(t.name||'Багш')+': шинэ нууц үг тавигдлаа. Одоо түүнд хэлж өгөөрэй.';
     }
     teachersLoad();
   }catch(x){m.style.color='var(--stain)';m.textContent=x.message;}
