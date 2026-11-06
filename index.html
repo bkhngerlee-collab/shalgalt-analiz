@@ -2226,7 +2226,7 @@ function renderSetup(){
     <details${q.text||q.img?' open':''}><summary>${q.text||q.img?'Асуултын текст, зураг, хувилбарууд':'Асуултын текст, зураг, хувилбар нэмэх'}</summary>
       <textarea data-i="${i}" data-f="text" placeholder="Асуултын текст" aria-label="${i+1}-р асуултын текст">${esc(q.text||'')}</textarea>
       <div class="qimg">
-        ${q.img?`<img src="${q.img}" alt="${i+1}-р асуултын зураг">`:''}
+        ${safeImg(q.img)?`<img src="${safeImg(q.img)}" alt="${i+1}-р асуултын зураг">`:''}
         <div class="btns" style="margin-top:6px">
           <label class="btn ghost" style="margin:0">${q.img?'Зургийг солих':'Зураг оруулах'}<input type="file" accept="image/*" data-i="${i}" data-f="img" hidden></label>
           ${q.img?`<button type="button" class="btn danger" data-i="${i}" data-f="imgdel">Зургийг устгах</button>`:''}
@@ -2316,7 +2316,9 @@ $('#varList').addEventListener('change',e=>{
 /* ---------- асуултын зураг ---------- */
 const IMG_MAX_KB=140, DB_WARN_KB=3800;
 function dbKB(){try{return Math.round(JSON.stringify(db).length/1024);}catch(e){return 0;}}
-function saveChecked(){try{localStorage.setItem(KEY,JSON.stringify(db));mem=db;renderExams();return true;}catch(e){return false;}}
+function saveChecked(){try{localStorage.setItem(KEY,JSON.stringify(db));mem=db;renderExams();cloudDirty();return true;}catch(e){return false;}}
+/* Зөвхөн жинхэнэ зургийн өгөгдлийг <img>-д тавина (гаднаас оруулсан нөөц файлаас хамгаална) */
+const safeImg=s=>typeof s==='string'&&/^data:image\/(png|jpe?g|gif|webp);base64,[A-Za-z0-9+/=]+$/.test(s)?s:'';
 function drawSmall(img,w,h,q){const cv=document.createElement('canvas');cv.width=w;cv.height=h;
   const x=cv.getContext('2d');x.fillStyle='#fff';x.fillRect(0,0,w,h);x.drawImage(img,0,0,w,h);
   return cv.toDataURL('image/jpeg',q);}
@@ -2948,7 +2950,7 @@ function renderSheet(){
     </div>`;}
     return`${head}<div class="qrow">
     <div class="qt"><b>${pos+1}-р асуулт</b>${entryVar?`<small style="color:var(--muted)"> (${VNAMES[0]} хувилбарын ${i+1})</small>`:''}${q.text?`<div class="qtext">${esc(q.text)}</div>`:''}
-      ${q.img?`<img class="sheet-img" src="${q.img}" alt="${pos+1}-р асуултын зураг">`:''}
+      ${safeImg(q.img)?`<img class="sheet-img" src="${safeImg(q.img)}" alt="${pos+1}-р асуултын зураг">`:''}
       ${o.some(Boolean)?`<ul class="qopts">${qOpts(q).map((x,k)=>o[k]?`<li>${x}. ${esc(o[k])}</li>`:'').join('')}</ul>`:''}</div>
     <div class="opts${p2?' wide':''}" role="group" aria-label="${pos+1}-р асуултын хариулт">${qOpts(q).map(x=>
       `<button type="button" data-q="${i}" data-o="${x}" aria-pressed="${p2?(draft[i]||'').includes(x):draft[i]===x}">${x}</button>`).join('')}</div>
@@ -5702,12 +5704,23 @@ function sessFrom(j){
     user:{id:j.user.id,email:j.user.email}};
 }
 function sessSave(){lsSet(SESS_KEY,AUTH.sess?JSON.stringify(AUTH.sess):'');}
+/* Нөгөө цонх (эсвэл суулгасан апп) токеноо шинэчилсэн бол түүнийг авна —
+   хуучин токеноор дахин шинэчлэх гэвэл Supabase татгалзаж, хоёулаа гарчихна. */
+function sessPeek(){
+  const s=AUTH.sess;let o=null;try{o=JSON.parse(lsGet(SESS_KEY)||'null');}catch(e){}
+  return o&&o.user&&s&&s.user&&o.user.id===s.user.id&&o.refresh_token!==s.refresh_token?o:null;
+}
 let tokP=null;
 async function sbToken(){
-  const s=AUTH.sess;if(!s)throw Object.assign(new Error('Нэвтрээгүй байна.'),{status:401});
+  let s=AUTH.sess;if(!s)throw Object.assign(new Error('Нэвтрээгүй байна.'),{status:401});
+  const o=sessPeek();if(o&&o.expires_at>=s.expires_at){AUTH.sess=s=o;}
   if(s.expires_at-90>Date.now()/1000)return s.access_token;
   if(!tokP)tokP=sbAuth('token?grant_type=refresh_token',{refresh_token:s.refresh_token})
     .then(j=>{AUTH.sess=sessFrom(j);sessSave();return AUTH.sess.access_token;})
+    .catch(e=>{
+      const o2=sessPeek();if(o2){AUTH.sess=o2;return o2.access_token;}
+      if(e.status===400||e.status===401)e.status=401;   // токен хүчингүй — дахин нэвтрүүлнэ
+      throw e;})
     .finally(()=>{tokP=null;});
   return tokP;
 }
@@ -5787,6 +5800,8 @@ function merge3(L,S,B){
 function applyDoc(d){
   const keep={};LOCAL_ONLY.forEach(k=>{if(k in db)keep[k]=db[k];});
   const cur=db.cur;
+  /* хуучин хуулбар руу "буцаах" нь нөгөө төхөөрөмжийн өөрчлөлтийг дарж устгах тул түүхийг цэвэрлэнэ */
+  undoStack.length=0;const ub=document.getElementById('undoBar');if(ub)ub.remove();
   db=Object.assign({},clone(d||{}),keep);
   if(!db.exams||!db.exams.length){const e=blank(5);db.exams=[e];}
   db.classes=db.classes||[];db.classes.forEach(fixCodes);
