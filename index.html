@@ -1351,7 +1351,7 @@ body.student #studentApp{display:block}
     <p>Эдгээр багана <b>Excel</b>-ийн "Асуултууд" хуудас болон <b>Word</b> тайланд ч орно. KR-20 нь Excel-ийн "Тойм" хуудсанд байна.</p>
 
     <h3>Жагсаалтыг шүүх, эрэмбэлэх</h3>
-    <p><b>"Харуулах"</b>: бүх сурагч / дундаж ба түүнээс дээш / дунджаас доош / 60%-аас доош. <b>"Эрэмбэлэх"</b>: анги-нэрээр, дүнгээр өсөх, буурах, кодоор. Энэ сонголт Дүнгийн хүснэгт, Excel, Word тайланд ч хамаарна.</p>
+    <p><b>"Харуулах"</b>: бүх сурагч / дундаж ба түүнээс дээш / дунджаас доош / 60%-аас доош. <b>"Эрэмбэлэх"</b>: анги, нэрээр (цагаан толгой), нэрсийн дараалал (кодоор — "Анги, нэрс"-д оруулсан дарааллаар), дүнгээр өсөх, буурах. Энэ сонголт "Дүнгийн хүснэгт" болон "Сурагч бүрээр" хэсэгт хоёуланд нь байх бөгөөд аль нэгэнд нь сольвол нөгөөд, Excel, Word тайланд ч хамаарна.</p>
     <h3>Сурагчийг нэрээр эсвэл кодоор</h3>
     <p><b>"Сурагчийг харуулах"</b> гэснийг <b>"Зөвхөн кодоор"</b> болговол дэлгэц, график, хэвлэлт дээр нэрний оронд <b>№01</b> гэх мэт код гарна — проектороор харуулах, хананд тавихад тохиромжтой. <b>Татаж авсан Excel, Word файлд нэр хэвээр</b> бичигдэнэ.</p>
     <h3>Татах</h3>
@@ -3190,14 +3190,16 @@ $('#delClsAns').addEventListener('click',()=>{
 /* ---------- student list view: filter + sort ---------- */
 let viewShow='all',viewSort='name',fShow='all',fSort='name';
 const SHOW_OPTS=[['all','Бүх сурагч'],['above','Дундаж ба түүнээс дээш'],['below','Дунджаас доош'],['fail','60%-аас доош (амжилтгүй)']];
-const SORT_OPTS=[['name','Анги, нэрээр'],['desc','Дүнгээр: өндрөөс нам'],['asc','Дүнгээр: намаас өндөр'],['code','Кодоор']];
+/* "Нэрсийн дараалал" = "Анги, нэрс" хэсэгт оруулсан жагсаалтын дараалал. fixCodes() жагсаалтыг кодоор
+   эрэмбэлдэг тул кодын дараалалтай яг ижил. */
+const SORT_OPTS=[['name','Анги, нэрээр (цагаан толгой)'],['code','Нэрсийн дараалал (кодоор)'],['desc','Дүнгээр: өндрөөс нам'],['asc','Дүнгээр: намаас өндөр']];
 function viewRows(rows,o){
   const v=rows.filter(r=>{const p=o.pct(r);return o.show==='above'?p>=o.avg-1e-9:o.show==='below'?p<o.avg-1e-9:o.show==='fail'?p<60:true;});
   const nm=(a,b)=>(o.cls(a)||'').localeCompare(o.cls(b)||'','mn',{numeric:true})||o.name(a).localeCompare(o.name(b),'mn');
   const cd=r=>+codeOf(o.cls(r),o.name(r))||999;
   if(o.sort==='desc')v.sort((a,b)=>o.pct(b)-o.pct(a)||nm(a,b));
   else if(o.sort==='asc')v.sort((a,b)=>o.pct(a)-o.pct(b)||nm(a,b));
-  else if(o.sort==='code')v.sort((a,b)=>(o.cls(a)||'').localeCompare(o.cls(b)||'','mn',{numeric:true})||cd(a)-cd(b));
+  else if(o.sort==='code')v.sort((a,b)=>(o.cls(a)||'').localeCompare(o.cls(b)||'','mn',{numeric:true})||cd(a)-cd(b)||o.name(a).localeCompare(o.name(b),'mn'));
   else v.sort(nm);
   return v;
 }
@@ -3519,7 +3521,8 @@ function renderAnalysis(){
   <div class="panel" data-sec="Дүнгийн хүснэгт"><div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap"><h2 style="margin:0">Дүнгийн хүснэгт</h2>
     <button class="btn xl noprint" id="mxXlsx">Дүнгийн хүснэгтийг Excel-ээр татах</button></div>
     <div class="msg noprint" id="mxMsg" role="status"></div>
-    <p class="hint">Мөр бүр сурагч, багана бүр асуулт. Нүдэнд тухайн асуултаар авсан оноо: ногоон нь бүтэн оноо, шар нь хэсэгчилсэн, улаан нь 0. Доод мөрүүдэд асуулт бүрийн ангийн нийт авах оноо, авсан оноо, дундаж, гүйцэтгэл гарна. Доорх "Харуулах", "Эрэмбэлэх" сонголт энэ хүснэгтэд ч хамаарна.</p>
+    <p class="hint">Мөр бүр сурагч, багана бүр асуулт. Нүдэнд тухайн асуултаар авсан оноо: ногоон нь бүтэн оноо, шар нь хэсэгчилсэн, улаан нь 0. Доод мөрүүдэд асуулт бүрийн ангийн нийт авах оноо, авсан оноо, дундаж, гүйцэтгэл гарна. "Харуулах", "Эрэмбэлэх" сонголт доорх "Сурагч тус бүрийн дүн", Excel, Word-д ч хамаарна.</p>
+    ${viewControls('m',viewShow,viewSort)}
     ${matrixHtml(viewRows(d.rows,{pct:r=>r.pct,name:r=>r.s.name,cls:r=>r.s.cls,show:viewShow,sort:viewSort,avg:d.avg}),qs,!filterCls)}
   </div>
 
@@ -3549,6 +3552,11 @@ function renderAnalysis(){
   $('#anonSel').addEventListener('change',e=>{db.anon=e.target.value;save();renderAnalysis();});
   $('#aShow').addEventListener('change',e=>{viewShow=e.target.value;renderAnalysis();});
   $('#aSort').addEventListener('change',e=>{viewSort=e.target.value;renderAnalysis();});
+  /* Дүнгийн хүснэгтийн өөрийн сонголт — ижил төлөвийг хуваалцана; дахин зурахад байрлалаа алдахгүй */
+  const keep=sel=>e=>{const y=e.target.getBoundingClientRect().top;sel(e.target.value);renderAnalysis();
+    const n=$('#'+e.target.id);if(n){scrollBy(0,n.getBoundingClientRect().top-y);n.focus();}};
+  $('#mShow').addEventListener('change',keep(v=>{viewShow=v;}));
+  $('#mSort').addEventListener('change',keep(v=>{viewSort=v;}));
   const pick=e=>{const tr=e.target.closest('tr[data-id]');if(!tr)return;
     if(e.type==='keydown'&&e.key!=='Enter')return;
     selId=selId===tr.dataset.id?null:tr.dataset.id;renderAnalysis();};
