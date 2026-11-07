@@ -6126,7 +6126,9 @@ async function oldLicHint(){
     +(r.d.n?` (<b>${esc(r.d.n)}</b>)`:'')+`. Одоо кодын оронд <b>и-мэйл, нууц үгээр</b> нэвтэрдэг боллоо.<br>`
     +`Доор нэг удаа бүртгүүлнэ үү. Таны хуучин кодыг программын эзэн харж, эрхийг тань сэргээнэ.`
     +(n?` Энэ төхөөрөмж дээрх <b>${n} шалгалт</b> устахгүй — эрх нээгдмэгц таны дансанд өөрөө шилжинэ.`:'')
-    +`<br><small>Өөр төхөөрөмж дээр аль хэдийн бүртгүүлсэн бол "Нэвтрэх"-ийг сонгоно уу.</small>`;
+    +`<br><small>Өөр төхөөрөмж дээр аль хэдийн бүртгүүлсэн бол "Нэвтрэх"-ийг сонгоно уу.</small>`
+    +(r.ok?`<br><button type="button" class="btn ghost" id="legBack" style="margin-top:8px">← Одоохондоо кодоороо үргэлжлүүлэх (${esc(r.d.e)} хүртэл)</button>`:'');
+  const back=$('#legBack');if(back)back.onclick=()=>legacyTry();
   authTab('up');
   if(r.d.n&&!$('#upName').value)$('#upName').value=r.d.n;
 }
@@ -6147,7 +6149,8 @@ async function authAfterLogin(j){
   AUTH.sess=sessFrom(j);
   if(!AUTH.sess)throw new Error('Бүртгэл үүссэн ч нэвтэрч чадсангүй. "Нэвтрэх" хэсгээр дахин оролдоно уу.');
   sessSave();await authStatus();
-  if(AUTH.approved)return authEnter();
+  if(AUTH.approved){LEGACY=null;return authEnter();}
+  if(await legacyTry())return toast('Бүртгэл үүслээ. Эрх нээгдэх хүртэл өмнөх шигээ ажиллаж болно — дараа нь өгөгдөл тань данс руу өөрөө шилжинэ.');
   authLock('wait');
 }
 function authExpired(){
@@ -6160,7 +6163,7 @@ async function authLogout(){
   if(SYNC.dirty&&!confirm('Зарим өөрчлөлт үүлэнд хадгалагдаж амжаагүй байна (интернэт алга?).\n'
     +'Гарвал тэдгээр зөвхөн энэ төхөөрөмж дээр үлдэж, дараа нь та нэвтрэхэд илгээгдэнэ.\n\nГарах уу?'))return;
   try{if(AUTH.sess)await sbAuth('logout',{},AUTH.sess.access_token);}catch(e){}
-  const clean=!SYNC.dirty;
+  const clean=!SYNC.dirty&&!LEGACY;   // хуучин кодын горимд өгөгдөл зөвхөн энд байгаа — арилгахгүй
   AUTH.sess=null;sessSave();lsSet(STAT_KEY,'');
   if(clean){
     /* бүх зүйл үүлэнд байгаа тул энэ төхөөрөмжөөс арилгана — дараагийн хүн харахгүй */
@@ -6169,9 +6172,35 @@ async function authLogout(){
   }
   location.reload();
 }
+/* Хуучин идэвхжүүлэх код нь хүчинтэй төхөөрөмж: данс үүсгээгүй (эсвэл эрх нь хараахан нээгдээгүй) ч
+   өмнөх шигээ энэ төхөөрөмж дээр шууд ажиллана. Өгөгдөл энд хадгалагдаж, эрх нээгдмэгц данс руу шилжинэ. */
+let LEGACY=null;
+async function legacyTry(){
+  const r=await licVerify(lsGet(LIC_KEY));
+  if(!r.ok)return false;
+  LEGACY=r.d;
+  $('#lock').hidden=true;clearInterval(waitTimer);
+  legacyHeader();renderSetup();
+  if(AUTH.sess)waitTimer=setInterval(async()=>{   // бүртгүүлсэн — эрх нээгдэхийг ар талд хүлээнэ
+    try{await authStatus();
+      if(AUTH.approved){clearInterval(waitTimer);LEGACY=null;toast('🎉 Эрх нээгдлээ! Өгөгдөл тань данс руу шилжиж байна.');authEnter();}}
+    catch(e){}},60000);
+  return true;
+}
+function legacyHeader(){
+  const w=$('#curTitleWrap');if(!w||!LEGACY)return;
+  w.innerHTML=AUTH.sess
+    ?`<span class="sync-pill warn" title="Программын эзэн эрхийг тань нээмэгц энэ төхөөрөмж дээрх өгөгдөл данс руу өөрөө шилжинэ">⏳ Эрх хүлээж байна</span>`
+      +` <a href="#" class="sync-pill" id="legOut" style="text-decoration:none" title="${esc(AUTH.email||'')}">↪ Гарах</a>`
+    :`<a href="#" class="sync-pill warn" id="legUp" style="text-decoration:none" title="Хуучин кодоор ажиллаж байна (${esc(LEGACY.e)} хүртэл). Данс үүсгэвэл өгөгдөл тань үүлэнд хадгалагдана.">☁ Данс үүсгэх</a>`;
+  const b=$('#legUp');if(b)b.onclick=e=>{e.preventDefault();authLock('in');};
+  const o=$('#legOut');if(o)o.onclick=e=>{e.preventDefault();authLogout();};
+}
 async function authBoot(){
   try{AUTH.sess=JSON.parse(lsGet(SESS_KEY)||'null');}catch(e){AUTH.sess=null;}
-  if(!AUTH.sess||!AUTH.sess.user)return authLock('in');
+  if(!AUTH.sess||!AUTH.sess.user){
+    if(await legacyTry())return toast('Программ шинэчлэгдлээ. Өгөгдлөө үүлэнд хадгалахын тулд дээд талын "☁ Данс үүсгэх"-ийг дарж бүртгүүлээрэй.');
+    return authLock('in');}
   try{await authStatus();}
   catch(e){
     if(e.status===401||/refresh token/i.test(e.message))return authExpired();
@@ -6183,9 +6212,10 @@ async function authBoot(){
       $('#lock').hidden=true;authHeader();renderSetup();SYNC.err='offline';syncUi();startSyncLoop();
       return;
     }
+    if(await legacyTry())return;
     return authLock('in',e.message);
   }
-  if(!AUTH.approved)return authLock('wait');
+  if(!AUTH.approved){if(await legacyTry())return;return authLock('wait');}
   authEnter();
 }
 const upPick=id=>[...document.querySelectorAll('#'+id+' .chip.done')].map(b=>b.dataset.v);
