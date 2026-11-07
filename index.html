@@ -731,6 +731,17 @@ body.student #studentApp{display:block}
     <div id="inviteBox"></div>
     <div class="msg" id="inviteMsg" role="status"></div>
     <div id="tList" style="margin-top:12px"></div>
+    <div id="legBox" style="margin-top:18px;border-top:1px solid var(--line);padding-top:14px">
+      <h3 style="margin:0 0 4px;font-size:1.02rem">Хуучин системийн багш нар</h3>
+      <p class="hint" style="margin:0 0 8px">Өмнө нь кодоор эрх авсан багш нар шинэ программд <b>өөрсдөө нэг удаа бүртгүүлнэ</b>.
+        Тэдний жагсаалтыг энд оруулбал бүртгүүлсэн нь дээр <b>"📜 Хуучин системд"</b> гэж тэмдэглэгдэж, хуучин хугацаагаараа нэг товчоор нээгдэнэ.
+        Бүртгүүлээгүй нь доор гарч, урилгыг нь хуулж илгээж болно.<br>
+        Яаж: <b>kod-uusgegch.html</b> → "Хүсэлтүүдийг харах" → <b>"📋 Жагсаалтыг шинэ программ руу хуулах"</b> → энд <b>"Оруулах"</b>.</p>
+      <div class="btns" style="margin-top:0"><button class="btn ghost" id="legImport">Оруулах</button></div>
+      <textarea id="legPaste" hidden rows="3" spellcheck="false" placeholder="Хуулсан жагсаалтаа энд буулгаад (Ctrl+V) дахин Оруулах дарна уу"></textarea>
+      <div class="msg" id="legMsg" role="status"></div>
+      <div id="legList"></div>
+    </div>
   </div>
 </section>
 
@@ -6241,6 +6252,7 @@ async function teachersLoad(){
 function teachersRender(){
   reqBadge();
   const box=$('#tList'),me=AUTH.sess&&AUTH.sess.user.id,today=localDay();
+  legRender();
   if(!tRows.length){box.innerHTML='<p class="hint">Одоогоор бүртгүүлсэн багш алга. Программын холбоосыг багш нартаа илгээхэд тэд энд гарч ирнэ.</p>';return;}
   const wait=tRows.filter(t=>!t.approved&&!t.expires&&t.id!==me).length;
   box.innerHTML=(wait?`<div class="avgsum" style="margin-bottom:10px"><b class="m">🔔 ${wait} шинэ хүсэлт ирсэн байна.</b> Доороос хугацааг нь сонгоход эрх нь нээгдэнэ.</div>`:'')
@@ -6253,12 +6265,14 @@ function teachersRender(){
         :`<b class="g">✓ Эрхтэй · ${t.expires?esc(t.expires)+' хүртэл':'хугацаагүй'}</b>`;
       const info=[t.subject,t.level,t.gender].filter(Boolean).map(esc).join(' · ');
       const verb=fresh?'Эрх нээх:':(!t.approved?'Дахин нээх:':'Сунгах:');
-      /* хуучин кодоор ажиллаж байсан багш: кодын хугацаагаар нь нэг товчоор сэргээнэ */
-      const v=t.licv,ld=v&&v.d&&v.d.e,lnm=v&&v.d&&v.d.n?esc(v.d.n)+', ':'';
-      const lic=!v?'':v.ok?`<small style="color:var(--leaf)">🔑 Хуучин код баталгаатай: ${lnm}${esc(ld)} хүртэл</small>`
+      /* хуучин системийн багш (кодоор эсвэл хуучин жагсаалтаар): хуучин хугацаагаар нь нэг товчоор сэргээнэ */
+      const lt=legOf(t.email),v=t.licv,ld=v&&v.d&&v.d.e,lnm=v&&v.d&&v.d.n?esc(v.d.n)+', ':'';
+      const lic=(!v?'':v.ok?`<small style="color:var(--leaf)">🔑 Хуучин код баталгаатай: ${lnm}${esc(ld)} хүртэл</small>`
         :v.why==='expired'?`<small>🔑 Хуучин код: ${lnm}хугацаа нь ${esc(ld)}-нд дууссан</small>`
-        :'<small style="color:var(--stain)">⚠ Хуучин код хүчингүй (гарын үсэг таарахгүй)</small>';
-      const licBtn=v&&v.ok&&(fresh||t.expires!==ld)?`<button class="btn" data-t="ok" data-u="${esc(ld)}">Хуучин кодоор (${esc(ld)} хүртэл)</button>`:'';
+        :'<small style="color:var(--stain)">⚠ Хуучин код хүчингүй (гарын үсэг таарахгүй)</small>')
+        +(lt?`<small style="color:var(--leaf)">📜 Хуучин системд: ${lt.status==='granted'?'батлагдсан'+(lt.until?' ('+esc(lt.until)+' хүртэл)':''):'хүсэлт гаргасан'}</small>`:'');
+      const old=[v&&v.ok?ld:'',lt&&lt.status==='granted'&&lt.until>=today?lt.until:''].filter(Boolean).sort().pop()||'';
+      const licBtn=old&&(fresh||t.expires!==old)?`<button class="btn" data-t="ok" data-u="${esc(old)}">Хуучин эрхээр (${esc(old)} хүртэл)</button>`:'';
       return`<div class="t-row" data-id="${esc(t.id)}">
         <div class="t-who"><b>${esc(t.name||'(нэргүй)')}</b>${info?`<small>${info}</small>`:''}
           <small>${esc(t.email||'')} · бүртгүүлсэн ${esc(String(t.created_at||'').slice(0,10))}${t.exams?` · ${t.exams} шалгалттай`:''}</small>${lic}</div>
@@ -6271,6 +6285,63 @@ function teachersRender(){
       </div>`;}).join('')+'</div>';
 }
 $('#tRefresh').addEventListener('click',teachersLoad);
+/* ---------- хуучин (Google, код үүсгэгч) системийн багш нар ----------
+   Жагсаалт нь эзний өөрийн db.legacy-д хадгалагдана (зөвхөн эзэн харна, төхөөрөмж хооронд дамжина).
+   И-мэйлээр нь тааруулна — и-мэйл баталгаажуулалтгүй тул эрхийг эзэн өөрөө товч дарж нээнэ. */
+const legAsks=()=>(db.legacy&&db.legacy.asks)||[];
+const legKey=e=>String(e||'').trim().toLowerCase();
+const legOf=e=>{const k=legKey(e);return k?legAsks().find(a=>legKey(a.email)===k):null;};
+function legParse(txt){
+  let o;try{o=JSON.parse(String(txt||'').trim());}catch(e){return null;}
+  if(!o||!o.shalgaltLegacy||!Array.isArray(o.asks))return null;
+  const s=(v,n)=>String(v==null?'':v).trim().slice(0,n);
+  return o.asks.filter(x=>x&&s(x.email,80)).slice(0,500).map(x=>({name:s(x.name,60),gender:s(x.gender,10),
+    level:s(x.level,40),subject:s(x.subject,60),email:s(x.email,80),status:s(x.status,12),
+    until:/^\d{4}-\d{2}-\d{2}$/.test(s(x.until,10))?s(x.until,10):'',asked:+x.asked||0}));
+}
+let legRest=[];
+function legRender(){
+  const box=$('#legList');if(!box)return;
+  if(!legAsks().length){box.innerHTML='';return;}
+  const reg=new Set(tRows.map(t=>legKey(t.email)));
+  legRest=legAsks().filter(a=>!reg.has(legKey(a.email)));
+  box.innerHTML=`<p class="hint" style="margin:10px 0 6px">`+(legRest.length
+      ?`<b>${legRest.length}</b> багш шинэ программд хараахан бүртгүүлээгүй байна. Урилгыг нь хуулж илгээнэ үү.`
+      :'✓ Хуучин жагсаалтын бүх багш шинэ программд бүртгүүлсэн байна.')+'</p>'
+    +'<div class="t-list">'+legRest.map((a,i)=>`<div class="t-row">
+        <div class="t-who"><b>${esc(a.name||'(нэргүй)')}</b>${[a.subject,a.level,a.gender].filter(Boolean).length?`<small>${[a.subject,a.level,a.gender].filter(Boolean).map(esc).join(' · ')}</small>`:''}<small>${esc(a.email)}</small></div>
+        <div class="t-st">${a.status==='granted'?`<b class="g">Хуучин эрх: ${a.until?esc(a.until)+' хүртэл':'хугацаагүй'}</b>`:'<b class="m">Хуучин хүсэлт (батлагдаагүй)</b>'}</div>
+        <div class="t-act"><button class="btn ghost" data-lg="${i}">Урилга хуулах</button></div></div>`).join('')+'</div>'
+    +(legRest.length>1?'<div class="btns"><button class="btn ghost" data-lg="all">Бүгдийн и-мэйлийг хуулах</button></div>':'');
+}
+$('#legImport').addEventListener('click',async()=>{
+  const m=$('#legMsg'),ta=$('#legPaste');m.style.color='';
+  let txt=ta.value;
+  if(!txt.trim()){try{txt=await navigator.clipboard.readText();}catch(e){txt='';}}
+  const asks=legParse(txt);
+  if(!asks){
+    ta.hidden=false;ta.focus();
+    if(txt.trim()&&ta.value.trim()){m.style.color='var(--stain)';m.textContent='Энэ нь хуучин жагсаалт биш байна. kod-uusgegch.html дээрх "📋 Жагсаалтыг шинэ программ руу хуулах" товчоор дахин хуулна уу.';}
+    else m.textContent='Хуулсан жагсаалтаа доорх талбарт буулгаад (Ctrl+V) дахин "Оруулах" дарна уу.';
+    return;}
+  db.legacy={at:new Date().toISOString(),asks};save();
+  ta.value='';ta.hidden=true;
+  m.textContent='✓ '+asks.length+' багшийн хуучин бүртгэл орлоо.';
+  teachersRender();
+});
+$('#legList').addEventListener('click',async e=>{
+  const b=e.target.closest('[data-lg]');if(!b)return;
+  const m=$('#legMsg');m.style.color='';
+  let txt,done;
+  if(b.dataset.lg==='all'){txt=legRest.map(a=>a.email).join(', ');done='Бүх и-мэйл хуулагдлаа. И-мэйлийн "To" хэсэгт буулгана уу.';}
+  else{const a=legRest[+b.dataset.lg];if(!a)return;
+    txt=`Сайн байна уу${a.name?', '+a.name:''}! "Шалгалтын анализ" программ шинэчлэгдэж, одоо кодын оронд и-мэйл, нууц үгээр нэвтэрдэг боллоо. `
+      +`${inviteLink()} хаягаар орж, "Бүртгүүлэх" хэсэгт ${a.email} и-мэйлээрээ нэг удаа бүртгүүлнэ үү. `
+      +`Таны өмнөх шалгалт, дүн устахгүй — өмнө ашиглаж байсан төхөөрөмж дээрээ бүртгүүлбэл таны дансанд өөрөө шилжинэ. Бүртгүүлмэгц эрхийг тань нээж өгнө.`;
+    done=(a.name||'Багш')+'-д илгээх урилга хуулагдлаа ('+a.email+').';}
+  try{await navigator.clipboard.writeText(txt);m.textContent=done;}
+  catch(x){m.textContent=txt;}
+});
 $('#tList').addEventListener('click',async e=>{
   const b=e.target.closest('[data-t]');if(!b)return;
   const row=b.closest('.t-row'),id=row.dataset.id,t=tRows.find(x=>x.id===id)||{},m=$('#inviteMsg');
