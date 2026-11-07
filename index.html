@@ -6083,6 +6083,12 @@ async function cloudPush(){
   if(!AUTH.sess||!AUTH.approved||SYNC.busy||!SYNC.dirty)return;
   const doc=cloudDoc();
   if(SYNC.base&&sameBase(baseOf(doc),SYNC.base)){SYNC.dirty=false;syncSave();syncUi();return;}
+  /* Нэг дор хэд хэдэн шалгалт алга болох гэж байвал (хуучирсан цонх г.м.) эхлээд асууна */
+  const ids=new Set((doc.exams||[]).map(e=>e.id)),gone=SYNC.base?Object.keys(SYNC.base.x).filter(id=>!ids.has(id)).length:0;
+  if(gone>=2&&!confirm('Үүлэнд хадгалахад '+gone+' шалгалт устах гэж байна.\n\n'
+    +'OK — тийм, би өөрөө устгасан\nCancel — үгүй, үүлэн дэх шалгалтуудаа буцааж ачаална')){
+    SYNC.dirty=false;SYNC.rev=-1;syncSave();syncUi();return cloudPull(true);
+  }
   SYNC.busy=true;syncUi();
   const v=SYNC.ver;
   try{
@@ -6132,8 +6138,18 @@ async function cloudPull(force){
 async function cloudFirstLoad(){
   const uid=AUTH.sess.user.id;
   const row=(await sbGet('teachers?select=rev,data&id=eq.'+uid))[0]||{rev:0,data:{}};
+  /* Энэ цонх удаан нээлттэй байсан бол санах ой дахь өгөгдөл нь хуучирсан байж болно
+     (энэ хооронд өөр цонх хадгалсан) — төхөөрөмж дээр хамгийн сүүлд хадгалсныг уншина */
+  const fresh=load();
+  if(fresh&&fresh.exams&&fresh.exams.length){db=mem=fresh;db.classes=db.classes||[];
+    state=db.exams.find(e=>e.id===db.cur)||db.exams[0];refreshAll();}
   const S=row.data||{},L=cloudDoc(),st=syncLoad();
-  if(st&&st.uid===uid){
+  if(st&&st.uid===uid&&!st.dirty&&!sameBase(baseOf(L),st.base)){
+    /* "тааруулсан" гэж тэмдэглэсэн ч энд байгаа нь үүлтэй таарахгүй байна. Үүлнийхийг үндэс болгоод
+       энд л байгаа шалгалт, сурагчийг нэмнэ — аль талынх ч устахгүй */
+    SYNC.rev=row.rev;SYNC.base=baseOf(S);SYNC.dirty=meaningful(L);
+    if(SYNC.dirty){backupLocal('mismatch');applyDoc(merge3(S,L,{k:{},x:{}}));}else applyDoc(S);
+  }else if(st&&st.uid===uid){
     /* энэ төхөөрөмж энэ данстай өмнө нь тааруулсан */
     SYNC.base=st.base;SYNC.rev=st.rev;SYNC.dirty=!!st.dirty;
     if(row.rev!==st.rev){
