@@ -6126,10 +6126,12 @@ function buildSecNav(box){
     const ids=[...nav.querySelectorAll('a')].filter(a=>!a.hidden).map(a=>a.getAttribute('href').slice(1));
     if(!ids.includes(id))id=ids[0];   // жишээ нь "Багш нарын эрх" нь эзэн тодорхой болохоос өмнө нуугдмал
     else try{localStorage.setItem('shalgalt-setup-sec',id);}catch(x){}
-    [...nav.parentElement.children].forEach(c=>{if(c!==nav)c.classList.toggle('sec-off',(ids.includes(c.id)?c.id:'s-back')!==id);});
+    /* "Миний шалгалтууд", "Шалгалтын материал" хоёр хамт харагдана — нэгийг нь сонгоход нөгөө нь нуугдахгүй */
+    const grp=x=>x==='s-mat'?'s-exams':x;
+    [...nav.parentElement.children].forEach(c=>{if(c!==nav)c.classList.toggle('sec-off',grp(ids.includes(c.id)?c.id:'s-back')!==grp(id));});
     nav.querySelectorAll('a').forEach(a=>a.classList.toggle('on',a.getAttribute('href')==='#'+id));
-    const top=nav.parentElement.getBoundingClientRect().top+scrollY-hdrH()-8;
-    if(scrollY>top)scrollTo(0,Math.max(0,top));
+    const el=document.getElementById(id),top=(id==='s-mat'&&el?el:nav.parentElement).getBoundingClientRect().top+scrollY-hdrH()-(id==='s-mat'?nav.offsetHeight+12:8);
+    if(id==='s-mat'||scrollY>top)scrollTo(0,Math.max(0,top));
   };
   let first='s-exams';try{first=localStorage.getItem('shalgalt-setup-sec')||first;}catch(x){}
   secTab(first);
