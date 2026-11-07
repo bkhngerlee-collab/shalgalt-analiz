@@ -6485,7 +6485,9 @@ async function mfaStart(){
     for(const f of all.filter(f=>f.status!=='verified'))await sbAuthReq('DELETE','factors/'+encodeURIComponent(f.id)).catch(()=>{});
     const n=all.filter(f=>f.status==='verified').length;
     const j=await sbAuthReq('POST','factors',{factor_type:'totp',friendly_name:'Төхөөрөмж '+(n+1)+' · '+localDay()+' '+Date.now().toString(36).slice(-3),issuer:'Шалгалтын анализ'});
-    const qr=String(j.totp&&j.totp.qr_code||''),sec=String(j.totp&&j.totp.secret||'');
+    /* Сервер QR-ыг SVG текстээр өгдөг — зураг болгож харуулахын тулд data хаяг болгоно */
+    const raw=String(j.totp&&j.totp.qr_code||'').trim(),sec=String(j.totp&&j.totp.secret||'');
+    const qr=/^data:image\/svg\+xml/.test(raw)?raw:/^(<\?xml|<svg)/i.test(raw)?'data:image/svg+xml;charset=utf-8,'+encodeURIComponent(raw):'';
     en.dataset.id=j.id;en.hidden=false;m.textContent='';
     en.innerHTML=`<ol class="mfa-steps">
         <li>Утсандаа <b>Google Authenticator</b> эсвэл <b>Microsoft Authenticator</b> аппыг Play Store / App Store-оос суулгана.</li>
