@@ -480,6 +480,10 @@ tr.pick{cursor:pointer} tr.pick:hover{background:var(--bg)} tr.sel{background:va
 .qbtn.del{color:var(--stain)}
 .qcard.p3{border-left:4px solid var(--iodine)}
 .qcard.p4{border-left:4px solid var(--leaf)}
+.sumbox{margin-top:14px;padding:12px 16px;border-radius:var(--radius);background:var(--leaf-soft);border-left:4px solid var(--leaf)}
+.sumbox-h{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.sumbox-h .btn{margin:0;padding:4px 12px;font-size:.85rem}
+.sumbox p{margin:6px 0 0;line-height:1.6}
 .qtools{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end;margin-bottom:8px}
 .qtools .btn{margin:0;padding:6px 12px;font-size:.85rem}
 .qblock{border:1px solid var(--line);border-radius:var(--radius);margin-bottom:14px;background:var(--surface)}
@@ -2227,7 +2231,7 @@ function fixCodes(c){
 }
 db.classes.forEach(fixCodes);
 let entryCls='',editId=null,rosterCls='',entryVar=0;
-function openExam(id){state=db.exams.find(e=>e.id===id)||db.exams[0];db.cur=state.id;draft=[];selId=null;filterCls='';editId=null;
+function openExam(id){state=db.exams.find(e=>e.id===id)||db.exams[0];db.cur=state.id;draft=[];selId=null;filterCls='';filterVar='';editId=null;
   finalCls='';   // нэгдсэн анализ шинэ шалгалтын ангиас эхэлнэ
   matOpen='';    // шалгалт солиход материал дахин түгжигдэнэ
   save();renderSetup();}
@@ -2311,7 +2315,11 @@ function renderExams(){
   $('#curTitle').textContent=state.exam.title?'📄 '+examLabel(state):'';
   $('#curTitle').title=state.exam.title?'Одоо нээлттэй шалгалт':'';
 }
-let draft=[], filterCls='', selId=null, VR=[];
+let draft=[], filterCls='', filterVar='', selId=null, VR=[];
+/* Анализын хувилбарын шүүлтүүр: '' = бүгд, '0' = зөвхөн А, '1' = зөвхөн Б ... */
+const varOn=()=>vCount()>1;
+const anaPick=list=>filterVar!==''&&varOn()?list.filter(s=>String(s.v||0)===filterVar):list;
+const varScope=()=>filterVar!==''&&varOn()?VNAMES[+filterVar]+' хувилбар':'';
 
 /* ---------- tabs ---------- */
 function go(tab){
@@ -3385,19 +3393,19 @@ function avgRowAt(list,pct,avg,sort,show,k,cols){
 
 function matrixHtml(list,qs,withCls){
   if(!list.length)return'<div class="empty">Энэ нөхцөлд тохирох сурагч алга.</div>';
-  const n=qs.length,max=qs.reduce((a,q)=>a+(+q.points||0),0),m=list.length,F=withCls?4:3;
+  const n=qs.length,max=qs.reduce((a,q)=>a+(+q.points||0),0),m=list.length,wv=varOn();
   const sum=i=>list.reduce((a,r)=>a+r.earn[i],0),tot=list.reduce((a,r)=>a+r.score,0);
-  const pre=lbl=>`<th class="s0"></th><th class="s1" style="text-align:right">${lbl}</th>${withCls?'<th></th>':''}<th></th>`;
-  const fpre=lbl=>`<td class="s0"></td><td class="s1" style="text-align:right">${lbl}</td>${withCls?'<td></td>':''}<td></td>`;
+  const pre=lbl=>`<th class="s0"></th><th class="s1" style="text-align:right">${lbl}</th>${withCls?'<th></th>':''}<th></th>${wv?'<th></th>':''}`;
+  const fpre=lbl=>`<td class="s0"></td><td class="s1" style="text-align:right">${lbl}</td>${withCls?'<td></td>':''}<td></td>${wv?'<td></td>':''}`;
   const has2=qs.some(q=>!isP1(q));
   return`<div class="scroll"><table class="matrix">
   <thead>
-    <tr><th class="s0">№</th><th class="s1">Нэр</th>${withCls?'<th>Анги</th>':''}<th>Код</th>${qs.map((q,i)=>`<th>${i+1}</th>`).join('')}<th>Нийт оноо</th><th>Гүйцэтгэл</th><th>Түвшин</th></tr>
+    <tr><th class="s0">№</th><th class="s1">Нэр</th>${withCls?'<th>Анги</th>':''}<th>Код</th>${wv?'<th>Хувилбар</th>':''}${qs.map((q,i)=>`<th>${i+1}</th>`).join('')}<th>Нийт оноо</th><th>Гүйцэтгэл</th><th>Түвшин</th></tr>
     ${has2?`<tr>${pre('Хэсэг')}${qs.map(q=>`<th>${partLabel(q)}</th>`).join('')}<th></th><th></th><th></th></tr>`:''}
     <tr>${pre('Агуулга')}${qs.map((q,i)=>`<th><span class="vt" title="${esc(topicOf(i))}">${esc(topicOf(i))}</span></th>`).join('')}<th></th><th></th><th></th></tr>
     <tr>${pre('Дээд оноо')}${qs.map(q=>`<th>${r1(+q.points||0)}</th>`).join('')}<th>${r1(max)}</th><th></th><th></th></tr>
   </thead>
-  <tbody>${list.map((r,k)=>`<tr><td class="s0">${k+1}</td><td class="s1"><b>${esc(dName(r.s.cls,r.s.name))}</b></td>${withCls?`<td>${esc(r.s.cls)}</td>`:''}<td>${codeOf(r.s.cls,r.s.name)||'–'}</td>
+  <tbody>${list.map((r,k)=>`<tr><td class="s0">${k+1}</td><td class="s1"><b>${esc(dName(r.s.cls,r.s.name))}</b></td>${withCls?`<td>${esc(r.s.cls)}</td>`:''}<td>${codeOf(r.s.cls,r.s.name)||'–'}</td>${wv?`<td style="text-align:center"><b>${VNAMES[r.s.v||0]}</b></td>`:''}
     ${r.earn.map((e,i)=>`<td class="num ${r.ok[i]?'mx-ok':e>0?'mx-pt':'mx-no'}">${r1(e)}</td>`).join('')}
     <td class="num tot">${r1(r.score)}</td><td class="num tot">${pc(r.pct)}</td><td class="num tot">${r.lv}</td></tr>`).join('')}</tbody>
   <tfoot>
@@ -3406,6 +3414,32 @@ function matrixHtml(list,qs,withCls){
     <tr>${fpre('Дундаж оноо')}${qs.map((q,i)=>`<td class="num">${(sum(i)/m).toFixed(1)}</td>`).join('')}<td class="num">${(tot/m).toFixed(1)}</td><td></td><td></td></tr>
     <tr>${fpre('Гүйцэтгэл')}${qs.map((q,i)=>`<td class="num">${pc(+q.points>0?sum(i)/((+q.points)*m)*100:0)}</td>`).join('')}<td class="num">${pc(max?tot/(max*m)*100:0)}</td><td></td><td class="num">${max?levelOf(tot/(max*m)*100):''}</td></tr>
   </tfoot></table></div>`;
+}
+
+/* Дүнгийн хүснэгтийн доорх ерөнхий дүгнэлт (100 үгэнд багтана): хамрагдалт, дундаж,
+   хамгийн сайн ба давтах шаардлагатай агуулга (агуулга бичээгүй бол асуултаар) */
+function anaSummary(d,roster){
+  const qs=state.exam.questions,named=qs.some(q=>(q.topic||'').trim()),kind=named?'агуулга':'асуулт',acc=named?'агуулгыг':'асуултын агуулгыг';
+  const cut=(s,n)=>s.length>n?s.slice(0,n-1)+'…':s;
+  const items=named?d.topics.map(t=>({t:t.t,p:t.pct})):qs.map((q,i)=>({t:(i+1)+'-р асуулт',p:d.qPct[i]}));
+  const fmt=a=>a.map(x=>cut(x.t,40)+' ('+Math.round(x.p)+'%)').join(', ');
+  const good=items.filter(x=>x.p>=80).sort((a,b)=>b.p-a.p).slice(0,3);
+  const weak=items.filter(x=>x.p<60).sort((a,b)=>a.p-b.p).slice(0,3);
+  const mid=items.filter(x=>x.p>=60&&x.p<80).sort((a,b)=>a.p-b.p).slice(0,2);
+  const who=[filterCls?filterCls+' ангийн':'',varScope()?varScope()+'ын':''].filter(Boolean).join(' ')||'Нийт';
+  const lv=d.avg>=80?'сайн':d.avg>=60?'дунд':d.avg>=40?'дунджаас доогуур':'хангалтгүй';
+  const out=[who+' '+d.n+' сурагч шалгалтад хамрагдлаа'+(roster>d.n&&!varScope()?' (нэрсийн '+roster+' сурагчийн '+Math.round(d.n/roster*100)+'%)':'')+'.',
+    'Дундаж оноо '+r1(d.avg*d.total/100)+' / '+r1(d.total)+' буюу '+Math.round(d.avg)+'% гүйцэтгэлтэй ('+lv+'), амжилт '+Math.round(d.success)+'%, чанар '+Math.round(d.quality)+'% байна.',
+    good.length?(named?'Хамгийн сайн эзэмшсэн агуулга: ':'Хамгийн сайн гүйцэтгэсэн асуулт: ')+fmt(good)+'.':'80%-аас дээш гүйцэтгэлтэй '+kind+' алга.',
+    weak.length?'Цаашид дараах '+acc+' давтах, уншиж судлах шаардлагатай: '+fmt(weak)+'.'
+      :mid.length?'60%-аас доош гүйцэтгэлтэй '+kind+' алга. '+fmt(mid)+' '+acc+' бататгавал дүн илүү сайжирна.'
+      :'Бүх '+acc+' сайн эзэмшсэн байна.'];
+  return out.join(' ');
+}
+function sumBoxHtml(d,roster){
+  if(!d.n)return'';
+  return`<div class="sumbox"><div class="sumbox-h"><b>Ерөнхий дүгнэлт</b><button type="button" class="btn ghost noprint" id="sumCopy">Хуулах</button></div>
+    <p id="sumText">${esc(anaSummary(d,roster))}</p></div>`;
 }
 
 /* ---------- analysis ---------- */
@@ -3488,14 +3522,17 @@ function renderAnalysis(){
   }
   const classes=[...new Set(state.students.map(s=>s.cls).filter(Boolean))].sort();
   if(filterCls&&!classes.includes(filterCls))filterCls='';
-  const list=filterCls?state.students.filter(s=>s.cls===filterCls):state.students;
+  if(filterVar!==''&&(!varOn()||!anaPick(state.students).length))filterVar='';
+  const list=anaPick(filterCls?state.students.filter(s=>s.cls===filterCls):state.students);
+  if(!list.length&&filterCls){filterCls='';return renderAnalysis();}
   const d=compute(list),qs=state.exam.questions;
   const best=d.topics[0],worst=d.topics[d.topics.length-1];
   const levels=LEVELS.map(l=>({g:l[0],range:l[1]+'–'+l[2],who:d.rows.filter(r=>r.lv===l[0])}));
   const sel=d.rows.find(r=>r.s.id===selId);
   /* Өмнөх шалгалттай харьцуулалт, нэрсийн жагсаалт дахь сурагчийн тоо */
   const ser=examSeries(filterCls),ix=ser.findIndex(x=>x.id===state.id);
-  const prev=ix>0?ser[ix-1]:null,hist=ix>=0?ser.slice(Math.max(0,ix-7),ix+1):[];
+  /* хувилбараар шүүсэн үед өмнөх шалгалтын бүх сурагчтай харьцуулахгүй */
+  const prev=ix>0&&!varScope()?ser[ix-1]:null,hist=ix>=0&&!varScope()?ser.slice(Math.max(0,ix-7),ix+1):[];
   const trend=k=>{if(!prev)return'';const r=Math.round(d[k]-prev[k]);
     return`<em class="tr ${r>0?'up':r<0?'dn':'eq'}" title="Өмнөх шалгалт: ${esc(prev.label)} — ${Math.round(prev[k])}%">${r>0?'▲ +'+r:r<0?'▼ '+r:'● 0'} пункт</em>`;};
   const roster=(filterCls?[filterCls]:classes).reduce((a,c)=>{const x=db.classes.find(k=>k.name===c);return a+(x?x.students.length:0);},0);
@@ -3511,11 +3548,11 @@ function renderAnalysis(){
       const cnt=L.map(l=>k.rows.filter(r=>r.lv===l[0]).length);
       return{name,roster,took:list.length,succ:k.success,qual:k.quality,perf:k.avg,cnt};
     };
-    const rows=shown.map(c=>row(c,state.students.filter(s=>s.cls===c)));
+    const rows=shown.map(c=>row(c,anaPick(state.students.filter(s=>s.cls===c))));
     if(!rows.length)return'<p class="hint">Анги тодорхойгүй байна.</p>';
     let all=null;
     if(rows.length>1){
-      const list=state.students.filter(s=>shown.includes(s.cls)),k=compute(list);
+      const list=anaPick(state.students.filter(s=>shown.includes(s.cls))),k=compute(list);
       all={name:'Нийт',roster:rows.reduce((a,r)=>a+r.roster,0),took:list.length,
         succ:k.success,qual:k.quality,perf:k.avg,
         cnt:L.map(l=>k.rows.filter(r=>r.lv===l[0]).length)};
@@ -3618,6 +3655,7 @@ function renderAnalysis(){
       <div style="flex:3 1 240px"><h2>${esc(state.exam.title||'Шалгалтын анализ')}</h2>
         <p class="hint" style="margin:0">${qs.length} асуулт, нийт ${r1(d.total)} оноо</p></div>
       <div><label for="fcls">Анги</label><select id="fcls"><option value="">Бүх анги</option>${classes.map(c=>`<option${c===filterCls?' selected':''}>${esc(c)}</option>`).join('')}</select></div>
+      ${varOn()?`<div><label for="fvar">Хувилбар</label><select id="fvar"><option value="">Бүх хувилбар</option>${Array.from({length:vCount()},(_,v)=>`<option value="${v}"${String(v)===filterVar?' selected':''}>Зөвхөн ${VNAMES[v]} хувилбар</option>`).join('')}</select></div>`:''}
       <div><label for="anonSel">Сурагчийг харуулах</label><select id="anonSel">
         <option value="name"${anonOn()?'':' selected'}>Нэрээр</option>
         <option value="code"${anonOn()?' selected':''}>Зөвхөн кодоор</option></select></div>
@@ -3686,6 +3724,7 @@ function renderAnalysis(){
     <p class="hint">Мөр бүр сурагч, багана бүр асуулт. Нүдэнд тухайн асуултаар авсан оноо: ногоон нь бүтэн оноо, шар нь хэсэгчилсэн, улаан нь 0. Доод мөрүүдэд асуулт бүрийн ангийн нийт авах оноо, авсан оноо, дундаж, гүйцэтгэл гарна. "Харуулах", "Эрэмбэлэх" сонголт доорх "Сурагч тус бүрийн дүн", Excel, Word-д ч хамаарна.</p>
     ${viewControls('m',viewShow,viewSort)}
     ${matrixHtml(viewRows(d.rows,{pct:r=>r.pct,name:r=>r.s.name,cls:r=>r.s.cls,show:viewShow,sort:viewSort,avg:d.avg}),qs,!filterCls)}
+    ${sumBoxHtml(d,roster)}
   </div>
 
   <div class="panel" data-sec="Сурагч бүрээр" data-badge-n="${d.n}"><h2>Сурагч тус бүрийн дүн</h2>
@@ -3711,6 +3750,9 @@ function renderAnalysis(){
   buildSecNav(el);
   lastD=d;renderChart();
   $('#fcls').addEventListener('change',e=>{filterCls=e.target.value;renderAnalysis();});
+  if($('#fvar'))$('#fvar').addEventListener('change',e=>{filterVar=e.target.value;renderAnalysis();});
+  if($('#sumCopy'))$('#sumCopy').addEventListener('click',()=>{
+    navigator.clipboard.writeText($('#sumText').textContent).then(()=>toast('Дүгнэлт хуулагдлаа.'),()=>toast('Хуулж чадсангүй — текстийг сонгоод Ctrl + C дарна уу.'));});
   $('#anonSel').addEventListener('change',e=>{db.anon=e.target.value;save();renderAnalysis();});
   $('#aShow').addEventListener('change',e=>{viewShow=e.target.value;renderAnalysis();});
   $('#aSort').addEventListener('change',e=>{viewSort=e.target.value;renderAnalysis();});
@@ -4306,24 +4348,24 @@ const dName=(cls,name)=>{if(!anonOn())return String(name||'');const c=codeOf(cls
 const todayStr=()=>new Date().toISOString().slice(0,10);
 /* --- single exam data --- */
 function examExportData(){
-  const list=filterCls?state.students.filter(s=>s.cls===filterCls):state.students,d=compute(list),qs=state.exam.questions;
+  const list=anaPick(filterCls?state.students.filter(s=>s.cls===filterCls):state.students),d=compute(list),qs=state.exam.questions;
   const LT=qs.some(isP2)?opts2():opts1();
   const dist=qs.map((q,i)=>{const c={'':0};LT.forEach(x=>c[x]=0);d.rows.forEach(r=>{const a=r.s.answers[i]||'';if(!a)c['']++;else[...a].forEach(x=>{if(x in c)c[x]++;});});return c;});
   const levels=LEVELS.map(l=>({g:l[0],range:l[1]+'–'+l[2]+'%',who:d.rows.filter(r=>r.lv===l[0])}));
   const share=m=>d.n?d.rows.filter(r=>r.pct>=m).length/d.n*100:0;
   const V=viewRows(d.rows,{pct:r=>r.pct,name:r=>r.s.name,cls:r=>r.s.cls,show:viewShow,sort:viewSort,avg:d.avg});
   const viewNote='Жагсаалт: '+showLabel(viewShow).toLowerCase()+', '+SORT_OPTS.find(o=>o[0]===viewSort)[1].toLowerCase()+' эрэмбэлсэн ('+V.length+' сурагч). Дундаж '+Math.round(d.avg)+'%.';
-  return{d,qs,dist,LT,levels,V,viewNote,success:share(60),quality:share(80),scope:filterCls?filterCls+' анги':'Бүх анги',title:state.exam.title||'Шалгалт'};
+  return{d,qs,dist,LT,levels,V,viewNote,success:share(60),quality:share(80),scope:(filterCls?filterCls+' анги':'Бүх анги')+(varScope()?', '+varScope():''),title:state.exam.title||'Шалгалт'};
 }
 function matrixSheet(name,title,note,list,qs,withCls){
-  const F=withCls?4:3,n=qs.length,qc=i=>colName(F+i),tc=colName(F+n),pcC=colName(F+n+1),lab=F-1;
+  const wv=varOn(),F=(withCls?4:3)+(wv?1:0),n=qs.length,qc=i=>colName(F+i),tc=colName(F+n),pcC=colName(F+n+1),lab=F-1;
   const first=8,last=first+Math.max(list.length,1)-1,blank=()=>Array(F).fill(null).map(()=>({v:'',s:'h'}));
   const lv=c=>`LOOKUP(ROUND(${c}*100,0),{0,30,40,50,60,70,80,90},{"I","II","III","IV","V","VI","VII","VIII"})`;
   /* Формул бүрийн хариуг энд давхар бодож, файлд хамт бичнэ */
   const m=list.length,pts=qs.map(q=>+q.points||0),max=pts.reduce((a,b)=>a+b,0);
   const sumQ=i=>list.reduce((a,r)=>a+(r.earn[i]||0),0),tot=list.reduce((a,r)=>a+r.score,0);
   const rnd=v=>!isFinite(v)?0:Math.round(v*1e6)/1e6;
-  const hdr=blank();['№',...(withCls?['Анги']:[]),'Код','Нэр'].forEach((v,i)=>hdr[i]={v,s:'h'});
+  const hdr=blank();['№',...(withCls?['Анги']:[]),'Код',...(wv?['Хувилбар']:[]),'Нэр'].forEach((v,i)=>hdr[i]={v,s:'h'});
   const r5=blank();r5[lab]={v:'Хэсэг',s:'sub'};
   const r6=blank();r6[lab]={v:'Агуулга',s:'sub'};
   const r7=blank();r7[lab]={v:'Дээд оноо',s:'sub'};
@@ -4333,7 +4375,7 @@ function matrixSheet(name,title,note,list,qs,withCls){
     [...r6,...qs.map((q,i)=>({v:topicOf(i),s:'subv'})),{v:'',s:'sub'},{v:'',s:'sub'},{v:'',s:'sub'}],
     [...r7,...qs.map(q=>({v:+q.points||0,s:'sub'})),{f:`SUM(${qc(0)}7:${qc(n-1)}7)`,cv:rnd(max),s:'sub'},{v:'',s:'sub'},{v:'',s:'sub'}]];
   list.forEach((r,k)=>{const row=first+k,pc2=max?r.score/max:0;
-    rows.push([{v:k+1,s:'cc'},...(withCls?[{v:r.s.cls,s:'cc'}]:[]),{v:codeOf(r.s.cls,r.s.name)||'',s:'cc'},{v:r.s.name,s:'b'},
+    rows.push([{v:k+1,s:'cc'},...(withCls?[{v:r.s.cls,s:'cc'}]:[]),{v:codeOf(r.s.cls,r.s.name)||'',s:'cc'},...(wv?[{v:VNAMES[r.s.v||0],s:'cc'}]:[]),{v:r.s.name,s:'b'},
       ...r.earn.map((e,i)=>({v:Math.round(e*100)/100,s:r.ok[i]?'ok':e>0?'pt':'no'})),
       {f:`SUM(${qc(0)}${row}:${qc(n-1)}${row})`,cv:rnd(r.score),s:'b'},
       {f:`IF($${tc}$7=0,0,${tc}${row}/$${tc}$7)`,cv:rnd(pc2),s:'pb'},
@@ -4351,7 +4393,7 @@ function matrixSheet(name,title,note,list,qs,withCls){
     i=>pts[i]*m?sumQ(i)/(pts[i]*m):0,max*m?tot/(max*m):0);
   gp[F+n+2]={f:lv(tc+(fr+3)),cv:levelOf(Math.round((max*m?tot/(max*m):0)*100)),s:'fb'};rows.push(gp);
   return{name,rows,freeze:7,freezeCol:F,heights:{5:Math.min(130,Math.max(40,8+5.5*Math.max(...qs.map((q,i)=>topicOf(i).length))))},
-    widths:[5,...(withCls?[7]:[]),6,22,...qs.map(()=>6),10,11,9]};
+    widths:[5,...(withCls?[7]:[]),6,...(wv?[9]:[]),22,...qs.map(()=>6),10,11,9]};
 }
 /* Шалгалтын нэрнээс хичээлийн нэрийг салгаж авна: "Биологи, 9-р анги" -> "Биологи" */
 function subjectName(){
@@ -5310,8 +5352,8 @@ const heatClr=p=>{p=Math.max(0,Math.min(100,p));
 function svgHeat(){
   const qs=state.exam.questions,n=qs.length;
   const cs=[...new Set(state.students.map(s=>s.cls||'Ангигүй'))].sort((a,b)=>a.localeCompare(b,'mn',{numeric:true}));
-  const rows=(filterCls?[filterCls]:cs).map(c=>({l:c,v:compute(state.students.filter(s=>(s.cls||'Ангигүй')===c)).qPct}));
-  if(rows.length>1)rows.push({l:'Нийт',v:compute(state.students).qPct,tot:true});
+  const rows=(filterCls?[filterCls]:cs).map(c=>({l:c,v:compute(anaPick(state.students.filter(s=>(s.cls||'Ангигүй')===c))).qPct}));
+  if(rows.length>1)rows.push({l:'Нийт',v:compute(anaPick(state.students)).qPct,tot:true});
   const cw=Math.max(24,Math.min(40,Math.floor(620/Math.max(1,n)))),ch=30,L=74,T=24,W=L+n*cw+8,H=T+rows.length*(ch+3)+4;
   let g='';
   qs.forEach((q,i)=>{g+=`<text x="${L+i*cw+cw/2}" y="${T-8}" text-anchor="middle" font-size="10.5" fill="var(--muted)">${i+1}</text>`;});
@@ -5330,7 +5372,7 @@ function svgRadar(d){
   const pctBy=k=>axes.map(t=>{const x=k.topics.find(y=>y.t===t);return x?x.pct:0;});
   const ser=[{l:filterCls?filterCls+' анги':'Бүх сурагч',v:pctBy(d)}];
   const cs=[...new Set(state.students.map(s=>s.cls).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'mn',{numeric:true}));
-  if(!filterCls&&cs.length>=2&&cs.length<=4)cs.forEach(c=>ser.push({l:c+' анги',v:pctBy(compute(state.students.filter(s=>s.cls===c)))}));
+  if(!filterCls&&cs.length>=2&&cs.length<=4)cs.forEach(c=>ser.push({l:c+' анги',v:pctBy(compute(anaPick(state.students.filter(s=>s.cls===c))))}));
   const W=520,H=400,cx=W/2,cy=H/2+6,R=140,N=axes.length,ang=i=>-Math.PI/2+i*2*Math.PI/N;
   const pt=(i,p)=>[cx+R*p/100*Math.cos(ang(i)),cy+R*p/100*Math.sin(ang(i))];
   let g='';
