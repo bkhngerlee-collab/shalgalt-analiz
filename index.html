@@ -430,6 +430,15 @@ body.sc .hdr-top{margin-bottom:6px}
 body.sc .sync-pill{font-size:.7rem}
 /* эзний самбар: багш нарын жагсаалт */
 .t-list{display:grid;gap:8px}
+.t-grp{border:1px solid var(--line);border-radius:12px;margin-top:10px;background:var(--bg)}
+.t-grp>summary{cursor:pointer;list-style:none;padding:12px 14px;font-weight:700;display:flex;align-items:center;gap:8px}
+.t-grp>summary::-webkit-details-marker{display:none}
+.t-grp>summary:before{content:"▸";color:var(--leaf);transition:transform .15s}
+.t-grp[open]>summary:before{transform:rotate(90deg)}
+.t-grp>summary:hover{color:var(--leaf)}
+.t-grp>.t-list,.t-grp>.btns{padding:0 10px 10px}
+.t-n{min-width:24px;padding:1px 8px;border-radius:999px;background:var(--leaf-soft);color:var(--leaf);font-size:.82rem;text-align:center}
+.sec-off{display:none!important}
 .t-row{display:grid;grid-template-columns:1fr auto;gap:6px 12px;align-items:center;border:1px solid var(--line);border-radius:10px;padding:10px 12px;background:var(--surface)}
 .t-who small{display:block;color:var(--muted);font-size:.8rem}
 .t-st{text-align:right;font-size:.9rem}
@@ -658,7 +667,7 @@ body.student #studentApp{display:block}
 <main class="wrap">
 <!-- ============ 1. SETUP ============ -->
 <section id="tab-setup">
-  <nav class="secnav noprint" aria-label="Шалгалт цонхны хэсгүүд">
+  <nav class="secnav noprint" data-tabs="setup" aria-label="Шалгалт цонхны хэсгүүд">
     <a href="#s-exams">Миний шалгалтууд</a>
     <a href="#s-mat">Шалгалтын материал</a>
     <a href="#s-sheet">Хариултын хуудас</a>
@@ -5052,6 +5061,7 @@ function renderCloud(){
   $('#cAuto').checked=!!k.auto;cStatusRender();
   const own=ownerMode(),ip=$('#invitePanel');
   if(own&&ip.hidden)setTimeout(()=>teachersLoad(),0);   // эзэнд анх харагдахад жагсаалтаа татна
+  if($('#secOwn').hidden===own&&window.secTab){$('#secOwn').hidden=!own;let s='';try{s=localStorage.getItem('shalgalt-setup-sec')||'';}catch(x){}secTab(s);}
   ip.hidden=!own;$('#secOwn').hidden=!own;
   const set=!!(c.api&&c.key);
   $('#cSum').textContent=set?('— тохируулсан'+(k.auto?', автоматаар хүлээн авна':'')):'— тохируулаагүй';
@@ -6085,6 +6095,7 @@ function buildSecNav(box){
   document.addEventListener('click',e=>{
     const a=e.target.closest('.secnav a');if(!a)return;
     e.preventDefault();
+    if(a.closest('.secnav').dataset.tabs)return secTab(a.getAttribute('href').slice(1));
     const el=document.querySelector(a.getAttribute('href'));if(!el)return;
     /* Эхлээд толгойг агшаагаад ДАРАА нь хэмжинэ — тэгэхгүй бол байрлал зөрнө */
     b.classList.add('sc');void hd.offsetHeight;setH();
@@ -6095,7 +6106,7 @@ function buildSecNav(box){
   /* Одоо хаана явааг цэсэнд тодруулах */
   const mark=()=>{
     const sn=[...document.querySelectorAll('.secnav')].find(n=>n.offsetParent!==null);
-    if(!sn)return;
+    if(!sn||sn.dataset.tabs)return;   // таб хэлбэрийн цэс өөрөө тодруулна
     const links=[...sn.querySelectorAll('a')],lim=hdrH()+sn.getBoundingClientRect().height+24;
     let cur=links[0];
     links.forEach(a=>{const el=document.querySelector(a.getAttribute('href'));
@@ -6108,6 +6119,20 @@ function buildSecNav(box){
   addEventListener('resize',()=>{setH();mark();});
   setH();onScroll();setTimeout(mark,120);
   window.secMark=mark;
+  /* "1. Шалгалт" цонх: хэсгүүд доош урсахгүй, таб шиг нэг удаад нэг нь харагдана.
+     Цэсэнд байхгүй хэсэг (s-cloud) "Нөөц"-тэй хамт гарна. Сонголт энэ төхөөрөмж дээр хадгалагдана. */
+  window.secTab=id=>{
+    const nav=document.querySelector('.secnav[data-tabs]');if(!nav)return;
+    const ids=[...nav.querySelectorAll('a')].filter(a=>!a.hidden).map(a=>a.getAttribute('href').slice(1));
+    if(!ids.includes(id))id=ids[0];   // жишээ нь "Багш нарын эрх" нь эзэн тодорхой болохоос өмнө нуугдмал
+    else try{localStorage.setItem('shalgalt-setup-sec',id);}catch(x){}
+    [...nav.parentElement.children].forEach(c=>{if(c!==nav)c.classList.toggle('sec-off',(ids.includes(c.id)?c.id:'s-back')!==id);});
+    nav.querySelectorAll('a').forEach(a=>a.classList.toggle('on',a.getAttribute('href')==='#'+id));
+    const top=nav.parentElement.getBoundingClientRect().top+scrollY-hdrH()-8;
+    if(scrollY>top)scrollTo(0,Math.max(0,top));
+  };
+  let first='s-exams';try{first=localStorage.getItem('shalgalt-setup-sec')||first;}catch(x){}
+  secTab(first);
 })();
 
 /* ---------- usage licence (time-limited activation codes) ---------- */
@@ -6850,8 +6875,7 @@ function teachersRender(){
   legRender();
   if(!tRows.length){box.innerHTML='<p class="hint">Одоогоор бүртгүүлсэн багш алга. Программын холбоосыг багш нартаа илгээхэд тэд энд гарч ирнэ.</p>';return;}
   const wait=tRows.filter(t=>!t.approved&&!t.expires&&t.id!==me).length;
-  box.innerHTML=(wait?`<div class="avgsum" style="margin-bottom:10px"><b class="m">🔔 ${wait} шинэ хүсэлт ирсэн байна.</b> Доороос хугацааг нь сонгоход эрх нь нээгдэнэ.</div>`:'')
-    +'<div class="t-list">'+tRows.map(t=>{
+  const row=t=>{
       const self=t.id===me,exp=t.expires&&t.expires<today,fresh=!t.approved&&!t.expires;
       const st=self?'<b class="g">👑 Эзэн (та)</b>'
         :!t.approved&&t.expires?'<b class="b">⛔ Эрх хаагдсан</b>'
@@ -6877,8 +6901,17 @@ function teachersRender(){
           ${licBtn}${T_DUR.map(([d,l])=>`<button class="btn ${fresh?'':'ghost'}" data-t="ok" data-d="${d}">${l}</button>`).join('')}
           ${t.approved?'<button class="btn danger" data-t="no">Эрх хаах</button>':''}
           <button class="btn ghost" data-t="pw">Нууц үг сэргээх</button></div>`}
-      </div>`;}).join('')+'</div>';
+      </div>`;};
+  /* Бүлэг бүр хураагддаг: шинэ хүсэлт нээлттэй, бусад нь хураалттай эхэлнэ. Байдал нь дахин зурахад хадгалагдана */
+  const kind=t=>t.id===me?'ok':!t.approved&&!t.expires?'new':(!t.approved||(t.expires&&t.expires<today))?'off':'ok';
+  const grp=(k,title,open)=>{const rs=tRows.filter(t=>kind(t)===k).sort((a,b)=>(b.id===me)-(a.id===me));
+    return rs.length?`<details class="t-grp" data-g="${k}"${(k in tOpen?tOpen[k]:open)?' open':''}>
+      <summary>${title} <span class="t-n">${rs.length}</span></summary><div class="t-list">${rs.map(row).join('')}</div></details>`:'';};
+  box.innerHTML=(wait?`<div class="avgsum" style="margin-bottom:10px"><b class="m">🔔 ${wait} шинэ хүсэлт ирсэн байна.</b> Доороос хугацааг нь сонгоход эрх нь нээгдэнэ.</div>`:'')
+    +grp('new','⏳ Шинэ хүсэлт',true)+grp('ok','✓ Эрхтэй багш нар',false)+grp('off','⌛ Хугацаа дууссан, хаагдсан',false);
 }
+let tOpen={};
+['#tList','#legList'].forEach(s=>$(s).addEventListener('toggle',e=>{const d=e.target;if(d.dataset&&d.dataset.g)tOpen[d.dataset.g]=d.open;},true));
 $('#tRefresh').addEventListener('click',teachersLoad);
 /* ---------- хуучин (Google, код үүсгэгч) системийн багш нар ----------
    Жагсаалт нь эзний өөрийн db.legacy-д хадгалагдана (зөвхөн эзэн харна, төхөөрөмж хооронд дамжина).
@@ -6903,11 +6936,13 @@ function legRender(){
   box.innerHTML=`<p class="hint" style="margin:10px 0 6px">`+(legRest.length
       ?`<b>${legRest.length}</b> багш шинэ программд хараахан бүртгүүлээгүй байна. Урилгыг нь хуулж илгээнэ үү.`
       :'✓ Хуучин жагсаалтын бүх багш шинэ программд бүртгүүлсэн байна.')+'</p>'
+    +(legRest.length?`<details class="t-grp" data-g="leg"${tOpen.leg?' open':''}><summary>📜 Бүртгүүлээгүй хуучин багш нар <span class="t-n">${legRest.length}</span></summary>`:'')
     +'<div class="t-list">'+legRest.map((a,i)=>`<div class="t-row">
         <div class="t-who"><b>${esc(a.name||'(нэргүй)')}</b>${[a.subject,a.level,a.gender].filter(Boolean).length?`<small>${[a.subject,a.level,a.gender].filter(Boolean).map(esc).join(' · ')}</small>`:''}<small>${esc(a.email)}</small></div>
         <div class="t-st">${a.status==='granted'?`<b class="g">Хуучин эрх: ${a.until?esc(a.until)+' хүртэл':'хугацаагүй'}</b>`:'<b class="m">Хуучин хүсэлт (батлагдаагүй)</b>'}</div>
         <div class="t-act"><button class="btn ghost" data-lg="${i}">Урилга хуулах</button></div></div>`).join('')+'</div>'
-    +(legRest.length>1?'<div class="btns"><button class="btn ghost" data-lg="all">Бүгдийн и-мэйлийг хуулах</button></div>':'');
+    +(legRest.length>1?'<div class="btns"><button class="btn ghost" data-lg="all">Бүгдийн и-мэйлийг хуулах</button></div>':'')
+    +(legRest.length?'</details>':'');
 }
 $('#legImport').addEventListener('click',async()=>{
   const m=$('#legMsg'),ta=$('#legPaste');m.style.color='';
