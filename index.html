@@ -685,12 +685,19 @@ body.student #studentApp{display:block}
 
   <div class="panel" id="s-back">
     <h2>Нөөц хадгалах</h2>
-    <p class="hint">Өгөгдөл энэ компьютерийн хөтөч дотор хадгалагддаг. Хөтчийн түүх цэвэрлэх, өөр компьютер ашиглахад алдагдахаас сэргийлж нөөц файлаа үе үе татаж, флаш эсвэл Google Drive-даа хадгалаарай. Өөр компьютер дээр тэр файлаас сэргээгээд үргэлжлүүлж болно.</p>
+    <p class="hint">Нэвтэрсэн үед өгөгдөл тань үүлэнд хадгалагдаж, засагдсан өдөр бүр <b>автоматаар нөөцлөгдөнө</b>. Нэмэлт хамгаалалт болгож нөөц файлаа үе үе татаж, флаш эсвэл Google Drive-даа хадгалж болно.</p>
     <div class="btns" style="margin-top:0">
       <button class="btn" id="backup">Нөөц файл татах</button>
       <label class="btn ghost" style="margin:0;color:var(--leaf)">Нөөц файлаас сэргээх<input type="file" id="restore" accept=".json" hidden></label>
     </div>
     <div class="msg" id="backupMsg" role="status"></div>
+    <div id="snapBox" hidden style="margin-top:16px;border-top:1px solid var(--line);padding-top:14px">
+      <h3 style="margin:0 0 4px;font-size:1.02rem">Үүлэн дэх өдөр тутмын нөөц</h3>
+      <p class="hint" style="margin:0 0 8px">Өгөгдлөө засах өдөр бүр өмнөх байдал нь үүлэнд автоматаар хадгалагдаж, <b>сүүлийн 2 долоо хоногийнх</b> үлдэнэ.
+        Андуурч устгасан, буруу зассан бол тухайн өдрийн байдал руу буцааж болно.</p>
+      <div class="btns" style="margin-top:0"><button class="btn ghost" id="snapLoad">Нөөцүүдийг харах</button></div>
+      <div id="snapList"></div>
+    </div>
   </div>
 
   <!-- Хуучин Google-ээр утас ↔ компьютер холбох хэсэг. Одоо данс (Supabase) өөрөө
@@ -2521,10 +2528,13 @@ $('#copyExam').addEventListener('click',()=>{
   const e=blank(1);e.exam=JSON.parse(JSON.stringify(state.exam));e.exam.title=(state.exam.title||'Шалгалт')+' (давтан)';e.exam.date=today();
   addExam(e);$('#title').focus();$('#title').select();
 });
-$('#backup').addEventListener('click',()=>{
+function dlBackup(data,name){
   const a=document.createElement('a');
-  a.href=URL.createObjectURL(new Blob([JSON.stringify({app:'shalgalt-analiz',version:2,saved:new Date().toISOString(),...db},null,1)],{type:'application/json'}));
-  a.download='shalgalt-nooc-'+today()+'.json';document.body.appendChild(a);a.click();a.remove();
+  a.href=URL.createObjectURL(new Blob([JSON.stringify({app:'shalgalt-analiz',version:2,saved:new Date().toISOString(),...data},null,1)],{type:'application/json'}));
+  a.download=name;document.body.appendChild(a);a.click();a.remove();
+}
+$('#backup').addEventListener('click',()=>{
+  dlBackup(db,'shalgalt-nooc-'+today()+'.json');
   $('#backupMsg').style.color='';$('#backupMsg').textContent=db.exams.length+' шалгалтын нөөц файл татагдлаа.';
 });
 $('#restore').addEventListener('change',e=>{
@@ -6006,8 +6016,39 @@ function startSyncLoop(){
   addEventListener('beforeunload',e=>{if(SYNC.dirty&&navigator.onLine&&AUTH.approved){e.preventDefault();e.returnValue='';}});
 }
 
+/* ---------- үүлэн дэх өдөр тутмын нөөц ----------
+   Сервер (save_db) өдрийн анхны хадгалалтын өмнөх байдлыг snapshots-д хадгална, 14 хоног үлдээнэ. */
+$('#snapLoad').addEventListener('click',async()=>{
+  const box=$('#snapList');box.innerHTML='<p class="hint">Ачаалж байна…</p>';
+  try{
+    const rows=await sbRpc('my_snapshots')||[];
+    box.innerHTML=rows.length?'<div class="t-list" style="margin-top:8px">'+rows.map(r=>`<div class="t-row">
+        <div class="t-who"><b>${esc(r.day)}</b><small>${+r.exams} шалгалт · ${+r.students} сурагчийн хариулт · ${+r.kb} КБ</small>
+          <small>Тэр өдөр засахаас өмнөх байдал</small></div>
+        <div class="t-act"><button class="btn ghost" data-snap="${esc(r.day)}">Энэ байдал руу буцаах</button>
+          <button class="btn ghost" data-snapdl="${esc(r.day)}">Файлаар татах</button></div></div>`).join('')+'</div>'
+      :'<p class="hint" style="margin-top:8px">Одоогоор нөөц алга. Өгөгдлөө засах өдөр бүр автоматаар үүснэ.</p>';
+  }catch(e){box.innerHTML=`<p class="hint" style="color:var(--stain)">${esc(e.message)}</p>`;}
+});
+$('#snapList').addEventListener('click',async e=>{
+  const b=e.target.closest('[data-snap],[data-snapdl]');if(!b)return;
+  const day=b.dataset.snap||b.dataset.snapdl,m=$('#backupMsg');m.style.color='';
+  try{
+    const d=await sbRpc('my_snapshot',{p_day:day});
+    if(!d||!Array.isArray(d.exams))throw new Error('Нөөц олдсонгүй.');
+    if(b.dataset.snapdl){dlBackup(d,'shalgalt-nooc-'+day+'.json');m.textContent=day+'-ны нөөц файл татагдлаа.';return;}
+    if(!confirm(day+'-ны нөөц рүү буцаах уу?\n\n'+d.exams.length+' шалгалттай байдал руу буцна. Одоогийн бүх шалгалт, хариулт тэр өдрийн байдлаар солигдоно.\n\n'
+      +'Санаа зоволтгүй: одоогийн байдлыг эхлээд файлаар татаж хадгална.'))return;
+    dlBackup(db,'shalgalt-nooc-butsaahaas-omnoh-'+today()+'.json');
+    backupLocal('before-snap:'+day);
+    applyDoc(d);save();
+    m.textContent='✓ '+day+'-ны байдал руу буцаалаа. Буцаахаас өмнөх байдал "shalgalt-nooc-butsaahaas-omnoh" файлд хадгалагдсан.';
+  }catch(x){m.style.color='var(--stain)';m.textContent=x.message;}
+});
+
 /* ---------- толгой хэсэг: хэрэглэгч, хадгалалтын төлөв ---------- */
 function syncUi(){
+  const sb=$('#snapBox');if(sb)sb.hidden=!(AUTH.sess&&AUTH.approved);
   const p=$('#syncPill');if(!p)return;
   let t,c='';
   if(!AUTH.sess||!AUTH.approved){p.hidden=true;return;}
