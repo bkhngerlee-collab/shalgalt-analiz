@@ -157,9 +157,50 @@ td input,td select{min-width:70px}
 .opts button[aria-pressed="true"]{background:var(--leaf);border-color:var(--leaf);color:#fff}
 .msg{margin-top:10px;font-size:.9rem;color:var(--leaf);min-height:1.4em}
 .stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin-bottom:18px}
-.stat{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:14px}
+.stat{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:14px;position:relative;box-shadow:var(--shadow)}
 .stat b{display:block;font-size:1.7rem;line-height:1.2;font-variant-numeric:tabular-nums}
 .stat span{color:var(--muted);font-size:.85rem}
+.stat small{display:block;color:var(--muted);font-size:.78rem;margin-top:2px}
+/* Үзүүлэлтийн өнгө: зорилтод хүрсэн / дунд / хүрээгүй — зөөлөн дэвсгэр, зүүн талын зураас */
+.stat.t-good{background:linear-gradient(135deg,var(--leaf-soft),var(--surface) 70%);border-left:4px solid var(--leaf)}
+.stat.t-mid{background:linear-gradient(135deg,var(--iodine-soft),var(--surface) 70%);border-left:4px solid var(--iodine)}
+.stat.t-bad{background:linear-gradient(135deg,var(--stain-soft),var(--surface) 70%);border-left:4px solid var(--stain)}
+.stat.t-good b{color:var(--leaf)} .stat.t-mid b{color:var(--iodine)} .stat.t-bad b{color:var(--stain)}
+/* Өмнөх шалгалттай харьцуулсан өөрчлөлт, бяцхан график */
+.stat .tr{display:inline-block;font-style:normal;font-size:.76rem;font-weight:700;border-radius:999px;padding:1px 8px;margin-top:6px}
+.tr.up{background:var(--leaf-soft);color:var(--leaf)} .tr.dn{background:var(--stain-soft);color:var(--stain)} .tr.eq{background:var(--bg);color:var(--muted)}
+.stat .spark{position:absolute;right:12px;top:14px;width:78px;height:26px;opacity:.9;color:var(--muted)}
+.stat.t-good .spark{color:var(--leaf)} .stat.t-mid .spark{color:var(--iodine)} .stat.t-bad .spark{color:var(--stain)}
+.stats-note{font-size:.78rem;color:var(--muted);margin:-10px 0 16px}
+/* Картууд дээр хулгана очиход зөөлөн өргөгдөнө */
+.stat,.ins{transition:transform .15s ease,box-shadow .15s ease}
+.stat:hover,.ins:hover{transform:translateY(-2px);box-shadow:0 6px 18px rgba(16,26,22,.09)}
+@media (prefers-reduced-motion:reduce){.stat,.ins{transition:none}.stat:hover,.ins:hover{transform:none}}
+/* Excel (ногоон), Word (цэнхэр) товч — танил өнгөөр шууд ялгагдана */
+.btn.xl,.btn.wd{background:var(--surface);color:var(--ink);border-color:var(--field-line);box-shadow:none}
+.btn.xl:hover{border-color:#1D6F42;background:rgba(29,111,66,.08);filter:none;box-shadow:none}
+.btn.wd:hover{border-color:#2B579A;background:rgba(43,87,154,.09);filter:none;box-shadow:none}
+.btn.xl::before,.btn.wd::before{content:"X";display:inline-grid;place-items:center;width:20px;height:20px;border-radius:5px;
+  margin:0 8px 0 -4px;color:#fff;font-size:.72rem;font-weight:800;line-height:1;background:#1D6F42;vertical-align:-4px}
+.btn.wd::before{content:"W";background:#2B579A}
+/* Анализын дэд цэсний тоон тэмдэглэгээ */
+.secnav .sn-b{display:inline-block;min-width:18px;padding:0 5px;margin-left:6px;border-radius:999px;font-size:.72rem;font-weight:700;
+  line-height:18px;text-align:center;background:var(--stain);color:#fff}
+.secnav .sn-b.n{background:var(--line);color:var(--ink)}
+.secnav a.on .sn-b{background:#fff;color:var(--leaf)}
+.ic-gauge{--i:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M4 18a8 8 0 1 1 16 0M12 18l4-6'/%3E%3C/svg%3E")}
+.ic-chart{--i:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.2' stroke-linecap='round'%3E%3Cpath d='M5 20V11M11 20V5M17 20v-6M3 21h18'/%3E%3C/svg%3E")}
+.ic-list{--i:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.2' stroke-linecap='round'%3E%3Cpath d='M9 6h12M9 12h12M9 18h12M4 6h.01M4 12h.01M4 18h.01'/%3E%3C/svg%3E")}
+.ic-shield{--i:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6zM8.5 12l2.5 2.5 4.5-5'/%3E%3C/svg%3E")}
+.ic-layers{--i:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 3l9 5-9 5-9-5zM3 13l9 5 9-5'/%3E%3C/svg%3E")}
+.ic-stairs{--i:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M3 20h5v-5h5v-5h5V5h3'/%3E%3C/svg%3E")}
+.ic-table{--i:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='3' y='5' width='18' height='14' rx='2'/%3E%3Cpath d='M3 10h18M3 15h18M9 5v14'/%3E%3C/svg%3E")}
+.ic-grid{--i:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linejoin='round'%3E%3Cpath d='M4 4h6v6H4zM14 4h6v6h-6zM4 14h6v6H4zM14 14h6v6h-6z'/%3E%3C/svg%3E")}
+.ic-users{--i:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M16 20v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2M9 10a4 4 0 1 0 0-8 4 4 0 0 0 0 8M22 20v-2a4 4 0 0 0-3-3.9M16 2.1a4 4 0 0 1 0 7.8'/%3E%3C/svg%3E")}
+/* Дулааны зураг, радар графикийн тайлбар */
+.heat-scale{display:flex;align-items:center;gap:8px;font-size:.8rem;color:var(--muted);margin-top:8px}
+.heat-scale i{display:block;width:180px;height:10px;border-radius:5px;
+  background:linear-gradient(90deg,hsl(0,62%,44%) 0%,hsl(18,62%,48%) 59%,hsl(36,72%,46%) 60%,hsl(46,72%,46%) 79%,hsl(128,46%,38%) 80%,hsl(142,46%,32%) 100%)}
 .bar{display:grid;grid-template-columns:minmax(110px,220px) 1fr 52px;gap:10px;align-items:center;padding:6px 0}
 .bar .lbl{font-size:.9rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .track{height:18px;background:var(--bg);border-radius:9px;overflow:hidden}
@@ -954,7 +995,7 @@ body.student #studentApp{display:block}
     <div class="btns">
       <button class="btn" id="vRefresh">Үр дүн шинэчлэх</button>
       <button class="btn ghost" id="vToggle">Сорилыг хаах</button>
-      <button class="btn ghost" id="vXlsx">Excel файлаар татах</button>
+      <button class="btn xl" id="vXlsx">Excel файлаар татах</button>
       <button class="btn danger" id="vDelete">Сорил устгах</button>
       <label style="display:flex;align-items:center;gap:6px;margin:0;color:var(--ink)"><input type="checkbox" id="vAuto" style="width:auto"> 10 секунд тутам шинэчлэх</label>
     </div>
@@ -3255,6 +3296,26 @@ function bar(label,p,extra){
     <div class="track"><div class="fill ${lvl(p)}" style="width:${Math.max(p,1.5)}%"></div></div>
     <div class="val">${Math.round(p)}%</div></div>${extra||''}`;
 }
+/* Сурагчтай бүх шалгалтын үндсэн үзүүлэлт, огноогоор эрэмбэлсэн — өмнөх шалгалттай харьцуулах,
+   бяцхан график зурахад. cls өгвөл зөвхөн тэр ангийнх. compute() нь state-ээс хамаардаг тул түр солино. */
+function examSeries(cls){
+  const cur=state,out=[];
+  const list=db.exams.filter(e=>e.students&&e.students.length&&(!cls||e.students.some(s=>s.cls===cls)))
+    .sort((a,b)=>(a.exam.date||'').localeCompare(b.exam.date||''));
+  try{for(const e of list){state=e;const k=compute(cls?e.students.filter(s=>s.cls===cls):e.students);
+    out.push({id:e.id,label:(e.exam.title||'Нэргүй шалгалт')+(e.exam.date?', '+e.exam.date:''),avg:k.avg,success:k.success,quality:k.quality});}}
+  finally{state=cur;}
+  return out;
+}
+function sparkSvg(vals){
+  if(vals.length<2)return'';
+  const W=78,H=26,p=3,x=i=>p+i*(W-2*p)/(vals.length-1),y=v=>H-p-(Math.max(0,Math.min(100,v))/100)*(H-2*p);
+  const pts=vals.map((v,i)=>x(i).toFixed(1)+','+y(v).toFixed(1)).join(' '),L=vals.length-1;
+  return`<svg class="spark" viewBox="0 0 ${W} ${H}" aria-hidden="true"><polyline points="${pts}" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round" opacity=".55"/>`
+    +`<circle cx="${x(L).toFixed(1)}" cy="${y(vals[L]).toFixed(1)}" r="2.6" fill="currentColor"/></svg>`;
+}
+/* Зорилтын босго: дундаж гүйцэтгэл 80/60, амжилт 70/50, чанар 40/20 (%) */
+const toneOf=(v,g,m)=>v>=g?'t-good':v>=m?'t-mid':'t-bad';
 function renderAnalysis(){
   const el=$('#analysis');
   if(!state.students.length){
@@ -3268,6 +3329,12 @@ function renderAnalysis(){
   const best=d.topics[0],worst=d.topics[d.topics.length-1];
   const levels=LEVELS.map(l=>({g:l[0],range:l[1]+'–'+l[2],who:d.rows.filter(r=>r.lv===l[0])}));
   const sel=d.rows.find(r=>r.s.id===selId);
+  /* Өмнөх шалгалттай харьцуулалт, нэрсийн жагсаалт дахь сурагчийн тоо */
+  const ser=examSeries(filterCls),ix=ser.findIndex(x=>x.id===state.id);
+  const prev=ix>0?ser[ix-1]:null,hist=ix>=0?ser.slice(Math.max(0,ix-7),ix+1):[];
+  const trend=k=>{if(!prev)return'';const r=Math.round(d[k]-prev[k]);
+    return`<em class="tr ${r>0?'up':r<0?'dn':'eq'}" title="Өмнөх шалгалт: ${esc(prev.label)} — ${Math.round(prev[k])}%">${r>0?'▲ +'+r:r<0?'▼ '+r:'● 0'} пункт</em>`;};
+  const roster=(filterCls?[filterCls]:classes).reduce((a,c)=>{const x=db.classes.find(k=>k.name===c);return a+(x?x.students.length:0);},0);
 
   /* Дүнгийн стандарт биелэлт: мөр бүр нэг анги, баганад түвшин I–VIII */
   function stdTable(allCls){
@@ -3329,7 +3396,7 @@ function renderAnalysis(){
         <td class="num"><b>${Math.round(t.p)}%</b></td><td><span class="${pl[1]}">${pl[0]}</span></td>
         <td class="num"><b class="${dl[1]}">${f2(t.D)}</b></td><td><span class="${dl[1]}">${dl[0]}</span></td>
         <td class="num">${f2(t.rpb)}</td></tr>`;};
-    return`<div class="panel" data-sec="Чанар"><h2>Асуултын чанарын шинжилгээ</h2>
+    return`<div class="panel" data-sec="Чанар" data-badge="${neg.length+bad.length}" data-badge-title="Ялгах чадвар сул эсвэл сөрөг асуулт"><h2>Асуултын чанарын шинжилгээ</h2>
       <p class="hint">Сурагчдын дүнг биш, <b>асуулт өөрөө хэр сайн бичигдсэнийг</b> үнэлнэ. Аль асуултыг хэвээр үлдээж, алийг дахин бичихийг эндээс харна.</p>
       <div class="stats" style="margin-bottom:12px">
         <div class="stat"><b class="${kr[1]}">${d.kr20==null?'–':f2(d.kr20)}</b><span>KR-20 найдвартай байдал — ${kr[0]}</span></div>
@@ -3393,19 +3460,20 @@ function renderAnalysis(){
     </div>
     ${anonOn()?'<p class="hint" style="margin:0">Сурагчдын нэр дэлгэц, график, хэвлэлт дээр код (№) болж харагдана. Код нь "Нэрс" хэсэгт сурагч бүрд өгсөн дугаар. <b>Татаж авсан Excel, Word файлд нэр хэвээр бичигдэнэ.</b></p>':''}
     <div class="btns noprint">
-      <button class="btn" id="xXlsx">Excel файлаар татах</button>
-      <button class="btn" id="xDocx">Word тайлангаар татах</button>
+      <button class="btn xl" id="xXlsx">Excel файлаар татах</button>
+      <button class="btn wd" id="xDocx">Word тайлангаар татах</button>
       <button class="btn ghost" onclick="window.print()">Хэвлэх</button>
     </div>
     <div class="msg noprint" id="xMsg" role="status"></div>
   </div>
 
   <div class="stats">
-    <div class="stat"><b>${d.n}</b><span>Оролцсон сурагч</span></div>
-    <div class="stat"><b>${Math.round(d.avg)}%</b><span>Дундаж гүйцэтгэл</span></div>
-    <div class="stat"><b>${Math.round(d.success)}%</b><span>Амжилт (60%-аас дээш)</span></div>
-    <div class="stat"><b>${Math.round(d.quality)}%</b><span>Чанар (80%-аас дээш)</span></div>
+    <div class="stat"><b>${d.n}</b><span>Оролцсон сурагч</span>${roster>d.n?`<small>нэрсийн ${roster} сурагчийн ${Math.round(d.n/roster*100)}%</small>`:''}</div>
+    <div class="stat ${toneOf(d.avg,80,60)}"><b>${Math.round(d.avg)}%</b><span>Дундаж гүйцэтгэл</span>${trend('avg')}${sparkSvg(hist.map(h=>h.avg))}</div>
+    <div class="stat ${toneOf(d.success,70,50)}"><b>${Math.round(d.success)}%</b><span>Амжилт (60%-аас дээш)</span>${trend('success')}</div>
+    <div class="stat ${toneOf(d.quality,40,20)}"><b>${Math.round(d.quality)}%</b><span>Чанар (80%-аас дээш)</span>${trend('quality')}</div>
   </div>
+  ${prev?`<p class="stats-note">▲▼ — өмнөх шалгалт <b>${esc(prev.label)}</b>${filterCls?' ('+esc(filterCls)+' анги)':''}-тай харьцуулсан өөрчлөлт, хувийн пунктээр.${hist.length>1?' Муруй: сүүлийн '+hist.length+' шалгалтын дундаж.':''}</p>`:''}
 
   <div class="insights">
     <div class="ins up"><h3>Хамгийн сайн эзэмшсэн агуулга</h3><p>${esc(best.t)}</p><small>${Math.round(best.pct)}% зөв хариулсан</small></div>
@@ -3416,7 +3484,7 @@ function renderAnalysis(){
 
   <div class="panel" id="chartPanel" data-sec="График"></div>
 
-  <div class="panel" data-sec="Асуулт бүрээр"><h2>Асуулт тус бүрийн гүйцэтгэл</h2>
+  <div class="panel" data-sec="Асуулт бүрээр" data-badge="${d.qPct.filter(p=>p<60).length}" data-badge-title="60%-аас доош гүйцэтгэлтэй асуулт"><h2>Асуулт тус бүрийн гүйцэтгэл</h2>
     <p class="hint">Тухайн асуултад зөв хариулсан сурагчдын хувь.</p>
     ${qs.map((q,i)=>bar((i+1)+'. '+topicOf(i),d.qPct[i])).join('')}
     <div class="legend">Ногоон: 80%-аас дээш. Шар: 60–79%. Улаан: 60%-аас доош.</div>
@@ -3424,7 +3492,7 @@ function renderAnalysis(){
 
   ${qualityHtml()}
 
-  <div class="panel" data-sec="Агуулга"><h2>Агуулга тус бүрийн гүйцэтгэл</h2>
+  <div class="panel" data-sec="Агуулга" data-badge="${d.topics.filter(t=>t.pct<60).length}" data-badge-title="60%-аас доош гүйцэтгэлтэй агуулга"><h2>Агуулга тус бүрийн гүйцэтгэл</h2>
     <p class="hint">Ижил агуулгатай асуултуудын дундаж, сайнаас сул руу эрэмбэлсэн.</p>
     ${d.topics.map(t=>bar(t.t+' ('+t.idx.length+' асуулт)',t.pct)).join('')}
   </div>
@@ -3442,20 +3510,20 @@ function renderAnalysis(){
 
   <div class="panel" data-sec="Стандарт биелэлт"><div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap">
       <h2 style="margin:0">Дүнгийн стандарт биелэлт</h2>
-      <button class="btn noprint" id="stdXlsx">Excel файлаар татах</button></div>
+      <button class="btn xl noprint" id="stdXlsx">Excel файлаар татах</button></div>
     <div class="msg noprint" id="stdMsg" role="status"></div>
     <p class="hint">Анги бүрээр: хамрагдалт, амжилт, чанар, гүйцэтгэл болон түвшин тус бүрд хэдэн сурагч багтсан.</p>
     <div class="scroll">${stdTable(classes)}</div>
   </div>
 
   <div class="panel" data-sec="Дүнгийн хүснэгт"><div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap"><h2 style="margin:0">Дүнгийн хүснэгт</h2>
-    <button class="btn noprint" id="mxXlsx">Дүнгийн хүснэгтийг Excel-ээр татах</button></div>
+    <button class="btn xl noprint" id="mxXlsx">Дүнгийн хүснэгтийг Excel-ээр татах</button></div>
     <div class="msg noprint" id="mxMsg" role="status"></div>
     <p class="hint">Мөр бүр сурагч, багана бүр асуулт. Нүдэнд тухайн асуултаар авсан оноо: ногоон нь бүтэн оноо, шар нь хэсэгчилсэн, улаан нь 0. Доод мөрүүдэд асуулт бүрийн ангийн нийт авах оноо, авсан оноо, дундаж, гүйцэтгэл гарна. Доорх "Харуулах", "Эрэмбэлэх" сонголт энэ хүснэгтэд ч хамаарна.</p>
     ${matrixHtml(viewRows(d.rows,{pct:r=>r.pct,name:r=>r.s.name,cls:r=>r.s.cls,show:viewShow,sort:viewSort,avg:d.avg}),qs,!filterCls)}
   </div>
 
-  <div class="panel" data-sec="Сурагч бүрээр"><h2>Сурагч тус бүрийн дүн</h2>
+  <div class="panel" data-sec="Сурагч бүрээр" data-badge-n="${d.n}"><h2>Сурагч тус бүрийн дүн</h2>
     <p class="hint">Байр нь тухайн сурагчийн өөрийн ангид оноогоороо эзэлж буй байр. "Дунджаас зөрүү" нь сурагчийн хувь ${filterCls?'ангийн':'сонгосон бүх сурагчийн'} дунджаас хэдэн хувиар дээш, доош байгааг заана. Мөр дээр дарвал ямар агуулга дээр алдсан нь харагдана.</p>
     ${viewControls('a',viewShow,viewSort)}
     ${avgSummary(d.rows,r=>r.pct,d.avg,` (${r1(d.avg*d.total/100)} / ${r1(d.total)} оноо)`)}
@@ -3852,8 +3920,8 @@ function renderFinal(){
   <div class="panel"><h2>${esc(finalCls)} анги: ${R.length} шалгалтын нэгдсэн дүн</h2>
     <p class="hint" style="margin:0">${R.map(r=>esc(exLabel(r.e))+' '+esc(r.e.exam.title||'')).join('; ')}</p>
     <div class="btns noprint">
-      <button class="btn" id="fXlsx">Excel файлаар татах</button>
-      <button class="btn" id="fDocx">Word тайлангаар татах</button>
+      <button class="btn xl" id="fXlsx">Excel файлаар татах</button>
+      <button class="btn wd" id="fDocx">Word тайлангаар татах</button>
       <button class="btn ghost" onclick="window.print()">Хэвлэх</button>
     </div>
     <div class="msg noprint" id="fMsg" role="status"></div></div>
@@ -4960,7 +5028,10 @@ function chartDefs(){return `<defs>
   <filter id="cSh" x="-35%" y="-35%" width="170%" height="180%">
     <feDropShadow dx="0" dy="3" stdDeviation="3.2" flood-color="#000" flood-opacity=".22"/></filter>
 </defs>`;}
-const DATA_OPTS=[['q','Асуулт тус бүрийн гүйцэтгэл'],['t','Агуулга тус бүрийн гүйцэтгэл'],['lv','Түвшний тархалт'],['s','Сурагчдын гүйцэтгэл'],['c','Ангиудын харьцуулалт']];
+const DATA_OPTS=[['q','Асуулт тус бүрийн гүйцэтгэл'],['t','Агуулга тус бүрийн гүйцэтгэл'],['lv','Түвшний тархалт'],['s','Сурагчдын гүйцэтгэл'],['c','Ангиудын харьцуулалт'],
+  ['qd','Асуултын хүндрэлийн тархалт'],['hm','Дулааны зураг: анги × асуулт'],['rd','Агуулгын радар']];
+/* Өөрийн тусгай зурагтай өгөгдөл — графикийн төрөл сонгох шаардлагагүй */
+const SPECIAL=['hm','rd'],PIE_OK=['lv','qd'];
 const TYPE_OPTS=[['bar','Босоо багана'],['hbar','Хэвтээ багана'],['line','Шугаман'],['pie','Дугуй']];
 const PIE_COLORS=['#1F5A41','#3E8A63','#78B48F','#A96A12','#D19A3E','#B4314A','#D46A80','#8A93A6'];
 function series(d){
@@ -4969,6 +5040,9 @@ function series(d){
   if(chartData==='t')return{pct:true,items:d.topics.map(t=>({l:t.t,full:t.t,v:t.pct}))};
   if(chartData==='lv')return{pct:false,items:LEVELS.map(l=>({l:l[0],full:l[0]+' түвшин ('+l[1]+'–'+l[2]+'%)',v:d.rows.filter(r=>r.lv===l[0]).length}))};
   if(chartData==='s')return{pct:true,items:d.rows.map(r=>{const nm=dName(r.s.cls,r.s.name);return{l:nm,full:nm+(r.s.cls?' ('+r.s.cls+')':''),v:r.pct};})};
+  if(chartData==='qd'){const k=f=>d.qPct.filter(f).length;
+    return{pct:false,items:[{l:'Хялбар',full:'Хялбар (80%+ зөв хариулсан)',v:k(p=>p>=80),c:'#3E8A63'},
+      {l:'Дунд',full:'Дунд (40–79% зөв)',v:k(p=>p>=40&&p<80),c:'#D19A3E'},{l:'Хүнд',full:'Хүнд (40%-аас доош зөв)',v:k(p=>p<40),c:'#B4314A'}],unit:'асуулт'};}
   const cs=[...new Set(state.students.map(s=>s.cls||'Ангигүй'))].sort((a,b)=>a.localeCompare(b,'mn',{numeric:true}));
   return{pct:true,items:cs.map(c=>({l:c,full:c+' анги',v:compute(state.students.filter(s=>(s.cls||'Ангигүй')===c)).avg}))};
 }
@@ -5035,7 +5109,7 @@ function svgPie(S){
   const d3=chartStyle==='deep',soft=chartStyle!=='flat';
   const items=S.items.filter(i=>i.v>0),tot=items.reduce((a,i)=>a+i.v,0)||1;
   const c=130,rx=118,ry=d3?70:118,cy=d3?112:130,dep=d3?26:0,H=d3?232:260;
-  const clrOf=(it,k)=>PIE_COLORS[LEVELS.findIndex(l=>l[0]===it.l)]||PIE_COLORS[k%8];
+  const clrOf=(it,k)=>it.c||PIE_COLORS[LEVELS.findIndex(l=>l[0]===it.l)]||PIE_COLORS[k%8];
   const path=(a0,a1,y)=>items.length===1
     ? `M${c-rx},${y} a${rx},${ry} 0 1 0 ${rx*2},0 a${rx},${ry} 0 1 0 ${-rx*2},0`
     : `M${c},${y} L${c+rx*Math.cos(a0)},${y+ry*Math.sin(a0)} A${rx},${ry} 0 ${a1-a0>Math.PI?1:0} 1 ${c+rx*Math.cos(a1)},${y+ry*Math.sin(a1)} Z`;
@@ -5053,27 +5127,77 @@ function svgPie(S){
     a0=a1;});
   g+=`<ellipse cx="${c}" cy="${cy}" rx="56" ry="${d3?33:56}" fill="var(--surface)"/>`
     +`<text x="${c}" y="${cy+(d3?2:-2)}" text-anchor="middle" font-size="${d3?22:26}" font-weight="700" fill="var(--ink)">${tot}</text>`
-    +(d3?`<text x="${c}" y="${cy+18}" text-anchor="middle" font-size="10" fill="var(--muted)">сурагч</text>`
-        :`<text x="${c}" y="${cy+18}" text-anchor="middle" font-size="12" fill="var(--muted)">сурагч</text>`);
+    +(d3?`<text x="${c}" y="${cy+18}" text-anchor="middle" font-size="10" fill="var(--muted)">${S.unit||'сурагч'}</text>`
+        :`<text x="${c}" y="${cy+18}" text-anchor="middle" font-size="12" fill="var(--muted)">${S.unit||'сурагч'}</text>`);
   const leg=items.map((it,k)=>`<div><i style="background:${clrOf(it,k)}"></i>${esc(it.full)}: <b>${it.v}</b> (${Math.round(it.v/tot*100)}%)</div>`).join('');
   return`<div class="pie-wrap"><svg viewBox="0 0 260 ${H}" width="260" xmlns="http://www.w3.org/2000/svg">${chartDefs()}${g}</svg><div class="pie-legend">${leg}</div></div>`;
+}
+/* Дулааны зураг: мөр бүр анги (олон анги бол "Нийт" мөр нэмнэ), багана бүр асуулт.
+   Нүдний өнгө улаанаас (0%) шар дамжин ногоон (100%) руу шилжинэ — аль асуулт дээр алдсан нь шууд харагдана. */
+/* Програмын бусад хэсэгтэй ижил босго: 60%-аас доош улаан, 60–79 шар, 80+ ногоон; бүс дотроо зөөлөн шилжинэ */
+const heatClr=p=>{p=Math.max(0,Math.min(100,p));
+  return p<60?`hsl(${(p/60*18).toFixed(0)},62%,${44+p/60*4}%)`:p<80?`hsl(${(36+(p-60)/20*10).toFixed(0)},72%,46%)`:`hsl(${(128+(p-80)/20*14).toFixed(0)},46%,${38-(p-80)/20*6}%)`;};
+function svgHeat(){
+  const qs=state.exam.questions,n=qs.length;
+  const cs=[...new Set(state.students.map(s=>s.cls||'Ангигүй'))].sort((a,b)=>a.localeCompare(b,'mn',{numeric:true}));
+  const rows=(filterCls?[filterCls]:cs).map(c=>({l:c,v:compute(state.students.filter(s=>(s.cls||'Ангигүй')===c)).qPct}));
+  if(rows.length>1)rows.push({l:'Нийт',v:compute(state.students).qPct,tot:true});
+  const cw=Math.max(24,Math.min(40,Math.floor(620/Math.max(1,n)))),ch=30,L=74,T=24,W=L+n*cw+8,H=T+rows.length*(ch+3)+4;
+  let g='';
+  qs.forEach((q,i)=>{g+=`<text x="${L+i*cw+cw/2}" y="${T-8}" text-anchor="middle" font-size="10.5" fill="var(--muted)">${i+1}</text>`;});
+  rows.forEach((r,j)=>{const y=T+j*(ch+3);
+    g+=`<text x="${L-8}" y="${y+ch/2+4}" text-anchor="end" font-size="12" font-weight="${r.tot?700:500}" fill="var(--ink)">${esc(cut(r.l,10))}</text>`;
+    r.v.forEach((p,i)=>{g+=`<rect x="${L+i*cw+1}" y="${y}" width="${cw-2}" height="${ch}" rx="5" fill="${heatClr(p)}"><title>${esc(r.l)}, ${i+1}-р асуулт (${esc(topicOf(i))}): ${Math.round(p)}% зөв</title></rect>`
+      +(cw>=26?`<text x="${L+i*cw+cw/2}" y="${y+ch/2+4}" text-anchor="middle" font-size="10" font-weight="600" fill="#fff" pointer-events="none">${Math.round(p)}</text>`:'');});});
+  return`<svg viewBox="0 0 ${W} ${H}" style="min-width:${Math.min(W,900)}px" xmlns="http://www.w3.org/2000/svg">${g}</svg>`;
+}
+/* Радар: агуулга бүр нэг тэнхлэг. Анги шүүгээгүй, 2–4 анги байвал анги тус бүрийг давхарлаж харьцуулна. */
+const RADAR_CLR=['var(--leaf)','#D19A3E','#4C7BD9','#B4314A','#8A5BD6'];
+function svgRadar(d){
+  const qs=state.exam.questions,axes=[];qs.forEach((q,i)=>{const t=topicOf(i);if(!axes.includes(t))axes.push(t);});
+  if(axes.length<3)return{msg:'Радар зурахад дор хаяж 3 өөр агуулга хэрэгтэй. "1. Шалгалт" хэсэгт асуултуудын агуулгыг (сэдэв) бичнэ үү.'};
+  if(axes.length>12)return{msg:'Агуулга '+axes.length+' байна — радар 12 хүртэл агуулгатай үед л уншигдахуйц. "Агуулга тус бүрийн гүйцэтгэл"-ийн хэвтээ баганыг ашиглана уу.'};
+  const pctBy=k=>axes.map(t=>{const x=k.topics.find(y=>y.t===t);return x?x.pct:0;});
+  const ser=[{l:filterCls?filterCls+' анги':'Бүх сурагч',v:pctBy(d)}];
+  const cs=[...new Set(state.students.map(s=>s.cls).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'mn',{numeric:true}));
+  if(!filterCls&&cs.length>=2&&cs.length<=4)cs.forEach(c=>ser.push({l:c+' анги',v:pctBy(compute(state.students.filter(s=>s.cls===c)))}));
+  const W=520,H=400,cx=W/2,cy=H/2+6,R=140,N=axes.length,ang=i=>-Math.PI/2+i*2*Math.PI/N;
+  const pt=(i,p)=>[cx+R*p/100*Math.cos(ang(i)),cy+R*p/100*Math.sin(ang(i))];
+  let g='';
+  [20,40,60,80,100].forEach(p=>{g+=`<polygon points="${axes.map((a,i)=>pt(i,p).join(',')).join(' ')}" fill="none" stroke="var(--${p===60?'muted':'line'})"${p===60?' stroke-dasharray="4 3"':''}/>`;});
+  g+=`<text x="${cx+4}" y="${pt(0,60)[1]-3}" font-size="9.5" fill="var(--muted)">60%</text><text x="${cx+4}" y="${pt(0,100)[1]-3}" font-size="9.5" fill="var(--muted)">100%</text>`;
+  axes.forEach((t,i)=>{const [x,y]=pt(i,100),[lx,ly]=pt(i,118),c=Math.cos(ang(i));
+    g+=`<line x1="${cx}" y1="${cy}" x2="${x}" y2="${y}" stroke="var(--line)"/>`
+      +`<text x="${lx}" y="${ly+4}" text-anchor="${Math.abs(c)<.2?'middle':c>0?'start':'end'}" font-size="11.5" fill="var(--ink)">${esc(cut(t,18))}<title>${esc(t)}</title></text>`;});
+  ser.forEach((s,k)=>{const c=RADAR_CLR[k%5],main=k===0;
+    g+=`<polygon points="${s.v.map((p,i)=>pt(i,p).join(',')).join(' ')}" fill="${c}" fill-opacity="${main?.2:.08}" stroke="${c}" stroke-width="${main?2.5:1.8}" stroke-linejoin="round"/>`;
+    s.v.forEach((p,i)=>{const [x,y]=pt(i,p);g+=`<circle cx="${x}" cy="${y}" r="${main?3.6:2.6}" fill="${c}"><title>${esc(s.l)} — ${esc(axes[i])}: ${Math.round(p)}%</title></circle>`;});});
+  const leg=ser.map((s,k)=>`<div><i style="background:${RADAR_CLR[k%5]}"></i>${esc(s.l)}: дундаж <b>${Math.round(s.v.reduce((a,v)=>a+v,0)/N)}%</b></div>`).join('');
+  return{html:`<div class="pie-wrap"><svg viewBox="0 0 ${W} ${H}" style="width:${W}px;max-width:100%" xmlns="http://www.w3.org/2000/svg">${g}</svg><div class="pie-legend">${leg}</div></div>`};
 }
 function renderChart(){
   const p=$('#chartPanel');if(!p||!lastD)return;
   chartStyle=chcfg().style||'deep';
-  if(chartType==='pie'&&chartData!=='lv')chartType='bar';
-  const S=series(lastD),title=DATA_OPTS.find(o=>o[0]===chartData)[1];
-  const body=!S.items.length?'<div class="empty">Харуулах өгөгдөл алга.</div>'
-    :chartType==='pie'?svgPie(S):chartType==='hbar'?svgHBar(S):svgBar(S,chartType==='line');
+  if(chartType==='pie'&&!PIE_OK.includes(chartData))chartType='bar';
+  const sp=SPECIAL.includes(chartData),title=DATA_OPTS.find(o=>o[0]===chartData)[1];
+  let S={items:[]},body;
+  if(chartData==='hm')body=svgHeat()+'<div class="heat-scale">0%<i></i>100% зөв хариулсан</div>';
+  else if(chartData==='rd'){const r=svgRadar(lastD);body=r.msg?`<div class="empty">${esc(r.msg)}</div>`:r.html;}
+  else{S=series(lastD);
+    body=!S.items.length?'<div class="empty">Харуулах өгөгдөл алга.</div>'
+      :chartType==='pie'?svgPie(S):chartType==='hbar'?svgHBar(S):svgBar(S,chartType==='line');}
   p.innerHTML=`<h2>График</h2>
     <div class="chart-controls">
       <div><label for="cdata">Юуг харуулах</label><select id="cdata">${DATA_OPTS.map(o=>`<option value="${o[0]}"${o[0]===chartData?' selected':''}>${o[1]}</option>`).join('')}</select></div>
-      <div><label for="ctype">Графикийн төрөл</label><select id="ctype">${TYPE_OPTS.map(o=>`<option value="${o[0]}"${o[0]===chartType?' selected':''}${o[0]==='pie'&&chartData!=='lv'?' disabled':''}>${o[1]}${o[0]==='pie'&&chartData!=='lv'?' (зөвхөн түвшинд)':''}</option>`).join('')}</select></div>
-      <div><label for="cstyle">Загвар</label><select id="cstyle">${STYLE_OPTS.map(o=>`<option value="${o[0]}"${o[0]===chartStyle?' selected':''}>${o[1]}</option>`).join('')}</select></div>
+      <div><label for="ctype">Графикийн төрөл</label><select id="ctype"${sp?' disabled':''}>${TYPE_OPTS.map(o=>{const no=o[0]==='pie'&&!PIE_OK.includes(chartData);
+        return`<option value="${o[0]}"${o[0]===chartType?' selected':''}${no?' disabled':''}>${o[1]}${no?' (зөвхөн түвшин, хүндрэлд)':''}</option>`;}).join('')}</select></div>
+      <div><label for="cstyle">Загвар</label><select id="cstyle"${sp?' disabled':''}>${STYLE_OPTS.map(o=>`<option value="${o[0]}"${o[0]===chartStyle?' selected':''}>${o[1]}</option>`).join('')}</select></div>
     </div>
     <h3 id="ctitle" style="margin:0 0 8px;font-size:1rem">${esc(title)}${filterCls&&chartData!=='c'?', '+esc(filterCls)+' анги':''}</h3>
     <div class="chart-box" id="cbox">${body}</div>
     ${S.pct&&chartType!=='pie'?'<div class="legend">Ногоон: 80%-аас дээш. Шар: 60–79%. Улаан: 60%-аас доош.</div>':''}
+    ${chartData==='hm'?'<div class="legend">Улаан нүд — тэр ангийн олонх нь алдсан асуулт. Нүдэн дээр очиход асуултын агуулга харагдана.</div>':''}
+    ${chartData==='rd'?'<div class="legend">Тэнхлэг бүр нэг агуулга. Төвөөс хол байх тусам сайн. Тасархай шугам — 60%.</div>':''}
     <div class="btns"><button class="btn ghost" id="cpng">Графикийг зураг болгож татах</button></div>`;
   $('#cdata').addEventListener('change',e=>{chartData=e.target.value;renderChart();});
   $('#ctype').addEventListener('change',e=>{chartType=e.target.value;renderChart();});
@@ -5690,6 +5814,8 @@ $('#hpPrint').addEventListener('click',()=>{hpAll(true);setTimeout(()=>window.pr
 
 /* data-sec гэж тэмдэглэсэн хэсгүүдээс шилжих цэсийг өөрөө угсарна.
    Байхгүй хэсэг (жишээ нь чанарын шинжилгээ) бол цэсэнд ч гарахгүй. */
+const SEC_IC={'Ерөнхий':'ic-gauge','График':'ic-chart','Асуулт бүрээр':'ic-list','Чанар':'ic-shield','Агуулга':'ic-layers',
+  'Түвшин':'ic-stairs','Стандарт биелэлт':'ic-table','Дүнгийн хүснэгт':'ic-grid','Сурагч бүрээр':'ic-users'};
 function buildSecNav(box){
   if(!box)return;
   const old=box.firstElementChild;
@@ -5700,7 +5826,13 @@ function buildSecNav(box){
   nav.className='secnav noprint';nav.setAttribute('aria-label','Цонхны хэсгүүд');
   secs.forEach((s,i)=>{
     if(!s.id)s.id='sec-'+(box.id||'x')+'-'+i;
-    const a=document.createElement('a');a.href='#'+s.id;a.textContent=s.dataset.sec;nav.appendChild(a);});
+    const a=document.createElement('a');a.href='#'+s.id;a.textContent=s.dataset.sec;
+    if(SEC_IC[s.dataset.sec])a.className='ic '+SEC_IC[s.dataset.sec];
+    /* data-badge: тухайн хэсэгт анхаарах зүйлийн тоо (улаан) эсвэл зүгээр тоо (data-badge-n) */
+    const bn=s.dataset.badge||s.dataset.badgeN;
+    if(bn&&bn!=='0'){const b=document.createElement('span');b.className='sn-b'+(s.dataset.badge?'':' n');b.textContent=bn;
+      if(s.dataset.badgeTitle)a.title=s.dataset.badgeTitle;a.appendChild(b);}
+    nav.appendChild(a);});
   box.insertBefore(nav,box.firstChild);
 }
 /* ---------- Толгой цэс байрандаа үлдэж, доош гүйлгэхэд агшина ----------
