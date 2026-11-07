@@ -752,7 +752,7 @@ body.student #studentApp{display:block}
     <p class="hint">Анги бүрийн сурагчдын нэрсийг нэг удаа оруулахад бүх шалгалтад ашиглагдана. Сурагч бүр ангидаа давхцахгүй 2 оронтой кодтой бөгөөд хариултын хуудсан дээр түүнийгээ будна. Нэрсийг Excel эсвэл Word-оос хуулж буулгана. Дугаартай хуулбал ("7. Анужин") тэр дугаар нь код болно, дугааргүй бол код автоматаар өгөгдөнө.</p>
     <div class="row">
       <div><label for="rcls">Анги</label><select id="rcls"></select></div>
-      <div><label for="newCls">Шинэ анги нэмэх</label><div style="display:flex;gap:8px"><input id="newCls" placeholder="Жишээ: 11В"><button class="btn" id="addCls">Нэмэх</button></div></div>
+      <div><label for="newCls">Шинэ анги нэмэх</label><div style="display:flex;gap:8px"><input id="newCls" name="new-class-name" placeholder="Жишээ: 11В" autocomplete="off" data-lpignore="true" data-1p-ignore><button class="btn" id="addCls">Нэмэх</button></div></div>
     </div>
     <label for="rnames" style="margin-top:12px">Код ба нэр (мөр бүрд нэг сурагч)</label>
     <textarea id="rnames" style="font-family:inherit;min-height:200px" placeholder="01 Анужин&#10;02 Билгүүн&#10;03 Номин"></textarea>
@@ -804,7 +804,7 @@ body.student #studentApp{display:block}
     </ol>
     <div class="row">
       <div style="flex:3 1 300px"><label for="cApi">Google Apps Script Web app URL</label><input id="cApi" placeholder="https://script.google.com/macros/s/.../exec" autocomplete="off"></div>
-      <div><label for="cKey">Багшийн нууц үг</label><input id="cKey" type="password" autocomplete="off"></div>
+      <div><label for="cKey">Багшийн нууц үг</label><input id="cKey" type="password" autocomplete="new-password" data-lpignore="true"></div>
     </div>
     <div class="btns">
       <button class="btn ghost" id="cTest">Холболт шалгах</button>
@@ -952,7 +952,7 @@ body.student #studentApp{display:block}
     </details>
     <div class="row" style="margin-top:12px">
       <div style="flex:3 1 300px"><label for="vApi">Google Apps Script Web app URL</label><input id="vApi" placeholder="https://script.google.com/macros/s/.../exec" autocomplete="off"></div>
-      <div><label for="vKey">Багшийн нууц үг</label><input id="vKey" type="password" autocomplete="off"></div>
+      <div><label for="vKey">Багшийн нууц үг</label><input id="vKey" type="password" autocomplete="new-password" data-lpignore="true"></div>
     </div>
     <div class="row" id="vBaseRow" style="margin-top:10px" hidden>
       <div style="flex:1 1 300px"><label for="vBase">Программын нийтэд нээлттэй хаяг (GitHub Pages)</label><input id="vBase" placeholder="https://таны-нэр.github.io/shalgalt-analiz/">
@@ -2977,6 +2977,8 @@ function renderRosterSetup(){
 $('#rcls').addEventListener('change',e=>{rosterCls=e.target.value;renderRosterSetup();$('#rosterMsg').textContent='';});
 $('#addCls').addEventListener('click',()=>{
   const raw=$('#newCls').value.trim(),m=$('#rosterMsg');if(!raw){$('#newCls').focus();return;}
+  if(raw.includes('@')){$('#newCls').value='';$('#newCls').focus();
+    m.style.color='var(--stain)';m.textContent='Энд ангийн нэрийг бичнэ (жишээ нь 11В), и-мэйл биш.';return;}
   const old=findClass(raw);
   if(old){rosterCls=old.name;renderRosterSetup();$('#newCls').value='';
     m.style.color='var(--stain)';m.textContent=old.name+' анги аль хэдийн байна. Тэр ангийг нээлээ, доороос нэрсийг нь засна уу.';return;}
@@ -2988,6 +2990,10 @@ $('#addCls').addEventListener('click',()=>{
   m.style.color='';m.textContent=n+' анги нэмэгдлээ. Одоо сурагчдын нэрсийг оруулна уу.';$('#rnames').focus();
 });
 $('#newCls').addEventListener('keydown',e=>{if(e.key==='Enter')$('#addCls').click();});
+/* Хөтөч нэвтрэх и-мэйлийг энэ нүдэнд өөрөө бөглөчихдөг — ангийн нэр биш тул арилгана */
+const clsAutofill=()=>{const n=$('#newCls');if(n&&n.value.includes('@'))n.value='';};
+[600,2000,5000].forEach(t=>setTimeout(clsAutofill,t));
+$('#newCls').addEventListener('focus',clsAutofill);
 $('#saveRoster').addEventListener('click',()=>{
   const c=db.classes.find(x=>x.name===rosterCls),m=$('#rosterMsg');if(!c)return;
   const items=[],seen=new Set();
