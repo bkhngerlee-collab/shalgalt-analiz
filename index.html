@@ -2387,15 +2387,13 @@ function qCardHTML(base,i,v,lk){
   const nav=B?'<span></span><span></span>'
     :`<button type="button" class="qbtn" data-i="${i}" data-f="qins"${lk?' disabled title="Шалгалт түгжээтэй"':' title="Доор нь шинэ асуулт нэмэх"'}>＋</button>
       <button type="button" class="qbtn del" data-i="${i}" data-f="qdel"${lk?' disabled title="Шалгалт түгжээтэй"':' title="Энэ асуултыг хасах"'}>✕</button>`;
-  const topic=B?`<span class="ro" title="Агуулга, оноо нь ${VNAMES[0]} хувилбартайгаа ижил">${esc(base.topic||'—')}</span>`
-    :`<input data-i="${i}" data-f="topic" value="${esc(q.topic)}" placeholder="${p3?'Даалгаврын':'Асуултын'} агуулгаа бич" list="topics" aria-label="${N}-р ${p3?'даалгаврын':'асуултын'} агуулга">`;
-  const ptsRO=`<span class="ro">${r1(p3?p3Max(base):+base.points||0)} оноо</span>`;
+  /* Агуулга, оноо, оноо тооцох журам нь бүх хувилбарт нэг — Б дээр засвал А-д ч өөрчлөгдөнө */
+  const topic=`<input data-i="${i}" data-f="topic" value="${esc(q.topic)}" placeholder="${p3?'Даалгаврын':'Асуултын'} агуулгаа бич" list="topics" aria-label="${N}-р ${p3?'даалгаврын':'асуултын'} агуулга">`;
   if(p4){const k=tfNorm(q.key),md=base.tfmode||'scale',P=+base.points||1.5;
     const pt=c=>r1(md==='all'?(c===TF_N?P:0):md==='prop'?P*c/TF_N:P*TF_SCALE[c]);
     return`${head}<div class="qcard p4">
     <div class="qhead"><b>${N}</b>${topic}
-    ${B?`<span class="ro">${md==='all'?'Бүгдийг зөв':md==='prop'?'Пропорциональ':'Стандарт'}</span>${ptsRO}`
-    :`<select data-i="${i}" data-f="tfmode" aria-label="${N}-р асуултын оноо тооцох журам">
+    ${`<select data-i="${i}" data-f="tfmode" aria-label="${N}-р асуултын оноо тооцох журам">
       <option value="scale"${md==='scale'?' selected':''}>Стандарт</option>
       <option value="prop"${md==='prop'?' selected':''}>Пропорциональ</option>
       <option value="all"${md==='all'?' selected':''}>Бүгдийг зөв</option></select>
@@ -2414,8 +2412,7 @@ function qCardHTML(base,i,v,lk){
   if(p3){const steps=p3Steps(base);
     return`${head}<div class="qcard p3">
     <div class="qhead"><b>${N}</b>${topic}
-    ${B?`<span class="ro">${base.scale==='pts'?'Шууд оноо':'Шатлал'}</span>${ptsRO}`
-    :`<select data-i="${i}" data-f="scale" aria-label="${N}-р даалгаврын үнэлэх хэлбэр">
+    ${`<select data-i="${i}" data-f="scale" aria-label="${N}-р даалгаврын үнэлэх хэлбэр">
       <option value="tier"${base.scale!=='pts'?' selected':''}>Шатлал</option>
       <option value="pts"${base.scale==='pts'?' selected':''}>Шууд оноо</option></select>
     <input data-i="${i}" data-f="points" type="number" min="1" max="10" step="1" value="${esc(p3Max(base))}" aria-label="${N}-р даалгаврын оноо">`}
@@ -2439,7 +2436,7 @@ function qCardHTML(base,i,v,lk){
   return`${head}<div class="qcard">
   <div class="qhead"><b>${N}</b>${topic}
   ${keyBox}
-  ${B?ptsRO:`<input data-i="${i}" data-f="points" type="number" min="0" step="0.5" value="${esc(base.points)}" aria-label="${N}-р асуултын оноо">`}
+  ${`<input data-i="${i}" data-f="points" type="number" min="0" step="0.5" value="${esc(base.points)}" aria-label="${N}-р асуултын оноо">`}
   ${nav}</div>
   <details${open?' open':''}><summary>${q.text||q.img?'▾ Асуултын текст, зураг, хувилбарууд':'＋ Текст, зураг, хувилбар нэмэх'}</summary>
     <textarea data-i="${i}"${dv} data-f="text" placeholder="Асуултын текст" aria-label="${lab}-р асуултын текст">${esc(q.text||'')}</textarea>
@@ -3133,6 +3130,8 @@ $('#qtable').addEventListener('input',e=>{
   else if(f==='key'&&isP2(Q)){q.key=keyNorm(e.target.value);e.target.style.borderColor=q.key?'':'var(--stain)';}
   else q[f]=f==='points'?(parseFloat(e.target.value)||0):e.target.value;
   if(f==='points'&&isP3(q))q.points=p3Max(q);   // задгай даалгаврын оноо үргэлж бүхэл
+  if(f==='topic'||f==='points')   // А, Б хувилбарт ижил — нөгөө хайрцаг дахь нүдийг ч шинэчилнэ
+    document.querySelectorAll(`#qtable [data-i="${i}"][data-f="${f}"]`).forEach(x=>{if(x!==e.target)x.value=e.target.value;});
   if(f==='points'&&isP4(q)){const b=e.target.closest('.qcard').querySelector('.p3bar small');
     if(b){const md=q.tfmode||'scale',P=+q.points||0;
       const pt=c=>r1(md==='all'?(c===TF_N?P:0):md==='prop'?P*c/TF_N:P*TF_SCALE[c]);
