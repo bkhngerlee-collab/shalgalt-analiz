@@ -6723,7 +6723,8 @@ async function authLogout(){
   if(SYNC.dirty)await cloudPush();
   if(SYNC.dirty&&!confirm('Зарим өөрчлөлт үүлэнд хадгалагдаж амжаагүй байна (интернэт алга?).\n'
     +'Гарвал тэдгээр зөвхөн энэ төхөөрөмж дээр үлдэж, дараа нь та нэвтрэхэд илгээгдэнэ.\n\nГарах уу?'))return;
-  try{if(AUTH.sess)await sbAuth('logout',{},AUTH.sess.access_token);}catch(e){}
+  /* зөвхөн энэ төхөөрөмжөөс гарна — бусад төхөөрөмж (утас г.м.) нэвтэрсэн хэвээр үлдэнэ */
+  try{if(AUTH.sess)await sbAuth('logout?scope=local',{},AUTH.sess.access_token);}catch(e){}
   const clean=!SYNC.dirty&&!LEGACY;   // хуучин кодын горимд өгөгдөл зөвхөн энд байгаа — арилгахгүй
   AUTH.sess=null;sessSave();lsSet(STAT_KEY,'');
   if(clean){
