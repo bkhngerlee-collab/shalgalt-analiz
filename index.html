@@ -6120,7 +6120,7 @@ function authLock(mode,msg){
    бүртгүүлэх хэсгийг нээнэ. Код нь бүртгүүлэхэд эзэнд илгээгдэж, эзэн эрхийг нь шууд сэргээнэ. */
 async function oldLicHint(){
   const r=await licVerify(lsGet(LIC_KEY));
-  if(!(r.ok||r.why==='expired')||AUTH.sess||$('#authIn').hidden)return;
+  if(!(r.ok||r.why==='expired')||!r.d.n||AUTH.sess||$('#authIn').hidden)return;   // нэргүй = эзний код
   const n=(db.exams||[]).filter(e=>meaningful({exams:[e]})).length;
   $('#lockMsg').innerHTML=`<b>Программ шинэчлэгдлээ.</b> Та энэ төхөөрөмж дээр өмнө нь идэвхжүүлэх кодоор ажиллаж байсан байна`
     +(r.d.n?` (<b>${esc(r.d.n)}</b>)`:'')+`. Одоо кодын оронд <b>и-мэйл, нууц үгээр</b> нэвтэрдэг боллоо.<br>`
@@ -6177,7 +6177,8 @@ async function authLogout(){
 let LEGACY=null;
 async function legacyTry(){
   const r=await licVerify(lsGet(LIC_KEY));
-  if(!r.ok)return false;
+  /* нэргүй код = эзний өөрийн код. Эзэн данстай тул үүлгүй горимд оруулахгүй — нэвтэрнэ */
+  if(!r.ok||!r.d.n)return false;
   LEGACY=r.d;
   $('#lock').hidden=true;clearInterval(waitTimer);
   legacyHeader();renderSetup();
@@ -6192,14 +6193,14 @@ function legacyHeader(){
   w.innerHTML=AUTH.sess
     ?`<span class="sync-pill warn" title="Программын эзэн эрхийг тань нээмэгц энэ төхөөрөмж дээрх өгөгдөл данс руу өөрөө шилжинэ">⏳ Эрх хүлээж байна</span>`
       +` <a href="#" class="sync-pill" id="legOut" style="text-decoration:none" title="${esc(AUTH.email||'')}">↪ Гарах</a>`
-    :`<a href="#" class="sync-pill warn" id="legUp" style="text-decoration:none" title="Хуучин кодоор ажиллаж байна (${esc(LEGACY.e)} хүртэл). Данс үүсгэвэл өгөгдөл тань үүлэнд хадгалагдана.">☁ Данс үүсгэх</a>`;
+    :`<a href="#" class="sync-pill warn" id="legUp" style="text-decoration:none" title="Хуучин кодоор ажиллаж байна (${esc(LEGACY.e)} хүртэл). Нэвтэрч эсвэл бүртгүүлж өгөгдлөө үүлэнд хадгална уу.">☁ Үүлэнд холбох</a>`;
   const b=$('#legUp');if(b)b.onclick=e=>{e.preventDefault();authLock('in');};
   const o=$('#legOut');if(o)o.onclick=e=>{e.preventDefault();authLogout();};
 }
 async function authBoot(){
   try{AUTH.sess=JSON.parse(lsGet(SESS_KEY)||'null');}catch(e){AUTH.sess=null;}
   if(!AUTH.sess||!AUTH.sess.user){
-    if(await legacyTry())return toast('Программ шинэчлэгдлээ. Өгөгдлөө үүлэнд хадгалахын тулд дээд талын "☁ Данс үүсгэх"-ийг дарж бүртгүүлээрэй.');
+    if(await legacyTry())return toast('Программ шинэчлэгдлээ. Өгөгдлөө үүлэнд хадгалахын тулд дээд талын "☁ Үүлэнд холбох"-ийг дарж бүртгүүлээрэй.');
     return authLock('in');}
   try{await authStatus();}
   catch(e){
