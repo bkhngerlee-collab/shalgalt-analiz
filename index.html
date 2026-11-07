@@ -6035,7 +6035,7 @@ function reqBadge(){
 }
 async function reqCheck(){
   if(!AUTH.owner||!AUTH.sess||document.visibilityState!=='visible')return;
-  try{tRows=await sbRpc('admin_list_teachers')||[];reqBadge();
+  try{await tFetch();reqBadge();
     if(!$('#invitePanel').hidden&&$('#tList'))teachersRender();}catch(e){}
 }
 /* Нэвтэрсэн хэрэглэгч өөрийн нууц үгээ солино */
@@ -6094,6 +6094,7 @@ function authLock(mode,msg){
     :'Тавтай морил! Өөрийн и-мэйл, нууц үгээрээ нэвтэрнэ үү.<br>Анх удаа орж байгаа бол <b>"Бүртгүүлэх"</b>-ийг сонгоно уу.';
   authTab(mode);
   authMsg(msg||'');
+  if(mode==='in'&&!msg)oldLicHint();
   $('#lockBackup').hidden=!(meaningful(db)||(AUTH.sess&&mode==='wait'));
   clearInterval(waitTimer);
   if(mode==='wait'){
@@ -6103,6 +6104,20 @@ function authLock(mode,msg){
       :'⏳ '+who+', таны хүсэлтийг хүлээж авлаа. Эрх нээгдэхийг хүлээж байна…';
     waitTimer=setInterval(()=>authRecheck(false),20000);
   }
+}
+/* Өмнө нь идэвхжүүлэх кодоор ажиллаж байсан төхөөрөмж: юу өөрчлөгдсөнийг тайлбарлаж,
+   бүртгүүлэх хэсгийг нээнэ. Код нь бүртгүүлэхэд эзэнд илгээгдэж, эзэн эрхийг нь шууд сэргээнэ. */
+async function oldLicHint(){
+  const r=await licVerify(lsGet(LIC_KEY));
+  if(!(r.ok||r.why==='expired')||AUTH.sess||$('#authIn').hidden)return;
+  const n=(db.exams||[]).filter(e=>meaningful({exams:[e]})).length;
+  $('#lockMsg').innerHTML=`<b>Программ шинэчлэгдлээ.</b> Та энэ төхөөрөмж дээр өмнө нь идэвхжүүлэх кодоор ажиллаж байсан байна`
+    +(r.d.n?` (<b>${esc(r.d.n)}</b>)`:'')+`. Одоо кодын оронд <b>и-мэйл, нууц үгээр</b> нэвтэрдэг боллоо.<br>`
+    +`Доор нэг удаа бүртгүүлнэ үү. Таны хуучин кодыг программын эзэн харж, эрхийг тань сэргээнэ.`
+    +(n?` Энэ төхөөрөмж дээрх <b>${n} шалгалт</b> устахгүй — эрх нээгдмэгц таны дансанд өөрөө шилжинэ.`:'')
+    +`<br><small>Өөр төхөөрөмж дээр аль хэдийн бүртгүүлсэн бол "Нэвтрэх"-ийг сонгоно уу.</small>`;
+  authTab('up');
+  if(r.d.n&&!$('#upName').value)$('#upName').value=r.d.n;
 }
 async function authRecheck(manual){
   if(manual)$('#authWaitMsg').textContent='Шалгаж байна…';
@@ -6186,8 +6201,9 @@ $('#authUp').addEventListener('submit',async e=>{
   if(pw!==pw2){$('#upPass2').focus();return authMsg('Хоёр нууц үг таарахгүй байна.');}
   btn.disabled=true;authMsg('Бүртгэж байна…',false);
   try{
-    const j=await sbAuth('signup',{email:em,password:pw,data:{name,subject:$('#upSubject').value.trim(),
-      gender:upPick('upGender')[0]||'',level:upPick('upLevel').join(', ')}});
+    const lic=lsGet(LIC_KEY).replace(/\s+/g,'').slice(0,600);   // хуучин идэвхжүүлэх код — эзэн шалгана
+    const j=await sbAuth('signup',{email:em,password:pw,data:Object.assign({name,subject:$('#upSubject').value.trim(),
+      gender:upPick('upGender')[0]||'',level:upPick('upLevel').join(', ')},lic?{lic}:{})});
     $('#upPass').value=$('#upPass2').value='';authMsg('');
     await authAfterLogin(j);
   }catch(x){authMsg(x.message);}
@@ -6209,11 +6225,17 @@ const ownerMode=()=>!!(AUTH&&AUTH.owner);
 const T_DUR=[[30,'1 сар'],[90,'3 сар'],[180,'6 сар'],[365,'1 жил'],[0,'Хугацаагүй']];
 const ymdPlus=n=>{const d=new Date();d.setDate(d.getDate()+n);return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');};
 let tRows=[];
+async function tFetch(){
+  const rows=await sbRpc('admin_list_teachers')||[];
+  /* хуучин идэвхжүүлэх кодыг энд (эзний төхөөрөмж дээр) гарын үсгээр нь шалгана — хуурамч кодыг ялгана */
+  for(const t of rows)if(t.lic)t.licv=await licVerify(t.lic);
+  tRows=rows;
+}
 async function teachersLoad(){
   if(!ownerMode())return;
   const box=$('#tList');if(!box)return;
   box.innerHTML='<p class="hint">Ачаалж байна…</p>';
-  try{tRows=await sbRpc('admin_list_teachers')||[];teachersRender();}
+  try{await tFetch();teachersRender();}
   catch(e){box.innerHTML=`<p class="hint" style="color:var(--stain)">${esc(e.message)}</p>`;}
 }
 function teachersRender(){
@@ -6231,13 +6253,19 @@ function teachersRender(){
         :`<b class="g">✓ Эрхтэй · ${t.expires?esc(t.expires)+' хүртэл':'хугацаагүй'}</b>`;
       const info=[t.subject,t.level,t.gender].filter(Boolean).map(esc).join(' · ');
       const verb=fresh?'Эрх нээх:':(!t.approved?'Дахин нээх:':'Сунгах:');
+      /* хуучин кодоор ажиллаж байсан багш: кодын хугацаагаар нь нэг товчоор сэргээнэ */
+      const v=t.licv,ld=v&&v.d&&v.d.e,lnm=v&&v.d&&v.d.n?esc(v.d.n)+', ':'';
+      const lic=!v?'':v.ok?`<small style="color:var(--leaf)">🔑 Хуучин код баталгаатай: ${lnm}${esc(ld)} хүртэл</small>`
+        :v.why==='expired'?`<small>🔑 Хуучин код: ${lnm}хугацаа нь ${esc(ld)}-нд дууссан</small>`
+        :'<small style="color:var(--stain)">⚠ Хуучин код хүчингүй (гарын үсэг таарахгүй)</small>';
+      const licBtn=v&&v.ok&&(fresh||t.expires!==ld)?`<button class="btn" data-t="ok" data-u="${esc(ld)}">Хуучин кодоор (${esc(ld)} хүртэл)</button>`:'';
       return`<div class="t-row" data-id="${esc(t.id)}">
         <div class="t-who"><b>${esc(t.name||'(нэргүй)')}</b>${info?`<small>${info}</small>`:''}
-          <small>${esc(t.email||'')} · бүртгүүлсэн ${esc(String(t.created_at||'').slice(0,10))}${t.exams?` · ${t.exams} шалгалттай`:''}</small></div>
+          <small>${esc(t.email||'')} · бүртгүүлсэн ${esc(String(t.created_at||'').slice(0,10))}${t.exams?` · ${t.exams} шалгалттай`:''}</small>${lic}</div>
         <div class="t-st">${st}</div>
         ${self?'':`<div class="t-act">
           <span style="align-self:center;font-size:.84rem;color:var(--muted)">${verb}</span>
-          ${T_DUR.map(([d,l])=>`<button class="btn ${fresh?'':'ghost'}" data-t="ok" data-d="${d}">${l}</button>`).join('')}
+          ${licBtn}${T_DUR.map(([d,l])=>`<button class="btn ${fresh?'':'ghost'}" data-t="ok" data-d="${d}">${l}</button>`).join('')}
           ${t.approved?'<button class="btn danger" data-t="no">Эрх хаах</button>':''}
           <button class="btn ghost" data-t="pw">Нууц үг сэргээх</button></div>`}
       </div>`;}).join('')+'</div>';
@@ -6249,7 +6277,7 @@ $('#tList').addEventListener('click',async e=>{
   m.style.color='';
   try{
     if(b.dataset.t==='ok'){
-      const d=+b.dataset.d,until=d?ymdPlus(d):null;
+      const d=+b.dataset.d,until=b.dataset.u||(d?ymdPlus(d):null);
       await sbRpc('admin_set_access',{p_id:id,p_approved:true,p_expires:until});
       m.textContent='✓ '+(t.name||'Багш')+': '+(until?until+' хүртэл':'хугацаагүй')+' эрх нээлээ. Түүний хуудас 20 секундын дотор өөрөө нээгдэнэ.';
     }else if(b.dataset.t==='no'){
