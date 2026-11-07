@@ -480,6 +480,12 @@ tr.pick{cursor:pointer} tr.pick:hover{background:var(--bg)} tr.sel{background:va
 .qbtn.del{color:var(--stain)}
 .qcard.p3{border-left:4px solid var(--iodine)}
 .qcard.p4{border-left:4px solid var(--leaf)}
+.mfa-steps{margin:6px 0 10px;padding-left:22px;line-height:1.6}
+.mfa-qr{display:flex;gap:16px;align-items:flex-start;flex-wrap:wrap;margin:6px 0 12px}
+.mfa-qr img{width:180px;height:180px;background:#fff;padding:8px;border-radius:12px;border:1px solid var(--line)}
+.mfa-qr>div{flex:1 1 240px;display:grid;gap:6px}
+.mfa-qr code{font:600 1.05rem ui-monospace,Consolas,monospace;letter-spacing:.06em;background:var(--leaf-soft);padding:8px 10px;border-radius:8px;word-break:break-all}
+.mfa-qr small{color:var(--muted);line-height:1.45}
 .sumbox{margin-top:14px;padding:12px 16px;border-radius:var(--radius);background:var(--leaf-soft);border-left:4px solid var(--leaf)}
 .sumbox-h{display:flex;justify-content:space-between;align-items:center;gap:10px}
 .sumbox-h .btn{margin:0;padding:4px 12px;font-size:.85rem}
@@ -792,6 +798,14 @@ body.student #studentApp{display:block}
         Андуурч устгасан, буруу зассан бол тухайн өдрийн байдал руу буцааж болно.</p>
       <div class="btns" style="margin-top:0"><button class="btn ghost ic ic-hist" id="snapLoad">Нөөцүүдийг харах</button></div>
       <div id="snapList"></div>
+    </div>
+    <div id="mfaBox" hidden style="margin-top:16px;border-top:1px solid var(--line);padding-top:14px">
+      <h3 style="margin:0 0 4px;font-size:1.02rem">🔐 Хоёр шаттай баталгаажуулалт</h3>
+      <p class="hint" style="margin:0 0 8px">Асаавал шинэ төхөөрөмжөөс нэвтрэх бүрт нууц үгийн дараа утасны <b>Google Authenticator</b> эсвэл <b>Microsoft Authenticator</b> аппын 6 оронтой код асууна.
+        Нууц үг тань алдагдсан ч эзний эрх, өгөгдлийг тань хэн ч ашиглаж чадахгүй. Нэг удаа нэвтэрсэн төхөөрөмж дээр дахин асуухгүй.</p>
+      <div id="mfaState"></div>
+      <div id="mfaEnroll" hidden></div>
+      <div class="msg" id="mfaMsg" role="status"></div>
     </div>
   </div>
 
@@ -1671,6 +1685,14 @@ body.student #studentApp{display:block}
     </div>
     <div class="btns"><button class="btn" type="submit" id="upGo">Бүртгүүлэх</button></div>
     <p class="hint" style="margin:10px 0 0;font-size:.82rem">Бүртгүүлсний дараа программын эзэн таныг багш мөн эсэхийг хараад батална. Батлагдмагц энэ хуудас өөрөө нээгдэнэ.</p>
+  </form>
+
+  <form id="authMfa" novalidate hidden>
+    <div class="avgsum" style="margin-bottom:10px">🔐 Таны дансанд <b>хоёр шаттай баталгаажуулалт</b> асаалттай. Утасныхаа Google Authenticator (эсвэл Microsoft Authenticator) аппыг нээж, <b>«Шалгалтын анализ»</b>-ын 6 оронтой кодыг оруулна уу.</div>
+    <label for="mfaCode">6 оронтой код</label>
+    <input id="mfaCode" inputmode="numeric" autocomplete="one-time-code" maxlength="7" placeholder="123456" style="font-size:1.4rem;letter-spacing:.3em;max-width:220px">
+    <div class="btns"><button class="btn" type="submit" id="mfaGo">Баталгаажуулах</button><button class="btn ghost" type="button" id="mfaOut">Гарах</button></div>
+    <p class="hint" style="margin:10px 0 0;font-size:.82rem">Код 30 секунд тутам шинэчлэгддэг — апп дээр одоо харагдаж байгааг нь бичнэ. Утсаа гээсэн бол цаасан дээр бичиж хадгалсан түлхүүрээрээ шинэ утсандаа аппаа сэргээнэ.</p>
   </form>
 
   <div id="authWait" hidden>
@@ -6392,12 +6414,120 @@ function startSyncLoop(){
   addEventListener('online',async()=>{
     SYNC.err='';syncUi();
     /* офлайн байх хооронд эрхийг хаасан байж болно — дахин шалгана */
-    try{await authStatus();if(!AUTH.approved)return authLock('wait');}catch(e){if(e.status===401)return authExpired();}
+    try{await authStatus();if(AUTH.mfa)return authLock('mfa');if(!AUTH.approved)return authLock('wait');}catch(e){if(e.status===401)return authExpired();}
     syncUi();cloudPush();cloudPull(true);});
   addEventListener('offline',()=>{SYNC.err='offline';syncUi();});
   document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'){if(SYNC.dirty)cloudPush();else cloudPull();}});
   addEventListener('beforeunload',e=>{if(SYNC.dirty&&navigator.onLine&&AUTH.approved){e.preventDefault();e.returnValue='';}});
 }
+
+/* ---------- хоёр шаттай баталгаажуулалт (TOTP) ----------
+   Сервер (supabase-setup-7): апп холбосон хэрэглэгчийн өгөгдөл, эрх зөвхөн кодоор
+   баталгаажсан нэвтрэлтэд (aal2) нээгдэнэ. Код шалгасны дараа шинэ токен ирнэ. */
+async function sbAuthReq(method,path,body){
+  const tok=await sbToken();let r;
+  try{r=await fetch(SB_URL+'/auth/v1/'+path,{method,headers:{apikey:SB_KEY,Authorization:'Bearer '+tok,'Content-Type':'application/json'},
+    body:body?JSON.stringify(body):undefined});}
+  catch(e){throw Object.assign(new Error('Интернэт холболт алга.'),{net:true});}
+  const j=await r.json().catch(()=>({}));
+  if(!r.ok){const e=new Error(r.status>=500?SRV_DOWN:authErr(j));e.status=r.status;throw e;}
+  return j;
+}
+const mfaFactors=async()=>((await sbAuthReq('GET','user')).factors||[]).filter(f=>f.factor_type==='totp');
+/* Хэд хэдэн төхөөрөмж холбосон бол аль нэгнийх нь код таарна */
+async function mfaVerify(code,ids){
+  for(const id of ids){
+    try{
+      const c=await sbAuthReq('POST','factors/'+encodeURIComponent(id)+'/challenge',{});
+      const j=await sbAuthReq('POST','factors/'+encodeURIComponent(id)+'/verify',{challenge_id:c.id,code});
+      const s=sessFrom(j);if(!s)throw new Error('Нэвтрэлт шинэчлэгдсэнгүй.');
+      AUTH.sess=s;sessSave();return;
+    }catch(e){if(e.net||e.status===401||e.status>=500)throw e;}
+  }
+  throw new Error('Код буруу эсвэл хугацаа нь дууссан байна. Апп дээр одоо харагдаж буй кодыг оруулна уу.');
+}
+const mfaCodeOf=el=>String(el.value||'').replace(/\D/g,'');
+$('#authMfa').addEventListener('submit',async e=>{
+  e.preventDefault();const code=mfaCodeOf($('#mfaCode')),btn=$('#mfaGo');
+  if(code.length!==6)return authMsg('6 оронтой кодыг бичнэ үү.');
+  btn.disabled=true;authMsg('Шалгаж байна…',false);
+  try{
+    await mfaVerify(code,(await mfaFactors()).filter(f=>f.status==='verified').map(f=>f.id));
+    $('#mfaCode').value='';authMsg('');await authStatus();
+    if(AUTH.mfa)return authMsg('Баталгаажуулж чадсангүй. Дахин оролдоно уу.');
+    if(AUTH.approved){LEGACY=null;return authEnter();}
+    authLock('wait');
+  }catch(x){if(x.status===401)return authExpired();authMsg(x.message);}
+  finally{btn.disabled=false;}
+});
+$('#mfaOut').addEventListener('click',()=>authLogout());
+
+/* Эзний тохиргоо: асаах, өөр төхөөрөмж нэмэх, салгах */
+async function mfaRender(){
+  const box=$('#mfaBox');if(!box)return;
+  box.hidden=!(AUTH.sess&&AUTH.approved&&AUTH.owner);if(box.hidden)return;
+  const st=$('#mfaState');st.innerHTML='<p class="hint" style="margin:0">Шалгаж байна…</p>';
+  try{
+    const ver=(await mfaFactors()).filter(f=>f.status==='verified');
+    st.innerHTML=ver.length
+      ?`<div class="avgsum" style="background:var(--leaf-soft)">✅ <b>Асаалттай.</b> Холбосон төхөөрөмж: ${ver.length}. ${ver.length>1?'Нэгийг нь гээсэн ч нөгөөгөөр нь нэвтэрнэ.':'Нөөц болгож хоёр дахь төхөөрөмж (жишээ нь гэрийн хүний утас эсвэл таблет) нэмэхийг зөвлөе.'}</div>
+        <div class="t-list" style="margin-top:8px">${ver.map(f=>`<div class="t-row"><div class="t-who"><b>${esc(f.friendly_name||'Төхөөрөмж')}</b>
+          <small>${esc(String(f.created_at||'').slice(0,10))}-нд холбосон</small></div>
+          <div class="t-act"><button type="button" class="btn ghost" data-mfadel="${esc(f.id)}">Салгах</button></div></div>`).join('')}</div>
+        <div class="btns"><button type="button" class="btn ghost" id="mfaAdd">＋ Өөр төхөөрөмж нэмэх</button></div>`
+      :`<div class="btns" style="margin-top:0"><button type="button" class="btn" id="mfaAdd">🔐 Асаах</button></div>`;
+  }catch(e){st.innerHTML=`<p class="hint" style="margin:0">${esc(e.message)}</p>`;}
+}
+async function mfaStart(){
+  const m=$('#mfaMsg'),en=$('#mfaEnroll');m.style.color='';m.textContent='Бэлдэж байна…';
+  try{
+    const all=await mfaFactors();
+    for(const f of all.filter(f=>f.status!=='verified'))await sbAuthReq('DELETE','factors/'+encodeURIComponent(f.id)).catch(()=>{});
+    const n=all.filter(f=>f.status==='verified').length;
+    const j=await sbAuthReq('POST','factors',{factor_type:'totp',friendly_name:'Төхөөрөмж '+(n+1)+' · '+localDay()+' '+Date.now().toString(36).slice(-3),issuer:'Шалгалтын анализ'});
+    const qr=String(j.totp&&j.totp.qr_code||''),sec=String(j.totp&&j.totp.secret||'');
+    en.dataset.id=j.id;en.hidden=false;m.textContent='';
+    en.innerHTML=`<ol class="mfa-steps">
+        <li>Утсандаа <b>Google Authenticator</b> эсвэл <b>Microsoft Authenticator</b> аппыг Play Store / App Store-оос суулгана.</li>
+        <li>Аппын <b>＋</b> товчийг дараад доорх QR кодыг уншуулна.</li>
+        <li>Апп дээр гарсан <b>6 оронтой кодыг</b> доор бичээд «Баталгаажуулах» дарна.</li></ol>
+      <div class="mfa-qr">${/^data:image\/svg\+xml/.test(qr)?`<img src="${esc(qr)}" alt="Баталгаажуулах аппад уншуулах QR код">`:''}
+        <div><small>QR уншуулж чадахгүй бол аппад гараар оруулах түлхүүр:</small><code>${esc(sec.replace(/(.{4})/g,'$1 ').trim())}</code>
+          <small>⚠ Энэ түлхүүрийг <b>цаасан дээр бичиж</b> аюулгүй газар хадгална уу. Утсаа гээвэл шинэ утсандаа энэ түлхүүрээр аппаа сэргээнэ. Хэнд ч бүү үзүүл.</small></div></div>
+      <div class="row" style="align-items:flex-end"><div style="max-width:220px"><label for="mfaNew">6 оронтой код</label>
+          <input id="mfaNew" inputmode="numeric" autocomplete="one-time-code" maxlength="7" placeholder="123456"></div>
+        <div class="btns" style="margin:0"><button type="button" class="btn" id="mfaConfirm">Баталгаажуулах</button>
+          <button type="button" class="btn ghost" id="mfaCancel">Болих</button></div></div>`;
+    $('#mfaNew').focus();
+  }catch(e){m.style.color='var(--stain)';m.textContent=e.message;}
+}
+async function mfaEndEnroll(drop){
+  const en=$('#mfaEnroll'),id=en.dataset.id;en.hidden=true;en.innerHTML='';en.dataset.id='';
+  if(drop&&id)await sbAuthReq('DELETE','factors/'+encodeURIComponent(id)).catch(()=>{});
+}
+$('#mfaBox').addEventListener('click',async e=>{
+  const m=$('#mfaMsg'),t=e.target;
+  if(t.id==='mfaAdd')return mfaStart();
+  if(t.id==='mfaCancel'){m.textContent='';return mfaEndEnroll(true);}
+  if(t.id==='mfaConfirm'){
+    const code=mfaCodeOf($('#mfaNew'));
+    if(code.length!==6){m.style.color='var(--stain)';m.textContent='Апп дээрх 6 оронтой кодыг бичнэ үү.';return;}
+    t.disabled=true;
+    try{await mfaVerify(code,[$('#mfaEnroll').dataset.id]);await mfaEndEnroll(false);
+      m.style.color='';m.textContent='✅ Асаалттай боллоо. Цаашид шинэ төхөөрөмжөөс нэвтрэхэд энэ аппын код асууна.';
+      mfaRender();}
+    catch(x){m.style.color='var(--stain)';m.textContent=x.message;}
+    finally{t.disabled=false;}
+    return;}
+  const d=t.closest('[data-mfadel]');if(!d)return;
+  const ver=(await mfaFactors().catch(()=>[])).filter(f=>f.status==='verified');
+  if(!confirm(ver.length<=1
+    ?'Энэ бол сүүлийн төхөөрөмж. Салгавал хоёр шаттай баталгаажуулалт УНТАРЧ, зөвхөн нууц үгээр нэвтэрдэг болно.\n\nСалгах уу?'
+    :'Энэ төхөөрөмжийг салгах уу? Түүний код цаашид ажиллахгүй.'))return;
+  try{await sbAuthReq('DELETE','factors/'+encodeURIComponent(d.dataset.mfadel));m.style.color='';m.textContent='Салгалаа.';mfaRender();}
+  catch(x){m.style.color='var(--stain)';m.textContent=x.message;}
+});
+$('#mfaBox').addEventListener('keydown',e=>{if(e.key==='Enter'&&e.target.id==='mfaNew'){e.preventDefault();$('#mfaConfirm').click();}});
 
 /* ---------- үүлэн дэх өдөр тутмын нөөц ----------
    Сервер (save_db) өдрийн анхны хадгалалтын өмнөх байдлыг snapshots-д хадгална, 14 хоног үлдээнэ. */
@@ -6432,6 +6562,7 @@ $('#snapList').addEventListener('click',async e=>{
 /* ---------- толгой хэсэг: хэрэглэгч, хадгалалтын төлөв ---------- */
 function syncUi(){
   const sb=$('#snapBox');if(sb)sb.hidden=!(AUTH.sess&&AUTH.approved);
+  const mb=$('#mfaBox');if(mb)mb.hidden=!(AUTH.sess&&AUTH.approved&&AUTH.owner);
   const p=$('#syncPill');if(!p)return;
   let t,c='';
   if(!AUTH.sess||!AUTH.approved){p.hidden=true;return;}
@@ -6508,14 +6639,14 @@ function statusSave(){lsSet(STAT_KEY,JSON.stringify({uid:AUTH.sess.user.id,appro
 async function authStatus(){
   const s=(await sbRpc('my_status'))[0];
   if(!s)throw new Error('Багшийн бүртгэл олдсонгүй.');
-  Object.assign(AUTH,{approved:!!s.approved,expires:s.expires||null,owner:!!s.is_owner,name:s.name||'',email:s.email||'',offline:false});
+  Object.assign(AUTH,{approved:!!s.approved,expires:s.expires||null,owner:!!s.is_owner,name:s.name||'',email:s.email||'',offline:false,mfa:!!s.mfa_needed});
   statusSave();return s;
 }
 const authMsg=(t,bad)=>{const m=$('#lockErr');m.style.color=bad===false?'':'var(--stain)';m.textContent=t||'';};
 function authTab(t){
   document.querySelectorAll('#authTabs .auth-tab').forEach(b=>b.classList.toggle('on',b.dataset.auth===t));
-  $('#authTabs').hidden=t==='wait';
-  $('#authIn').hidden=t!=='in';$('#authUp').hidden=t!=='up';$('#authWait').hidden=t!=='wait';
+  $('#authTabs').hidden=t==='wait'||t==='mfa';
+  $('#authIn').hidden=t!=='in';$('#authUp').hidden=t!=='up';$('#authWait').hidden=t!=='wait';$('#authMfa').hidden=t!=='mfa';
 }
 let waitTimer=null;
 function authLock(mode,msg){
@@ -6526,6 +6657,7 @@ function authLock(mode,msg){
           +`Санаа зоволтгүй — таны шалгалт, дүн бүгд хадгалагдаж байгаа, эрх сунгамагц яг хэвээрээ үргэлжилнэ.`
        :'Бүртгэл амжилттай үүслээ. Программын эзэн таны мэдээллийг шалгаад эрх нээж өгнө.<br>'
           +'Эрх нээгдмэгц энэ хуудас <b>өөрөө</b> нээгдэнэ — дахин нэвтрэх шаардлагагүй.')
+    :mode==='mfa'?'Нууц үг зөв байна. Одоо <b>хоёр дахь шат</b>: утасны баталгаажуулах аппын кодыг оруулна уу.'
     :'Тавтай морил! Өөрийн и-мэйл, нууц үгээрээ нэвтэрнэ үү.<br>Анх удаа орж байгаа бол <b>"Бүртгүүлэх"</b>-ийг сонгоно уу.';
   authTab(mode);
   authMsg(msg||'');
@@ -6539,6 +6671,7 @@ function authLock(mode,msg){
       :'⏳ '+who+', таны хүсэлтийг хүлээж авлаа. Эрх нээгдэхийг хүлээж байна…';
     waitTimer=setInterval(()=>authRecheck(false),20000);
   }
+  if(mode==='mfa')setTimeout(()=>{const c=$('#mfaCode');if(c)c.focus();},50);
 }
 /* Өмнө нь идэвхжүүлэх кодоор ажиллаж байсан төхөөрөмж: юу өөрчлөгдсөнийг тайлбарлаж,
    бүртгүүлэх хэсгийг нээнэ. Код нь бүртгүүлэхэд эзэнд илгээгдэж, эзэн эрхийг нь шууд сэргээнэ. */
@@ -6559,6 +6692,7 @@ async function oldLicHint(){
 async function authRecheck(manual){
   if(manual)$('#authWaitMsg').textContent='Шалгаж байна…';
   try{await authStatus();
+    if(AUTH.mfa){clearInterval(waitTimer);return authLock('mfa');}
     if(AUTH.approved){clearInterval(waitTimer);toast('🎉 Эрх нээгдлээ! Программыг ашиглахад бэлэн.');return authEnter();}
     authLock('wait');
   }catch(e){if(e.status===401)return authExpired();$('#authWaitMsg').textContent=e.message;}
@@ -6567,12 +6701,13 @@ async function authEnter(){
   $('#lock').hidden=true;authHeader();
   try{await cloudFirstLoad();}
   catch(e){SYNC.err=e.net||netErr(e)?'offline':e.message;}
-  renderSetup();syncUi();startSyncLoop();
+  renderSetup();syncUi();startSyncLoop();mfaRender();
 }
 async function authAfterLogin(j){
   AUTH.sess=sessFrom(j);
   if(!AUTH.sess)throw new Error('Бүртгэл үүссэн ч нэвтэрч чадсангүй. "Нэвтрэх" хэсгээр дахин оролдоно уу.');
   sessSave();await authStatus();
+  if(AUTH.mfa)return authLock('mfa');
   if(AUTH.approved){LEGACY=null;return authEnter();}
   if(await legacyTry())return toast('Бүртгэл үүслээ. Эрх нээгдэх хүртэл өмнөх шигээ ажиллаж болно — дараа нь өгөгдөл тань данс руу өөрөө шилжинэ.');
   authLock('wait');
@@ -6608,7 +6743,8 @@ async function legacyTry(){
   legacyHeader();renderSetup();
   if(AUTH.sess)waitTimer=setInterval(async()=>{   // бүртгүүлсэн — эрх нээгдэхийг ар талд хүлээнэ
     try{await authStatus();
-      if(AUTH.approved){clearInterval(waitTimer);LEGACY=null;toast('🎉 Эрх нээгдлээ! Өгөгдөл тань данс руу шилжиж байна.');authEnter();}}
+      if(AUTH.mfa){clearInterval(waitTimer);LEGACY=null;authLock('mfa');}
+      else if(AUTH.approved){clearInterval(waitTimer);LEGACY=null;toast('🎉 Эрх нээгдлээ! Өгөгдөл тань данс руу шилжиж байна.');authEnter();}}
     catch(e){}},60000);
   return true;
 }
@@ -6640,6 +6776,7 @@ async function authBoot(){
     if(await legacyTry())return;
     return authLock('in',e.message);
   }
+  if(AUTH.mfa)return authLock('mfa');
   if(!AUTH.approved){if(await legacyTry())return;return authLock('wait');}
   authEnter();
 }
