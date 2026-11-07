@@ -36,8 +36,8 @@
   --bg:#F5F7F6; --surface:#FFFFFF; --ink:#101A16; --muted:#66736D; --line:#E1E7E4;
   --field:#FFFFFF; --field-line:#CFD8D3;
   --leaf:#047857; --leaf-soft:#E2F4EC; --stain:#B4314A; --stain-soft:#FBE9ED;
-  --iodine:#A3620A; --iodine-soft:#FEF6E7; --radius:12px;
-  --shadow:0 1px 2px rgba(16,26,22,.05),0 1px 3px rgba(16,26,22,.04);
+  --iodine:#A3620A; --iodine-soft:#FEF6E7; --radius:14px;
+  --shadow:0 1px 2px rgba(16,26,22,.04),0 4px 14px rgba(16,26,22,.05);
 }
 @media (prefers-color-scheme:dark){
   :root{
@@ -62,10 +62,16 @@ h1{margin:0;font-size:1.6rem;font-weight:700;letter-spacing:-.01em}
 .hdr-top h1{font-size:1.35rem;white-space:nowrap}
 header p{margin:4px 0 16px;opacity:.85;font-size:.95rem}
 nav{display:flex;gap:4px;overflow-x:auto}
-nav button{font:inherit;border:0;background:transparent;color:#fff;opacity:.75;padding:10px 16px;
-  border-radius:8px 8px 0 0;cursor:pointer;white-space:nowrap}
+nav button{font:inherit;font-weight:500;border:0;background:transparent;color:#fff;opacity:.78;padding:11px 18px;
+  border-radius:10px 10px 0 0;cursor:pointer;white-space:nowrap;position:relative;transition:background .2s,opacity .2s}
 nav button:hover{opacity:1;background:rgba(255,255,255,.14)}
-nav button[aria-selected="true"],nav button[aria-selected="true"]:hover{background:var(--bg);color:var(--ink);opacity:1;font-weight:600}
+nav button[aria-selected="true"],nav button[aria-selected="true"]:hover{background:var(--bg);color:var(--ink);opacity:1;font-weight:700}
+/* Сонгосон табын доогуурх ногоон зураас — сонгоход голоосоо сунаж гарна */
+nav button::after{content:"";position:absolute;left:18px;right:18px;bottom:5px;height:3px;border-radius:3px;
+  background:rgba(255,255,255,.6);transform:scaleX(0);transition:transform .25s ease}
+nav button:hover::after{transform:scaleX(.5)}
+nav button[aria-selected="true"]::after{background:var(--leaf);transform:scaleX(1)}
+@media (prefers-reduced-motion:reduce){nav button::after{transition:none}}
 /* Цонх доторх хэсгүүд рүү шилжих цэс */
 .secnav{display:flex;gap:6px;flex-wrap:wrap;position:sticky;top:var(--hdr,112px);z-index:20;
   background:var(--bg);padding:10px 0;margin:-6px 0 10px;border-bottom:1px solid var(--line)}
@@ -100,23 +106,39 @@ h2{margin:0 0 6px;font-size:1.2rem;font-weight:700;color:var(--ink);letter-spaci
 .hint{color:var(--muted);font-size:.87rem;line-height:1.55;margin:0 0 18px;max-width:68ch}
 label{display:block;font-size:.84rem;font-weight:500;color:var(--muted);margin-bottom:5px}
 input,select,textarea{font:inherit;color:var(--ink);background:var(--field);border:1px solid var(--field-line);
-  border-radius:8px;padding:9px 11px;width:100%;transition:border-color .15s,box-shadow .15s}
+  border-radius:10px;padding:10px 12px;width:100%;transition:border-color .15s,box-shadow .15s}
 input:hover,select:hover,textarea:hover{border-color:#B5C2BB}
-input:focus,select:focus,textarea:focus{border-color:var(--leaf);box-shadow:0 0 0 3px var(--leaf-soft);outline:none}
+input:focus,select:focus,textarea:focus{border-color:var(--leaf);box-shadow:0 0 0 4px var(--leaf-soft);outline:none}
 textarea{min-height:110px;font-family:ui-monospace,Consolas,monospace;font-size:.9rem}
 :focus-visible{outline:2px solid var(--leaf);outline-offset:2px}
 .row{display:flex;gap:14px 16px;flex-wrap:wrap;align-items:flex-end}
 .row>div{flex:1 1 180px}
 /* Товч: гол үйлдэл — тод ногоон; туслах — хүрээтэй; эрсдэлтэй — улаан хүрээтэй, бусдаасаа тусдаа */
 .btn{font:inherit;font-weight:600;border:1px solid var(--leaf);background:var(--leaf);color:#fff;
-  padding:10px 18px;border-radius:8px;cursor:pointer;transition:background .15s,filter .15s,box-shadow .15s;line-height:1.3}
-.btn:hover{filter:brightness(1.08);box-shadow:0 2px 6px rgba(4,120,87,.18)}
+  background-image:linear-gradient(180deg,rgba(255,255,255,.12),rgba(255,255,255,0));
+  box-shadow:0 1px 2px rgba(4,120,87,.22);
+  padding:10px 18px;border-radius:10px;cursor:pointer;transition:background .15s,filter .15s,box-shadow .15s,transform .1s;line-height:1.3}
+.btn:hover{filter:brightness(1.08);box-shadow:0 4px 12px rgba(4,120,87,.24)}
+.btn:active{transform:translateY(1px)}
 .btn:disabled{opacity:.5;cursor:not-allowed;filter:none;box-shadow:none}
 @media (prefers-color-scheme:dark){.btn{color:#0e1a15}}
-.btn.ghost{background:var(--surface);color:var(--leaf);border-color:var(--field-line)}
+.btn.ghost{background:var(--surface);color:var(--leaf);border-color:var(--field-line);box-shadow:none}
 .btn.ghost:hover{background:var(--leaf-soft);border-color:var(--leaf);filter:none;box-shadow:none}
-.btn.danger{border-color:#E7B7C2;background:var(--surface);color:var(--stain)}
+.btn.danger{border-color:#E7B7C2;background:var(--surface);color:var(--stain);box-shadow:none}
 .btn.danger:hover{background:var(--stain-soft);border-color:var(--stain);filter:none;box-shadow:none}
+/* Товчны жижиг дүрс — текстийн өнгийг дагана (currentColor), харанхуй горимд ч тохирно */
+.ic::before{content:"";display:inline-block;width:1.05em;height:1.05em;margin:0 7px 0 -2px;vertical-align:-.18em;
+  background:currentColor;-webkit-mask:var(--i) center/contain no-repeat;mask:var(--i) center/contain no-repeat}
+.ic-plus{--i:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.4' stroke-linecap='round'%3E%3Cpath d='M12 5v14M5 12h14'/%3E%3C/svg%3E")}
+.ic-copy{--i:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='9' y='9' width='12' height='12' rx='2'/%3E%3Cpath d='M5 15H4a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v1'/%3E%3C/svg%3E")}
+.ic-trash{--i:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6M10 11v6M14 11v6'/%3E%3C/svg%3E")}
+.ic-down{--i:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 3v12M7 10l5 5 5-5M5 21h14'/%3E%3C/svg%3E")}
+.ic-up{--i:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 21V9M7 14l5-5 5 5M5 3h14'/%3E%3C/svg%3E")}
+.ic-sync{--i:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M21 12a9 9 0 1 1-2.6-6.4L21 8M21 3v5h-5'/%3E%3C/svg%3E")}
+.ic-link{--i:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M10 13a5 5 0 0 0 7.5.5l3-3a5 5 0 0 0-7-7L12 5M14 11a5 5 0 0 0-7.5-.5l-3 3a5 5 0 0 0 7 7L12 19'/%3E%3C/svg%3E")}
+.ic-hist{--i:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M3 12a9 9 0 1 0 2.6-6.4L3 8M3 3v5h5M12 7v5l3 2'/%3E%3C/svg%3E")}
+.ic-sheet{--i:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9zM14 3v6h6M8 13h8M8 17h8'/%3E%3C/svg%3E")}
+.ic-paste{--i:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='8' y='2' width='8' height='4' rx='1'/%3E%3Cpath d='M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2'/%3E%3C/svg%3E")}
 .btns{display:flex;gap:10px;flex-wrap:wrap;margin-top:16px}
 #reset{margin-left:auto}
 @media(max-width:560px){#reset{margin-left:0}}
@@ -204,9 +226,10 @@ td input,td select{min-width:70px}
 .toast.undo span{font-weight:400;font-size:.93rem}
 .toast.undo button{font:inherit;font-weight:700;border:0;border-radius:8px;padding:8px 14px;cursor:pointer;background:#fff;color:#047857;white-space:nowrap}
 /* Анхааруулга: зөөлөн дэвсгэртэй, тод гарчигтай тусдаа карт */
-.locked,.unlocked{display:flex;align-items:center;gap:10px 16px;flex-wrap:wrap;border-radius:10px;padding:14px 16px;margin:0 0 18px;font-size:.93rem}
-.locked{background:var(--iodine-soft);border:1px solid #F2DDB4;border-left:4px solid var(--iodine)}
-.unlocked{background:var(--leaf-soft);border:1px solid #BFE5D3;border-left:4px solid var(--leaf)}
+.locked,.unlocked{display:flex;align-items:center;gap:10px 16px;flex-wrap:wrap;border-radius:12px;padding:14px 16px;margin:0 0 18px;font-size:.93rem}
+.locked{background:linear-gradient(90deg,var(--iodine-soft),var(--surface) 85%);border:1px solid #F2DDB4;border-left:4px solid var(--iodine)}
+.unlocked{background:linear-gradient(90deg,var(--leaf-soft),var(--surface) 85%);border:1px solid #BFE5D3;border-left:4px solid var(--leaf)}
+@media (prefers-color-scheme:dark){.locked{border-color:#4A3A1C;border-left-color:var(--iodine)}.unlocked{border-color:#24503D;border-left-color:var(--leaf)}}
 @media (prefers-color-scheme:dark){.locked{border-color:#5A4720;border-left-color:var(--iodine)}.unlocked{border-color:#24563F;border-left-color:var(--leaf)}}
 .locked b{color:var(--iodine)}
 .locked small,.unlocked small{color:var(--muted);flex:1 1 240px;font-size:.86rem}
@@ -581,9 +604,9 @@ body.student #studentApp{display:block}
     <label for="examSel">Нээлттэй шалгалт</label>
     <select id="examSel"></select>
     <div class="btns">
-      <button class="btn" id="newExam">Шинэ шалгалт</button>
-      <button class="btn ghost" id="copyExam">Ижил асуулттай дахин шалгалт</button>
-      <button class="btn danger" id="reset">Энэ шалгалтыг устгах</button>
+      <button class="btn ic ic-plus" id="newExam">Шинэ шалгалт</button>
+      <button class="btn ghost ic ic-copy" id="copyExam">Ижил асуулттай дахин шалгалт</button>
+      <button class="btn danger ic ic-trash" id="reset">Энэ шалгалтыг устгах</button>
     </div>
   </div>
 
@@ -676,8 +699,8 @@ body.student #studentApp{display:block}
       <b>Excel файлаар оруулах</b>
       <p class="hint" style="margin:4px 0 0">Загвар файлыг татаад Excel дээр "Анги", "Код", "Нэр" баганыг бөглөж хадгална. Дараа нь "Excel файлаас оруулах" дарж тэр файлаа сонгоно. Хэд хэдэн ангийг нэг файлд оруулж болно. Файлд байгаа ангийн нэрс шинэчлэгдэнэ.</p>
       <div class="btns">
-        <button class="btn ghost" id="rosterTpl">Нэрсийн Excel загвар татах</button>
-        <label class="btn" style="margin:0">Excel файлаас оруулах<input type="file" id="rosterFile" accept=".xlsx" hidden></label>
+        <button class="btn ghost ic ic-down" id="rosterTpl">Нэрсийн Excel загвар татах</button>
+        <label class="btn ic ic-sheet" style="margin:0">Excel файлаас оруулах<input type="file" id="rosterFile" accept=".xlsx" hidden></label>
       </div>
     </div>
     <div class="msg" id="rosterMsg" role="status"></div>
@@ -687,15 +710,15 @@ body.student #studentApp{display:block}
     <h2>Нөөц хадгалах</h2>
     <p class="hint">Нэвтэрсэн үед өгөгдөл тань үүлэнд хадгалагдаж, засагдсан өдөр бүр <b>автоматаар нөөцлөгдөнө</b>. Нэмэлт хамгаалалт болгож нөөц файлаа үе үе татаж, флаш эсвэл Google Drive-даа хадгалж болно.</p>
     <div class="btns" style="margin-top:0">
-      <button class="btn" id="backup">Нөөц файл татах</button>
-      <label class="btn ghost" style="margin:0;color:var(--leaf)">Нөөц файлаас сэргээх<input type="file" id="restore" accept=".json" hidden></label>
+      <button class="btn ic ic-down" id="backup">Нөөц файл татах</button>
+      <label class="btn ghost ic ic-up" style="margin:0;color:var(--leaf)">Нөөц файлаас сэргээх<input type="file" id="restore" accept=".json" hidden></label>
     </div>
     <div class="msg" id="backupMsg" role="status"></div>
     <div id="snapBox" hidden style="margin-top:16px;border-top:1px solid var(--line);padding-top:14px">
       <h3 style="margin:0 0 4px;font-size:1.02rem">Үүлэн дэх өдөр тутмын нөөц</h3>
       <p class="hint" style="margin:0 0 8px">Өгөгдлөө засах өдөр бүр өмнөх байдал нь үүлэнд автоматаар хадгалагдаж, <b>сүүлийн 2 долоо хоногийнх</b> үлдэнэ.
         Андуурч устгасан, буруу зассан бол тухайн өдрийн байдал руу буцааж болно.</p>
-      <div class="btns" style="margin-top:0"><button class="btn ghost" id="snapLoad">Нөөцүүдийг харах</button></div>
+      <div class="btns" style="margin-top:0"><button class="btn ghost ic ic-hist" id="snapLoad">Нөөцүүдийг харах</button></div>
       <div id="snapList"></div>
     </div>
   </div>
@@ -733,8 +756,8 @@ body.student #studentApp{display:block}
     <p class="hint">Шинэ багш программын холбоосыг нээгээд <b>"Бүртгүүлэх"</b> дарахад энд <b>"⏳ Шинэ хүсэлт"</b> болж гарч ирнэ,
       толгой хэсэгт <b>🔔</b> тэмдэг асна. Хугацааг нь сонгоход л эрх нь нээгдэнэ.
       Та багш нарын <b>сурагчдын дүнг харахгүй</b> — зөвхөн нэр, мэргэжил, эрхийн мэдээллийг харна.</p>
-    <div class="btns" style="margin-top:0"><button class="btn" id="tRefresh">Жагсаалт шинэчлэх</button>
-      <button class="btn ghost" id="inviteBtn">Урих холбоос</button></div>
+    <div class="btns" style="margin-top:0"><button class="btn ic ic-sync" id="tRefresh">Жагсаалт шинэчлэх</button>
+      <button class="btn ghost ic ic-link" id="inviteBtn">Урих холбоос</button></div>
     <div id="inviteBox"></div>
     <div class="msg" id="inviteMsg" role="status"></div>
     <div id="tList" style="margin-top:12px"></div>
@@ -744,7 +767,7 @@ body.student #studentApp{display:block}
         Тэдний жагсаалтыг энд оруулбал бүртгүүлсэн нь дээр <b>"📜 Хуучин системд"</b> гэж тэмдэглэгдэж, хуучин хугацаагаараа нэг товчоор нээгдэнэ.
         Бүртгүүлээгүй нь доор гарч, урилгыг нь хуулж илгээж болно.<br>
         Яаж: <b>kod-uusgegch.html</b> → "Хүсэлтүүдийг харах" → <b>"📋 Жагсаалтыг шинэ программ руу хуулах"</b> → энд <b>"Оруулах"</b>.</p>
-      <div class="btns" style="margin-top:0"><button class="btn ghost" id="legImport">Оруулах</button></div>
+      <div class="btns" style="margin-top:0"><button class="btn ghost ic ic-paste" id="legImport">Оруулах</button></div>
       <textarea id="legPaste" hidden rows="3" spellcheck="false" placeholder="Хуулсан жагсаалтаа энд буулгаад (Ctrl+V) дахин Оруулах дарна уу"></textarea>
       <div class="msg" id="legMsg" role="status"></div>
       <div id="legList"></div>
