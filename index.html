@@ -3739,9 +3739,13 @@ function sheetLayout(qs,letters){
     grade:[col(24,digits),col(31.5,digits)],
     letter:[...Array(lc)].map((_,k)=>col(lx+k*7.5,letters.slice(k*10,k*10+10))),
     code:[col(lx+lc*7.5+16,digits),col(lx+lc*7.5+23.5,digits)]};
-  const O1=opts1(),ow=O1.length>=5?6.6:7.5,need=11+(O1.length-1)*ow+3;
+  const O1=opts1();let ow=O1.length>=5?6.6:7.5,need=11+(O1.length-1)*ow+3;
   const aTop=152,ady=6.9,maxRows=n2?13:17,cols=Math.max(1,Math.ceil(n1/maxRows));
-  const colW=Math.max(need,cols>=4?44:47),x0=cols>=4?14:16,perCol=Math.ceil(n1/cols);
+  let colW=Math.max(need,cols>=4?44:47);const x0=cols>=4?14:16,perCol=Math.ceil(n1/cols);
+  /* Сүүлийн багана хуудаснаас гарах бол (жишээ нь 55 асуулт × 5 сонголт = 5 багана) баганыг
+     хуудасны өргөнд тэнцүү хувааж, дугуйн хоорондын зайг багасгана. Багтаж байсан хуучин
+     загварууд яг хэвээрээ — өмнө хэвлэсэн хуудас уншигдсаар байна. */
+  if(x0+(cols-1)*colW+need>196){colW=(196-x0)/cols;ow=Math.min(ow,(colW-11-3)/Math.max(1,O1.length-1));need=11+(O1.length-1)*ow+3;}
   L.q=[...Array(n1)].map((_,i)=>{const c=Math.floor(i/perCol),x=x0+c*colW,y=aTop+(i%perCol)*ady;
     return{n:i+1,x,y,opts:O1.map((o,k)=>({v:o,x:x+11+k*ow,y}))};});
   L.y2=aTop+maxRows*ady+2;
