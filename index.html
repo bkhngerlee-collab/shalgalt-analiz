@@ -354,6 +354,41 @@ td input,td select{min-width:70px}
   .ex-del{grid-column:4;grid-row:1;opacity:.6}
   .ex-tools input{max-width:none}
 }
+/* Шалгалтын мэдээлэл: ногоон толгойтой карт, талбар бүр өнгөт тэмдэгтэй */
+.xi{border-radius:18px;background:linear-gradient(180deg,#F3FAF6,var(--surface) 140px);border:1px solid #D7EBE0;box-shadow:var(--shadow);margin:6px 0 14px;overflow:hidden}
+.xi-head{position:relative;display:flex;align-items:center;gap:16px;padding:14px 22px;color:#fff;overflow:hidden;
+  background:linear-gradient(100deg,#03573F 0%,#047857 45%,#3BA374 78%,#A7DCA8 100%)}
+.xi-head h3{margin:0;font-size:1.35rem;font-weight:800;letter-spacing:-.01em;padding-left:16px;border-left:2px solid rgba(255,255,255,.45)}
+.xi-logo{display:grid;place-items:center;width:46px;height:46px;border-radius:50%;background:rgba(255,255,255,.18);font-size:1.5rem;flex:0 0 auto}
+.xi-tag{margin-left:auto;font-style:italic;font-weight:600;font-family:Georgia,'Times New Roman',serif;font-size:1.02rem;opacity:.95;
+  border-bottom:2px solid rgba(255,255,255,.55);padding-bottom:1px;white-space:nowrap;position:relative;z-index:1}
+.xi-art{font-size:1.9rem;letter-spacing:-6px;filter:drop-shadow(0 2px 3px rgba(0,0,0,.18));white-space:nowrap;position:relative;z-index:1}
+.xi-body{position:relative;display:grid;grid-template-columns:1.4fr 1fr 1fr 1fr;gap:12px;padding:16px 18px 18px}
+.xi-f{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:10px 12px 12px;min-width:0;box-shadow:0 1px 2px rgba(16,26,22,.03)}
+.xi-f label{display:flex;align-items:center;gap:9px;margin:0 0 8px;font-weight:600;font-size:.88rem;color:var(--ink);line-height:1.25}
+.xi-f input,.xi-f select{border-radius:10px}
+.xi-span2{grid-column:span 2}
+.xi-ic{display:grid;place-items:center;flex:0 0 30px;width:30px;height:30px;border-radius:50%;font-style:normal;font-size:.95rem;line-height:1}
+.c-blue{background:#E3EDFF}.c-green{background:#DDF3E6}.c-violet{background:#ECE6FF}.c-amber{background:#FFF0D6}
+.c-purple{background:#F1E6FB}.c-teal{background:#D9F2F2}.c-red{background:#FFE3E3}
+.xi-p2{grid-column:1/-1;border:1px dashed #BFE0CC;border-radius:14px;padding:12px;background:rgba(4,120,87,.035)}
+.xi-p2h{margin:0 0 10px;font-size:.9rem}.xi-p2h b{color:var(--leaf)}.xi-p2h span{color:var(--muted)}
+.xi-p2b{display:grid;grid-template-columns:1fr 1fr 2fr;gap:12px}
+.xi-p2o{display:contents}
+.xi-p2o[hidden]{display:none}
+.xi-f input:disabled,.xi-f select:disabled{background:var(--bg)}
+@media (prefers-color-scheme:dark){
+  .xi{background:var(--surface);border-color:var(--line)}
+  .xi-head{background:linear-gradient(100deg,#03392A 0%,#05553F 55%,#1F7A55 100%)}
+  .c-blue,.c-green,.c-violet,.c-amber,.c-purple,.c-teal,.c-red{background:rgba(255,255,255,.08)}
+  .xi-p2{border-color:var(--line);background:rgba(255,255,255,.02)}}
+@media(max-width:980px){.xi-body{grid-template-columns:1fr 1fr}.xi-span2{grid-column:span 2}.xi-p2b{grid-template-columns:1fr 1fr}.xi-p2b .xi-f:last-child{grid-column:1/-1}}
+@media(max-width:560px){
+  .xi-head{padding:12px 14px;gap:10px;flex-wrap:wrap}.xi-head h3{font-size:1.12rem;padding-left:10px}.xi-logo{width:38px;height:38px;font-size:1.2rem}
+  .xi-tag{order:3;margin-left:0;font-size:.9rem}.xi-art{margin-left:auto;font-size:1.4rem}
+  .xi-body{grid-template-columns:1fr 1fr;gap:10px;padding:12px}.xi-body>.xi-f:first-child{grid-column:1/-1}.xi-span2{grid-column:auto}
+  .xi-f{padding:9px 10px 10px}.xi-f label{font-size:.82rem;gap:7px}.xi-ic{flex-basis:26px;width:26px;height:26px;font-size:.85rem}
+  .xi-p2{padding:10px}.xi-p2b{gap:10px}}
 .rgrid{min-width:420px}
 .rgrid td:first-child{width:58px}
 .rgrid td:first-child input{text-align:center;font-weight:700;color:var(--ink)}
@@ -839,19 +874,40 @@ body.student #studentApp{display:block}
     <h2>Шалгалтын материал</h2>
     <p class="hint">Асуулт бүрийн агуулга (сэдэв), зөв хариулт, оноог оруулна. Асуултын текст, хариултын хувилбаруудыг оруулбал сурагч хариулт бөглөхдөө асуултаа харж бөглөнө. Ижил агуулгатай асуултууд анализ дээр нэгтгэгдэнэ.</p>
     <div id="matLock"></div>
-    <div class="row">
-      <div style="flex:3 1 260px"><label for="title">Шалгалтын нэр</label><input id="title" placeholder="Жишээ: Биологи, 11-р анги, I улирал"></div>
-      <div><label for="edate">Огноо</label><input id="edate" type="date"></div>
-      <div><label for="qcount">I хэсэг: асуултын тоо</label><input id="qcount" type="number" min="1" max="60"></div>
-      <div><label for="optn">I хэсэг: хувилбарын тоо</label><select id="optn">
-        <option value="3">3 (A B C)</option><option value="4">4 (A B C D)</option><option value="5">5 (A B C D E)</option></select></div>
-      <div><label for="qcount2">II хэсэг: асуултын тоо (0–4)</label><input id="qcount2" type="number" min="0" max="4"></div>
-      <div><label for="qcount4">III хэсэг: үнэн/худал (0–60)</label><input id="qcount4" type="number" min="0" max="60"></div>
-      <div><label for="qcount3">IV хэсэг: задгай даалгавар (0–6)</label><input id="qcount3" type="number" min="0" max="6"></div>
-      <div><label for="vcount">Хувилбарын тоо</label><select id="vcount">
-        <option value="1">1 хувилбар</option><option value="2">2 хувилбар (А, Б)</option>
-        <option value="3">3 хувилбар (А, Б, В)</option><option value="4">4 хувилбар (А, Б, В, Г)</option></select></div>
-    </div>
+    <section class="xi" aria-label="Шалгалтын мэдээлэл">
+      <div class="xi-head">
+        <span class="xi-logo" aria-hidden="true">🧬</span>
+        <h3>Шалгалтын мэдээлэл</h3>
+        <span class="xi-tag">Илүү сайн ирээдүйн төлөө</span>
+        <span class="xi-art" aria-hidden="true">🌿📚🎓</span>
+      </div>
+      <div class="xi-body">
+        <div class="xi-f"><label for="title"><i class="xi-ic c-blue" aria-hidden="true">🏆</i>Шалгалтын нэр</label><input id="title" placeholder="Жишээ: Биологи, 11-р анги, I улирал"></div>
+        <div class="xi-f"><label for="edate"><i class="xi-ic c-green" aria-hidden="true">📅</i>Огноо</label><input id="edate" type="date"></div>
+        <div class="xi-f"><label for="qcount"><i class="xi-ic c-violet" aria-hidden="true">✅</i>I хэсэг (тест): асуултын тоо</label><input id="qcount" type="number" min="1" max="60"></div>
+        <div class="xi-f"><label for="optn"><i class="xi-ic c-amber" aria-hidden="true">🔤</i>I хэсэг: хувилбарын тоо</label><select id="optn">
+          <option value="3">3 (A B C)</option><option value="4">4 (A B C D)</option><option value="5">5 (A B C D E)</option></select></div>
+        <div class="xi-f"><label for="qcount4"><i class="xi-ic c-purple" aria-hidden="true">⚖️</i>III хэсэг: үнэн/худал (0–60)</label><input id="qcount4" type="number" min="0" max="60"></div>
+        <div class="xi-f"><label for="qcount3"><i class="xi-ic c-teal" aria-hidden="true">✍️</i>IV хэсэг: задгай даалгавар (0–6)</label><input id="qcount3" type="number" min="0" max="6"></div>
+        <div class="xi-f xi-span2"><label for="vcount"><i class="xi-ic c-green" aria-hidden="true">📊</i>Хувилбарын тоо</label><select id="vcount">
+          <option value="1">1 хувилбар</option><option value="2">2 хувилбар (А, Б)</option>
+          <option value="3">3 хувилбар (А, Б, В)</option><option value="4">4 хувилбар (А, Б, В, Г)</option></select></div>
+        <div class="xi-p2">
+          <div class="xi-p2h"><b>II хэсэг</b> <span>олон зөв хариулттай даалгавар (A–H эсвэл A–J)</span></div>
+          <div class="xi-p2b">
+            <div class="xi-f"><label for="qcount2"><i class="xi-ic c-green" aria-hidden="true">🎯</i>Асуултын тоо (0–4)</label><input id="qcount2" type="number" min="0" max="4"></div>
+            <div id="p2opts" class="xi-p2o" hidden>
+              <div class="xi-f"><label for="p2n"><i class="xi-ic c-amber" aria-hidden="true">🔠</i>Сонголтын тоо</label><select id="p2n">
+                <option value="8">8 (A–H)</option><option value="10">10 (A–J)</option></select></div>
+              <div class="xi-f"><label for="p2mode"><i class="xi-ic c-red" aria-hidden="true">⭐</i>II хэсгийн оноо</label><select id="p2mode">
+                <option value="exact">Зөв хувилбаруудыг яг таг будсан бол бүтэн оноо</option>
+                <option value="partial">Хэсэгчилсэн оноо (зөв будсанаас буруу будсаныг хасна)</option></select></div>
+            </div>
+          </div>
+          <p class="hint" id="p2hint" style="margin:8px 0 0" hidden>Зөв хариулт нэг буюу хэд хэдэн үсэг байж болно (жишээ нь ACF). Асуултын тоог 0 гэвэл хариултын хуудсанд II хэсэг гарахгүй.</p>
+        </div>
+      </div>
+    </section>
     <div id="varBox" hidden style="margin-top:10px;padding:12px;border:1px solid var(--line);border-radius:8px;background:var(--bg)">
       <div style="max-width:420px;margin-bottom:8px"><label for="vmode">Хувилбарууд юугаараа ялгаатай вэ</label><select id="vmode">
         <option value="own">Өөр асуултууд — хувилбар бүрийн асуултыг тусад нь оруулна</option>
@@ -860,14 +916,6 @@ body.student #studentApp{display:block}
       <p class="hint" id="vordHint" style="margin:0 0 8px">Хувилбар бүр нь <b>ижил асуултуудын өөр дараалал</b>. Доорх жагсаалт нь "энэ хувилбарын 1, 2, 3-р асуулт нь үндсэн хувилбарын хэд дэх асуулт вэ" гэдгийг заана. Word дээрх хуудсаа энэ дараалалтай тааруулж бэлдэнэ (эсвэл эсрэгээр, бэлэн хуудсныхаа дарааллыг энд бичнэ).</p>
       <div id="varList"></div>
     </div>
-    <div id="p2opts" class="row" style="margin-top:10px" hidden>
-      <div style="max-width:240px"><label for="p2n">II хэсэг: сонголтын тоо</label><select id="p2n">
-        <option value="8">8 (A–H)</option><option value="10">10 (A–J)</option></select></div>
-      <div style="max-width:420px"><label for="p2mode">II хэсгийн оноо</label><select id="p2mode">
-        <option value="exact">Зөв хувилбаруудыг яг таг будсан бол бүтэн оноо</option>
-        <option value="partial">Хэсэгчилсэн оноо (зөв будсанаас буруу будсаныг хасна)</option></select></div>
-    </div>
-    <p class="hint" id="p2hint" style="margin-top:8px" hidden>II хэсэг нь A–H (8) эсвэл A–J (10) сонголттой, чадвар шаардсан даалгавар. Зөв хариулт нэг буюу хэд хэдэн үсэг байж болно (жишээ нь ACF). II хэсгийн асуултын тоог 0 гэвэл хариултын хуудсанд II хэсэг гарахгүй.</p>
     <details class="collapsible" style="margin-top:18px">
       <summary class="import-btn"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/><path d="M15 13v5M12.5 15.5 15 18l2.5-2.5"/></svg>Word, Excel-ээс асуулт оруулах <small>— хуулж буулгахад бүгд нэг дор орно</small></summary>
       <p class="hint" style="margin-top:8px"><b>Хүснэгтээр:</b> Word эсвэл Excel дэх хүснэгтээ толгой мөртэй нь хуулж (Ctrl + C) доорх нүдэнд буулгана. Толгой мөрөнд <b>Асуулт</b>, <b>A</b>, <b>B</b>, <b>C</b>, <b>D</b>, <b>Зөв хариулт</b> (хүсвэл <b>Агуулга</b>, <b>Оноо</b>) гэсэн багана байхад программ өөрөө таньж авна.</p>
