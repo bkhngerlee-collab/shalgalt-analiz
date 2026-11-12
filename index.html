@@ -315,6 +315,12 @@ td input,td select{min-width:70px}
 .wgrid td:first-child{width:42px;text-align:center;color:var(--muted);font-size:.8rem;background:var(--bg)}
 .wgrid input{border:0;border-radius:0;background:transparent;padding:7px 8px;width:100%}
 .wgrid input:focus{outline:2px solid var(--iodine);outline-offset:-2px;background:var(--surface)}
+.rgrid{min-width:420px}
+.rgrid td:first-child{width:58px}
+.rgrid td:first-child input{text-align:center;font-weight:700;color:var(--ink)}
+.rgrid td:nth-child(2){width:34%}
+.rgrid td:nth-child(2) input{font-family:ui-monospace,Consolas,monospace;font-size:.92rem}
+.rgrid input:disabled{background:transparent}
 .sq-list{display:grid;gap:8px}
 .sq-row{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.2fr);gap:8px;align-items:center;padding:6px 0;border-bottom:1px solid var(--line)}
 .sq-row .w{font-weight:700;font-size:1.1rem;word-break:break-word}
@@ -875,15 +881,19 @@ body.student #studentApp{display:block}
 
   <div class="panel" id="s-cls">
     <h2>Ангиуд, сурагчдын нэрс</h2>
-    <p class="hint">Анги бүрийн сурагчдын нэрсийг нэг удаа оруулахад бүх шалгалтад ашиглагдана. Сурагч бүр ангидаа давхцахгүй 2 оронтой кодтой бөгөөд хариултын хуудсан дээр түүнийгээ будна. Нэрсийг Excel эсвэл Word-оос хуулж буулгана. Дугаартай хуулбал ("7. Анужин") тэр дугаар нь код болно, дугааргүй бол код автоматаар өгөгдөнө.</p>
+    <p class="hint">Анги бүрийн сурагчдын нэрсийг нэг удаа оруулахад бүх шалгалтад ашиглагдана. Сурагч бүр ангидаа давхцахгүй 2 оронтой дугаартай (№) бөгөөд хариултын хуудсан дээр түүнийгээ будна. Сургуулийн өөрийн код (жишээ нь GTIS24100003) байвал хамт оруулж болно — Excel тайлан, кодын жагсаалтад гарна.</p>
     <div class="row">
       <div><label for="rcls">Анги</label><select id="rcls"></select></div>
       <div><label for="newCls">Шинэ анги нэмэх</label><div style="display:flex;gap:8px"><input id="newCls" name="new-class-name" placeholder="Жишээ: 11В" autocomplete="off" data-lpignore="true" data-1p-ignore><button class="btn" id="addCls">Нэмэх</button></div></div>
     </div>
-    <label for="rnames" style="margin-top:12px">Код ба нэр (мөр бүрд нэг сурагч)</label>
-    <textarea id="rnames" style="font-family:inherit;min-height:200px" placeholder="01 Анужин&#10;02 Билгүүн&#10;03 Номин"></textarea>
+    <label style="margin-top:12px">Сурагчдын жагсаалт</label>
+    <p class="hint" style="margin:2px 0 8px">Сургуулийн системээсээ <b>код, нэрийг хамт</b> хуулж (Ctrl + C) доорх хүснэгтийн аль ч нүдэнд дараад <b>Ctrl + V</b> — аль нь сургуулийн код, аль нь нэр болохыг программ өөрөө таньна. Зөвхөн нэр эсвэл зөвхөн кодын баганыг тусад нь буулгаж ч болно. <b>№</b> нь хариултын хуудсан дээр будах 2 оронтой дугаар — хоосон орхивол өөрөө өгөгдөнө.</p>
+    <div class="scroll" style="max-height:460px;overflow-y:auto;border:1px solid var(--line);border-radius:6px">
+      <table class="wgrid rgrid"><thead><tr><th>№</th><th>Сургуулийн код (заавал биш)</th><th>Овог, нэр</th></tr></thead><tbody id="rGrid"></tbody></table>
+    </div>
     <div class="btns">
       <button class="btn" id="saveRoster">Нэрсийг хадгалах</button>
+      <button class="btn ghost" id="rAddRows">+ 10 мөр нэмэх</button>
       <button class="btn ghost" id="printCodes">Кодын жагсаалт хэвлэх</button>
       <button class="btn ghost" id="tidyCls">Ангиудыг цэгцлэх</button>
       <button class="btn danger" id="delCls">Энэ ангийг устгах</button>
@@ -1277,18 +1287,19 @@ body.student #studentApp{display:block}
       "Шинэ анги нэмэх" нүдэнд <code>11В</code> гэж бичээд <b>"Нэмэх"</b> дарна.
       <div class="hp-tip">"11 в анги", "11b" гэж бичсэн ч болно — <b>"Ангиудыг цэгцлэх"</b> дарвал нэг хэлбэрт оруулж, давхардсаныг нэгтгэнэ.</div></div></div>
     <div class="hp-step"><div class="hp-num">2</div><div><b>Нэрсээ буулгах</b>
-      Мөр бүрд нэг сурагч. Excel, Word-оос хуулаад (Ctrl + C) буулгаж (Ctrl + V) болно.
+      Хүснэгт 3 баганатай: <b>№</b> (хуудсан дээр будах 2 оронтой дугаар), <b>Сургуулийн код</b> (заавал биш), <b>Овог, нэр</b>. Excel, сургуулийн системээс хуулаад (Ctrl + C) аль ч нүдэнд дараад буулгана (Ctrl + V).
       <table>
-        <tr><th>Ингэж бичвэл</th><th>Юу болох</th></tr>
-        <tr><td><code>01 Анужин</code></td><td>Бичсэн дугаар нь сурагчийн код болно</td></tr>
-        <tr><td><code>Анужин</code></td><td>Код 01, 02… гэж автоматаар өгөгдөнө</td></tr>
-        <tr><td><code>7. Анужин</code></td><td>Цэг, зай байсан ч болно — код 07</td></tr>
-      </table></div></div>
+        <tr><th>Хуулсан мөр</th><th>Юу болох</th></tr>
+        <tr><td><code>GTIS24100003 · Ану-Үжин</code></td><td>Сургуулийн код, нэр хоёр өөр өөрийн баганад орно</td></tr>
+        <tr><td><code>Ану-Үжин</code></td><td>Зөвхөн нэр орж, № 01, 02… автоматаар өгөгдөнө</td></tr>
+        <tr><td><code>7 · GTIS24100003 · Ану-Үжин</code></td><td>№ 07, код, нэр гурвуулаа орно</td></tr>
+      </table>
+      Сургуулийн код "Кодын жагсаалт", Excel тайлангийн дүнгийн хүснэгт, нэгдсэн анализын Excel-д тусдаа багана болж гарна.</div></div>
     <div class="hp-step"><div class="hp-num">3</div><div><b>"Нэрсийг хадгалах"</b> дарна.</div></div>
     <div class="hp-step"><div class="hp-num">4</div><div><b>Кодоо сурагчдад өгөх</b>
       <b>"Кодын жагсаалт хэвлэх"</b> дарж код–нэрийн хүснэгт хэвлээд сурагчдад өгнө.
       <div class="hp-warn">Сурагч кодоо буруу будвал хуудас нь өөр хүний дүн болно. Шалгалтын өмнө "анги, бүлэг, кодоо зөв будсан эсэхээ шалга" гэж сануулаарай.</div></div></div>
-    <div class="hp-ok"><b>Олон ангийг нэг дор:</b> "Нэрсийн Excel загвар татах" → <b>Анги / Код / Нэр</b> баганыг бөглөх → "Excel файлаас оруулах". Нэр засах, сурагч нэмэх, хасах бол текстээ засаад дахин "Нэрсийг хадгалах" — өмнөх дүн хэвээр үлдэнэ.</div>
+    <div class="hp-ok"><b>Олон ангийг нэг дор:</b> "Нэрсийн Excel загвар татах" → <b>Анги / Код / Сургуулийн код / Нэр</b> баганыг бөглөх → "Excel файлаас оруулах". Нэр засах, сурагч нэмэх, хасах бол хүснэгтээ засаад дахин "Нэрсийг хадгалах" — өмнөх дүн хэвээр үлдэнэ.</div>
   </details>
 
   <!-- ======================= -->
@@ -2263,6 +2274,7 @@ const pad2=n=>String(n).padStart(2,'0');
 function fixCodes(c){
   c.codes=c.codes||{};
   Object.keys(c.codes).forEach(n=>{if(!c.students.includes(n))delete c.codes[n];});
+  if(c.sids)Object.keys(c.sids).forEach(n=>{if(!c.students.includes(n)||!c.sids[n])delete c.sids[n];});
   const used=new Set(Object.values(c.codes));
   c.students.forEach(n=>{if(!c.codes[n]){let k=1;while(used.has(k))k++;c.codes[n]=k;used.add(k);}});
   c.students.sort((a,b)=>c.codes[a]-c.codes[b]);
@@ -2766,6 +2778,7 @@ $('#restore').addEventListener('change',e=>{
       (d.classes||[]).forEach(c=>{ensureRoster(c.name);(c.students||[]).forEach(n=>ensureRoster(c.name,n));
         const t=db.classes.find(x=>x.name===c.name);
         if(t&&c.codes)Object.entries(c.codes).forEach(([n,k])=>{if(t.students.includes(n)&&!Object.entries(t.codes).some(([o,j])=>j===k&&o!==n))t.codes[n]=k;});
+        if(t&&c.sids)Object.entries(c.sids).forEach(([n,s])=>{if(s&&t.students.includes(n))(t.sids=t.sids||{})[n]=s;});
         if(t)fixCodes(t);});
       if(d.sheet)db.sheet=d.sheet;
       state=db.exams.find(x=>x.id===state.id)||db.exams[0];openExam(state.id);
@@ -3014,14 +3027,61 @@ $('#qbulkBtn').addEventListener('click',()=>{
     +(used>=2?' Хариултын хувилбар '+O.join(', ')+' гэж тогтоолоо.':'')
     +(cut?' II хэсэг 4-өөс олон асуулттай байсан тул эхний 4-ийг авлаа.':'')+' Зөв хариулт, агуулгыг доорх жагсаалтаас шалгана уу.';
 });
+/* ---------- Ангийн нэрсийн хүснэгт: № (хуудсан дээрх 2 оронтой дугаар) | сургуулийн код | нэр ---------- */
+let rGrid=[],rDirty=false;
+const sidOf=(cls,name)=>{const c=db.classes.find(x=>x.name===cls);return(c&&c.sids&&c.sids[name])||'';};
 function renderRosterSetup(){
   const sel=$('#rcls');
   if(!db.classes.find(c=>c.name===rosterCls))rosterCls=(db.classes[0]||{}).name||'';
   sel.innerHTML=db.classes.length?db.classes.map(c=>`<option${c.name===rosterCls?' selected':''}>${esc(c.name)}</option>`).join(''):'<option value="">Анги нэмээгүй байна</option>';
   const c=db.classes.find(x=>x.name===rosterCls);
-  $('#rnames').value=c?c.students.map(n=>pad2(c.codes[n])+' '+n).join('\n'):'';$('#rnames').disabled=!c;
+  rGrid=c?c.students.map(n=>[pad2(c.codes[n]),(c.sids&&c.sids[n])||'',n]):[];
+  const want=Math.max(15,rGrid.length+5);while(rGrid.length<want)rGrid.push(['','','']);
+  rDirty=false;rGridRender();
 }
-$('#rcls').addEventListener('change',e=>{rosterCls=e.target.value;renderRosterSetup();$('#rosterMsg').textContent='';});
+function rGridRender(){
+  const off=!db.classes.find(x=>x.name===rosterCls),L=['дугаар (№)','сургуулийн код','овог, нэр'];
+  $('#rGrid').innerHTML=rGrid.map((r,i)=>`<tr>${[0,1,2].map(c=>`<td><input data-r="${i}" data-c="${c}" value="${esc(r[c]||'')}"${c===0?' inputmode="numeric" maxlength="2" placeholder="'+pad2(i+1)+'"':''}
+    aria-label="${i+1}-р мөр, ${L[c]}" autocomplete="off" spellcheck="false"${off?' disabled':''}></td>`).join('')}</tr>`).join('');
+}
+/* Хуулсан мөрийг таньна: 1–2 оронтой тоо = №, цифртэй зайгүй үг (GTIS24100003) = сургуулийн код, бусад нь нэр */
+function rosterCells(line){
+  const t=line.replace(/\r/g,'');
+  let cells=t.includes('\t')?t.split('\t'):t.trim().split(/\s+/);
+  cells=cells.map(x=>x.trim()).filter(Boolean);
+  let no='',sid='';const rest=[];
+  cells.forEach((x,i)=>{
+    if(!no&&!sid&&!rest.length&&cells.length>1&&/^\d{1,2}[.)]?$/.test(x))no=x.replace(/\D/g,'');
+    else if(!sid&&x.length>=3&&/\d/.test(x)&&/^[0-9A-Za-zА-Яа-яЁёӨөҮү_\-\/.]+$/.test(x)&&!/^\d{1,2}[.)]$/.test(x))sid=x;
+    else rest.push(x);});
+  return[no?pad2(+no):'',sid,rest.join(' ')];
+}
+$('#rGrid').addEventListener('input',e=>{const t=e.target;if(t.dataset.r==null)return;
+  rGrid[+t.dataset.r][+t.dataset.c]=t.value;rDirty=true;
+  const m=$('#rosterMsg');m.style.color='var(--iodine)';m.textContent='Хадгалаагүй өөрчлөлт байна — "Нэрсийг хадгалах" дарна уу.';});
+$('#rGrid').addEventListener('keydown',e=>{const t=e.target;if(e.key!=='Enter'||t.dataset.r==null)return;e.preventDefault();
+  const r=+t.dataset.r+1;if(r>=rGrid.length){rGrid.push(['','','']);rGridRender();}
+  const n=$(`#rGrid input[data-r="${r}"][data-c="${t.dataset.c}"]`);if(n)n.focus();});
+$('#rGrid').addEventListener('paste',e=>{
+  const t=e.target;if(t.dataset.r==null)return;const txt=(e.clipboardData||window.clipboardData).getData('text');
+  const lines=txt.replace(/\r/g,'').replace(/\n+$/,'').split('\n');
+  if(lines.length<2&&!txt.includes('\t'))return;   // нэг утга — ердийнхөөр буулгана
+  e.preventDefault();
+  const r0=+t.dataset.r;let k=0;
+  lines.forEach(l=>{if(!l.trim())return;
+    let v=rosterCells(l);
+    /* Зөвхөн дугаарын багана буулгасан бол */
+    if(/^\d{1,2}[.)]?$/.test(l.trim()))v=[pad2(+l.replace(/\D/g,'')),'',''];
+    while(rGrid.length<=r0+k)rGrid.push(['','','']);
+    v.forEach((x,j)=>{if(x&&!(j===0&&x==='00'))rGrid[r0+k][j]=x;});k++;});
+  while(rGrid.length<r0+k+5)rGrid.push(['','','']);
+  rDirty=true;rGridRender();
+  const m=$('#rosterMsg');m.style.color='var(--iodine)';m.textContent=k+' мөр буулгагдлаа. Шалгаад "Нэрсийг хадгалах" дарна уу.';
+});
+$('#rAddRows').addEventListener('click',()=>{for(let i=0;i<10;i++)rGrid.push(['','','']);rGridRender();});
+$('#rcls').addEventListener('change',e=>{
+  if(rDirty&&!confirm(rosterCls+' ангийн хадгалаагүй өөрчлөлт алга болно. Үргэлжлүүлэх үү?')){e.target.value=rosterCls;return;}
+  rosterCls=e.target.value;renderRosterSetup();$('#rosterMsg').textContent='';});
 $('#addCls').addEventListener('click',()=>{
   const raw=$('#newCls').value.trim(),m=$('#rosterMsg');if(!raw){$('#newCls').focus();return;}
   if(raw.includes('@')){$('#newCls').value='';$('#newCls').focus();
@@ -3034,7 +3094,7 @@ $('#addCls').addEventListener('click',()=>{
   const lt=classParts(n).letter;
   if(lt&&db.sheet&&db.sheet.letters&&!sheetLetters().some(x=>normL(x)===normL(lt)))db.sheet.letters=(db.sheet.letters+' '+lt).trim();
   save();renderRosterSetup();renderSheetPanel();$('#newCls').value='';
-  m.style.color='';m.textContent=n+' анги нэмэгдлээ. Одоо сурагчдын нэрсийг оруулна уу.';$('#rnames').focus();
+  m.style.color='';m.textContent=n+' анги нэмэгдлээ. Одоо сурагчдын нэрсийг оруулна уу.';const f0=$('#rGrid input[data-c="1"]');if(f0)f0.focus();
 });
 $('#newCls').addEventListener('keydown',e=>{if(e.key==='Enter')$('#addCls').click();});
 /* Хөтөч нэвтрэх и-мэйлийг энэ нүдэнд өөрөө бөглөчихдөг — ангийн нэр биш тул арилгана */
@@ -3043,16 +3103,22 @@ const clsAutofill=()=>{const n=$('#newCls');if(n&&n.value.includes('@'))n.value=
 $('#newCls').addEventListener('focus',clsAutofill);
 $('#saveRoster').addEventListener('click',()=>{
   const c=db.classes.find(x=>x.name===rosterCls),m=$('#rosterMsg');if(!c)return;
-  const items=[],seen=new Set();
-  $('#rnames').value.split(/\r?\n/).forEach(l=>{l=l.trim();if(!l)return;
-    const mm=l.match(/^(\d{1,2})\s*[.)]?[\s]+(.+)$/)||l.match(/^(\d{1,2})[.)](.+)$/);
-    let code=mm?+mm[1]:null,name=(mm?mm[2]:l).split('\t')[0].trim();
-    if(!name||seen.has(name))return;seen.add(name);items.push({code:code||null,name});});
+  const items=[],seen=new Set(),noName=[];
+  rGrid.forEach((r,i)=>{const name=String(r[2]||'').replace(/\s+/g,' ').trim(),sid=String(r[1]||'').trim(),no=String(r[0]||'').replace(/\D/g,'');
+    if(!name){if(sid)noName.push(sid);return;}
+    if(seen.has(name))return;seen.add(name);
+    const code=/^\d{1,2}$/.test(no)&&+no>0?+no:null;items.push({code,name,sid});});
+  if(noName.length){m.style.color='var(--stain)';m.textContent='Нэргүй мөр байна: '+noName.slice(0,5).join(', ')+(noName.length>5?'…':'')+'. Нэрийг нь бичих эсвэл кодыг нь арилгана уу.';return;}
   const by={};items.forEach(it=>{if(it.code)(by[it.code]=by[it.code]||[]).push(it.name);});
   const dup=Object.entries(by).filter(([k,v])=>v.length>1);
-  if(dup.length){m.style.color='var(--stain)';m.textContent='Код давхацсан байна: '+dup.map(([k,v])=>pad2(k)+' ('+v.join(', ')+')').join('; ')+'. Засаад дахин хадгална уу.';return;}
-  c.students=items.map(it=>it.name);c.codes={};items.forEach(it=>{if(it.code)c.codes[it.name]=it.code;});fixCodes(c);
-  save();renderRosterSetup();renderSheetPanel();m.style.color='';m.textContent=c.name+' ангид '+c.students.length+' сурагч хадгалагдлаа. Код бүр давхцалгүй.';
+  if(dup.length){m.style.color='var(--stain)';m.textContent='Дугаар (№) давхацсан байна: '+dup.map(([k,v])=>pad2(k)+' ('+v.join(', ')+')').join('; ')+'. Засаад дахин хадгална уу.';return;}
+  const bs={};items.forEach(it=>{if(it.sid)(bs[it.sid]=bs[it.sid]||[]).push(it.name);});
+  const dupS=Object.entries(bs).filter(([k,v])=>v.length>1);
+  if(dupS.length){m.style.color='var(--stain)';m.textContent='Сургуулийн код давхацсан байна: '+dupS.map(([k,v])=>k+' ('+v.join(', ')+')').join('; ')+'. Засаад дахин хадгална уу.';return;}
+  c.students=items.map(it=>it.name);c.codes={};c.sids={};
+  items.forEach(it=>{if(it.code)c.codes[it.name]=it.code;if(it.sid)c.sids[it.name]=it.sid;});fixCodes(c);
+  const ns=Object.keys(c.sids).length;
+  save();renderRosterSetup();renderSheetPanel();m.style.color='';m.textContent=c.name+' ангид '+c.students.length+' сурагч хадгалагдлаа'+(ns?' ('+ns+' нь сургуулийн кодтой)':'')+'. Дугаар бүр давхцалгүй.';
 });
 $('#tidyCls').addEventListener('click',()=>{
   const m=$('#rosterMsg'),groups=new Map();
@@ -3069,9 +3135,10 @@ $('#tidyCls').addEventListener('click',()=>{
   snap('ангиудыг цэгцлэх');
   const out=[];
   groups.forEach(list=>{
-    const c0={name:clsPretty(list[0].name),students:[],codes:{}};
+    const c0={name:clsPretty(list[0].name),students:[],codes:{},sids:{}};
     list.forEach(c=>{const used=new Set(Object.values(c0.codes));
       (c.students||[]).forEach(n=>{if(c0.students.includes(n))return;c0.students.push(n);
+        if(c.sids&&c.sids[n])c0.sids[n]=c.sids[n];
         const code=c.codes&&c.codes[n];if(code&&!used.has(code)){c0.codes[n]=code;used.add(code);}});});
     fixCodes(c0);out.push(c0);
   });
@@ -4104,10 +4171,10 @@ $('#sPrint').addEventListener('click',()=>{
 });
 $('#printCodes').addEventListener('click',()=>{
   const c=db.classes.find(x=>x.name===rosterCls);if(!c||!c.students.length)return;
-  const p=classParts(c.name);
+  const p=classParts(c.name),hasSid=!!(c.sids&&Object.keys(c.sids).length);
   printPages(`<div class="codes-print"><h2>${esc(c.name)} анги: сурагчдын код</h2>
     <p>Хариултын хуудсан дээр Анги хэсэгт ${esc(p.grade)}, Бүлэг хэсэгт ${esc(p.letter)}, Код хэсэгт өөрийн кодыг будна.</p>
-    <table><thead><tr><th>Код</th><th>Нэр</th></tr></thead><tbody>${c.students.map(n=>`<tr><td><b>${pad2(c.codes[n])}</b></td><td>${esc(n)}</td></tr>`).join('')}</tbody></table></div>`,'12mm');
+    <table><thead><tr><th>Код</th>${hasSid?'<th>Сургуулийн код</th>':''}<th>Нэр</th></tr></thead><tbody>${c.students.map(n=>`<tr><td><b>${pad2(c.codes[n])}</b></td>${hasSid?`<td>${esc(c.sids[n]||'')}</td>`:''}<td>${esc(n)}</td></tr>`).join('')}</tbody></table></div>`,'12mm');
 });
 
 /* ---------- combined (final) analysis ---------- */
@@ -4404,14 +4471,15 @@ function examExportData(){
   return{d,qs,dist,LT,levels,V,viewNote,success:share(60),quality:share(80),scope:(filterCls?filterCls+' анги':'Бүх анги')+(varScope()?', '+varScope():''),title:state.exam.title||'Шалгалт'};
 }
 function matrixSheet(name,title,note,list,qs,withCls){
-  const wv=varOn(),F=(withCls?4:3)+(wv?1:0),n=qs.length,qc=i=>colName(F+i),tc=colName(F+n),pcC=colName(F+n+1),lab=F-1;
+  const ws=list.some(r=>sidOf(r.s.cls,r.s.name));
+  const wv=varOn(),F=(withCls?4:3)+(wv?1:0)+(ws?1:0),n=qs.length,qc=i=>colName(F+i),tc=colName(F+n),pcC=colName(F+n+1),lab=F-1;
   const first=8,last=first+Math.max(list.length,1)-1,blank=()=>Array(F).fill(null).map(()=>({v:'',s:'h'}));
   const lv=c=>`LOOKUP(ROUND(${c}*100,0),{0,30,40,50,60,70,80,90},{"I","II","III","IV","V","VI","VII","VIII"})`;
   /* Формул бүрийн хариуг энд давхар бодож, файлд хамт бичнэ */
   const m=list.length,pts=qs.map(q=>+q.points||0),max=pts.reduce((a,b)=>a+b,0);
   const sumQ=i=>list.reduce((a,r)=>a+(r.earn[i]||0),0),tot=list.reduce((a,r)=>a+r.score,0);
   const rnd=v=>!isFinite(v)?0:Math.round(v*1e6)/1e6;
-  const hdr=blank();['№',...(withCls?['Анги']:[]),'Код',...(wv?['Хувилбар']:[]),'Нэр'].forEach((v,i)=>hdr[i]={v,s:'h'});
+  const hdr=blank();['№',...(withCls?['Анги']:[]),'Код',...(ws?['Сургуулийн код']:[]),...(wv?['Хувилбар']:[]),'Нэр'].forEach((v,i)=>hdr[i]={v,s:'h'});
   const r5=blank();r5[lab]={v:'Хэсэг',s:'sub'};
   const r6=blank();r6[lab]={v:'Агуулга',s:'sub'};
   const r7=blank();r7[lab]={v:'Дээд оноо',s:'sub'};
@@ -4421,7 +4489,7 @@ function matrixSheet(name,title,note,list,qs,withCls){
     [...r6,...qs.map((q,i)=>({v:topicOf(i),s:'subv'})),{v:'',s:'sub'},{v:'',s:'sub'},{v:'',s:'sub'}],
     [...r7,...qs.map(q=>({v:+q.points||0,s:'sub'})),{f:`SUM(${qc(0)}7:${qc(n-1)}7)`,cv:rnd(max),s:'sub'},{v:'',s:'sub'},{v:'',s:'sub'}]];
   list.forEach((r,k)=>{const row=first+k,pc2=max?r.score/max:0;
-    rows.push([{v:k+1,s:'cc'},...(withCls?[{v:r.s.cls,s:'cc'}]:[]),{v:codeOf(r.s.cls,r.s.name)||'',s:'cc'},...(wv?[{v:VNAMES[r.s.v||0],s:'cc'}]:[]),{v:r.s.name,s:'b'},
+    rows.push([{v:k+1,s:'cc'},...(withCls?[{v:r.s.cls,s:'cc'}]:[]),{v:codeOf(r.s.cls,r.s.name)||'',s:'cc'},...(ws?[{v:sidOf(r.s.cls,r.s.name),s:'cc'}]:[]),...(wv?[{v:VNAMES[r.s.v||0],s:'cc'}]:[]),{v:r.s.name,s:'b'},
       ...r.earn.map((e,i)=>({v:Math.round(e*100)/100,s:r.ok[i]?'ok':e>0?'pt':'no'})),
       {f:`SUM(${qc(0)}${row}:${qc(n-1)}${row})`,cv:rnd(r.score),s:'b'},
       {f:`IF($${tc}$7=0,0,${tc}${row}/$${tc}$7)`,cv:rnd(pc2),s:'pb'},
@@ -4439,7 +4507,7 @@ function matrixSheet(name,title,note,list,qs,withCls){
     i=>pts[i]*m?sumQ(i)/(pts[i]*m):0,max*m?tot/(max*m):0);
   gp[F+n+2]={f:lv(tc+(fr+3)),cv:levelOf(Math.round((max*m?tot/(max*m):0)*100)),s:'fb'};rows.push(gp);
   return{name,rows,freeze:7,freezeCol:F,heights:{5:Math.min(130,Math.max(40,8+5.5*Math.max(...qs.map((q,i)=>topicOf(i).length))))},
-    widths:[5,...(withCls?[7]:[]),6,...(wv?[9]:[]),22,...qs.map(()=>6),10,11,9]};
+    widths:[5,...(withCls?[7]:[]),6,...(ws?[16]:[]),...(wv?[9]:[]),22,...qs.map(()=>6),10,11,9]};
 }
 /* Шалгалтын нэрнээс хичээлийн нэрийг салгаж авна: "Биологи, 9-р анги" -> "Биологи" */
 function subjectName(){
@@ -4508,10 +4576,10 @@ async function exportExamXlsx(){
     ['Бүх сурагч ижил хариулсан асуулт',d.qstat.filter(s=>s.v<=1e-12).length],
     ['Хамгийн сайн эзэмшсэн агуулга',best?best.t+' ('+Math.round(best.pct)+'%)':'–'],
     ['Цаашид анхаарах агуулга',d.topics.length>1?worst.t+' ('+Math.round(worst.pct)+'%)':'–']]};
-  const V=X.V;
-  const stu={name:'Сурагчид',freeze:1,widths:[5,8,6,22,...qs.map(()=>5),8,8,10,8,10,40],rows:[
-    ['№','Анги','Код','Нэр',...qs.map((q,i)=>String(i+1)),'Оноо','Хувь','Дунджаас зөрүү','Түвшин','Байр','Алдсан агуулга'].map(v=>({v,s:'h'})),
-    ...V.map((r,k)=>[k+1,r.s.cls,codeOf(r.s.cls,r.s.name),r.s.name,...r.ok.map(o=>o?1:0),r1(r.score),P(r.pct),Math.round(r.pct-d.avg),r.lv,r.rank+' / '+r.of,
+  const V=X.V,ws=V.some(r=>sidOf(r.s.cls,r.s.name));
+  const stu={name:'Сурагчид',freeze:1,widths:[5,8,6,...(ws?[16]:[]),22,...qs.map(()=>5),8,8,10,8,10,40],rows:[
+    ['№','Анги','Код',...(ws?['Сургуулийн код']:[]),'Нэр',...qs.map((q,i)=>String(i+1)),'Оноо','Хувь','Дунджаас зөрүү','Түвшин','Байр','Алдсан агуулга'].map(v=>({v,s:'h'})),
+    ...V.map((r,k)=>[k+1,r.s.cls,codeOf(r.s.cls,r.s.name),...(ws?[sidOf(r.s.cls,r.s.name)]:[]),r.s.name,...r.ok.map(o=>o?1:0),r1(r.score),P(r.pct),Math.round(r.pct-d.avg),r.lv,r.rank+' / '+r.of,
       [...new Set(qs.map((q,i)=>i).filter(i=>!r.ok[i]).map(topicOf))].join(', ')||'–']),
     [],[{v:X.viewNote,s:'n'}]]};
   const qsh={name:'Асуултууд',freeze:1,widths:[5,8,24,9,10,10,...X.LT.map(()=>6),11,13,14,26,8],rows:[
@@ -4588,9 +4656,10 @@ async function exportFinalXlsx(){
     ...R.map(r=>[lab(r),r.e.exam.title||'Нэргүй шалгалт',r.d.n,P(r.d.avg),r.w,P(F.totalW?r.w/F.totalW*100:0)]),[],
     [{v:'Үзүүлэлт',s:'h'},{v:'Утга',s:'h'}],['Сурагч',n],['Нэгдсэн дундаж',P(avg)],['Амжилт (60%-аас дээш)',P(share(60))],['Чанар (80%-аас дээш)',P(share(80))]]};
   const V=viewRows(F.rows,{pct:r=>r.fin,name:r=>r.n,cls:()=>finalCls,show:fShow,sort:fSort,avg});
-  const stu={name:'Эцсийн дүн',freeze:1,widths:[5,6,22,...R.map(()=>12),12,10,9,9,9,14],rows:[
-    ['№','Код','Нэр',...R.map(lab),'Эцсийн дүн','Дунджаас зөрүү','Түвшин','Байр','Ахиц','Тайлбар'].map(v=>({v,s:'h'})),
-    ...V.map((r,k)=>[k+1,codeOf(finalCls,r.n),r.n,...r.p.map(P),{v:r.fin/100,s:'pb'},Math.round(r.fin-avg),r.lv,r.rank+' / '+n,r.ch==null?'–':P(r.ch),r.miss?r.miss+' шалгалт өгөөгүй':'']),
+  const ws=V.some(r=>sidOf(finalCls,r.n));
+  const stu={name:'Эцсийн дүн',freeze:1,widths:[5,6,...(ws?[16]:[]),22,...R.map(()=>12),12,10,9,9,9,14],rows:[
+    ['№','Код',...(ws?['Сургуулийн код']:[]),'Нэр',...R.map(lab),'Эцсийн дүн','Дунджаас зөрүү','Түвшин','Байр','Ахиц','Тайлбар'].map(v=>({v,s:'h'})),
+    ...V.map((r,k)=>[k+1,codeOf(finalCls,r.n),...(ws?[sidOf(finalCls,r.n)]:[]),r.n,...r.p.map(P),{v:r.fin/100,s:'pb'},Math.round(r.fin-avg),r.lv,r.rank+' / '+n,r.ch==null?'–':P(r.ch),r.miss?r.miss+' шалгалт өгөөгүй':'']),
     [],[{v:'Жагсаалт: '+showLabel(fShow).toLowerCase()+', '+SORT_OPTS.find(o=>o[0]===fSort)[1].toLowerCase()+' эрэмбэлсэн ('+V.length+' сурагч). Нэгдсэн дундаж '+Math.round(avg)+'%.',s:'n'}]]};
   const top={name:'Агуулга',freeze:1,widths:[28,...R.map(()=>12),12],rows:[
     ['Агуулга',...R.map(lab),'Нэгдсэн'].map(v=>({v,s:'h'})),...F.topics.map(t=>[t.t,...t.arr.map(P),{v:t.avg/100,s:'pb'}])]};
@@ -4666,11 +4735,11 @@ function findHeader(rows,must){for(let i=0;i<Math.min(rows.length,15);i++){const
 
 /* ---------- Excel templates and imports ---------- */
 $('#rosterTpl').addEventListener('click',()=>{
-  const rows=[[{v:'Ангийн нэрсийн жагсаалт',s:'t'}],[{v:'Мөр бүрд нэг сурагч. Анги: 11С гэх мэт тоо, үсгээр. Код: 1–99, нэг ангид давхцахгүй. Код хоосон бол автоматаар өгнө.',s:'n'}],[],
-    ['Анги','Код','Нэр'].map(v=>({v,s:'h'}))];
-  db.classes.forEach(c=>c.students.forEach(n=>rows.push([{v:c.name,s:'cc'},{v:pad2(c.codes[n]),s:'cc'},{v:n,s:'c'}])));
-  for(let i=0;i<40;i++)rows.push([{v:'',s:'cc'},{v:'',s:'cc'},{v:'',s:'c'}]);
-  saveBlob(buildXlsx([{name:'Нэрс',rows,freeze:4,widths:[10,8,30]}]),'nersiin-zagvar.xlsx');
+  const rows=[[{v:'Ангийн нэрсийн жагсаалт',s:'t'}],[{v:'Мөр бүрд нэг сурагч. Анги: 11С гэх мэт тоо, үсгээр. Код: 1–99, нэг ангид давхцахгүй, хуудсан дээр будна. Код хоосон бол автоматаар өгнө. Сургуулийн код заавал биш.',s:'n'}],[],
+    ['Анги','Код','Сургуулийн код','Нэр'].map(v=>({v,s:'h'}))];
+  db.classes.forEach(c=>c.students.forEach(n=>rows.push([{v:c.name,s:'cc'},{v:pad2(c.codes[n]),s:'cc'},{v:(c.sids&&c.sids[n])||'',s:'cc'},{v:n,s:'c'}])));
+  for(let i=0;i<40;i++)rows.push([{v:'',s:'cc'},{v:'',s:'cc'},{v:'',s:'cc'},{v:'',s:'c'}]);
+  saveBlob(buildXlsx([{name:'Нэрс',rows,freeze:4,widths:[10,8,20,30]}]),'nersiin-zagvar.xlsx');
   $('#rosterMsg').style.color='';$('#rosterMsg').textContent='Загвар татагдлаа'+(db.classes.length?' (одоо байгаа нэрс бичигдсэн).':'.')+' Excel дээр бөглөөд "Excel файлаас оруулах" дарна.';
 });
 $('#rosterFile').addEventListener('change',async e=>{
@@ -4679,11 +4748,11 @@ $('#rosterFile').addEventListener('change',async e=>{
     const sheets=await readXlsx(f);let found=null;
     for(const sh of sheets){const h=findHeader(sh.rows,['Нэр']);if(h>=0){found={sh,h};break;}}
     if(!found)throw new Error('"Нэр" гэсэн гарчигтай багана олдсонгүй. Загвар файлыг ашиглана уу.');
-    const H=found.sh.rows[found.h],ci=hdrIdx(H,['Анги']),ki=hdrIdx(H,['Код']),ni=hdrIdx(H,['Нэр']);
+    const H=found.sh.rows[found.h],ci=hdrIdx(H,['Анги']),ki=hdrIdx(H,['Код']),ni=hdrIdx(H,['Нэр']),si=hdrIdx(H,['Сургуулийн код','Сурагчийн код','ID']);
     const by={},bad=[];
     found.sh.rows.slice(found.h+1).forEach((r,k)=>{if(!r)return;const name=(r[ni]||'').trim();if(!name)return;
       const cls=(ci>=0?r[ci]:'')||rosterCls;if(!cls){bad.push(name);return;}
-      const code=ki>=0&&/^\d{1,2}$/.test(r[ki]||'')?+r[ki]:null;(by[cls]=by[cls]||[]).push({name,code:code||null});});
+      const code=ki>=0&&/^\d{1,2}$/.test(r[ki]||'')?+r[ki]:null;(by[cls]=by[cls]||[]).push({name,code:code||null,sid:si>=0?String(r[si]||'').trim():''});});
     const cl=Object.keys(by);if(!cl.length)throw new Error('Файлд нэр олдсонгүй.'+(bad.length?' "Анги" баганыг бөглөнө үү.':''));
     const errs=[];cl.forEach(c=>{const seen={};by[c].forEach(x=>{if(x.code){if(seen[x.code]&&seen[x.code]!==x.name)errs.push(c+': '+pad2(x.code)+' ('+seen[x.code]+', '+x.name+')');seen[x.code]=x.name;}});});
     if(errs.length)throw new Error('Код давхацсан: '+errs.join('; ')+'. Засаад дахин оруулна уу.');
@@ -4691,7 +4760,8 @@ $('#rosterFile').addEventListener('change',async e=>{
     if(!confirm(cl.map(c=>nameOf(c)+' ('+by[c].length+' сурагч)').join(', ')+' ангийн нэрсийг файлаас шинэчлэх үү?'))return(m.textContent='');
     cl.forEach(c=>{const nm=nameOf(c);ensureRoster(nm);const k=db.classes.find(x=>x.name===nm),seen=new Set();
       const items=by[c].filter(x=>!seen.has(x.name)&&seen.add(x.name));
-      k.students=items.map(x=>x.name);k.codes={};items.forEach(x=>{if(x.code)k.codes[x.name]=x.code;});fixCodes(k);});
+      const oldS=k.sids||{};k.students=items.map(x=>x.name);k.codes={};k.sids={};
+      items.forEach(x=>{if(x.code)k.codes[x.name]=x.code;const s=si>=0?x.sid:oldS[x.name];if(s)k.sids[x.name]=s;});fixCodes(k);});
     rosterCls=nameOf(cl[0]);save();renderRosterSetup();renderSheetPanel();
     m.textContent=cl.map(c=>nameOf(c)+': '+by[c].length).join(', ')+' сурагч орлоо.'+(bad.length?' Анги тодорхойгүй '+bad.length+' мөрийг алгаслаа.':'');
   }catch(err){m.style.color='var(--stain)';m.textContent=err.message;}
@@ -6659,7 +6729,8 @@ function mergeClasses(a,b){
     if(!t){r.push(clone(c));return;}
     t.students=t.students||[];t.codes=t.codes||{};
     (c.students||[]).forEach(n=>{if(!t.students.includes(n)){t.students.push(n);
-      if(c.codes&&c.codes[n]!=null&&t.codes[n]==null)t.codes[n]=c.codes[n];}});});
+      if(c.codes&&c.codes[n]!=null&&t.codes[n]==null)t.codes[n]=c.codes[n];}
+      if(c.sids&&c.sids[n]&&t.students.includes(n)&&!(t.sids&&t.sids[n]))(t.sids=t.sids||{})[n]=c.sids[n];});});
   return r;
 }
 /* Гурван талт нэгтгэл: L = энэ төхөөрөмж, S = үүлэн дэх, B = сүүлд тааруулсан хээ */
