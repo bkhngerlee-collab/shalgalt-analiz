@@ -586,6 +586,11 @@ body.student #studentApp{display:block}
 .sq-opt.sel{border-color:var(--leaf);background:var(--leaf-soft)}
 .sq-input{font-size:1.2rem;padding:12px 14px}
 .sq-big{font-size:2.6rem;font-weight:700;margin:6px 0}
+.ox-pct{display:flex;align-items:center;gap:10px;max-width:320px;margin:4px auto 10px}
+.ox-pct b{font-size:1.5rem;min-width:3.2em;text-align:right}
+.ox-bar{flex:1;height:14px;border-radius:99px;background:var(--line,#dfe6e2);overflow:hidden}
+.ox-bar i{display:block;height:100%;border-radius:99px;background:var(--leaf)}
+.ox-wish{font-weight:700;font-size:1.1rem;margin:14px 0 0}
 .sq-overlay{position:fixed;inset:0;background:rgba(0,0,0,.55);display:flex;align-items:center;justify-content:center;padding:20px;z-index:10}
 .sq-overlay .panel{max-width:420px}
 .qrbox{display:flex;gap:18px;flex-wrap:wrap;align-items:flex-start}
@@ -1397,7 +1402,9 @@ body.student #studentApp{display:block}
       Цахим шалгалтын табд хэн өгч байгаа, хэн дуусгасан, хэн ороогүй нь 10 секунд тутам шинэчлэгдэнэ. Дууссан хариулт бүр <b>"3. Анализ"</b>-д өөрөө орно.</div></div>
     <div class="hp-warn"><b>Хуулахаас сэргийлэх:</b> шалгалтын үеэр өөр цонх, программ руу <b>5 секундээс удаан</b> гарвал эхний удаад анхааруулна, <b>2 дахь удаад шалгалт шууд дуусна</b>. Утасны дэлгэцийг унтраах, хуудсаа дахин ачаалах нь ч гарсанд тооцогдоно — сурагчдад урьдчилан хэлээрэй.</div>
     <ul class="hp-list">
-      <li><b>Зөв хариулт сурагчийн утсанд огт очихгүй</b> — дүнг таны программ бодно.</li>
+      <li><b>Бүх төрөл ажиллана:</b> I хэсэг (нэг зөв), II хэсэг (олон зөв), III хэсэг (Үнэн/Худал). IV хэсгийн задгай даалгаврыг сурагч цаасан дээр бичнэ.</li>
+      <li>Сурагч илгээмэгц <b>"Нийт 20 онооноос 16 оноо · 80%"</b> гэж харж, амжилт хүссэн үг гарна. Хүсэхгүй бол нийтлэхээсээ өмнө <b>"оноо, хувийг нь харуулах"</b> чагтыг авна.</li>
+      <li><b>Зөв хариулт сурагчийн утсанд огт очихгүй</b> — оноог сервер бодож, зөвхөн нийт дүнг буцаана. Аль асуулт зөв, буруу болохыг хэлэхгүй.</li>
       <li>Хувилбартай шалгалтад кодоор нь хуваарилна: <b>01 → А, 02 → Б…</b></li>
       <li>IV хэсгийн задгай даалгаврын оноог "2. Хариулт оруулах"-аас өгнө.</li>
       <li>Шалгалт дуусахад <b>"Шалгалтыг хаах"</b> дарна. "Дахин өгүүлэх" нь нэг сурагчид дахин өгөх боломж олгоно.</li>
@@ -5868,9 +5875,24 @@ function oePayload(o,withImg){
     return r;};
   const classes=db.classes.filter(c=>o.classes.includes(c.name)).map(c=>({name:c.name,
     students:c.students.map(nm=>({code:pad2(c.codes[nm]),name:nm}))}));
+  /* "g": зөв хариулт, оноо. Сервер үүнийг тусад нь хадгалж, сурагчид ОГТ илгээхгүй —
+     зөвхөн илгээсний дараа нийт оноог бодоход хэрэглэнэ. */
+  const grade=(q,b)=>{const p=isP2(q)?2:isP3(q)?3:isP4(q)?4:1,r={p,pts:+b.points||0};
+    if(p===1)r.k=String(q.key||'');else if(p===2)r.k=keyNorm(q.key);else if(p===4){r.k=tfNorm(q.key);r.m=b.tfmode||'scale';}
+    return r;};
   return{title:state.exam.title||'Шалгалт',date:state.exam.date||'',minutes:o.minutes,login:o.login,classes,n:qs.length,
     vcount:V,own,order:!own&&V>1?Array.from({length:V},(_,v)=>vOrder(v)):null,
-    vq:own?Array.from({length:V},(_,v)=>qs.map(q=>view(qv(q,v)))):[qs.map(view)]};
+    vq:own?Array.from({length:V},(_,v)=>qs.map(q=>view(qv(q,v)))):[qs.map(view)],
+    g:{show:o.show!==false,p2:state.exam.p2mode==='partial'?'partial':'exact',
+      v:own?Array.from({length:V},(_,v)=>qs.map(q=>grade(qv(q,v),q))):[qs.map(q=>grade(q,q))]}};
+}
+/* Багшийн хүснэгтэд: нэг оролдлогын оноо (IV задгай хэсгийг тооцохгүй) */
+function oeScoreOf(a){
+  const qs=state.exam.questions,src=a.answers||[];let got=0,max=0;
+  qs.forEach((q,i)=>{if(isP3(q))return;max+=+q.points||0;let x=String(src[i]==null?'':src[i]);
+    if(isP2(q))x=keyNorm(x);else if(isP4(q)){x=tfNorm(x);if(/^-+$/.test(x))x='';}
+    got+=qEarn(qv(q,a.v||0),x);});
+  return{got:Math.round(got*100)/100,max:Math.round(max*100)/100};
 }
 let oeLoadedAt=0;
 function oeRender(){
@@ -5888,6 +5910,8 @@ function oeRender(){
         <option value="names"${o&&o.login==='code'?'':' selected'}>Ангиа сонгоод нэрсийн жагсаалтаас нэрээ дарна</option>
         <option value="code"${o&&o.login==='code'?' selected':''}>Ангиа сонгоод 2 оронтой кодоо оруулна (илүү найдвартай)</option></select></div>
     </div>
+    <label style="display:flex;gap:8px;align-items:center;margin-top:10px;font-weight:600"><input type="checkbox" id="oeShow" style="width:auto"${o&&o.show===false?'':' checked'}>
+      Шалгалт дуусахад сурагчид авсан оноо, хувийг нь харуулах</label>
     <div style="margin-top:10px"><label>Оролцох ангиуд</label><div class="roster" id="oeCls">${cls.length?cls.map(c=>
       `<label class="chip" style="display:inline-flex;gap:6px;align-items:center;margin:0"><input type="checkbox" value="${esc(c.name)}" style="width:auto"${sel.has(c.name)?' checked':''}> ${esc(c.name)} (${c.students.length})</label>`).join('')
       :'<span class="progress">"Ангиуд, нэрс" табаас анги, сурагчдын нэрс оруулна уу.</span>'}</div></div>
@@ -5911,19 +5935,19 @@ function oeRender(){
 const oeErr=t=>{const m=$('#oeMsg');if(m){m.style.color='var(--stain)';m.textContent=t;}};
 async function oePublish(){
   const m=$('#oeMsg'),ex=state;
-  const minutes=Math.max(1,Math.min(300,Math.round(+$('#oeMin').value||45))),login=$('#oeLogin').value;
+  const minutes=Math.max(1,Math.min(300,Math.round(+$('#oeMin').value||45))),login=$('#oeLogin').value,show=$('#oeShow').checked;
   const classes=[...document.querySelectorAll('#oeCls input:checked')].map(x=>x.value);
   if(!classes.length)return oeErr('Оролцох ангиа сонгоно уу.');
   const o0=oeCfg(),started=oeRes&&oeRes.attempts&&oeRes.attempts.length;
   if(o0&&started&&o0.n&&o0.n!==ex.exam.questions.length)
     return oeErr('Сурагчид аль хэдийн өгч эхэлсэн тул асуултын тоог өөрчилж нийтлэх боломжгүй. Асуултын тоог '+o0.n+' болгож буцаана уу.');
   if(o0&&started&&!confirm('Энэ шалгалтыг '+oeRes.attempts.length+' сурагч аль хэдийн өгсөн/өгч байна.\n\nАсуулт, зөв хариултаа зассан бол дүн нь шинэ зөв хариултаар бодогдоно. Нийтлэх үү?'))return;
-  let p=oePayload({minutes,login,classes},true),note='';
-  if(JSON.stringify(p).length>1500000){p=oePayload({minutes,login,classes},false);note=' Зураг их байсан тул зурагнуудыг сурагчдад харуулсангүй.';}
+  let p=oePayload({minutes,login,classes,show},true),note='';
+  if(JSON.stringify(p).length>1500000){p=oePayload({minutes,login,classes,show},false);note=' Зураг их байсан тул зурагнуудыг сурагчдад харуулсангүй.';}
   m.style.color='';m.textContent='Нийтэлж байна…';
   try{const r=await sbRpc('oe_publish',{p_exam_id:ex.id,p_payload:p});
     if(!r||!r.ok)throw new Error(r&&r.error||'Нийтэлж чадсангүй.');
-    ex.exam.online={id:r.id,minutes,login,classes,n:p.n,open:true};if(matOpen===ex.id)matOpen='';save();
+    ex.exam.online={id:r.id,minutes,login,classes,show,n:p.n,open:true};if(matOpen===ex.id)matOpen='';save();
     if(state===ex){oeRender();const m2=$('#oeMsg');m2.style.color='';m2.textContent='Нийтлэгдлээ. QR кодыг проектороор харуулах эсвэл холбоосыг сурагчдад илгээнэ үү.'+note;}}
   catch(e){oeErr(e.message);}
 }
@@ -5981,15 +6005,15 @@ function oeRenderRes(){
   const nAns=a=>(a.answers||[]).filter(x=>String(x||'').replace(/-/g,'')).length;
   const row=a=>`<tr><td>${esc(a.cls)}</td><td>${esc(pad2(a.code))}</td><td><b>${esc(a.name)}</b></td>${V>1?`<td>${VNAMES[a.v||0]}</td>`:''}
     <td>${a.status==='started'?`<span class="m">${OE_ST.started}</span>`:a.status==='left'?`<span class="b">${OE_ST.left}</span>`:OE_ST[a.status]||esc(a.status)}</td>
-    <td class="num">${nAns(a)} / ${o.n}</td><td class="num">${a.leaves?`<span class="b">${a.leaves}</span>`:'0'}</td>
+    <td class="num">${nAns(a)} / ${o.n}</td><td class="num">${(()=>{const s=oeScoreOf(a);return s.max?`<b>${s.got}</b> / ${s.max} <small>(${Math.round(s.got/s.max*100)}%)</small>`:'–';})()}</td><td class="num">${a.leaves?`<span class="b">${a.leaves}</span>`:'0'}</td>
     <td class="num">${a.status==='started'?'үлдсэн '+mmss(Math.max(0,(a.startMs+lim-now)/1000)):mmss(((a.endMs||now)-a.startMs)/1000)}</td>
     <td><button class="btn danger" style="padding:3px 10px" data-oereset="${esc(a.attemptId)}">Дахин өгүүлэх</button></td></tr>`;
   box.innerHTML=`<div class="stats" style="margin-top:6px">
       <div class="stat"><b>${fin.length}</b><span>Дуусгасан</span></div>
       <div class="stat"><b>${live.length}</b><span>Одоо өгч байгаа</span></div>
       <div class="stat"><b>${miss.length}</b><span>Ороогүй</span></div></div>
-    <div class="scroll"><table><thead><tr><th>Анги</th><th>Код</th><th>Нэр</th>${V>1?'<th>Хувилбар</th>':''}<th>Төлөв</th><th class="num">Хариулсан</th><th class="num">Гарсан</th><th class="num">Хугацаа</th><th></th></tr></thead>
-      <tbody>${A.length?live.concat(fin).map(row).join(''):`<tr><td colspan="${V>1?9:8}" class="empty">Одоогоор хэн ч эхлээгүй байна.</td></tr>`}</tbody></table></div>
+    <div class="scroll"><table><thead><tr><th>Анги</th><th>Код</th><th>Нэр</th>${V>1?'<th>Хувилбар</th>':''}<th>Төлөв</th><th class="num">Хариулсан</th><th class="num">Оноо</th><th class="num">Гарсан</th><th class="num">Хугацаа</th><th></th></tr></thead>
+      <tbody>${A.length?live.concat(fin).map(row).join(''):`<tr><td colspan="${V>1?10:9}" class="empty">Одоогоор хэн ч эхлээгүй байна.</td></tr>`}</tbody></table></div>
     <div class="legend">Дууссан хариулт бүр энэ шалгалтын <b>анализд</b> өөрөө орно. "Гарсан" нь өөр цонх руу 5 секундээс удаан гарсан тоо. "Дахин өгүүлэх" нь оролдлогыг устгаж, дахин өгөх боломж олгоно. Жагсаалт 10 секунд тутам шинэчлэгдэнэ.</div>
     ${miss.length?`<h3 style="margin:14px 0 6px">Ороогүй сурагчид (${miss.length})</h3><p style="margin:0">${miss.map(esc).join(', ')}</p>`:''}`;
   box.querySelectorAll('[data-oereset]').forEach(b=>b.onclick=async()=>{
@@ -6156,8 +6180,15 @@ async function oxFinish(reason){
 function oxShowResult(r,reason){
   if(r&&(r.ok||r.already)){oxDel('pending');
     const need=oxOrder().filter(i=>oxView(i).p!==3),got=need.filter(i=>oxFilled(i,oxView(i))).length;
-    oxMsg(reason==='left'?'Та шалгалтаас 2 удаа гарсан тул шалгалт дууслаа':reason==='time'?'⏱ Хугацаа дууслаа':'✅ Шалгалт амжилттай илгээгдлээ',
-      `<div class="sq-big">${got} / ${need.length}</div><p>асуултад хариулсан. Таны хариулт багшид очлоо — дүнгээ багшаасаа сонсоорой.</p>`,reason==='left'?'b':'');}
+    const sc=r.score,open=oxOrder().some(i=>oxView(i).p===3),title=reason==='left'?'Та шалгалтаас 2 удаа гарсан тул шалгалт дууслаа':reason==='time'?'⏱ Хугацаа дууслаа':'✅ Шалгалт амжилттай илгээгдлээ';
+    if(sc&&+sc.max>0){const pct=Math.round(sc.got/sc.max*100);
+      oxMsg(title,`<p style="margin:4px 0 0">Нийт <b>${sc.max}</b> онооноос</p>
+        <div class="sq-big">${sc.got} оноо</div>
+        <div class="ox-pct"><div class="ox-bar"><i style="width:${Math.max(0,Math.min(100,pct))}%"></i></div><b>${pct}%</b></div>
+        <p class="ox-note">${got} / ${need.length} асуултад хариулсан.${open?' Задгай даалгаврын оноог багш дараа нь нэмнэ.':''}</p>
+        <p class="ox-wish">${pct>=90?'🌟 Гайхалтай!':pct>=70?'👏 Сайн байна!':pct>=50?'👍 Болж байна!':'💪 Бүү бууж өг!'} Дараагийн шалгалтад амжилт хүсье!</p>`,reason==='left'?'b':'');}
+    else oxMsg(title,`<div class="sq-big">${got} / ${need.length}</div><p>асуултад хариулсан. Таны хариулт багшид очлоо — дүнгээ багшаасаа сонсоорой.</p>
+        <p class="ox-wish">Дараагийн шалгалтад амжилт хүсье!</p>`,reason==='left'?'b':'');}
   else oxMsg('Илгээж чадсангүй',`<p>${esc(r&&r.error||'')}</p>`,'b');
 }
 function oxResend(body){
