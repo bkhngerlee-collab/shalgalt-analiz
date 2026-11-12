@@ -346,6 +346,41 @@ td input,td select{min-width:70px}
 .wgrid td:first-child{width:42px;text-align:center;color:var(--muted);font-size:.8rem;background:var(--bg)}
 .wgrid input{border:0;border-radius:0;background:transparent;padding:7px 8px;width:100%}
 .wgrid input:focus{outline:2px solid var(--iodine);outline-offset:-2px;background:var(--surface)}
+/* Нэгдсэн тайлан: ахиц ба агуулгын дулааны зураг */
+.tr-chips{display:flex;gap:8px;flex-wrap:wrap;margin:4px 0 12px}
+.tr-chip{font:inherit;font-size:.86rem;border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:999px;padding:5px 13px;cursor:pointer}
+.tr-chip b{margin-left:4px}
+.tr-chip.u{background:#E4F4EC;color:#0F6E56;border-color:#BFE6D3}.tr-chip.f{background:var(--bg);color:var(--muted)}
+.tr-chip.d{background:#FDF1DC;color:#854F0B;border-color:#F4D9A8}.tr-chip.a{background:#FCEBEB;color:#A32D2D;border-color:#F4C7C7}
+.tr-chip[aria-pressed="true"]{outline:2px solid currentColor;outline-offset:1px;font-weight:700}
+.tr-badge{display:inline-block;font-size:.76rem;font-weight:700;padding:2px 9px;border-radius:999px;white-space:nowrap}
+.tr-badge.up{background:#E4F4EC;color:#0F6E56}.tr-badge.flat{background:var(--bg);color:var(--muted)}
+.tr-badge.down{background:#FDF1DC;color:#854F0B}.tr-badge.alert{background:#FCEBEB;color:#A32D2D}
+.tr-row.alert td:first-child{box-shadow:inset 3px 0 0 #E24B4A}
+.tr-table td{vertical-align:middle}
+.tr-weak{font-size:.86rem}.tr-weak small{color:var(--muted)}
+.spark{display:block;color:var(--ink)}
+.hm{border-collapse:separate;border-spacing:3px}
+.hm th{font-weight:600;font-size:.82rem;color:var(--muted);text-align:center;white-space:nowrap}
+.hm th:first-child{text-align:left}
+.hm td{text-align:center;border-radius:6px;padding:6px 8px;font-variant-numeric:tabular-nums;min-width:52px;border:0}
+.hm td:first-child{text-align:left;min-width:160px;background:none}
+.hm-a{background:#97C459;color:#173404}.hm-b{background:#D5EAB4;color:#27500A}.hm-c{background:#FAD79A;color:#633806}.hm-d{background:#F7C1C1;color:#791F1F}
+.hm-n{background:var(--bg);color:var(--muted)}
+.hm-tr{background:none!important;font-size:1rem}
+.tr-u{color:#1D9E75}.tr-d{color:#E24B4A}.tr-f{color:var(--muted)}
+.hm-key i{display:inline-block;width:12px;height:12px;border-radius:3px;vertical-align:-1px;margin:0 3px 0 8px}
+.tp-sums{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px;margin:4px 0 12px}
+.tp-sum{border-radius:10px;padding:9px 12px;font-size:.9rem}
+.tp-sum.s{background:#E4F4EC;color:#0F6E56}.tp-sum.w{background:#FCEBEB;color:#A32D2D}.tp-sum.f{background:#FDF1DC;color:#854F0B}
+.tp-tag{font-size:.7rem;font-weight:700;padding:1px 7px;border-radius:999px;vertical-align:1px}
+.tp-tag.strong{background:#E4F4EC;color:#0F6E56}.tp-tag.weak{background:#FCEBEB;color:#A32D2D}.tp-tag.fading{background:#FDF1DC;color:#854F0B}
+@media (prefers-color-scheme:dark){
+  .tr-chip.u,.tr-badge.up,.tp-sum.s,.tp-tag.strong{background:rgba(29,158,117,.18);color:#7DDCB5;border-color:transparent}
+  .tr-chip.d,.tr-badge.down,.tp-sum.f,.tp-tag.fading{background:rgba(186,117,23,.2);color:#F5C27A;border-color:transparent}
+  .tr-chip.a,.tr-badge.alert,.tp-sum.w,.tp-tag.weak{background:rgba(226,75,74,.2);color:#F7A3A3;border-color:transparent}
+  .hm-a{background:#3B6D11;color:#EAF3DE}.hm-b{background:#27500A;color:#C0DD97}.hm-c{background:#633806;color:#FAC775}.hm-d{background:#791F1F;color:#F7C1C1}}
+@media print{.hm td{-webkit-print-color-adjust:exact;print-color-adjust:exact}.tr-badge,.tp-sum{-webkit-print-color-adjust:exact;print-color-adjust:exact}}
 /* Миний шалгалтууд: цэгцтэй жагсаалт */
 .ex-tools{display:flex;gap:10px 14px;flex-wrap:wrap;align-items:center;margin:4px 0 10px}
 .ex-tools input{flex:1 1 220px;max-width:320px}
@@ -4364,13 +4399,37 @@ let finalCls='',finalChart='trend',FV=[];
 function allClasses(){const s=new Set(db.classes.map(c=>c.name));db.exams.forEach(e=>e.students.forEach(x=>x.cls&&s.add(x.cls)));
   return[...s].sort((a,b)=>a.localeCompare(b,'mn',{numeric:true}));}
 function withExam(rec,fn){const sv=state;state=rec;try{return fn();}finally{state=sv;}}
+/* Хамгийн бага квадратын шулуун: [[x,y],...] -> нэг алхамд y хэдээр өөрчлөгдөх. 2-оос цөөн цэгтэй бол null */
+const TREND_STEP=3;
+function trendSlope(pts){
+  if(!pts||pts.length<2)return null;const n=pts.length,mx=pts.reduce((a,p)=>a+p[0],0)/n,my=pts.reduce((a,p)=>a+p[1],0)/n;
+  let num=0,den=0;pts.forEach(([x,y])=>{num+=(x-mx)*(y-my);den+=(x-mx)*(x-mx);});return den?num/den:0;
+}
+const TREND_LAB={up:'Ахиж байна',flat:'Тогтвортой',down:'Буурч байна',alert:'Анхаарах'};
+const TREND_ORD={alert:0,down:1,flat:2,up:3,'':4};
+let fTrend='';
+/* Жижиг шугаман график: утгууд 0–100, хоосон (null) нь алгасагдана */
+function sparkSvg(vals,st){
+  const pts=vals.map((v,k)=>v==null?null:[k,v]).filter(Boolean);if(!pts.length)return'';
+  const W=92,H=24,n=Math.max(1,vals.length-1),X=k=>3+k*(W-6)/n,Y=v=>H-3-Math.max(0,Math.min(100,v))*(H-6)/100;
+  const col={up:'#1D9E75',down:'#BA7517',alert:'#E24B4A'}[st]||'#888780',p=pts.map(([k,v])=>X(k).toFixed(1)+','+Y(v).toFixed(1)).join(' '),L=pts[pts.length-1];
+  return`<svg class="spark" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" aria-hidden="true"><line x1="0" x2="${W}" y1="${Y(60).toFixed(1)}" y2="${Y(60).toFixed(1)}" stroke="currentColor" stroke-opacity=".18" stroke-dasharray="2 3"/>
+    ${pts.length>1?`<polyline points="${p}" fill="none" stroke="${col}" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>`:''}<circle cx="${X(L[0]).toFixed(1)}" cy="${Y(L[1]).toFixed(1)}" r="2.8" fill="${col}"/></svg>`;
+}
+const hmCls=v=>v==null?'hm-n':v>=80?'hm-a':v>=60?'hm-b':v>=50?'hm-c':'hm-d';
+const trendArrow=s=>s==null?'<span class="tr-f">–</span>':s>=TREND_STEP?'<span class="tr-u" title="Сайжирч байна">▲</span>':s<=-TREND_STEP?'<span class="tr-d" title="Муудаж байна">▼</span>':'<span class="tr-f" title="Тогтвортой">●</span>';
 const pc=v=>v==null?'<span style="color:var(--muted)">–</span>':`<span class="${({good:'g',mid:'m',bad:'b'})[lvl(v)]}">${Math.round(v)}%</span>`;
 function finalData(){
   const exams=db.exams.filter(e=>e.students.some(s=>s.cls===finalCls)).sort((a,b)=>(a.exam.date||'').localeCompare(b.exam.date||''));
   db.final=db.final||{};const cfg=db.final[finalCls]=db.final[finalCls]||{ids:null,w:{}};
   if(!cfg.ids)cfg.ids=exams.map(e=>e.id);
   const W=e=>{const w=parseFloat(cfg.w[e.id]);return isNaN(w)||w<0?1:w;};
-  const res=exams.filter(e=>cfg.ids.includes(e.id)).map(e=>({e,w:W(e),d:withExam(e,()=>compute(e.students.filter(s=>s.cls===finalCls)))}));
+  /* Шалгалт бүрийн дүн + сурагч бүрийн агуулга тус бүрийн авсан/авах оноо (IV задгай хэсэг ч орно) */
+  const res=exams.filter(e=>cfg.ids.includes(e.id)).map(e=>({e,w:W(e),d:withExam(e,()=>{
+    const d=compute(e.students.filter(s=>s.cls===finalCls)),qs=state.exam.questions;d.stTop={};
+    d.rows.forEach(x=>{const m={};qs.forEach((q,i)=>{const p=+q.points||0;if(!p)return;const t=topicOf(i);
+      (m[t]=m[t]||[0,0]);m[t][0]+=x.earn[i]||0;m[t][1]+=p;});d.stTop[x.s.name]=m;});
+    return d;})}));
   const roster=(db.classes.find(c=>c.name===finalCls)||{students:[]}).students;
   const names=[...new Set([...roster,...res.flatMap(r=>r.d.rows.map(x=>x.s.name))])].sort((a,b)=>a.localeCompare(b,'mn'));
   let rows=names.map(n=>{
@@ -4379,10 +4438,22 @@ function finalData(){
     const t=p.filter(v=>v!=null);
     return{n,p,fin:sw?sv/sw:(t.length?t.reduce((a,b)=>a+b,0)/t.length:null),ch:t.length>1?t[t.length-1]-t[0]:null,miss:p.length-t.length};
   }).filter(r=>r.p.some(v=>v!=null));
-  rows.forEach(r=>{r.rank=1+rows.filter(x=>Math.round(x.fin*10)>Math.round(r.fin*10)).length;r.lv=levelOf(r.fin);});
+  rows.forEach(r=>{r.rank=1+rows.filter(x=>Math.round(x.fin*10)>Math.round(r.fin*10)).length;r.lv=levelOf(r.fin);
+    /* Ахиц: бүх шалгалтаар татсан чиг шугамын налуу (нэг шалгалтад дунджаар хэдэн пункт өөрчлөгдөж буй) */
+    const pts=r.p.map((v,k)=>v==null?null:[k,v]).filter(Boolean);
+    r.slope=trendSlope(pts);r.last=pts.length?pts[pts.length-1][1]:null;
+    r.st=r.slope==null?'':r.slope>=TREND_STEP?'up':r.slope<=-TREND_STEP?(r.last<60?'alert':'down'):'flat';
+    /* Сул агуулга: сонгосон бүх шалгалтаар нэгтгэсэн гүйцэтгэл 60%-аас доош */
+    const tg={};res.forEach(x=>{const m=x.d.stTop[r.n];if(m)Object.entries(m).forEach(([t,[a,b]])=>{(tg[t]=tg[t]||[0,0]);tg[t][0]+=a;tg[t][1]+=b;});});
+    r.weak=Object.entries(tg).map(([t,[a,b]])=>({t,p:b?a/b*100:0})).filter(x=>x.p<60).sort((a,b)=>a.p-b.p);});
   const tw={};res.forEach((r,k)=>r.d.topics.forEach(t=>{(tw[t.t]=tw[t.t]||Array(res.length).fill(null))[k]=t.pct;}));
   const topics=Object.entries(tw).map(([t,arr])=>{let sw=0,sv=0;arr.forEach((v,k)=>{if(v!=null){sw+=res[k].w||1;sv+=v*(res[k].w||1);}});
-    return{t,arr,avg:sw?sv/sw:0};}).sort((a,b)=>b.avg-a.avg);
+    const pts=arr.map((v,k)=>v==null?null:[k,v]).filter(Boolean),vals=pts.map(x=>x[1]),slope=trendSlope(pts),avg=sw?sv/sw:0;
+    /* Дүгнэлт: бат эзэмшсэн / байнга сул / мартагдаж буй */
+    const kind=vals.length&&vals.every(v=>v>=75)?'strong'
+      :vals.length>=2&&vals[0]>=65&&vals[vals.length-1]<=vals[0]-10&&slope!=null&&slope<=-TREND_STEP?'fading'
+      :avg<60&&vals.filter(v=>v<60).length*2>=vals.length?'weak':'';
+    return{t,arr,avg,slope,kind,first:vals[0],last:vals[vals.length-1]};}).sort((a,b)=>b.avg-a.avg);
   return{exams,cfg,res,rows,topics,totalW:res.reduce((a,r)=>a+r.w,0)};
 }
 function renderFinal(){
@@ -4463,13 +4534,47 @@ function renderFinal(){
         <td class="num">${r.ch==null?'–':`<span class="${r.ch>0?'g':r.ch<0?'b':''}">${r.ch>0?'+':''}${Math.round(r.ch)}%</span>`}</td></tr>`).join('')}</tbody>
     </table></div>
   </div>
-  <div class="panel"><h2>Агуулга тус бүрийн гүйцэтгэл, шалгалтаар</h2>
-    <p class="hint">Ижил нэртэй агуулгыг шалгалт хооронд харьцуулна. Тухайн шалгалтад ороогүй агуулга (–) гэж харагдана.</p>
-    <div class="scroll"><table>
-      <thead><tr><th>Агуулга</th>${R.map(r=>`<th class="num">${esc(exLabel(r.e))}</th>`).join('')}<th class="num">Нэгдсэн</th></tr></thead>
-      <tbody>${F.topics.map(t=>`<tr><td>${esc(t.t)}</td>${t.arr.map(v=>`<td class="num">${pc(v)}</td>`).join('')}<td class="num"><b>${Math.round(t.avg)}%</b></td></tr>`).join('')}</tbody>
-    </table></div>
-  </div>`}`;
+  ${progressPanel(F,R,n)}
+  ${topicPanel(F,R)}`}`;
+}
+/* ---------- Нэгдсэн тайлан: сурагч бүрийн ахиц ---------- */
+function progressPanel(F,R,n){
+  if(R.length<2)return`<div class="panel"><h2>📈 Сурагч бүрийн ахиц</h2><div class="empty">Ахиц, бууралтыг харахын тулд дээрх жагсаалтаас дор хаяж <b>2 шалгалт</b> сонгоно уу.</div></div>`;
+  const cnt={up:0,flat:0,down:0,alert:0};F.rows.forEach(r=>{if(r.st)cnt[r.st]++;});
+  if(fTrend&&!cnt[fTrend])fTrend='';
+  const list=F.rows.filter(r=>!fTrend||r.st===fTrend).slice().sort((a,b)=>TREND_ORD[a.st]-TREND_ORD[b.st]||(a.slope||0)-(b.slope||0)||a.n.localeCompare(b.n,'mn'));
+  const chip=(k,cls)=>`<button type="button" class="tr-chip ${cls}" data-trend="${k}" aria-pressed="${fTrend===k}">${TREND_LAB[k]} <b>${cnt[k]}</b></button>`;
+  const sl=s=>s==null?'–':`<span class="${s>=TREND_STEP?'g':s<=-TREND_STEP?'b':''}">${s>0?'▲ +':s<0?'▼ ':'● '}${Math.abs(s)<0.05?'0':(Math.round(s*10)/10)}</span>`;
+  return`<div class="panel"><h2>📈 Сурагч бүрийн ахиц</h2>
+    <p class="hint">Сурагч бүрийн бүх шалгалтын дүнгээр чиг шугам татаж, <b>нэг шалгалтад дунджаар хэдэн пунктээр</b> өөрчлөгдөж байгааг бодно. Нэг удаагийн санамсаргүй өндөр, нам дүн нөлөөлөх нь бага.
+      ${TREND_STEP}-аас дээш өсвөл <b>ахиж байна</b>, буурвал <b>буурч байна</b>, буурч байгаа бөгөөд сүүлийн дүн 60%-аас доош бол <b>анхаарах</b>. Тасархай шугам нь 60%.</p>
+    <div class="tr-chips noprint">${fTrend?'<button type="button" class="tr-chip" data-trend="">Бүгд</button>':''}${chip('alert','a')}${chip('down','d')}${chip('flat','f')}${chip('up','u')}</div>
+    <div class="scroll"><table class="tr-table">
+      <thead><tr><th>Код</th><th>Нэр</th><th>Явц (${R.length} шалгалт)</th><th class="num">Эхний</th><th class="num">Сүүлийн</th><th class="num" title="Нэг шалгалтад дунджаар хэдэн пунктээр өөрчлөгдсөн">Ахиц / шалгалт</th><th>Төлөв</th><th>Сул агуулга (60%-аас доош)</th></tr></thead>
+      <tbody>${list.length?list.map(r=>{const v=r.p.filter(x=>x!=null);return`<tr class="tr-row ${r.st}"><td>${codeOf(finalCls,r.n)||'–'}</td>
+        <td><b>${esc(dName(finalCls,r.n))}</b>${r.miss?` <small style="color:var(--muted)">(${r.miss} өгөөгүй)</small>`:''}</td>
+        <td>${sparkSvg(r.p,r.st)}</td><td class="num">${v.length?Math.round(v[0])+'%':'–'}</td><td class="num"><b>${r.last==null?'–':Math.round(r.last)+'%'}</b></td>
+        <td class="num">${sl(r.slope)}</td><td>${r.st?`<span class="tr-badge ${r.st}">${TREND_LAB[r.st]}</span>`:'<span style="color:var(--muted)">1 шалгалт</span>'}</td>
+        <td class="tr-weak">${r.weak.length?r.weak.slice(0,3).map(w=>esc(w.t)+' <small>'+Math.round(w.p)+'%</small>').join(', ')+(r.weak.length>3?' <small>+'+(r.weak.length-3)+'</small>':''):'<span style="color:var(--muted)">–</span>'}</td></tr>`;}).join('')
+        :'<tr><td colspan="8" class="empty">Энэ төлөвтэй сурагч алга.</td></tr>'}</tbody></table></div></div>`;
+}
+/* ---------- Нэгдсэн тайлан: агуулгын эзэмшлийн дулааны зураг ---------- */
+function topicPanel(F,R){
+  if(!F.topics.length)return'';
+  const lab=e=>e.exam.date?e.exam.date.slice(5):'Огноогүй';
+  const grp=k=>F.topics.filter(t=>t.kind===k);
+  const box=(k,cls,title,fmt)=>{const g=grp(k);return g.length?`<div class="tp-sum ${cls}"><b>${title}</b> ${g.map(fmt).join(', ')}</div>`:'';};
+  const sums=box('strong','s','Бат эзэмшсэн:',t=>esc(t.t)+' ('+Math.round(t.avg)+'%)')+box('weak','w','Байнга сул:',t=>esc(t.t)+' ('+Math.round(t.avg)+'%)')
+    +box('fading','f','Мартагдаж буй:',t=>esc(t.t)+' ('+Math.round(t.first)+' → '+Math.round(t.last)+'%)');
+  return`<div class="panel"><h2>🧩 Агуулгын эзэмшил, шалгалт бүрээр</h2>
+    <p class="hint">Ижил нэртэй агуулгыг шалгалт хооронд харьцуулна. <span class="hm-key"><i class="hm-a"></i>80%+ <i class="hm-b"></i>60–79 <i class="hm-c"></i>50–59 <i class="hm-d"></i>50-аас доош</span>
+      ▲ сайжирч, ▼ муудаж байна. Тухайн шалгалтад ороогүй агуулга (–).</p>
+    ${sums?`<div class="tp-sums">${sums}</div>`:''}
+    <div class="scroll"><table class="hm">
+      <thead><tr><th>Агуулга</th>${R.map(r=>`<th title="${esc(r.e.exam.title||'')}">${esc(lab(r.e))}</th>`).join('')}<th>Нэгдсэн</th><th>Чиг</th></tr></thead>
+      <tbody>${F.topics.map(t=>`<tr><td>${esc(t.t)}${t.kind?` <span class="tp-tag ${t.kind}">${({strong:'бат',weak:'сул',fading:'мартагдаж буй'})[t.kind]}</span>`:''}</td>
+        ${t.arr.map(v=>`<td class="${hmCls(v)}">${v==null?'–':Math.round(v)}</td>`).join('')}<td class="${hmCls(t.avg)}"><b>${Math.round(t.avg)}</b></td><td class="hm-tr">${trendArrow(t.slope)}</td></tr>`).join('')}</tbody>
+    </table></div></div>`;
 }
 $('#finalBox').addEventListener('change',e=>{
   const t=e.target;
@@ -4483,6 +4588,7 @@ $('#finalBox').addEventListener('change',e=>{
   if(t.dataset.w){const v=parseFloat(t.value);cfg.w[t.dataset.w]=isNaN(v)||v<0?1:v;save();renderFinal();}
 });
 $('#finalBox').addEventListener('click',e=>{
+  const tc=e.target.closest('[data-trend]');if(tc){fTrend=fTrend===tc.dataset.trend?'':tc.dataset.trend;renderFinal();return;}
   const cfg=db.final&&db.final[finalCls];if(!cfg)return;
   if(e.target.id==='fAll'){cfg.ids=db.exams.filter(x=>x.students.some(s=>s.cls===finalCls)).map(x=>x.id);save();renderFinal();}
   if(e.target.id==='fNone'){cfg.ids=[];save();renderFinal();}
@@ -4843,9 +4949,20 @@ async function exportFinalXlsx(){
     ['№','Код',...(ws?['Сургуулийн код']:[]),'Нэр',...R.map(lab),'Эцсийн дүн','Дунджаас зөрүү','Түвшин','Байр','Ахиц','Тайлбар'].map(v=>({v,s:'h'})),
     ...V.map((r,k)=>[k+1,codeOf(finalCls,r.n),...(ws?[sidOf(finalCls,r.n)]:[]),r.n,...r.p.map(P),{v:r.fin/100,s:'pb'},Math.round(r.fin-avg),r.lv,r.rank+' / '+n,r.ch==null?'–':P(r.ch),r.miss?r.miss+' шалгалт өгөөгүй':'']),
     [],[{v:'Жагсаалт: '+showLabel(fShow).toLowerCase()+', '+SORT_OPTS.find(o=>o[0]===fSort)[1].toLowerCase()+' эрэмбэлсэн ('+V.length+' сурагч). Нэгдсэн дундаж '+Math.round(avg)+'%.',s:'n'}]]};
-  const top={name:'Агуулга',freeze:1,widths:[28,...R.map(()=>12),12],rows:[
-    ['Агуулга',...R.map(lab),'Нэгдсэн'].map(v=>({v,s:'h'})),...F.topics.map(t=>[t.t,...t.arr.map(P),{v:t.avg/100,s:'pb'}])]};
-  const name=fileSafe(finalCls+' negdsen analiz')+'.xlsx';saveBlob(buildXlsx([sum,stu,top]),name);return name;
+  const TK={strong:'Бат эзэмшсэн',weak:'Байнга сул',fading:'Мартагдаж буй'},arrow=s=>s==null?'–':s>=TREND_STEP?'▲ сайжирч байна':s<=-TREND_STEP?'▼ муудаж байна':'● тогтвортой';
+  const top={name:'Агуулга',freeze:1,widths:[28,...R.map(()=>12),12,18,18],rows:[
+    ['Агуулга',...R.map(lab),'Нэгдсэн','Чиг','Дүгнэлт'].map(v=>({v,s:'h'})),
+    ...F.topics.map(t=>[t.t,...t.arr.map(P),{v:t.avg/100,s:'pb'},arrow(t.slope),TK[t.kind]||''])]};
+  const sheets=[sum,stu,top];
+  if(R.length>1){
+    const PR=F.rows.slice().sort((a,b)=>TREND_ORD[a.st]-TREND_ORD[b.st]||(a.slope||0)-(b.slope||0));
+    sheets.splice(2,0,{name:'Ахиц',freeze:1,widths:[5,6,22,10,10,14,14,46],rows:[
+      ['№','Код','Нэр','Эхний','Сүүлийн','Ахиц / шалгалт','Төлөв','Сул агуулга (60%-аас доош)'].map(v=>({v,s:'h'})),
+      ...PR.map((r,k)=>{const v=r.p.filter(x=>x!=null);return[k+1,codeOf(finalCls,r.n),r.n,v.length?P(v[0]):'',r.last==null?'':P(r.last),
+        r.slope==null?'':Math.round(r.slope*10)/10,TREND_LAB[r.st]||'',r.weak.map(w=>w.t+' ('+Math.round(w.p)+'%)').join(', ')];}),
+      [],[{v:'Ахиц / шалгалт: бүх шалгалтын дүнгээр татсан чиг шугамаар нэг шалгалтад дунджаар хэдэн пунктээр өөрчлөгдсөн. '+TREND_STEP+'-аас дээш өсвөл "Ахиж байна", буурвал "Буурч байна", буурч байгаа бөгөөд сүүлийн дүн 60%-аас доош бол "Анхаарах".',s:'n'}]]});
+  }
+  const name=fileSafe(finalCls+' negdsen analiz')+'.xlsx';saveBlob(buildXlsx(sheets),name);return name;
 }
 async function exportFinalDocx(){
   const F=finalData(),R=F.res,n=F.rows.length,D=docxBuilder();if(!R.length)throw new Error('шалгалт сонгоогүй байна');
@@ -4869,8 +4986,26 @@ async function exportFinalDocx(){
     r.ch==null?{t:'–',al:'right'}:{t:(r.ch>0?'+':'')+Math.round(r.ch)+'%',al:'right',color:r.ch>0?'1F5A41':r.ch<0?'B4314A':undefined,b:true}]),
     [0.5,0.6,2.2,...R.map(()=>1.05),1,0.8,0.8,0.8]);
   if(F.rows.some(r=>r.miss))D.note('* Зарим шалгалт өгөөгүй. Эцсийн дүнг зөвхөн өгсөн шалгалтуудаар тооцов.');
+  if(R.length>1){
+    const cnt={up:0,flat:0,down:0,alert:0};F.rows.forEach(r=>{if(r.st)cnt[r.st]++;});
+    D.h2('Сурагч бүрийн ахиц');
+    D.p('Ахиж байна: '+cnt.up+', тогтвортой: '+cnt.flat+', буурч байна: '+cnt.down+', анхаарах: '+cnt.alert+' сурагч.');
+    const PR=F.rows.slice().sort((a,b)=>TREND_ORD[a.st]-TREND_ORD[b.st]||(a.slope||0)-(b.slope||0));
+    const SC={up:'1F5A41',down:'8A5A0B',alert:'B4314A'};
+    D.table(['Код','Нэр','Эхний','Сүүлийн','Ахиц','Төлөв','Сул агуулга'],PR.map(r=>{const v=r.p.filter(x=>x!=null);return[
+      {t:codeOf(finalCls,r.n)||'–',al:'center'},{t:r.n,b:true},v.length?pctCell(v[0]):{t:'–'},r.last==null?{t:'–'}:pctCell(r.last),
+      r.slope==null?{t:'–',al:'right'}:{t:(r.slope>0?'+':'')+(Math.round(r.slope*10)/10),al:'right',color:SC[r.st],b:true},
+      {t:TREND_LAB[r.st]||'–',color:SC[r.st],b:!!SC[r.st]},{t:r.weak.slice(0,3).map(w=>w.t).join(', ')||'–'}];}),[0.6,2.2,0.9,0.9,0.8,1.3,3]);
+    D.note('Ахиц нь бүх шалгалтын дүнгээр татсан чиг шугамаар нэг шалгалтад дунджаар хэдэн пунктээр өөрчлөгдсөнийг заана. Сул агуулга: тухайн сурагчийн сонгосон шалгалтуудаар нэгтгэсэн гүйцэтгэл 60%-аас доош.');
+  }
   D.h2('Агуулга тус бүрийн гүйцэтгэл, шалгалтаар');
-  D.table(['Агуулга',...R.map(lab),'Нэгдсэн'],F.topics.map(t=>[t.t,...t.arr.map(pctCell),{...pctCell(t.avg),fill:'EDF2F0'}]),[3,...R.map(()=>1.2),1.2]);
+  const TK={strong:'Бат эзэмшсэн',weak:'Байнга сул',fading:'Мартагдаж буй'};
+  ['strong','weak','fading'].forEach(k=>{const g=F.topics.filter(t=>t.kind===k);
+    if(g.length)D.p([{t:TK[k]+': ',b:true},{t:g.map(t=>t.t+(k==='fading'?' ('+Math.round(t.first)+' → '+Math.round(t.last)+'%)':' ('+Math.round(t.avg)+'%)')).join(', '),
+      color:k==='strong'?'1F5A41':k==='weak'?'B4314A':'8A5A0B',b:true}]);});
+  const ar=s=>s==null?'–':s>=TREND_STEP?'▲':s<=-TREND_STEP?'▼':'●';
+  D.table(['Агуулга',...R.map(lab),'Нэгдсэн','Чиг'],F.topics.map(t=>[t.t,...t.arr.map(pctCell),{...pctCell(t.avg),fill:'EDF2F0'},
+    {t:ar(t.slope),al:'center',color:t.slope>=TREND_STEP?'1F5A41':t.slope<=-TREND_STEP?'B4314A':undefined}]),[3,...R.map(()=>1.1),1.1,0.6]);
   D.note('Тайлан үүсгэсэн огноо: '+todayStr());
   const name=fileSafe(finalCls+' negdsen analiz')+'.docx';saveBlob(D.build(),name);return name;
 }
