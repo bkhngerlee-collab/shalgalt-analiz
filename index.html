@@ -315,6 +315,40 @@ td input,td select{min-width:70px}
 .wgrid td:first-child{width:42px;text-align:center;color:var(--muted);font-size:.8rem;background:var(--bg)}
 .wgrid input{border:0;border-radius:0;background:transparent;padding:7px 8px;width:100%}
 .wgrid input:focus{outline:2px solid var(--iodine);outline-offset:-2px;background:var(--surface)}
+/* Миний шалгалтууд: цэгцтэй жагсаалт */
+.ex-tools{display:flex;gap:10px 14px;flex-wrap:wrap;align-items:center;margin:4px 0 10px}
+.ex-tools input{flex:1 1 220px;max-width:320px}
+.ex-chips{display:flex;gap:6px;flex-wrap:wrap}
+.ex-chip{border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:6px 13px;font:inherit;font-size:.85rem;cursor:pointer;color:var(--ink)}
+.ex-chip:hover{border-color:var(--leaf);color:var(--leaf)}
+.ex-chip[aria-pressed="true"]{background:var(--leaf);border-color:var(--leaf);color:#fff;font-weight:600}
+.ex-list{border:1px solid var(--line);border-radius:12px;max-height:430px;overflow-y:auto;background:var(--surface)}
+.ex-row{display:grid;grid-template-columns:92px minmax(0,1fr) 128px 112px;gap:14px;align-items:center;width:100%;text-align:left;
+  border:0;border-bottom:1px solid var(--line);background:transparent;padding:10px 16px;font:inherit;color:var(--ink);cursor:pointer;border-radius:0}
+.ex-row:last-child{border-bottom:0}
+.ex-row:hover{background:var(--bg)}
+.ex-row.on{background:var(--leaf-soft);box-shadow:inset 4px 0 0 var(--leaf);cursor:default}
+.ex-row:focus-visible{outline:2px solid var(--leaf);outline-offset:-2px}
+.ex-g{justify-self:start;font-size:.76rem;font-weight:700;padding:3px 10px;border-radius:999px;white-space:nowrap;background:var(--bg);color:var(--muted);border:1px solid var(--line)}
+.ex-g.g9{background:#FEF3E2;color:#A3620A;border-color:#F6DDB4}
+.ex-g.g10{background:#E6EFFD;color:#1D4ED8;border-color:#C7D9FA}
+.ex-g.g11{background:var(--leaf-soft);color:var(--leaf);border-color:#BFE6D3}
+.ex-g.g12{background:#F1E9FD;color:#6D28D9;border-color:#DCCBF9}
+@media (prefers-color-scheme:dark){.ex-g.g9,.ex-g.g10,.ex-g.g11,.ex-g.g12{background:rgba(255,255,255,.06);border-color:var(--line)}
+  .ex-g.g9{color:#F5B964}.ex-g.g10{color:#93B4F7}.ex-g.g11{color:#6EE7B7}.ex-g.g12{color:#C4A5F7}}
+.ex-t{min-width:0}
+.ex-t>span{display:block;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ex-t small{display:block;color:var(--muted);font-size:.78rem;margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ex-cur{color:var(--leaf)}
+.ex-d,.ex-n{font-size:.86rem;color:var(--muted);white-space:nowrap;font-variant-numeric:tabular-nums}
+.ex-row.ex-empty .ex-t>span{color:var(--muted);font-weight:500}
+.ex-none{margin:0;padding:18px;text-align:center;color:var(--muted)}
+@media(max-width:660px){
+  .ex-row{grid-template-columns:auto minmax(0,1fr) auto;gap:4px 10px;padding:10px 12px}
+  .ex-t{grid-column:1/-1;grid-row:2}
+  .ex-d{grid-column:2;grid-row:1;justify-self:end}.ex-n{grid-column:3;grid-row:1}
+  .ex-tools input{max-width:none}
+}
 .rgrid{min-width:420px}
 .rgrid td:first-child{width:58px}
 .rgrid td:first-child input{text-align:center;font-weight:700;color:var(--ink)}
@@ -784,8 +818,11 @@ body.student #studentApp{display:block}
   <div class="panel" id="s-exams">
     <h2>Миний шалгалтууд</h2>
     <p class="hint">Шалгалт бүр асуулт, хариулт, анализынхаа хамт тусдаа хадгалагдана. Жагсаалтаас сонгоход өмнөх шалгалтын анализ буцаж нээгдэнэ.</p>
-    <label for="examSel">Нээлттэй шалгалт</label>
-    <select id="examSel"></select>
+    <div class="ex-tools">
+      <input id="exFind" type="search" placeholder="🔍 Шалгалт хайх…" aria-label="Шалгалтыг нэрээр хайх" autocomplete="off">
+      <div class="ex-chips" id="exGrades" role="group" aria-label="Ангиар шүүх"></div>
+    </div>
+    <div class="ex-list" id="exList" role="listbox" aria-label="Миний шалгалтууд"></div>
     <div class="btns">
       <button class="btn ic ic-plus" id="newExam">Шинэ шалгалт</button>
       <button class="btn ghost ic ic-copy" id="copyExam">Ижил асуулттай дахин шалгалт</button>
@@ -2359,11 +2396,45 @@ function lostInfo(n1,n2,n3,n4){
   return{idx,lines,ans,students:state.students.length};
 }
 const UNDO_NOTE='\n\nБуцаах товч 30 секунд гарч ирнэ. Гэхдээ хуудсаа хаавал сэргээх боломжгүй.';
-function examLabel(e){return(e.exam.title||'Нэргүй шалгалт')+(e.exam.date?', '+e.exam.date:'')+' ('+e.students.length+' сурагч)';}
+/* Шалгалтын анги: сурагчдын ангиас (хамгийн олон нь), эсвэл нэрнээс ("12 ...", "11-р анги") */
+function examGrade(e){
+  const cnt={};(e.students||[]).forEach(s=>{const g=+classParts(s.cls).grade;if(g)cnt[g]=(cnt[g]||0)+1;});
+  const top=Object.keys(cnt).sort((a,b)=>cnt[b]-cnt[a])[0];if(top)return+top;
+  const t=String(e.exam.title||'');
+  const m=t.match(/(?:^|[\s,(])(\d{1,2})\s*-?\s*р\s+анги/i)||t.match(/^\s*(\d{1,2})(?=[\s\-.,:]|$)/);
+  const g=m?+m[1]:0;return g>=1&&g<=12?g:0;
+}
+/* Нэрнээс ангийн давхардсан хэсгийг ("11-р анги", эхний "12") хасна — анги нь тусдаа тэмдгээр гарна */
+function examName(e){
+  const t=String(e.exam.title||'').replace(/\s+/g,' ').trim(),g=examGrade(e);if(!t)return'Нэргүй шалгалт';if(!g)return t;
+  let s=t.replace(new RegExp('(^|[\\s,(])'+g+'\\s*-?\\s*р\\s+анги(йн)?(?=[\\s,.)]|$)','i'),'$1')
+    .replace(new RegExp('^'+g+'(?=[\\s\\-.,:])\\s*[-.,:]?\\s*'),'');
+  s=s.replace(/\s*,\s*,/g,',').replace(/\(\s*\)/g,'').replace(/^[\s,.:\-–]+|[\s,.:\-–]+$/g,'').replace(/\s{2,}/g,' ');
+  return s?s.charAt(0).toUpperCase()+s.slice(1):t;
+}
+function examLabel(e){const g=examGrade(e);
+  return(g?'['+g+'-р анги] ':'')+examName(e)+(e.exam.date?' · '+e.exam.date:'')+' · '+e.students.length+' сурагч';}
+let exGrade='all';try{exGrade=localStorage.getItem('shalgalt-ex-grade')||'all';}catch(x){}
 function renderExams(){
-  const sel=$('#examSel');if(!sel)return;
-  const list=db.exams.slice().sort((a,b)=>(b.exam.date||'').localeCompare(a.exam.date||''));
-  sel.innerHTML=list.map(e=>`<option value="${e.id}"${e.id===state.id?' selected':''}>${esc(examLabel(e))}</option>`).join('');
+  const box=$('#exList');if(!box)return;
+  const all=db.exams.slice().sort((a,b)=>(b.exam.date||'').localeCompare(a.exam.date||'')||(b.students.length-a.students.length));
+  const grades=[...new Set(all.map(examGrade))].sort((a,b)=>a-b);
+  if(exGrade!=='all'&&!grades.includes(+exGrade))exGrade='all';
+  const chips=$('#exGrades');
+  chips.innerHTML=grades.length>1?[['all','Бүгд ('+all.length+')'],...grades.map(g=>[String(g),(g?g+'-р анги':'Ангигүй')+' ('+all.filter(e=>examGrade(e)===g).length+')'])]
+    .map(([v,l])=>`<button type="button" class="ex-chip" data-g="${v}" aria-pressed="${exGrade===v}">${esc(l)}</button>`).join(''):'';
+  const nz=s=>String(s||'').toLowerCase().replace(/\s+/g,' ').trim(),q=nz($('#exFind').value);
+  const list=all.filter(e=>(exGrade==='all'||examGrade(e)===+exGrade)&&(!q||nz((e.exam.title||'')+' '+(e.exam.date||'')).includes(q)));
+  box.innerHTML=list.length?list.map(e=>{const g=examGrade(e),n=e.students.length,cur=e.id===state.id;
+    const cls=[...new Set(e.students.map(s=>s.cls).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'mn',{numeric:true}));
+    const sub=[cur?'<b class="ex-cur">● Нээлттэй</b>':'',e.exam.online?'📱 Цахим':'',cls.length?esc(cls.slice(0,6).join(', ')+(cls.length>6?'…':'')):'',
+      e.exam.questions?e.exam.questions.length+' асуулт':''].filter(Boolean).join(' · ');
+    return`<button type="button" class="ex-row${cur?' on':''}${n?'':' ex-empty'}" role="option" aria-selected="${cur}" data-id="${e.id}">
+      <span class="ex-g${g?' g'+Math.min(12,Math.max(9,g)):''}">${g?g+'-р анги':'—'}</span>
+      <span class="ex-t"><span>${esc(examName(e))}</span><small>${sub}</small></span>
+      <span class="ex-d">📅 ${esc(e.exam.date||'огноогүй')}</span>
+      <span class="ex-n">👥 ${n} сурагч</span></button>`;}).join('')
+    :`<p class="ex-none">${q?'"'+esc($('#exFind').value)+'" нэртэй шалгалт олдсонгүй.':'Энэ ангид шалгалт алга.'}</p>`;
   $('#curTitle').textContent=state.exam.title?'📄 '+examLabel(state):'';
   $('#curTitle').title=state.exam.title?'Одоо нээлттэй шалгалт':'';
 }
@@ -2753,7 +2824,10 @@ $('#title').addEventListener('input',e=>{state.exam.title=e.target.value;save();
 $('#title').addEventListener('change',renderSheetPanel);
 $('#edate').addEventListener('change',()=>setTimeout(renderSheetPanel));
 $('#edate').addEventListener('change',e=>{state.exam.date=e.target.value;save();});
-$('#examSel').addEventListener('change',e=>openExam(e.target.value));
+$('#exList').addEventListener('click',e=>{const b=e.target.closest('.ex-row');if(!b||b.dataset.id===state.id)return;openExam(b.dataset.id);});
+$('#exGrades').addEventListener('click',e=>{const b=e.target.closest('.ex-chip');if(!b)return;exGrade=b.dataset.g;
+  try{localStorage.setItem('shalgalt-ex-grade',exGrade);}catch(x){}renderExams();});
+$('#exFind').addEventListener('input',renderExams);
 $('#newExam').addEventListener('click',()=>{addExam(blank(5));$('#title').focus();});
 $('#copyExam').addEventListener('click',()=>{
   const e=blank(1);e.exam=JSON.parse(JSON.stringify(state.exam));e.exam.title=(state.exam.title||'Шалгалт')+' (давтан)';e.exam.date=today();
