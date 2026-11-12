@@ -50,28 +50,54 @@
 *{box-sizing:border-box}
 body{margin:0;background:var(--bg);color:var(--ink);
   font-family:"Segoe UI",Roboto,"Noto Sans","Helvetica Neue",Arial,sans-serif;font-size:16px;line-height:1.5}
-header{background:var(--leaf);color:#fff;padding:14px 20px 0;position:sticky;top:0;z-index:30}
-@media (prefers-color-scheme:dark){header{background:#0D3427}}
+header{background:linear-gradient(180deg,#E9F6EF 0%,var(--bg) 100%);color:var(--ink);padding:12px 20px 12px;position:sticky;top:0;z-index:30}
+@media (prefers-color-scheme:dark){header{background:var(--bg)}}
 /* Доош гүйлгэхэд толгой хэсэг агшиж, цэс нь дэлгэцэн дээр үлдэнэ */
-body.sc header{padding-top:9px;box-shadow:0 2px 10px rgba(0,0,0,.16)}
+body.sc header{padding-top:6px;padding-bottom:8px;box-shadow:0 4px 16px rgba(16,26,22,.08)}
 body.sc header h1{font-size:1.05rem}
 body.sc header p{display:none}
-body.sc nav button{padding:8px 14px;font-size:.93rem}
 .wrap{max-width:1000px;margin:0 auto}
 h1{margin:0;font-size:1.6rem;font-weight:700;letter-spacing:-.01em}
-.hdr-top h1{font-size:1.35rem;white-space:nowrap}
+.hdr-top h1{font-size:1.35rem;white-space:nowrap;color:var(--leaf)}
 header p{margin:4px 0 16px;opacity:.85;font-size:.95rem}
 nav{display:flex;gap:4px;overflow-x:auto}
-nav button{font:inherit;font-weight:500;border:0;background:transparent;color:#fff;opacity:.78;padding:11px 18px;
-  border-radius:10px 10px 0 0;cursor:pointer;white-space:nowrap;position:relative;transition:background .2s,opacity .2s}
-nav button:hover{opacity:1;background:rgba(255,255,255,.14)}
-nav button[aria-selected="true"],nav button[aria-selected="true"]:hover{background:var(--bg);color:var(--ink);opacity:1;font-weight:700}
-/* Сонгосон табын доогуурх ногоон зураас — сонгоход голоосоо сунаж гарна */
-nav button::after{content:"";position:absolute;left:18px;right:18px;bottom:5px;height:3px;border-radius:3px;
-  background:rgba(255,255,255,.6);transform:scaleX(0);transition:transform .25s ease}
-nav button:hover::after{transform:scaleX(.5)}
-nav button[aria-selected="true"]::after{background:var(--leaf);transform:scaleX(1)}
-@media (prefers-reduced-motion:reduce){nav button::after{transition:none}}
+/* Үндсэн цэс: цагаан "капсул", хоёр үзүүр нь навчит ногоон, таб бүр дүрс + нэртэй */
+.hdr-grid{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center}
+.hdr-grid>.hdr-top{grid-column:1/-1;grid-row:1}
+.navbar{grid-column:1/-1;grid-row:2;position:relative;display:flex;align-items:stretch;background:var(--surface);
+  border:1px solid #D6ECDF;border-radius:999px;padding:7px 200px 7px 70px;min-height:80px;overflow:hidden;
+  box-shadow:0 8px 24px rgba(4,120,87,.13),0 1px 2px rgba(16,26,22,.05)}
+.navbar::before{content:"";position:absolute;left:0;top:0;bottom:0;width:150px;pointer-events:none;
+  background:radial-gradient(ellipse 150px 110px at 0 50%,#3FAE72 0%,#8ED3A8 45%,rgba(190,232,206,.5) 70%,transparent 72%)}
+.navbar::after{content:"";position:absolute;right:0;top:0;bottom:0;width:230px;pointer-events:none;
+  border-radius:140px 0 0 140px/100% 0 0 100%;background:linear-gradient(100deg,#A6DEBB 0%,#2E9E68 38%,#047857 70%,#03573F 100%)}
+.nav-leaf{position:absolute;left:12px;top:50%;transform:translateY(-50%) rotate(-12deg);font-size:2.1rem;z-index:1;
+  filter:drop-shadow(0 2px 2px rgba(0,0,0,.15));pointer-events:none}
+.mainnav{position:relative;z-index:1;flex:1;display:flex;gap:0;overflow-x:auto;scrollbar-width:none}
+.mainnav::-webkit-scrollbar{display:none}
+.mainnav button{--nb-ic-bg:var(--surface);flex:1 1 0;min-width:112px;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:5px;font:inherit;font-weight:700;font-size:.9rem;line-height:1.18;color:#0B5E43;background:transparent;border:0;
+  border-radius:24px;padding:9px 12px 12px;cursor:pointer;position:relative;text-align:center;white-space:normal;transition:background .2s,box-shadow .2s}
+.mainnav button svg{width:30px;height:30px;color:var(--leaf);flex:0 0 auto}
+.mainnav button+button::before{content:"";position:absolute;left:0;top:24%;bottom:24%;width:1px;background:var(--line)}
+.mainnav button:hover{background:var(--leaf-soft)}
+.mainnav button[aria-selected="true"]{--nb-ic-bg:#0E8A5C;background:linear-gradient(165deg,#22A866 0%,#047857 100%);color:#fff;
+  box-shadow:0 8px 18px rgba(4,120,87,.32)}
+.mainnav button[aria-selected="true"] svg{color:#fff}
+.mainnav button[aria-selected="true"]::after{content:"";position:absolute;left:32%;right:32%;bottom:6px;height:3px;border-radius:3px;background:rgba(255,255,255,.9)}
+.mainnav button[aria-selected="true"]::before,.mainnav button[aria-selected="true"]+button::before{display:none}
+.mainnav button:focus-visible{outline:2px solid var(--leaf);outline-offset:-2px}
+@media (prefers-color-scheme:dark){.navbar{border-color:var(--line)}.mainnav button{color:#BFE9D3}.mainnav button svg{color:#6EE7B7}.navbar::before{opacity:.45}}
+body.sc .navbar{min-height:0;padding-top:4px;padding-bottom:4px}
+body.sc .mainnav button{padding:5px 10px 8px;gap:2px;font-size:.84rem}
+body.sc .mainnav button svg{width:22px;height:22px}
+body.sc .nav-leaf{font-size:1.6rem}
+/* Баруун үзүүр: хонх, данс (ногоон дэвсгэр дээр) */
+.hdr-grid>.hdr-user{grid-column:2;grid-row:2;position:relative;z-index:2;padding-right:18px;color:#fff;gap:12px}
+.hdr-bell{position:relative;font-size:1.55rem;text-decoration:none;line-height:1;filter:drop-shadow(0 1px 2px rgba(0,0,0,.25))}
+.hdr-bell .bdg{position:absolute;top:-7px;right:-9px;min-width:19px;height:19px;padding:0 5px;border-radius:999px;background:#E53935;color:#fff;
+  font-size:.7rem;font-weight:800;display:grid;place-items:center;border:2px solid #fff;font-family:inherit}
+.hdr-bell[hidden]{display:none}
 /* Цонх доторх хэсгүүд рүү шилжих цэс */
 .secnav{display:flex;gap:6px;flex-wrap:wrap;position:sticky;top:var(--hdr,112px);z-index:20;
   background:var(--bg);padding:10px 0;margin:-6px 0 10px;border-bottom:1px solid var(--line)}
@@ -111,12 +137,17 @@ main>section>.panel,.omr-card{scroll-margin-top:calc(var(--hdr,112px) + 56px)}
   .secnav{flex-wrap:nowrap;overflow-x:auto;padding:8px 0;scrollbar-width:none;-ms-overflow-style:none}
   .secnav::-webkit-scrollbar{display:none}
   .secnav a{font-size:.84rem;padding:6px 12px;flex:0 0 auto}
-  header{padding:14px 14px 0}
-  body.sc header{padding-top:7px}
+  header{padding:10px 12px 10px}
+  body.sc header{padding-top:6px}
   h1{font-size:1.3rem}
   header p{margin:3px 0 12px;font-size:.88rem}
-  nav button{padding:9px 13px;font-size:.93rem}
-  body.sc nav button{padding:7px 12px;font-size:.88rem}
+  .hdr-grid>.hdr-top{grid-column:1;grid-row:1}
+  .hdr-grid>.hdr-user{grid-row:1;padding-right:0;color:var(--ink)}
+  .navbar{padding:4px;border-radius:20px;min-height:0;margin-top:6px}
+  .navbar::before,.navbar::after,.nav-leaf{display:none}
+  .mainnav button{min-width:84px;font-size:.76rem;padding:7px 6px 10px;border-radius:16px;gap:3px}
+  .mainnav button svg{width:24px;height:24px}
+  body.sc .mainnav button{font-size:.72rem}
   main{padding:14px}
 }
 /* Хэсэг бүрийн гарчгийг ялгаруулах */
@@ -503,10 +534,15 @@ header .hdr-cur{margin:0;flex:1 1 auto;min-width:0;font-size:.88rem;opacity:.8;w
 .hdr-user{display:flex;align-items:center;gap:6px;margin-left:auto;flex:0 0 auto}
 .hdr-user .sync-pill{margin-left:0}
 .umenu{position:relative}
-.umenu>summary{list-style:none;cursor:pointer;font-size:.86rem;padding:5px 12px;border-radius:999px;
-  background:rgba(255,255,255,.14);white-space:nowrap;max-width:200px;overflow:hidden;text-overflow:ellipsis}
+.umenu>summary{list-style:none;cursor:pointer;display:flex;align-items:center;gap:7px;border-radius:999px;padding:2px}
 .umenu>summary::-webkit-details-marker{display:none}
-.umenu>summary:hover,.umenu[open]>summary{background:rgba(255,255,255,.26)}
+.umenu>summary>span{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+.umenu .av{display:grid;place-items:center;width:46px;height:46px;border-radius:50%;background:#fff;box-shadow:0 2px 8px rgba(0,0,0,.18);transition:transform .15s}
+.umenu .av svg{width:26px;height:26px;fill:#0B5E43}
+.umenu .chev{width:9px;height:9px;border-right:2.5px solid currentColor;border-bottom:2.5px solid currentColor;transform:rotate(45deg);margin:-4px 2px 0 2px}
+.umenu>summary:hover .av,.umenu[open]>summary .av{transform:scale(1.06)}
+.umenu>summary:focus-visible{outline:2px solid #fff;outline-offset:2px}
+@media(max-width:660px){.hdr-user .sync-pill.ok,.hdr-user .sync-pill:not(.warn):not(.bad){background:var(--leaf-soft);color:var(--leaf)}.umenu .av{width:36px;height:36px;background:var(--leaf-soft);box-shadow:none}.umenu .av svg{width:21px;height:21px;fill:var(--leaf)}}
 .umenu-pop{position:absolute;right:0;top:calc(100% + 6px);z-index:40;min-width:220px;background:var(--surface);color:var(--ink);
   border:1px solid var(--line);border-radius:var(--radius);box-shadow:0 8px 24px rgba(0,0,0,.18);padding:6px}
 .umenu-who{padding:8px 10px 10px;border-bottom:1px solid var(--line);margin-bottom:4px}
@@ -742,7 +778,7 @@ body.student #studentApp{display:block}
 .sheet-preview svg{display:block;width:100%;height:auto}
 .codes-print table{border-collapse:collapse;width:100%;font-size:12pt}
 .codes-print th,.codes-print td{border:1px solid #999;padding:6px 10px;text-align:left;color:#000}
-/* ---------- 6. Заавар (гарын авлага) ---------- */
+/* ---------- Тусламж (гарын авлага) ---------- */
 .hp{line-height:1.6}
 .hp h3{margin:16px 0 4px;font-size:1rem}
 .hp p{max-width:80ch}
@@ -826,20 +862,23 @@ body.student #studentApp{display:block}
 </head>
 <body>
 <header>
-  <div class="wrap">
+  <div class="wrap hdr-grid">
     <div class="hdr-top">
       <h1>Шалгалтын анализ</h1>
       <p id="curTitle" class="hdr-cur"></p>
-      <div id="curTitleWrap" class="hdr-user"></div>
     </div>
-    <nav role="tablist">
-      <button role="tab" data-tab="setup" aria-selected="true">1. Шалгалт</button>
-      <button role="tab" data-tab="entry" aria-selected="false">2. Хариулт оруулах</button>
-      <button role="tab" data-tab="analysis" aria-selected="false">3. Анализ</button>
-      <button role="tab" data-tab="final" aria-selected="false">4. Нэгдсэн анализ</button>
-      <button role="tab" data-tab="vocab" aria-selected="false">5. Шинэ үгийн сорил</button>
-      <button role="tab" data-tab="help" aria-selected="false">6. Заавар</button>
-    </nav>
+    <div class="navbar">
+      <span class="nav-leaf" aria-hidden="true">🌿</span>
+      <nav role="tablist" class="mainnav" aria-label="Үндсэн цэс">
+        <button role="tab" data-tab="setup" aria-selected="true"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 2h8l6 6v4.4A6.6 6.6 0 0 0 12.4 22H6a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2z" fill="currentColor"/><path d="M14 2.5V7a1 1 0 0 0 1 1h4.5" fill="none" stroke="var(--nb-ic-bg,#fff)" stroke-width="1.5"/><circle cx="18" cy="18" r="4.6" fill="currentColor"/><path d="m15.9 18 1.5 1.5 2.8-3" fill="none" stroke="var(--nb-ic-bg,#fff)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Шалгалтын сан</span></button>
+        <button role="tab" data-tab="entry" aria-selected="false"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="4" width="14" height="18" rx="2"/><path d="M9 2h6v4H9z" fill="currentColor"/><path d="m8.5 11 1.3 1.3 2.2-2.3M8.5 16.5l1.3 1.3 2.2-2.3M14 11.5h2M14 17h2"/></svg><span>Хариултын бүртгэл</span></button>
+        <button role="tab" data-tab="analysis" aria-selected="false"><svg viewBox="0 0 24 24" aria-hidden="true" fill="currentColor"><rect x="3" y="12" width="5" height="9" rx="1.3"/><rect x="9.5" y="7" width="5" height="14" rx="1.3"/><rect x="16" y="3" width="5" height="18" rx="1.3"/></svg><span>Үр дүнгийн шинжилгээ</span></button>
+        <button role="tab" data-tab="final" aria-selected="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 2h11l3 3v7.4A6.5 6.5 0 0 0 12.4 22H5a1 1 0 0 1-1-1V3a1 1 0 0 1 1-1z" fill="currentColor"/><path d="M7.5 7h8M7.5 10.5h8M7.5 14h4" stroke="var(--nb-ic-bg,#fff)" stroke-width="1.7" stroke-linecap="round"/><circle cx="18" cy="18" r="4.6" fill="none" stroke="currentColor" stroke-width="2"/><path d="M18 15.8V18l1.5 1" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg><span>Нэгдсэн тайлан</span></button>
+        <button role="tab" data-tab="vocab" aria-selected="false"><svg viewBox="0 0 24 24" aria-hidden="true" fill="currentColor"><path d="M2 5.5C4.5 4 8 4 11 5.6V21c-3-1.6-6.5-1.6-9-.1z"/><path d="M22 5.5C19.5 4 16 4 13 5.6V21c3-1.6 6.5-1.6 9-.1z"/></svg><span>Нэр томьёоны сорил</span></button>
+        <button role="tab" data-tab="help" aria-selected="false"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10" fill="currentColor"/><path d="M9.3 9.2a2.8 2.8 0 0 1 5.4 1c0 1.9-2.7 2.4-2.7 4" fill="none" stroke="var(--nb-ic-bg,#fff)" stroke-width="2.1" stroke-linecap="round"/><circle cx="12" cy="17.6" r="1.25" fill="var(--nb-ic-bg,#fff)"/></svg><span>Тусламж</span></button>
+      </nav>
+    </div>
+    <div id="curTitleWrap" class="hdr-user"></div>
   </div>
 </header>
 
@@ -1034,7 +1073,7 @@ body.student #studentApp{display:block}
       <li><b>Компьютер дээр:</b> доорх URL, нууц үгээ оруулаад "Үүлэнд илгээх" дарна. Шалгалт, анги, нэрс Google Sheets-д хуулагдана.</li>
       <li><b>Утсан дээр:</b> программын GitHub холбоосыг нээгээд мөн URL, нууц үгээ оруулж "Үүлнээс татах" дарна.</li>
       <li><b>Компьютер дээр:</b> "Утаснаас ирэх хариултыг автоматаар хүлээн авах"-ыг чагтална.</li>
-      <li><b>Утсан дээр:</b> "2. Хариулт оруулах" → "Камераар шууд уншуулах" дарж хуудсуудыг ээлж дараалан камерт харуулна.</li>
+      <li><b>Утсан дээр:</b> "Хариултын бүртгэл" → "Камераар шууд уншуулах" дарж хуудсуудыг ээлж дараалан камерт харуулна.</li>
     </ol>
     <div class="row">
       <div style="flex:3 1 300px"><label for="cApi">Google Apps Script Web app URL</label><input id="cApi" placeholder="https://script.google.com/macros/s/.../exec" autocomplete="off"></div>
@@ -1329,12 +1368,12 @@ body.student #studentApp{display:block}
     <h3>Дээд талын 6 цонх</h3>
     <table>
       <tr><th>Цонх</th><th>Юунд хэрэглэх</th></tr>
-      <tr><td><b>1. Шалгалт</b></td><td>Дотроо табуудтай: <b>Миний шалгалтууд · Шалгалтын материал · Хариултын хуудас · Цахим шалгалт · Ангиуд, нэрс · Нөөц</b>. Программын эзэнд <b>Багш нарын эрх</b> таб нэмэгдэнэ.</td></tr>
-      <tr><td><b>2. Хариулт оруулах</b></td><td>Сурагчдын хариултыг камераар, зургаар, гараар эсвэл Excel-ээр оруулах.</td></tr>
-      <tr><td><b>3. Анализ</b></td><td>Нэг шалгалтын дүн, график, асуултын чанар, дүнгийн хүснэгт, ерөнхий дүгнэлт, Excel, Word тайлан.</td></tr>
-      <tr><td><b>4. Нэгдсэн анализ</b></td><td>Хэд хэдэн шалгалтыг нэгтгэж улирал, жилийн дүн гаргах.</td></tr>
-      <tr><td><b>5. Шинэ үгийн сорил</b></td><td>Сурагчид утаснаасаа онлайнаар өгдөг үгийн сорил.</td></tr>
-      <tr><td><b>6. Заавар</b></td><td>Энэ хуудас.</td></tr>
+      <tr><td><b>Шалгалтын сан</b></td><td>Дотроо табуудтай: <b>Миний шалгалтууд · Шалгалтын материал · Хариултын хуудас · Цахим шалгалт · Ангиуд, нэрс · Нөөц</b>. Программын эзэнд <b>Багш нарын эрх</b> таб нэмэгдэнэ.</td></tr>
+      <tr><td><b>Хариултын бүртгэл</b></td><td>Сурагчдын хариултыг камераар, зургаар, гараар эсвэл Excel-ээр оруулах.</td></tr>
+      <tr><td><b>Үр дүнгийн шинжилгээ</b></td><td>Нэг шалгалтын дүн, график, асуултын чанар, дүнгийн хүснэгт, ерөнхий дүгнэлт, Excel, Word тайлан.</td></tr>
+      <tr><td><b>Нэгдсэн тайлан</b></td><td>Хэд хэдэн шалгалтыг нэгтгэж улирал, жилийн дүн гаргах.</td></tr>
+      <tr><td><b>Нэр томьёоны сорил</b></td><td>Сурагчид утаснаасаа онлайнаар өгдөг үгийн сорил.</td></tr>
+      <tr><td><b>Тусламж</b></td><td>Энэ хуудас.</td></tr>
     </table>
     <div class="hp-ok"><b>Нэг шалгалт = нэг бүртгэл.</b> Шалгалт бүр өөрийн асуулт, хариулт, анализтайгаа тусдаа хадгалагдана. "Миний шалгалтууд"-аас аль шалгалт нээлттэй байгааг үргэлж хараарай — бусад цонх тэр шалгалтаар ажиллана.</div>
   </details>
@@ -1366,13 +1405,13 @@ body.student #studentApp{display:block}
       <li><b>Эрхийн хугацаа дуусахад өгөгдөл устахгүй.</b> Эзэн сунгамагц бүх шалгалт, дүн хэвээрээ үргэлжилнэ.</li>
       <li><b>Таны сурагчдын дүнг зөвхөн та харна.</b> Эзэн зөвхөн таны нэр, мэргэжил, эрхийн хугацааг хардаг.</li>
     </ul>
-    <div class="hp-tip"><b>Хоёр шаттай баталгаажуулалт (программын эзэнд).</b> "1. Шалгалт → Нөөц" хэсгээс асаавал шинэ төхөөрөмжөөс нэвтрэхэд нууц үгийн дараа утасны Google Authenticator аппын 6 оронтой код асууна. Нэг удаа нэвтэрсэн төхөөрөмж дээр дахин асуухгүй.</div>
+    <div class="hp-tip"><b>Хоёр шаттай баталгаажуулалт (программын эзэнд).</b> "Шалгалтын сан → Нөөц" хэсгээс асаавал шинэ төхөөрөмжөөс нэвтрэхэд нууц үгийн дараа утасны Google Authenticator аппын 6 оронтой код асууна. Нэг удаа нэвтэрсэн төхөөрөмж дээр дахин асуухгүй.</div>
   </details>
 
   <!-- ======================= -->
   <details class="panel hp hp-sec" id="h-cls">
     <summary><i class="hp-ic">👥</i><span>Анги, сурагчдын нэрс</span><small>нэг удаа оруулаад бүх шалгалтад</small></summary>
-    <div class="hp-short"><b>Товчхондоо</b> "1. Шалгалт → <b>Ангиуд, нэрс</b>" таб. Анги нэмээд нэрсээ буулгана. Сурагч бүр ангидаа <b>2 оронтой код</b> авч, хариултын хуудсан дээр тэр кодоо будна.</div>
+    <div class="hp-short"><b>Товчхондоо</b> "Шалгалтын сан → <b>Ангиуд, нэрс</b>" таб. Анги нэмээд нэрсээ буулгана. Сурагч бүр ангидаа <b>2 оронтой код</b> авч, хариултын хуудсан дээр тэр кодоо будна.</div>
     <div class="hp-step"><div class="hp-num">1</div><div><b>Анги нэмэх</b>
       "Шинэ анги нэмэх" нүдэнд <code>11В</code> гэж бичээд <b>"Нэмэх"</b> дарна.
       <div class="hp-tip">"11 в анги", "11b" гэж бичсэн ч болно — <b>"Ангиудыг цэгцлэх"</b> дарвал нэг хэлбэрт оруулж, давхардсаныг нэгтгэнэ.</div></div></div>
@@ -1395,7 +1434,7 @@ body.student #studentApp{display:block}
   <!-- ======================= -->
   <details class="panel hp hp-sec" id="h-mat">
     <summary><i class="hp-ic">📝</i><span>Шалгалтын материал</span><small>асуулт, зөв хариулт, оноо</small></summary>
-    <div class="hp-short"><b>Товчхондоо</b> "1. Шалгалт → <b>Миний шалгалтууд</b>"-аас <b>"Шинэ шалгалт"</b> үүсгэнэ. Доорх "Шалгалтын материал"-д асуултын тоо, асуулт бүрийн <b>агуулга, зөв хариулт, оноо</b>-г оруулна. Word-оос бүгдийг нэг дор хуулж болно.</div>
+    <div class="hp-short"><b>Товчхондоо</b> "Шалгалтын сан → <b>Миний шалгалтууд</b>"-аас <b>"Шинэ шалгалт"</b> үүсгэнэ. Доорх "Шалгалтын материал"-д асуултын тоо, асуулт бүрийн <b>агуулга, зөв хариулт, оноо</b>-г оруулна. Word-оос бүгдийг нэг дор хуулж болно.</div>
     <h3>Шалгалтын хэсгүүд</h3>
     <div class="hp-parts">
       <div><b>I</b><span>Тест</span><small>A–E, нэг зөв хариулттай. 60 хүртэл.</small></div>
@@ -1472,7 +1511,7 @@ body.student #studentApp{display:block}
   <!-- ======================= -->
   <details class="panel hp hp-sec" id="h-print">
     <summary><i class="hp-ic">🖨</i><span>Хариултын хуудас хэвлэх</span><small>A4, камераар уншигддаг</small></summary>
-    <div class="hp-short"><b>Товчхондоо</b> "1. Шалгалт → <b>Хариултын хуудас</b>" таб. Хуудас асуултын тоонд тааруулж өөрөө зурагдана. <b>A4, масштаб 100%</b>-иар хэвлэнэ.</div>
+    <div class="hp-short"><b>Товчхондоо</b> "Шалгалтын сан → <b>Хариултын хуудас</b>" таб. Хуудас асуултын тоонд тааруулж өөрөө зурагдана. <b>A4, масштаб 100%</b>-иар хэвлэнэ.</div>
     <table>
       <tr><th>Хэвлэх төрөл</th><th>Хэзээ</th></tr>
       <tr><td><b>Хоосон хуудас</b></td><td>Нэг хэвлээд олшруулна. Сурагч анги, бүлэг, кодоо өөрөө будна.</td></tr>
@@ -1492,7 +1531,7 @@ body.student #studentApp{display:block}
   <!-- ======================= -->
   <details class="panel hp hp-sec" id="h-scan">
     <summary><i class="hp-ic">📷</i><span>Хариулт оруулах, уншуулах</span><small>4 арга</small></summary>
-    <div class="hp-short"><b>Товчхондоо</b> "2. Хариулт оруулах" цонх. Хамгийн хурдан нь <b>камераар уншуулах</b> — 30 хуудас ≈ 5 минут. Уншуулахын өмнө зөв шалгалт нээлттэй эсэхийг шалгана.</div>
+    <div class="hp-short"><b>Товчхондоо</b> "Хариултын бүртгэл" цонх. Хамгийн хурдан нь <b>камераар уншуулах</b> — 30 хуудас ≈ 5 минут. Уншуулахын өмнө зөв шалгалт нээлттэй эсэхийг шалгана.</div>
     <div class="hp-ways">
       <div><i>📷</i><b>Камераар шууд</b><small>"Камераар шууд уншуулах" дарж хуудсуудаа ээлжлэн харуулна. "Бийп" дуугарч нэр, оноо гарна.</small></div>
       <div><i>🖼</i><b>Зургаар</b><small>Бүх хуудасны зургийг аваад "Зураг сонгох"-оор нэг дор оруулна.</small></div>
@@ -1509,7 +1548,7 @@ body.student #studentApp{display:block}
       <li><b>Программ дээр шууд:</b> сурагчаа сонгоход задгай даалгавар бүр гарч, "Зөв хариултын санаа" хажууд нь харагдана.</li>
     </ul>
     <h3>2 хуудастай шалгалт</h3>
-    <p>Сурагч бүрийн <b>хоёр хуудсыг хоёуланг нь</b> уншуулна. Дараалал хамаагүй, утас, компьютер хоёрт хуваасан ч нэг дүн болно. Дутуу хуудас байвал "3. Анализ"-ын дээд талд <b>нэрээр нь</b> сануулна.</p>
+    <p>Сурагч бүрийн <b>хоёр хуудсыг хоёуланг нь</b> уншуулна. Дараалал хамаагүй, утас, компьютер хоёрт хуваасан ч нэг дүн болно. Дутуу хуудас байвал "Үр дүнгийн шинжилгээ"-ний дээд талд <b>нэрээр нь</b> сануулна.</p>
     <h3>Буруу орсныг устгах</h3>
     <p>Нэг сурагчийнх — жагсаалтын мөрний <b>"Устгах"</b>. Бүтэн ангийнх — <b>"Энэ ангийн бүх хариултыг устгах"</b> (зөвхөн тэр шалгалтаас).</p>
   </details>
@@ -1517,7 +1556,7 @@ body.student #studentApp{display:block}
   <!-- ======================= -->
   <details class="panel hp hp-sec" id="h-online">
     <summary><i class="hp-ic">📱</i><span>Цахим шалгалт (QR)</span><small>цаасгүй, утаснаас</small></summary>
-    <div class="hp-short"><b>Товчхондоо</b> "1. Шалгалт → <b>📱 Цахим шалгалт</b>" таб. Хугацаа, ангиудаа сонгоод <b>"QR үүсгэж нийтлэх"</b>. Сурагчид QR уншуулж утаснаасаа хариулна. Хариулт ирэх бүрд энэ шалгалтын <b>анализ өөрөө бүтнэ</b>.</div>
+    <div class="hp-short"><b>Товчхондоо</b> "Шалгалтын сан → <b>📱 Цахим шалгалт</b>" таб. Хугацаа, ангиудаа сонгоод <b>"QR үүсгэж нийтлэх"</b>. Сурагчид QR уншуулж утаснаасаа хариулна. Хариулт ирэх бүрд энэ шалгалтын <b>анализ өөрөө бүтнэ</b>.</div>
     <div class="hp-step"><div class="hp-num">1</div><div><b>Шалгалтын материалаа оруулна</b>
       Асуулт, зөв хариултаа ердийнх шиг оруулна. Асуултын текст, сонголтыг бичсэн бол сурагчийн утсан дээр гарна — бичээгүй бол зөвхөн "1. A B C D" гэсэн хариултын хуудас гарч, асуултыг цаасан дээрээс уншина.</div></div>
     <div class="hp-step"><div class="hp-num">2</div><div><b>Нийтлэх</b>
@@ -1525,14 +1564,14 @@ body.student #studentApp{display:block}
     <div class="hp-step"><div class="hp-num">3</div><div><b>Сурагчид өгнө</b>
       Ангиа, нэр эсвэл кодоо сонгоод "Эхлэх" дарна. Хугацаа тэр мөчөөс тоологдож, дуусахад хариулт өөрөө илгээгдэнэ.</div></div>
     <div class="hp-step"><div class="hp-num">4</div><div><b>Хариулт, анализ</b>
-      Цахим шалгалтын табд хэн өгч байгаа, хэн дуусгасан, хэн ороогүй нь 10 секунд тутам шинэчлэгдэнэ. Дууссан хариулт бүр <b>"3. Анализ"</b>-д өөрөө орно.</div></div>
+      Цахим шалгалтын табд хэн өгч байгаа, хэн дуусгасан, хэн ороогүй нь 10 секунд тутам шинэчлэгдэнэ. Дууссан хариулт бүр <b>"Үр дүнгийн шинжилгээ"</b>-нд өөрөө орно.</div></div>
     <div class="hp-warn"><b>Хуулахаас сэргийлэх:</b> шалгалтын үеэр өөр цонх, программ руу <b>5 секундээс удаан</b> гарвал эхний удаад анхааруулна, <b>2 дахь удаад шалгалт шууд дуусна</b>. Утасны дэлгэцийг унтраах, хуудсаа дахин ачаалах нь ч гарсанд тооцогдоно — сурагчдад урьдчилан хэлээрэй.</div>
     <ul class="hp-list">
       <li><b>Бүх төрөл ажиллана:</b> I хэсэг (нэг зөв), II хэсэг (олон зөв), III хэсэг (Үнэн/Худал). IV хэсгийн задгай даалгаврыг сурагч цаасан дээр бичнэ.</li>
       <li>Сурагч илгээмэгц <b>"Нийт 20 онооноос 16 оноо · 80%"</b> гэж харж, амжилт хүссэн үг гарна. Хүсэхгүй бол нийтлэхээсээ өмнө <b>"оноо, хувийг нь харуулах"</b> чагтыг авна.</li>
       <li><b>Зөв хариулт сурагчийн утсанд огт очихгүй</b> — оноог сервер бодож, зөвхөн нийт дүнг буцаана. Аль асуулт зөв, буруу болохыг хэлэхгүй.</li>
       <li>Хувилбартай шалгалтад кодоор нь хуваарилна: <b>01 → А, 02 → Б…</b></li>
-      <li>IV хэсгийн задгай даалгаврын оноог "2. Хариулт оруулах"-аас өгнө.</li>
+      <li>IV хэсгийн задгай даалгаврын оноог "Хариултын бүртгэл"-ээс өгнө.</li>
       <li>Шалгалт дуусахад <b>"Шалгалтыг хаах"</b> дарна. "Дахин өгүүлэх" нь нэг сурагчид дахин өгөх боломж олгоно.</li>
     </ul>
   </details>
@@ -1540,7 +1579,7 @@ body.student #studentApp{display:block}
   <!-- ======================= -->
   <details class="panel hp hp-sec" id="h-ana">
     <summary><i class="hp-ic">📊</i><span>Анализ</span><small>юуг яаж уншдаг вэ</small></summary>
-    <div class="hp-short"><b>Товчхондоо</b> "3. Анализ" хариулт орсон даруйд өөрөө бүтнэ. Дээд талаас <b>Анги</b>, <b>Хувилбар</b>, сурагчийг <b>нэрээр эсвэл кодоор</b> харуулахыг сонгоно. Дээрх цэсээр хэсэг хооронд шилжинэ — <b>улаан тоо</b> нь анхаарах зүйлийн тоо.</div>
+    <div class="hp-short"><b>Товчхондоо</b> "Үр дүнгийн шинжилгээ" хариулт орсон даруйд өөрөө бүтнэ. Дээд талаас <b>Анги</b>, <b>Хувилбар</b>, сурагчийг <b>нэрээр эсвэл кодоор</b> харуулахыг сонгоно. Дээрх цэсээр хэсэг хооронд шилжинэ — <b>улаан тоо</b> нь анхаарах зүйлийн тоо.</div>
     <h3>Гол үзүүлэлтүүд</h3>
     <div class="hp-kpi">
       <div><b>Дундаж гүйцэтгэл</b><small>сурагчдын авсан хувийн дундаж</small></div>
@@ -1615,7 +1654,7 @@ body.student #studentApp{display:block}
     <summary><i class="hp-ic">🛡</i><span>Нөөц, аюулгүй байдал</span><small>өгөгдөл тань алга болохгүй</small></summary>
     <div class="hp-short"><b>Товчхондоо</b> Бүх өгөгдөл таны дансанд, үүлэнд хадгалагдаж, засвар хийсэн өдөр бүр <b>автоматаар нөөцлөгдөнө</b>. Андуурч устгасан бол сүүлийн 2 долоо хоногийн аль ч өдөр рүү буцаана.</div>
     <h3>Андуурч устгасан, буруу зассан бол</h3>
-    <div class="hp-step"><div class="hp-num">1</div><div>"1. Шалгалт" → <b>Нөөц</b> таб → <b>"Нөөцүүдийг харах"</b>.</div></div>
+    <div class="hp-step"><div class="hp-num">1</div><div>"Шалгалтын сан" → <b>Нөөц</b> таб → <b>"Нөөцүүдийг харах"</b>.</div></div>
     <div class="hp-step"><div class="hp-num">2</div><div>Өдөр бүрийн нөөц хэдэн шалгалт, хариулттай байсан нь харагдана. Хүссэн өдрийнхөө <b>"Энэ байдал руу буцаах"</b> дарна.
       <div class="hp-ok">Буцаахын өмнө одоогийн байдал тань <b>файлаар татагдана</b> — алдаж буцаасан ч дахин сэргээж болно.</div></div></div>
     <h3>Нэмэлт хамгаалалт</h3>
@@ -3431,14 +3470,14 @@ function renderEntryClasses(){
   if(entryCls&&!db.classes.find(c=>c.name===entryCls))entryCls='';
   if(!entryCls&&db.classes.length)entryCls=db.classes[0].name;
   sel.innerHTML=db.classes.length?db.classes.map(c=>`<option${c.name===entryCls?' selected':''}>${esc(c.name)}</option>`).join('')
-    :'<option value="">Эхлээд "1. Шалгалт" хэсэгт анги нэмнэ үү</option>';
+    :'<option value="">Эхлээд "Шалгалтын сан" хэсэгт анги нэмнэ үү</option>';
 }
 function renderRoster(){
   const c=db.classes.find(x=>x.name===entryCls),cur=$('#name').value.trim();
   if(!c){$('#roster').innerHTML='';$('#progress').textContent='';return;}
   const done=new Set(state.students.filter(s=>s.cls===entryCls).map(s=>s.name));
   $('#roster').innerHTML=c.students.map(n=>`<button type="button" class="chip${done.has(n)?' done':''}${n===cur?' act':''}" data-n="${esc(n)}">${done.has(n)?'✓ ':''}${pad2(c.codes[n])} ${esc(n)}</button>`).join('')
-    ||'<span class="progress">Энэ ангид нэрс оруулаагүй байна. "1. Шалгалт" хэсгээс нэмнэ үү.</span>';
+    ||'<span class="progress">Энэ ангид нэрс оруулаагүй байна. "Шалгалтын сан" хэсгээс нэмнэ үү.</span>';
   $('#progress').textContent=c.students.length?c.students.filter(n=>done.has(n)).length+' / '+c.students.length+' сурагчийн хариулт орсон':'';
 }
 function ecfg(){db.entry=db.entry||{prefill:false};return db.entry;}
@@ -3461,7 +3500,7 @@ function renderOmrExam(){
   const el=$('#omrExam');if(!el)return;
   el.innerHTML=`Уншсан хуудас <b>"${esc(state.exam.title||'Нэргүй шалгалт')}"</b> шалгалтад орно `
     +`(${state.exam.questions.length} асуулт${state.exam.date?', '+esc(state.exam.date):''}). `
-    +`<span class="hint">Өөр шалгалт руу оруулах бол "1. Шалгалт" хэсгээс эхлээд тэр шалгалтаа сонгоно уу.</span>`;
+    +`<span class="hint">Өөр шалгалт руу оруулах бол "Шалгалтын сан" хэсгээс эхлээд тэр шалгалтаа сонгоно уу.</span>`;
 }
 $('#scanVar').addEventListener('change',e=>{scanVar=+e.target.value;
   const m=$('#omrMsg');m.style.color='';m.textContent=VNAMES[scanVar]+' хувилбарын хуудсуудыг уншина.';});
@@ -3469,7 +3508,7 @@ $('#prefillKey').addEventListener('change',e=>{ecfg().prefill=e.target.checked;s
   const m=$('#entryMsg');m.style.color='';m.textContent=e.target.checked?'Одооноос сурагч сонгоход зөв хариулт нь урьдчилж орох болно.':'Урьдчилан дүүргэхийг унтраалаа.';});
 $('#fillKey').addEventListener('click',()=>{
   const m=$('#entryMsg');
-  if(!state.exam.questions.some(q=>q.key)){m.style.color='var(--stain)';m.textContent='Энэ шалгалтад зөв хариулт оруулаагүй байна. "1. Шалгалт" хэсэгт оруулна уу.';return;}
+  if(!state.exam.questions.some(q=>q.key)){m.style.color='var(--stain)';m.textContent='Энэ шалгалтад зөв хариулт оруулаагүй байна. "Шалгалтын сан" хэсэгт оруулна уу.';return;}
   draft=keyDraft();renderSheet();
   m.style.color='';m.textContent='Зөв хариултаар дүүргэлээ. Алдсан хариултыг нь дарж өөрчилнө үү.';});
 $('#cls').addEventListener('change',e=>{entryCls=e.target.value;$('#name').value='';editId=null;draft=[];$('#saveStudent').textContent='Хариултыг хадгалах';renderRoster();renderSheet();renderList();});
@@ -3900,7 +3939,7 @@ function renderAnalysis(){
   el.innerHTML=(gaps.length?`<div class="panel noprint" style="border-left:4px solid var(--stain)">
     <b class="m">Анхаар: ${gaps.length} сурагчийн нэмэлт хуудас уншуулагдаагүй байна.</b>
     <p class="hint" style="margin:4px 0 0">Тэдний сүүлийн хуудасны асуултууд бүгд хоосон байгаа тул анализ дутуу гарч байна.
-    "2. Хариулт оруулах" хэсэгт тэр хуудсуудыг нь уншуулбал нэг дүнд нийлнэ:
+    "Хариултын бүртгэл" хэсэгт тэр хуудсуудыг нь уншуулбал нэг дүнд нийлнэ:
     ${esc(gaps.slice(0,10).map(x=>x.name+' ('+x.cls+', '+x.miss.join(', ')+'-р хуудас)').join('; '))}${gaps.length>10?' ба бусад':''}.</p></div>`:'')+`
   <div class="panel" data-sec="Ерөнхий">
     <div class="row">
@@ -5302,7 +5341,7 @@ function toast(t){const d=document.createElement('div');d.className='toast';d.te
 $('#cTest').addEventListener('click',async()=>{
   try{const r=await vCall({action:'ping'});
     if(!r.teacher)return cMsg('Холбогдлоо, гэхдээ нууц үг таарахгүй байна.',true);
-    cMsg(r.version>=2?'Амжилттай холбогдлоо.':'Холбогдлоо, гэхдээ Google дээрх скрипт хуучин байна. "5. Шинэ үгийн сорил" дахь кодыг хуулж, Apps Script-ээ шинэчлээд Deploy → Manage deployments → Edit → New version хийнэ үү.',r.version<2);
+    cMsg(r.version>=2?'Амжилттай холбогдлоо.':'Холбогдлоо, гэхдээ Google дээрх скрипт хуучин байна. "Нэр томьёоны сорил" дахь кодыг хуулж, Apps Script-ээ шинэчлээд Deploy → Manage deployments → Edit → New version хийнэ үү.',r.version<2);
   }catch(e){cMsg(e.message,true);}
 });
 $('#cPush').addEventListener('click',async()=>{
@@ -5367,7 +5406,7 @@ async function cloudPoll(force){
       if(r.until)k.since=Math.max(k.since||0,r.until);
       if(list.length){const a=applyScans(list);k.orphans=a.orph;save();
         if(a.n){const ot=Object.entries(a.other);
-          toast('Утаснаас '+a.n+' хуудасны хариулт ирлээ.'+(ot.length?' ('+ot.map(([t,n])=>t+': '+n).join(', ')+' — "1. Шалгалт" хэсгээс тэр шалгалтыг нээж харна уу)':''));
+          toast('Утаснаас '+a.n+' хуудасны хариулт ирлээ.'+(ot.length?' ('+ot.map(([t,n])=>t+': '+n).join(', ')+' — "Шалгалтын сан" хэсгээс тэр шалгалтыг нээж харна уу)':''));
           if(!$('#tab-analysis').hidden)renderAnalysis();if(!$('#tab-entry').hidden)renderEntry();if(!$('#tab-final').hidden)renderFinal();renderExams();}
       }else save();
     }
@@ -5375,7 +5414,7 @@ async function cloudPoll(force){
   }catch(e){cLast={t:null,err:e.message};}finally{pollBusy=false;cStatusRender();}
 }
 $('#cPushAns').addEventListener('click',async()=>{
-  if(!state.students.length)return cMsg('Энэ шалгалтад хариулт оруулаагүй байна. "1. Шалгалт" → "Миний шалгалтууд"-аас зөв шалгалтаа сонгоно уу.',true);
+  if(!state.students.length)return cMsg('Энэ шалгалтад хариулт оруулаагүй байна. "Шалгалтын сан" → "Миний шалгалтууд"-аас зөв шалгалтаа сонгоно уу.',true);
   state.students.forEach(st=>ccfg().queue.push({id:uid(),examId:state.id,cls:st.cls,name:st.name,answers:st.answers.slice()}));save();
   cMsg('Илгээж байна...');await cloudPoll(true);const k=ccfg();
   cMsg(k.queue.length?'Илгээж чадсангүй. Интернэт, URL-ээ шалгана уу.':state.students.length+' сурагчийн хариулт илгээгдлээ. Нөгөө төхөөрөмж дээр "Одоо илгээх / хүлээн авах" дарвал шууд орж ирнэ.',!!k.queue.length);
@@ -5627,7 +5666,7 @@ function svgHeat(){
 const RADAR_CLR=['var(--leaf)','#D19A3E','#4C7BD9','#B4314A','#8A5BD6'];
 function svgRadar(d){
   const qs=state.exam.questions,axes=[];qs.forEach((q,i)=>{const t=topicOf(i);if(!axes.includes(t))axes.push(t);});
-  if(axes.length<3)return{msg:'Радар зурахад дор хаяж 3 өөр агуулга хэрэгтэй. "1. Шалгалт" хэсэгт асуултуудын агуулгыг (сэдэв) бичнэ үү.'};
+  if(axes.length<3)return{msg:'Радар зурахад дор хаяж 3 өөр агуулга хэрэгтэй. "Шалгалтын сан" хэсэгт асуултуудын агуулгыг (сэдэв) бичнэ үү.'};
   if(axes.length>12)return{msg:'Агуулга '+axes.length+' байна — радар 12 хүртэл агуулгатай үед л уншигдахуйц. "Агуулга тус бүрийн гүйцэтгэл"-ийн хэвтээ баганыг ашиглана уу.'};
   const pctBy=k=>axes.map(t=>{const x=k.topics.find(y=>y.t===t);return x?x.pct:0;});
   const ser=[{l:filterCls?filterCls+' анги':'Бүх сурагч',v:pctBy(d)}];
@@ -5887,7 +5926,7 @@ function renderVocab(){
   vSetRender();
   const prev=new Set([...document.querySelectorAll('#vClasses input:checked')].map(x=>x.value));
   $('#vClasses').innerHTML=db.classes.length?db.classes.map(k=>`<label class="chip" style="display:inline-flex;gap:6px;align-items:center;margin:0"><input type="checkbox" value="${esc(k.name)}" style="width:auto"${prev.has(k.name)?' checked':''}> ${esc(k.name)} (${k.students.length})</label>`).join('')
-    :'<span class="progress">"1. Шалгалт" хэсэгт анги, сурагчдын нэрс оруулна уу.</span>';
+    :'<span class="progress">"Шалгалтын сан" хэсэгт анги, сурагчдын нэрс оруулна уу.</span>';
   renderVQuizList();
 }
 function renderVQuizList(){
@@ -6158,7 +6197,7 @@ function oeRender(){
       <li>Шалгалтын үеэр өөр цонх, программ руу <b>5 секундээс удаан</b> гарвал: 1 дэх удаад анхааруулна, <b>2 дахь удаад шалгалт шууд дуусна</b>.</li>
       ${V>1||vCount()>1?`<li>Хувилбарыг кодоор нь хуваарилна: <b>01 → А, 02 → Б${vCount()>2?', 03 → В':''}…</b></li>`:''}
       <li>Хариулт ирэх бүрд энэ шалгалтын <b>анализ өөрөө шинэчлэгдэнэ</b>.</li>
-      ${qs.some(isP3)?'<li>IV хэсгийн задгай даалгаврыг сурагч утсан дээр бичихгүй — оноог нь "2. Хариулт оруулах"-аас өгнө.</li>':''}
+      ${qs.some(isP3)?'<li>IV хэсгийн задгай даалгаврыг сурагч утсан дээр бичихгүй — оноог нь "Хариултын бүртгэл"-ээс өгнө.</li>':''}
     </ul>
     ${noKey?`<div class="hp-warn" style="margin:8px 0">${noKey} асуултын зөв хариулт дутуу байна. Дүн зөв гарахын тулд "Шалгалтын материал"-д оруулаарай (дараа нь оруулсан ч болно).</div>`:''}
     <div class="btns"><button class="btn" id="oePub">${o?'Өөрчлөлтийг нийтлэх':'📱 QR үүсгэж нийтлэх'}</button>
@@ -6634,7 +6673,7 @@ function sqResend(body){
   $('#sqSkip').onclick=()=>{SQ.sel={cls:'',c1:'',c2:''};SQ.who=null;sqIdentity();};
 }
 
-/* ---------- 6. Заавар (гарын авлага) ---------- */
+/* ---------- Тусламж (гарын авлага) ---------- */
 $('#tab-help').addEventListener('click',e=>{
   const a=e.target.closest('.hp-toc a,.hp-qs a');if(!a)return;
   e.preventDefault();
@@ -6713,7 +6752,7 @@ function buildSecNav(box){
   addEventListener('resize',()=>{setH();mark();});
   setH();onScroll();setTimeout(mark,120);
   window.secMark=mark;
-  /* "1. Шалгалт" цонх: хэсгүүд доош урсахгүй, таб шиг нэг удаад нэг нь харагдана.
+  /* "Шалгалтын сан" цонх: хэсгүүд доош урсахгүй, таб шиг нэг удаад нэг нь харагдана.
      Цэсэнд байхгүй хэсэг (s-cloud) "Нөөц"-тэй хамт гарна. Сонголт энэ төхөөрөмж дээр хадгалагдана. */
   window.secTab=id=>{
     const nav=document.querySelector('.secnav[data-tabs]');if(!nav)return;
@@ -7207,8 +7246,8 @@ function authHeader(){
   else if(AUTH.expires){const left=Math.round((new Date(AUTH.expires+'T00:00:00')-new Date(localDay()+'T00:00:00'))/864e5)+1;
     lic=AUTH.expires+' хүртэл ('+left+' хоног)';}
   w.innerHTML=`<span class="sync-pill" id="syncPill" hidden></span>`
-    +`<a href="#" class="sync-pill warn" id="hdrReq" hidden style="text-decoration:none"></a>`
-    +`<details class="umenu" id="umenu"><summary title="Миний данс">👤 <span>${esc(nm)}</span></summary>
+    +`<a href="#" class="hdr-bell" id="hdrReq" hidden></a>`
+    +`<details class="umenu" id="umenu"><summary title="Миний данс: ${esc(nm)}"><i class="av" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="8.2" r="4.3"/><path d="M3.8 21a8.2 8.2 0 0 1 16.4 0z"/></svg></i><span>${esc(nm)}</span><i class="chev" aria-hidden="true"></i></summary>
       <div class="umenu-pop"><div class="umenu-who"><b>${esc(nm)}</b>${AUTH.email&&AUTH.email!==nm?`<small>${esc(AUTH.email)}</small>`:''}${lic?`<small>Эрх: ${esc(lic)}</small>`:''}</div>
       <button type="button" id="hdrPw">🔑 Нууц үг солих</button><button type="button" id="hdrOut">↪ Гарах</button></div></details>`;
   $('#hdrOut').onclick=()=>{$('#umenu').open=false;authLogout();};
@@ -7222,7 +7261,8 @@ document.addEventListener('click',e=>{const m=document.getElementById('umenu');i
 function reqBadge(){
   const b=$('#hdrReq');if(!b)return;
   const n=AUTH.owner?tRows.filter(t=>!t.approved&&!t.expires&&!(AUTH.sess&&t.id===AUTH.sess.user.id)).length:0;
-  b.hidden=!n;b.innerHTML='🔔 '+(+n)+'<span> шинэ хүсэлт</span>';b.title='Бүртгүүлсэн багш таны баталгааг хүлээж байна';
+  b.hidden=!AUTH.owner;b.innerHTML='🔔'+(n?'<b class="bdg">'+(+n)+'</b>':'');
+  b.title=n?n+' багш таны баталгааг хүлээж байна':'Шинэ хүсэлт алга';b.setAttribute('aria-label',b.title);
 }
 async function reqCheck(){
   if(!AUTH.owner||!AUTH.sess||document.visibilityState!=='visible')return;
