@@ -592,6 +592,38 @@ body.student #studentApp{display:block}
 .qrbox svg{width:220px;height:220px;background:#fff;padding:6px;border-radius:8px;border:1px solid var(--line)}
 .linkbox{flex:1 1 260px;min-width:0}
 .linkbox code{display:block;word-break:break-all;background:var(--bg);padding:8px;border-radius:6px;font-size:.82rem;margin:6px 0}
+/* шинэ үгийн сорил: сүүлийн 5 */
+.vh-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:10px;margin-bottom:12px}
+.vh-card{border:1px solid var(--line);border-radius:12px;padding:10px 12px;background:var(--surface);display:grid;gap:4px}
+.vh-card.on{border-color:var(--leaf);box-shadow:inset 0 0 0 1px var(--leaf)}
+.vh-top{display:flex;justify-content:space-between;gap:8px;align-items:flex-start}
+.vh-card small{color:var(--muted)}
+.vh-btns{display:flex;gap:6px;flex-wrap:wrap;margin-top:4px}
+.vh-btns .btn{margin:0;padding:5px 12px;font-size:.85rem}
+/* цахим шалгалт: багш */
+.oe-rules{font-size:.9rem;color:var(--muted);margin:10px 0 4px}
+.oe-pill{display:inline-block;font-size:.8rem;font-weight:700;border-radius:999px;padding:2px 10px;background:var(--leaf-soft);color:var(--leaf)}
+.oe-pill.off{background:var(--stain-soft);color:var(--stain)}
+/* цахим шалгалт: сурагч */
+.ox-top{position:sticky;top:0;z-index:5;display:flex;justify-content:space-between;align-items:center;gap:10px;background:var(--surface);
+  border:1px solid var(--line);border-radius:12px;padding:10px 14px;margin-bottom:12px;box-shadow:var(--shadow);font-weight:700;font-variant-numeric:tabular-nums}
+.ox-q{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:12px 14px;margin-bottom:10px;scroll-margin-top:70px}
+.ox-q.done{border-color:var(--leaf);box-shadow:inset 3px 0 0 var(--leaf)}
+.ox-q h3{margin:0 0 6px;font-size:1rem;display:flex;gap:8px;align-items:baseline}
+.ox-q h3 small{color:var(--muted);font-weight:400;font-size:.8rem}
+.ox-text{white-space:pre-wrap;margin:0 0 8px;line-height:1.5}
+.ox-q img{max-width:100%;border-radius:8px;margin:4px 0 8px;display:block}
+.ox-bubs{display:flex;flex-wrap:wrap;gap:8px}
+.ox-b{font:inherit;font-weight:700;width:46px;height:46px;border-radius:50%;border:2px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer;padding:0}
+.ox-b[aria-pressed="true"]{background:var(--leaf);border-color:var(--leaf);color:#fff}
+.ox-opts{display:grid;gap:6px}
+.ox-opt{font:inherit;text-align:left;padding:10px 12px;border-radius:10px;border:2px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer;display:flex;gap:10px;align-items:baseline}
+.ox-opt b{flex:0 0 22px}
+.ox-opt[aria-pressed="true"]{border-color:var(--leaf);background:var(--leaf-soft)}
+.ox-tf{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px 10px;align-items:center}
+.ox-tf .ox-b{width:auto;height:40px;border-radius:20px;padding:0 14px;font-size:.9rem}
+.ox-tfp{display:flex;gap:6px}
+.ox-note{font-size:.88rem;color:var(--muted);background:var(--bg);border-radius:8px;padding:8px 10px}
 .qr-full{position:fixed;inset:0;background:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:20;gap:16px;padding:20px;color:#000}
 .qr-full svg{width:min(80vh,90vw);height:min(80vh,90vw)}
 .medal1 td{background:var(--iodine-soft)}
@@ -708,6 +740,7 @@ body.student #studentApp{display:block}
     <a href="#s-exams">Миний шалгалтууд</a>
     <a href="#s-mat">Шалгалтын материал</a>
     <a href="#s-sheet">Хариултын хуудас</a>
+    <a href="#s-online">📱 Цахим шалгалт</a>
     <a href="#s-cls">Ангиуд, нэрс</a>
     <a href="#s-back">Нөөц</a>
     <a href="#invitePanel" id="secOwn" hidden>Багш нарын эрх</a>
@@ -801,6 +834,13 @@ body.student #studentApp{display:block}
     <div class="sheet-preview" id="sPreview"></div>
     <div class="btns"><button class="btn" id="sPrint">Хуудас хэвлэх</button></div>
     <div class="msg" id="sMsg" role="status"></div>
+  </div>
+
+  <div class="panel" id="s-online">
+    <h2>📱 Цахим шалгалт</h2>
+    <p class="hint">Шалгалтаа <b>цаасгүйгээр</b> авна: сурагчид QR код уншуулаад утаснаасаа хариулна. Хариулт ирэх тусам энэ шалгалтын
+      анализ, дүн <b>өөрөө бүтнэ</b> — хуудас хэвлэх, уншуулах шаардлагагүй. Цаасан хуудастай хольж ч болно.</p>
+    <div id="oeBody"></div>
   </div>
 
   <div class="panel" id="s-cls">
@@ -1080,6 +1120,7 @@ body.student #studentApp{display:block}
   <div class="panel">
     <h2>Сорилын дүн ба анализ</h2>
     <p class="hint">Сурагчдын илгээсэн хариулт энд гарна: эрэмбэ, оноо (100-аас), хугацаа, түвшин, ороогүй сурагчид, хамгийн их алдсан үгс. Сурагчийн нэр дээр дарвал үг бүрт юу гэж бичсэнийг харна.</p>
+    <div id="vHist"></div>
     <div class="row">
       <div style="flex:3 1 280px"><label for="vQuizSel">Сорил</label><select id="vQuizSel"><option value="">Холболт шалгасны дараа жагсаалт гарна</option></select></div>
     </div>
@@ -1129,6 +1170,7 @@ body.student #studentApp{display:block}
         <a href="#h-print"><i>🖨</i>Хариултын хуудас хэвлэх</a></div>
       <div class="hp-grp"><h4>Дүн гаргах</h4>
         <a href="#h-scan"><i>📷</i>Хариулт оруулах, уншуулах</a>
+        <a href="#h-online"><i>📱</i>Цахим шалгалт (QR)</a>
         <a href="#h-ana"><i>📊</i>Анализ</a>
         <a href="#h-fin"><i>📈</i>Нэгдсэн анализ</a></div>
       <div class="hp-grp"><h4>Бусад</h4>
@@ -1157,7 +1199,7 @@ body.student #studentApp{display:block}
     <h3>Дээд талын 6 цонх</h3>
     <table>
       <tr><th>Цонх</th><th>Юунд хэрэглэх</th></tr>
-      <tr><td><b>1. Шалгалт</b></td><td>Дотроо табуудтай: <b>Миний шалгалтууд · Шалгалтын материал · Хариултын хуудас · Ангиуд, нэрс · Нөөц</b>. Программын эзэнд <b>Багш нарын эрх</b> таб нэмэгдэнэ.</td></tr>
+      <tr><td><b>1. Шалгалт</b></td><td>Дотроо табуудтай: <b>Миний шалгалтууд · Шалгалтын материал · Хариултын хуудас · Цахим шалгалт · Ангиуд, нэрс · Нөөц</b>. Программын эзэнд <b>Багш нарын эрх</b> таб нэмэгдэнэ.</td></tr>
       <tr><td><b>2. Хариулт оруулах</b></td><td>Сурагчдын хариултыг камераар, зургаар, гараар эсвэл Excel-ээр оруулах.</td></tr>
       <tr><td><b>3. Анализ</b></td><td>Нэг шалгалтын дүн, график, асуултын чанар, дүнгийн хүснэгт, ерөнхий дүгнэлт, Excel, Word тайлан.</td></tr>
       <tr><td><b>4. Нэгдсэн анализ</b></td><td>Хэд хэдэн шалгалтыг нэгтгэж улирал, жилийн дүн гаргах.</td></tr>
@@ -1342,6 +1384,27 @@ body.student #studentApp{display:block}
   </details>
 
   <!-- ======================= -->
+  <details class="panel hp hp-sec" id="h-online">
+    <summary><i class="hp-ic">📱</i><span>Цахим шалгалт (QR)</span><small>цаасгүй, утаснаас</small></summary>
+    <div class="hp-short"><b>Товчхондоо</b> "1. Шалгалт → <b>📱 Цахим шалгалт</b>" таб. Хугацаа, ангиудаа сонгоод <b>"QR үүсгэж нийтлэх"</b>. Сурагчид QR уншуулж утаснаасаа хариулна. Хариулт ирэх бүрд энэ шалгалтын <b>анализ өөрөө бүтнэ</b>.</div>
+    <div class="hp-step"><div class="hp-num">1</div><div><b>Шалгалтын материалаа оруулна</b>
+      Асуулт, зөв хариултаа ердийнх шиг оруулна. Асуултын текст, сонголтыг бичсэн бол сурагчийн утсан дээр гарна — бичээгүй бол зөвхөн "1. A B C D" гэсэн хариултын хуудас гарч, асуултыг цаасан дээрээс уншина.</div></div>
+    <div class="hp-step"><div class="hp-num">2</div><div><b>Нийтлэх</b>
+      Хугацаа (жишээ нь 50 минут), нэвтрэх арга, оролцох ангиудаа сонгоод <b>"📱 QR үүсгэж нийтлэх"</b>. QR-ыг "QR томоор харуулах"-аар проектороор харуулна.</div></div>
+    <div class="hp-step"><div class="hp-num">3</div><div><b>Сурагчид өгнө</b>
+      Ангиа, нэр эсвэл кодоо сонгоод "Эхлэх" дарна. Хугацаа тэр мөчөөс тоологдож, дуусахад хариулт өөрөө илгээгдэнэ.</div></div>
+    <div class="hp-step"><div class="hp-num">4</div><div><b>Хариулт, анализ</b>
+      Цахим шалгалтын табд хэн өгч байгаа, хэн дуусгасан, хэн ороогүй нь 10 секунд тутам шинэчлэгдэнэ. Дууссан хариулт бүр <b>"3. Анализ"</b>-д өөрөө орно.</div></div>
+    <div class="hp-warn"><b>Хуулахаас сэргийлэх:</b> шалгалтын үеэр өөр цонх, программ руу <b>5 секундээс удаан</b> гарвал эхний удаад анхааруулна, <b>2 дахь удаад шалгалт шууд дуусна</b>. Утасны дэлгэцийг унтраах, хуудсаа дахин ачаалах нь ч гарсанд тооцогдоно — сурагчдад урьдчилан хэлээрэй.</div>
+    <ul class="hp-list">
+      <li><b>Зөв хариулт сурагчийн утсанд огт очихгүй</b> — дүнг таны программ бодно.</li>
+      <li>Хувилбартай шалгалтад кодоор нь хуваарилна: <b>01 → А, 02 → Б…</b></li>
+      <li>IV хэсгийн задгай даалгаврын оноог "2. Хариулт оруулах"-аас өгнө.</li>
+      <li>Шалгалт дуусахад <b>"Шалгалтыг хаах"</b> дарна. "Дахин өгүүлэх" нь нэг сурагчид дахин өгөх боломж олгоно.</li>
+    </ul>
+  </details>
+
+  <!-- ======================= -->
   <details class="panel hp hp-sec" id="h-ana">
     <summary><i class="hp-ic">📊</i><span>Анализ</span><small>юуг яаж уншдаг вэ</small></summary>
     <div class="hp-short"><b>Товчхондоо</b> "3. Анализ" хариулт орсон даруйд өөрөө бүтнэ. Дээд талаас <b>Анги</b>, <b>Хувилбар</b>, сурагчийг <b>нэрээр эсвэл кодоор</b> харуулахыг сонгоно. Дээрх цэсээр хэсэг хооронд шилжинэ — <b>улаан тоо</b> нь анхаарах зүйлийн тоо.</div>
@@ -1411,6 +1474,7 @@ body.student #studentApp{display:block}
     <div class="hp-step"><div class="hp-num">3</div><div><b>Ангиудаа чагтлаад "Сорил нийтлэх"</b> — QR кодыг проектороор харуулах эсвэл холбоосыг чат руу хуулна.</div></div>
     <div class="hp-step"><div class="hp-num">4</div><div><b>"Сорилын дүн ба анализ"</b> — эрэмбэ, оноо, хугацаа, ороогүй сурагчид, хамгийн их алдсан үгс. Үсгийн алдаатай боловч зөвийг <b>"Зөв болгох"</b>-оор засна.</div></div>
     <div class="hp-warn">Сорил дуусахад <b>"Сорилыг хаах"</b> дарна — эс тэгвээс сурагчид дараа ч орох боломжтой.</div>
+    <div class="hp-ok"><b>Сүүлийн 5 сорил</b> "Сорилын дүн ба анализ" хэсгийн дээд талд карт хэлбэрээр харагдана — "Анализ харах" дарж дүнг нь нээнэ. Хэрэггүй болсныг <b>"Устгах"</b>-аар (асууж баталгаажуулсны дараа) бүрмөсөн устгана. Түүнээс өмнөх сорилууд "Сорил" цэснээс сонгогдоно.</div>
   </details>
 
   <!-- ======================= -->
@@ -2286,6 +2350,7 @@ function renderSetup(){
   $('#title').value=state.exam.title;
   $('#edate').value=state.exam.date||'';
   renderExams();renderRosterSetup();renderSheetPanel();renderVariants();if(typeof renderCloud==='function'&&$('#cApi'))renderCloud();
+  {const so=$('#s-online');if(so&&!so.classList.contains('sec-off')&&window.oeRender)oeRender();}
   const [n1,n2,n3,n4]=partCount();
   $('#qcount').value=n1;$('#qcount2').value=n2;$('#qcount3').value=n3;$('#qcount4').value=n4;$('#optn').value=optN();
   $('#p2opts').hidden=!n2;$('#p2hint').hidden=false;$('#p2mode').value=state.exam.p2mode||'exact';$('#p2n').value=p2N();
@@ -5584,6 +5649,30 @@ function renderVQuizList(){
   sel.innerHTML=vList.length?vList.map(q=>`<option value="${esc(q.id)}"${q.id===vSel?' selected':''}>${esc(q.title||'Нэргүй сорил')} — ${esc(when(q.created))}, ${q.count} оролдлого${q.open?'':', хаалттай'}</option>`).join('')
     :'<option value="">'+(vSb()?'Сорил алга. Доорх "Шинэ сорил үүсгэх"-ээр нэмнэ үү.':vcfg().api?'Сорил алга. "Холболт шалгах" дарж шинэчилнэ үү.':'Холболт шалгасны дараа жагсаалт гарна')+'</option>';
   const q=vList.find(x=>x.id===vSel);$('#vToggle').textContent=q&&!q.open?'Сорилыг нээх':'Сорилыг хаах';
+  vHistRender(when);
+}
+/* Сүүлийн 5 сорил: дарвал дүн, анализ нь нээгдэнэ. Хуучныг устгахаас өмнө заавал асууна. Бүх сорил (5-аас олон байсан ч)
+   дээрх цэснээс сонгогдох хэвээр — серверт хадгалагдсаар байна. */
+function vHistRender(when){
+  const box=$('#vHist');if(!box)return;
+  const last=vList.slice(0,5);
+  if(!last.length){box.innerHTML='';return;}
+  box.innerHTML=`<h3 style="margin:4px 0 8px;font-size:1rem">Сүүлийн ${last.length} сорил</h3>
+    <div class="vh-list">${last.map(q=>`<div class="vh-card${q.id===vSel?' on':''}">
+      <div class="vh-top"><b>${esc(q.title||'Нэргүй сорил')}</b><span class="oe-pill${q.open?'':' off'}">${q.open?'нээлттэй':'хаалттай'}</span></div>
+      <small>${esc(when(q.created))} · ${q.count} сурагч өгсөн</small>
+      <div class="vh-btns"><button type="button" class="btn${q.id===vSel?'':' ghost'}" data-vh="${esc(q.id)}">${q.id===vSel?'Нээлттэй байна':'Анализ харах'}</button>
+        <button type="button" class="btn danger" data-vhdel="${esc(q.id)}">Устгах</button></div></div>`).join('')}</div>
+    ${vList.length>5?`<p class="hint" style="margin:6px 0 0;font-size:.84rem">Өмнөх ${vList.length-5} сорил доорх "Сорил" цэснээс сонгогдоно.</p>`:''}`;
+  box.querySelectorAll('[data-vh]').forEach(b=>b.onclick=()=>{vSel=b.dataset.vh;vRes=null;vCls='';renderVQuizList();vShowQuiz();});
+  box.querySelectorAll('[data-vhdel]').forEach(b=>b.onclick=()=>vDeleteQuiz(b.dataset.vhdel));
+}
+async function vDeleteQuiz(id){
+  const q=vList.find(x=>x.id===id);if(!q)return;
+  if(!confirm('"'+(q.title||'Нэргүй сорил')+'" сорил болон '+q.count+' сурагчийн хариултыг бүрмөсөн устгах уу?\n\nУстгасны дараа сэргээх боломжгүй.'))return;
+  try{await vCall({action:'deleteQuiz',quizId:id});if(vSel===id){vSel='';vRes=null;}await vLoadList();vShowQuiz();
+    const m=$('#vResMsg');m.style.color='';m.textContent='Сорил устгагдлаа.';}
+  catch(e){$('#vResMsg').textContent=e.message;}
 }
 async function vLoadList(){const r=await vCall({action:'listQuizzes'});vList=r.quizzes||[];if(!vList.find(q=>q.id===vSel))vSel=vList[0]?vList[0].id:'';renderVQuizList();}
 ['vApi','vKey','vBase'].forEach(id=>$('#'+id).addEventListener('change',e=>{const c=vcfg();c[{vApi:'api',vKey:'key',vBase:'base'}[id]]=e.target.value.trim();save();
@@ -5743,10 +5832,7 @@ $('#vToggle').addEventListener('click',async()=>{
   try{await vCall({action:'setOpen',quizId:vSel,open:!q.open});await vLoadList();$('#vResMsg').style.color='';$('#vResMsg').textContent=q.open?'Сорил хаагдлаа. Сурагчид шинээр эхлүүлэх боломжгүй.':'Сорил нээгдлээ.';}
   catch(e){$('#vResMsg').textContent=e.message;}
 });
-$('#vDelete').addEventListener('click',async()=>{
-  const q=vList.find(x=>x.id===vSel);if(!q||!confirm('"'+q.title+'" сорил болон бүх сурагчийн хариултыг бүрмөсөн устгах уу?\n\nДараа нь сэргээх боломжгүй.'))return;
-  try{await vCall({action:'deleteQuiz',quizId:vSel});vSel='';vRes=null;await vLoadList();vShowQuiz();}catch(e){$('#vResMsg').textContent=e.message;}
-});
+$('#vDelete').addEventListener('click',()=>{if(vSel)vDeleteQuiz(vSel);});
 $('#vXlsx').addEventListener('click',()=>runExport(async()=>{
   if(!vRes)throw new Error('эхлээд үр дүнгээ шинэчилнэ үү');
   const q=vRes.quiz,R=vRanked();
@@ -5758,6 +5844,322 @@ $('#vXlsx').addEventListener('click',()=>runExport(async()=>{
   const ms={name:'Ороогүй',widths:[8,6,24],rows:[['Анги','Код','Нэр'].map(v=>({v,s:'h'})),...R.missing.map(s=>[s.cls,pad2(s.code),s.name])]};
   const name=fileSafe((q.title||'shine ug')+(vCls?' '+vCls:'')+' ur dun')+'.xlsx';saveBlob(buildXlsx([res,ws,ms]),name);return name;
 },'#vResMsg'));
+
+/* ---------- цахим шалгалт: багш ----------
+   Шалгалтыг QR / холбоосоор нийтэлж, сурагчдын утаснаас ирсэн хариултыг энэ шалгалтад сурагч бүрээр нь
+   оруулна — анализ, тайлан цаасан хуудастай яг адил бүтнэ. Зөв хариулт серверт очихгүй (supabase-setup-8).
+   Тохиргоо нь шалгалт дотроо хадгалагдана: state.exam.online = {id, minutes, login, classes, n, open}. */
+let oeRes=null,oeBusy=false;
+const OE_ST={started:'Өгч байна',done:'Дуусгасан',time:'Хугацаа дууссан',left:'Гарснаар дууссан'};
+const oeCfg=()=>state.exam.online||null;
+function oeLink(id){let base=isPublicPage()?location.origin+location.pathname:APP_URL;
+  if(!/\.html?$/.test(base)&&!base.endsWith('/'))base+='/';return base+'?exam='+encodeURIComponent(id);}
+/* Сурагчид очих мэдээлэл: асуултын текст, сонголт, зураг — зөв хариултгүй */
+function oePayload(o,withImg){
+  const qs=state.exam.questions,V=vCount(),own=vOwn();
+  const view=q=>{const p=isP2(q)?2:isP3(q)?3:isP4(q)?4:1,r={p};
+    if(String(q.text||'').trim())r.text=String(q.text).slice(0,3000);
+    if(p===1||p===2){r.o=qOpts(q);const ot=r.o.map((x,k)=>String((q.opts||[])[k]||'').slice(0,600));if(ot.some(Boolean))r.ot=ot;}
+    if(p===4){const st=Array.from({length:TF_N},(_,j)=>String((q.stmts||[])[j]||'').slice(0,600));if(st.some(Boolean))r.st=st;}
+    if(withImg&&safeImg(q.img))r.img=q.img;
+    return r;};
+  const classes=db.classes.filter(c=>o.classes.includes(c.name)).map(c=>({name:c.name,
+    students:c.students.map(nm=>({code:pad2(c.codes[nm]),name:nm}))}));
+  return{title:state.exam.title||'Шалгалт',date:state.exam.date||'',minutes:o.minutes,login:o.login,classes,n:qs.length,
+    vcount:V,own,order:!own&&V>1?Array.from({length:V},(_,v)=>vOrder(v)):null,
+    vq:own?Array.from({length:V},(_,v)=>qs.map(q=>view(qv(q,v)))):[qs.map(view)]};
+}
+let oeLoadedAt=0;
+function oeRender(){
+  const box=$('#oeBody');if(!box)return;
+  if(oeRes&&oeRes._ex!==state.id)oeRes=null;
+  if(!vSb()){box.innerHTML='<p class="hint">Цахим шалгалт авахын тулд дансаараа нэвтэрсэн байх шаардлагатай.</p>';return;}
+  const o=oeCfg(),qs=state.exam.questions,V=vOwn()?vCount():1;
+  const noKey=qs.filter(q=>[...Array(V).keys()].some(v=>!keyDone(qv(q,v)))).length;
+  const cls=db.classes.filter(c=>c.students.length),sel=new Set(o?o.classes:cls.map(c=>c.name));
+  box.innerHTML=`
+    ${o?`<p style="margin:0 0 10px">Төлөв: <span class="oe-pill${o.open?'':' off'}">${o.open?'● Нээлттэй — сурагчид орж болно':'Хаалттай'}</span></p>`:''}
+    <div class="row">
+      <div style="max-width:220px"><label for="oeMin">Хугацаа (минут)</label><input id="oeMin" type="number" min="1" max="300" value="${o?o.minutes:45}"></div>
+      <div style="flex:2 1 320px"><label for="oeLogin">Сурагч нэвтрэх арга</label><select id="oeLogin">
+        <option value="names"${o&&o.login==='code'?'':' selected'}>Ангиа сонгоод нэрсийн жагсаалтаас нэрээ дарна</option>
+        <option value="code"${o&&o.login==='code'?' selected':''}>Ангиа сонгоод 2 оронтой кодоо оруулна (илүү найдвартай)</option></select></div>
+    </div>
+    <div style="margin-top:10px"><label>Оролцох ангиуд</label><div class="roster" id="oeCls">${cls.length?cls.map(c=>
+      `<label class="chip" style="display:inline-flex;gap:6px;align-items:center;margin:0"><input type="checkbox" value="${esc(c.name)}" style="width:auto"${sel.has(c.name)?' checked':''}> ${esc(c.name)} (${c.students.length})</label>`).join('')
+      :'<span class="progress">"Ангиуд, нэрс" табаас анги, сурагчдын нэрс оруулна уу.</span>'}</div></div>
+    <ul class="oe-rules">
+      <li>Хугацаа сурагч бүрийн <b>"Эхлэх" дарснаас</b> тоологдоно. Дуусахад хариулт нь өөрөө илгээгдэнэ.</li>
+      <li>Шалгалтын үеэр өөр цонх, программ руу <b>5 секундээс удаан</b> гарвал: 1 дэх удаад анхааруулна, <b>2 дахь удаад шалгалт шууд дуусна</b>.</li>
+      ${V>1||vCount()>1?`<li>Хувилбарыг кодоор нь хуваарилна: <b>01 → А, 02 → Б${vCount()>2?', 03 → В':''}…</b></li>`:''}
+      <li>Хариулт ирэх бүрд энэ шалгалтын <b>анализ өөрөө шинэчлэгдэнэ</b>.</li>
+      ${qs.some(isP3)?'<li>IV хэсгийн задгай даалгаврыг сурагч утсан дээр бичихгүй — оноог нь "2. Хариулт оруулах"-аас өгнө.</li>':''}
+    </ul>
+    ${noKey?`<div class="hp-warn" style="margin:8px 0">${noKey} асуултын зөв хариулт дутуу байна. Дүн зөв гарахын тулд "Шалгалтын материал"-д оруулаарай (дараа нь оруулсан ч болно).</div>`:''}
+    <div class="btns"><button class="btn" id="oePub">${o?'Өөрчлөлтийг нийтлэх':'📱 QR үүсгэж нийтлэх'}</button>
+      ${o?`<button class="btn ghost" id="oeToggle">${o.open?'Шалгалтыг хаах':'Шалгалтыг нээх'}</button>
+        <button class="btn ghost" data-go="analysis">Анализ харах</button>
+        <button class="btn danger" id="oeDel">Цахим шалгалтыг устгах</button>`:''}</div>
+    <div class="msg" id="oeMsg" role="status"></div>
+    ${o?'<div id="oeShare"></div><div id="oeRes"></div>':''}`;
+  $('#oePub').onclick=oePublish;
+  if(o){$('#oeToggle').onclick=oeToggle;$('#oeDel').onclick=oeDelete;oeShare();oeRenderRes();if(!oeRes||Date.now()-oeLoadedAt>5000)oeLoad();}
+}
+const oeErr=t=>{const m=$('#oeMsg');if(m){m.style.color='var(--stain)';m.textContent=t;}};
+async function oePublish(){
+  const m=$('#oeMsg'),ex=state;
+  const minutes=Math.max(1,Math.min(300,Math.round(+$('#oeMin').value||45))),login=$('#oeLogin').value;
+  const classes=[...document.querySelectorAll('#oeCls input:checked')].map(x=>x.value);
+  if(!classes.length)return oeErr('Оролцох ангиа сонгоно уу.');
+  const o0=oeCfg(),started=oeRes&&oeRes.attempts&&oeRes.attempts.length;
+  if(o0&&started&&o0.n&&o0.n!==ex.exam.questions.length)
+    return oeErr('Сурагчид аль хэдийн өгч эхэлсэн тул асуултын тоог өөрчилж нийтлэх боломжгүй. Асуултын тоог '+o0.n+' болгож буцаана уу.');
+  if(o0&&started&&!confirm('Энэ шалгалтыг '+oeRes.attempts.length+' сурагч аль хэдийн өгсөн/өгч байна.\n\nАсуулт, зөв хариултаа зассан бол дүн нь шинэ зөв хариултаар бодогдоно. Нийтлэх үү?'))return;
+  let p=oePayload({minutes,login,classes},true),note='';
+  if(JSON.stringify(p).length>1500000){p=oePayload({minutes,login,classes},false);note=' Зураг их байсан тул зурагнуудыг сурагчдад харуулсангүй.';}
+  m.style.color='';m.textContent='Нийтэлж байна…';
+  try{const r=await sbRpc('oe_publish',{p_exam_id:ex.id,p_payload:p});
+    if(!r||!r.ok)throw new Error(r&&r.error||'Нийтэлж чадсангүй.');
+    ex.exam.online={id:r.id,minutes,login,classes,n:p.n,open:true};save();
+    if(state===ex){oeRender();const m2=$('#oeMsg');m2.style.color='';m2.textContent='Нийтлэгдлээ. QR кодыг проектороор харуулах эсвэл холбоосыг сурагчдад илгээнэ үү.'+note;}}
+  catch(e){oeErr(e.message);}
+}
+async function oeToggle(){const o=oeCfg();if(!o)return;
+  try{const r=await sbRpc('oe_set_open',{p_id:o.id,p_open:!o.open});if(!r.ok)throw new Error(r.error);o.open=!o.open;save();oeRender();}
+  catch(e){oeErr(e.message);}}
+async function oeDelete(){const o=oeCfg();if(!o)return;
+  if(!confirm('Цахим шалгалтыг устгах уу?\n\nQR, холбоос ажиллахаа болино. Аль хэдийн ирсэн хариултууд энэ шалгалтын анализд ХЭВЭЭР үлдэнэ.'))return;
+  try{await sbRpc('oe_delete',{p_id:o.id});delete state.exam.online;oeRes=null;save();oeRender();}
+  catch(e){oeErr(e.message);}}
+async function oeShare(){
+  const o=oeCfg(),box=$('#oeShare');if(!o||!box)return;const link=oeLink(o.id);
+  box.innerHTML=`<div class="qrbox" style="margin:14px 0"><div id="oeQr"><div class="progress">QR код үүсгэж байна...</div></div>
+    <div class="linkbox"><b>Сурагчдын холбоос</b><code>${esc(link)}</code>
+    <div class="btns" style="margin-top:6px"><button class="btn ghost" id="oeCopy">Холбоос хуулах</button><button class="btn ghost" id="oeBig">QR томоор харуулах</button></div></div></div>`;
+  $('#oeCopy').onclick=async()=>{try{await navigator.clipboard.writeText(link);$('#oeCopy').textContent='Хуулагдлаа';}catch(e){}};
+  try{const svg=await qrSvg(link);$('#oeQr').innerHTML=svg;
+    $('#oeBig').onclick=()=>{const d=document.createElement('div');d.className='qr-full';
+      d.innerHTML=`<h2 style="margin:0">${esc(state.exam.title||'Шалгалт')} · ${o.minutes} минут</h2>${svg}<div>Дэлгэц дээр дарж хаана</div>`;d.onclick=()=>d.remove();document.body.appendChild(d);};}
+  catch(e){$('#oeQr').innerHTML='<div class="progress">QR код үүсгэхэд интернэт хэрэгтэй. Холбоосыг хуулж ашиглана уу.</div>';$('#oeBig').hidden=true;}
+}
+/* Дууссан оролдлогуудыг энэ шалгалтын сурагчдын хариулт болгоно. IV хэсгийн оноог (багшийнх) хөндөхгүй. */
+function oeImport(ex,r){
+  const e=ex.exam?ex:state,qs=e.exam.questions,n=qs.length;let ch=0;
+  const saved=state;state=e;const O1=opts1();   // opts1/keyNorm нь тухайн шалгалтын тохиргоогоор
+  try{(r.attempts||[]).forEach(a=>{if(a.status==='started')return;
+    const src=Array.isArray(a.answers)?a.answers:[];
+    const ans=qs.map((q,i)=>{let x=String(src[i]==null?'':src[i]);if(isP3(q))return null;
+      if(isP2(q))return keyNorm(x);if(isP4(q)){x=tfNorm(x);return /^-+$/.test(x)?'':x;}return O1.includes(x)?x:'';});
+    let s=e.students.find(s=>s.cls===a.cls&&s.name===a.name);
+    if(!s){s={id:uid(),cls:a.cls,name:a.name,answers:Array(n).fill(''),v:a.v||0,src:'online'};e.students.push(s);ch++;}
+    while(s.answers.length<n)s.answers.push('');
+    ans.forEach((x,i)=>{if(x!==null&&s.answers[i]!==x){s.answers[i]=x;ch++;}});
+    if((s.v||0)!==(a.v||0)){s.v=a.v||0;ch++;}
+    if(s.src!=='online'){s.src='online';ch++;}});}
+  finally{state=saved;}
+  if(ch){save();if(state===e){if(!$('#tab-analysis').hidden)renderAnalysis();if(!$('#tab-entry').hidden)renderEntry();}}
+  return ch;
+}
+async function oeLoad(silent){
+  const o=oeCfg(),ex=state;if(!o||oeBusy||!vSb())return;oeBusy=true;
+  try{const r=await sbRpc('oe_results',{p_id:o.id});if(!r||!r.ok)throw new Error(r&&r.error||'Дүн татаж чадсангүй.');
+    if(state!==ex)return;oeRes=r;r._ex=ex.id;oeLoadedAt=Date.now();if(o.open!==r.open){o.open=r.open;save();}oeImport(ex,r);oeRenderRes();}
+  catch(e){if(!silent)oeErr(e.message);}
+  finally{oeBusy=false;}
+}
+function oeRenderRes(){
+  const box=$('#oeRes'),o=oeCfg();if(!box||!o)return;
+  if(!oeRes){box.innerHTML='<p class="hint">Дүн ачаалж байна…</p>';return;}
+  const A=oeRes.attempts||[],V=vCount(),now=oeRes.now,lim=o.minutes*60000;
+  const fin=A.filter(a=>a.status!=='started'),live=A.filter(a=>a.status==='started');
+  const miss=[];db.classes.filter(c=>o.classes.includes(c.name)).forEach(c=>c.students.forEach(nm=>{
+    if(!A.some(a=>a.cls===c.name&&a.name===nm))miss.push(c.name+' '+pad2(c.codes[nm])+' '+nm);}));
+  const nAns=a=>(a.answers||[]).filter(x=>String(x||'').replace(/-/g,'')).length;
+  const row=a=>`<tr><td>${esc(a.cls)}</td><td>${esc(pad2(a.code))}</td><td><b>${esc(a.name)}</b></td>${V>1?`<td>${VNAMES[a.v||0]}</td>`:''}
+    <td>${a.status==='started'?`<span class="m">${OE_ST.started}</span>`:a.status==='left'?`<span class="b">${OE_ST.left}</span>`:OE_ST[a.status]||esc(a.status)}</td>
+    <td class="num">${nAns(a)} / ${o.n}</td><td class="num">${a.leaves?`<span class="b">${a.leaves}</span>`:'0'}</td>
+    <td class="num">${a.status==='started'?'үлдсэн '+mmss(Math.max(0,(a.startMs+lim-now)/1000)):mmss(((a.endMs||now)-a.startMs)/1000)}</td>
+    <td><button class="btn danger" style="padding:3px 10px" data-oereset="${esc(a.attemptId)}">Дахин өгүүлэх</button></td></tr>`;
+  box.innerHTML=`<div class="stats" style="margin-top:6px">
+      <div class="stat"><b>${fin.length}</b><span>Дуусгасан</span></div>
+      <div class="stat"><b>${live.length}</b><span>Одоо өгч байгаа</span></div>
+      <div class="stat"><b>${miss.length}</b><span>Ороогүй</span></div></div>
+    <div class="scroll"><table><thead><tr><th>Анги</th><th>Код</th><th>Нэр</th>${V>1?'<th>Хувилбар</th>':''}<th>Төлөв</th><th class="num">Хариулсан</th><th class="num">Гарсан</th><th class="num">Хугацаа</th><th></th></tr></thead>
+      <tbody>${A.length?live.concat(fin).map(row).join(''):`<tr><td colspan="${V>1?9:8}" class="empty">Одоогоор хэн ч эхлээгүй байна.</td></tr>`}</tbody></table></div>
+    <div class="legend">Дууссан хариулт бүр энэ шалгалтын <b>анализд</b> өөрөө орно. "Гарсан" нь өөр цонх руу 5 секундээс удаан гарсан тоо. "Дахин өгүүлэх" нь оролдлогыг устгаж, дахин өгөх боломж олгоно. Жагсаалт 10 секунд тутам шинэчлэгдэнэ.</div>
+    ${miss.length?`<h3 style="margin:14px 0 6px">Ороогүй сурагчид (${miss.length})</h3><p style="margin:0">${miss.map(esc).join(', ')}</p>`:''}`;
+  box.querySelectorAll('[data-oereset]').forEach(b=>b.onclick=async()=>{
+    const a=A.find(x=>x.attemptId===b.dataset.oereset);
+    if(!confirm((a?a.name:'')+'-ийн оролдлогыг устгаж, шалгалтыг дахин өгөх боломж олгох уу?'))return;
+    try{await sbRpc('oe_reset',{p_att:b.dataset.oereset});oeLoad();}catch(e){oeErr(e.message);}});
+}
+/* Нээлттэй цахим шалгалтын хариултыг 10 секунд тутам татна (программ нээлттэй, дэлгэц идэвхтэй үед) */
+setInterval(()=>{const o=state&&state.exam&&state.exam.online;
+  if(o&&o.open&&vSb()&&document.visibilityState==='visible')oeLoad(true);},10000);
+
+/* ---------- цахим шалгалт: сурагч ---------- */
+const OX={id:'',exam:null,sel:{cls:'',c1:'',c2:''},who:null,att:null,v:0,answers:[],leaves:0,startMs:0,offset:0,
+  inExam:false,done:false,tick:null,awayAt:0,saveT:null,warn:false};
+const oxCall=(f,args,keep)=>fetch(SB_URL+'/rest/v1/rpc/'+f,{method:'POST',keepalive:!!keep,
+    headers:{apikey:SB_KEY,'Content-Type':'application/json'},body:JSON.stringify(args)})
+  .then(r=>r.json()).then(j=>j&&j.ok===undefined&&j.message?{ok:false,error:j.message}:j);
+const oxKey=k=>'ox_'+OX.id+'_'+k;
+const oxSave=(k,v)=>{try{localStorage.setItem(oxKey(k),JSON.stringify(v));}catch(e){}};
+const oxLoad=k=>{try{return JSON.parse(localStorage.getItem(oxKey(k)));}catch(e){return null;}};
+const oxDel=k=>{try{localStorage.removeItem(oxKey(k));}catch(e){}};
+function oxHead(sub){return`<div class="sq-head"><h1>${esc(OX.exam&&OX.exam.title||'Цахим шалгалт')}</h1>${sub?`<p>${sub}</p>`:''}</div>`;}
+function oxMsg(title,body,cls){sqEl().innerHTML=oxHead()+`<div class="panel" style="text-align:center"><h2 class="${cls||''}">${title}</h2>${body||''}</div>`;}
+async function startExam(){
+  document.body.classList.add('student');document.title='Цахим шалгалт';
+  OX.id=new URLSearchParams(location.search).get('exam')||'';
+  oxMsg('Ачаалж байна...');
+  try{const r=await oxCall('oe_public',{p_id:OX.id});if(!r.ok)return oxMsg(esc(r.error),'','b');OX.exam=r.exam;}
+  catch(e){return oxMsg('Шалгалтыг ачаалж чадсангүй','<p>Интернэт холболтоо шалгаад хуудсаа дахин ачаална уу.</p>','b');}
+  const pend=oxLoad('pending');
+  if(pend){try{const r=await oxCall('oe_submit',pend);if(r&&(r.ok||r.already))oxDel('pending');else return oxResend(pend);}catch(e){return oxResend(pend);}}
+  oxIdentity();
+}
+function oxIdentity(){
+  const digits=[...'0123456789'],S=OX.sel,q=OX.exam,byName=q.login==='names'&&q.classes.some(c=>c.students&&c.students.length);
+  const row=(key,label)=>`<div class="bublab">${label}</div><div class="bubrow">${digits.map(v=>`<button type="button" class="bub" data-k="${key}" data-v="${v}" aria-pressed="${S[key]===v}">${v}</button>`).join('')}</div>`;
+  const selCls=byName?q.classes.find(c=>c.name===S.cls):null,np=q.vq[0].filter(x=>x.p!==3).length;
+  sqEl().innerHTML=oxHead(np+' асуулт, '+q.minutes+' минут')+`<div class="panel">
+    <h2>Өөрийгөө сонгоно уу</h2>
+    <div class="bubgrp"><b>Анги</b><div class="clsbtns">${q.classes.map(c=>`<button type="button" class="clsbtn" data-cls="${esc(c.name)}" aria-pressed="${S.cls===c.name}">${esc(c.name)}</button>`).join('')}</div></div>
+    ${byName?(selCls?`<div class="bubgrp"><b>Нэр</b><div class="namebtns">${(selCls.students||[]).map(st=>`<button type="button" class="namebtn" data-code="${esc(st.code)}" aria-pressed="${OX.who&&OX.who.cls===selCls.name&&OX.who.code===st.code}"><small>${esc(st.code)}</small>${esc(st.name)}</button>`).join('')}</div></div>`:'')
+      :`<div class="bubgrp"><b>Код</b>${row('c1','1-р орон')}${row('c2','2-р орон')}</div>`}
+    <div class="sq-who" id="oxWho">${OX.who?`Та: <b>${esc(OX.who.name)}</b> (${esc(OX.who.cls)}, код ${esc(OX.who.code)}). Зөв бол "Эхлэх" дарна уу.`:'Ангиа сонгоод '+(byName?'нэрээ дарна уу.':'кодоо бүрэн сонгоно уу.')}</div>
+    <ul class="sq-rules">
+      <li>Хугацаа <b>${q.minutes} минут</b>. "Эхлэх" дарснаас тоологдож, дуусахад хариулт тань өөрөө илгээгдэнэ.</li>
+      <li>Асуулт бүрт зөв гэж үзсэн хариултаа дарна. Хариултаа дуустал хүссэн үедээ сольж болно.</li>
+      <li><b>Шалгалтын үеэр өөр цонх, программ руу бүү гар.</b> 5 секундээс удаан гарвал эхний удаад анхааруулна, <b>2 дахь удаад шалгалт шууд дуусна.</b> Утасныхаа дэлгэцийг унтраахгүй байгаарай.</li>
+    </ul>
+    <div class="btns"><button class="btn" id="oxStart" ${OX.who?'':'disabled'} style="width:100%;padding:14px;font-size:1.1rem">Эхлэх</button></div>
+    <div class="msg" id="oxErr" style="color:var(--stain)"></div></div>`;
+  sqEl().querySelectorAll('.bub').forEach(b=>b.onclick=()=>{S[b.dataset.k]=S[b.dataset.k]===b.dataset.v?'':b.dataset.v;OX.who=null;oxIdentity();oxLookup();});
+  sqEl().querySelectorAll('.clsbtn').forEach(b=>b.onclick=()=>{S.cls=b.dataset.cls;OX.who=null;oxIdentity();if(!byName)oxLookup();});
+  sqEl().querySelectorAll('.namebtn').forEach(b=>b.onclick=()=>{const st=selCls.students.find(x=>String(x.code)===b.dataset.code);
+    OX.who={cls:selCls.name,code:String(st.code),name:st.name};oxIdentity();const s2=$('#oxStart');if(s2)s2.scrollIntoView({behavior:'smooth',block:'center'});});
+  $('#oxStart').onclick=oxBegin;
+}
+let oxLookT=null;
+function oxLookup(){
+  const S=OX.sel;if(!S.cls||!S.c1||!S.c2)return;const w=$('#oxWho'),code=S.c1+S.c2;w.textContent='Шалгаж байна...';clearTimeout(oxLookT);
+  oxLookT=setTimeout(async()=>{try{const r=await oxCall('oe_who',{p_id:OX.id,p_cls:S.cls,p_code:code});if(S.c1+S.c2!==code)return;
+    if(r.ok){OX.who={cls:S.cls,code,name:r.name};oxIdentity();}else w.textContent=r.error;}catch(e){w.textContent='Холболт тасарлаа. Дахин оролдоно уу.';}},250);
+}
+async function oxBegin(){
+  const b=$('#oxStart');b.disabled=true;b.textContent='Эхлүүлж байна...';
+  let r;try{r=await oxCall('oe_start',{p_id:OX.id,p_cls:OX.who.cls,p_code:OX.who.code});}
+  catch(e){b.disabled=false;b.textContent='Эхлэх';$('#oxErr').textContent='Холболт тасарлаа. Дахин оролдоно уу.';return;}
+  if(!r.ok){if(r.ended)return oxMsg(esc(r.error),'<p>Асуулт байвал багшдаа хандана уу.</p>','b');b.disabled=false;b.textContent='Эхлэх';$('#oxErr').textContent=r.error;return;}
+  OX.att=r.attemptId;OX.v=r.v||0;OX.startMs=r.startMs;OX.offset=r.now-Date.now();OX.leaves=r.leaves||0;
+  const n=OX.exam.n,loc=oxLoad('state'),srv=Array.isArray(r.answers)?r.answers:[];
+  OX.answers=Array.from({length:n},(_,i)=>String((loc&&loc.att===OX.att?loc.answers[i]:'')||srv[i]||''));
+  OX.inExam=true;OX.done=false;OX.warn=OX.leaves>0;
+  oxGuard();oxRender();OX.tick=setInterval(oxTick,500);oxTick();
+}
+const oxOrder=()=>{const o=OX.exam.order;return o&&o[OX.v]?o[OX.v]:[...Array(OX.exam.n).keys()];};
+const oxView=i=>(OX.exam.vq[OX.exam.own?OX.v:0]||OX.exam.vq[0])[i]||{p:1,o:['A','B','C','D']};
+const oxFilled=(i,q)=>{const a=String(OX.answers[i]||'');return q.p===4?a.replace(/-/g,'').length>0:!!a;};
+function oxCardInner(i,pos){
+  const q=oxView(i),a=String(OX.answers[i]||''),PL={1:'I',2:'II',3:'IV',4:'III'};
+  let body='';
+  if(q.p===1||q.p===2){
+    const on=x=>q.p===2?a.includes(x):a===x;
+    body=(q.p===2?'<p class="ox-note" style="margin:0 0 8px">Нэг буюу хэд хэдэн зөв хариулт сонгож болно.</p>':'')
+      +(q.ot?`<div class="ox-opts">${q.o.map((x,k)=>`<button type="button" class="ox-opt" data-i="${i}" data-o="${x}" aria-pressed="${on(x)}"><b>${x}.</b><span>${esc(q.ot[k]||'')}</span></button>`).join('')}</div>`
+        :`<div class="ox-bubs">${q.o.map(x=>`<button type="button" class="ox-b" data-i="${i}" data-o="${x}" aria-pressed="${on(x)}">${x}</button>`).join('')}</div>`);
+  }else if(q.p===4){
+    const t=(a+'----').slice(0,TF_N);
+    body=`<div class="ox-tf">${Array.from({length:TF_N},(_,j)=>`<span>${j+1}. ${esc(q.st&&q.st[j]||'')}</span>
+      <span class="ox-tfp"><button type="button" class="ox-b" data-i="${i}" data-j="${j}" data-o="Ү" aria-pressed="${t[j]==='Ү'}">Үнэн</button>
+      <button type="button" class="ox-b" data-i="${i}" data-j="${j}" data-o="Х" aria-pressed="${t[j]==='Х'}">Худал</button></span>`).join('')}</div>`;
+  }else body='<p class="ox-note" style="margin:0">Задгай даалгавар — хариултаа багшийн зааврын дагуу цаасан дээр бичнэ.</p>';
+  return`<h3>${pos+1}. <small>${PL[q.p]} хэсэг</small></h3>${q.text?`<p class="ox-text">${esc(q.text)}</p>`:''}
+    ${q.img&&safeImg(q.img)?`<img src="${safeImg(q.img)}" alt="${pos+1}-р асуултын зураг">`:''}${body}`;
+}
+function oxRender(){
+  const ord=oxOrder(),vn=OX.exam.vcount>1?' · '+VNAMES[OX.v]+' хувилбар':'';
+  sqEl().innerHTML=oxHead(esc(OX.who.name)+', '+esc(OX.who.cls)+vn)
+    +`<div class="ox-top"><span id="oxCnt"></span><span class="sq-timer" id="oxTime">--:--</span></div>`
+    +ord.map((i,pos)=>`<div class="ox-q${oxFilled(i,oxView(i))?' done':''}" id="oxq${i}" data-pos="${pos}">${oxCardInner(i,pos)}</div>`).join('')
+    +`<div class="panel"><div class="btns" style="margin:0"><button class="btn" id="oxSubmit" style="width:100%;padding:14px;font-size:1.1rem">Дуусгаж илгээх</button></div>
+      <div class="msg" id="oxSubMsg" style="color:var(--stain)"></div></div>`;
+  oxCount();
+  sqEl().onclick=oxClick;
+  $('#oxSubmit').onclick=oxAskSubmit;
+  if(OX.warn)oxWarn();
+}
+function oxCount(){const ord=oxOrder(),need=ord.filter(i=>oxView(i).p!==3),c=$('#oxCnt');
+  if(c)c.textContent='Хариулсан: '+need.filter(i=>oxFilled(i,oxView(i))).length+' / '+need.length;}
+function oxClick(e){
+  const b=e.target.closest('button[data-i]');if(!b||!OX.inExam)return;
+  const i=+b.dataset.i,q=oxView(i),o=b.dataset.o;let a=String(OX.answers[i]||'');
+  if(q.p===4){const t=(a+'----').slice(0,TF_N).split(''),j=+b.dataset.j;t[j]=t[j]===o?'-':o;a=t.join('');if(/^-+$/.test(a))a='';}
+  else if(q.p===2){a=a.includes(o)?a.replace(o,''):a+o;a=[...a].sort().join('');}
+  else a=a===o?'':o;
+  OX.answers[i]=a;
+  const card=$('#oxq'+i);card.innerHTML=oxCardInner(i,+card.dataset.pos);card.classList.toggle('done',oxFilled(i,q));
+  oxCount();oxPersist();
+}
+function oxPersist(){oxSave('state',{att:OX.att,answers:OX.answers});clearTimeout(OX.saveT);
+  OX.saveT=setTimeout(()=>{if(OX.inExam)oxCall('oe_save',{p_att:OX.att,p_answers:OX.answers}).then(r=>{if(r&&r.ended&&OX.inExam)oxFinish(r.status==='left'?'left':'time');}).catch(()=>{});},1200);}
+function oxTick(){
+  if(!OX.inExam)return;const left=(OX.startMs+OX.exam.minutes*60000-(Date.now()+OX.offset))/1000,t=$('#oxTime');
+  if(t){t.textContent='⏱ '+mmss(Math.max(0,left));t.classList.toggle('low',left<120);}
+  if(left<=0)oxFinish('time');
+}
+function oxAskSubmit(){
+  const need=oxOrder().filter(i=>oxView(i).p!==3),blank=need.filter(i=>!oxFilled(i,oxView(i))).length;
+  sqEl().insertAdjacentHTML('beforeend',`<div class="sq-overlay" id="oxAsk"><div class="panel"><h2>Шалгалтаа дуусгах уу?</h2>
+    <p>${blank?`<b class="b">${blank} асуултад хариулаагүй байна.</b> `:'Бүх асуултад хариулсан байна. '}Илгээсний дараа засах боломжгүй.</p>
+    <div class="btns"><button class="btn" id="oxYes">Тийм, илгээх</button><button class="btn ghost" id="oxNo">Буцах</button></div></div></div>`);
+  $('#oxNo').onclick=()=>$('#oxAsk').remove();$('#oxYes').onclick=()=>{$('#oxAsk').remove();oxFinish('done');};
+}
+function oxWarn(){
+  if($('#oxWarn'))return;
+  sqEl().insertAdjacentHTML('beforeend',`<div class="sq-overlay" id="oxWarn"><div class="panel"><h2 class="b">⚠ Анхааруулга</h2>
+    <p>Та шалгалтаас <b>гарлаа</b>. Энэ нь багшид харагдана.</p><p><b>Дахин 5 секундээс удаан гарвал шалгалт тань шууд дуусна.</b> Хугацаа үргэлжлэн тоологдож байгаа.</p>
+    <div class="btns"><button class="btn" id="oxWarnOk" style="width:100%">Ойлголоо, үргэлжлүүлэх</button></div></div></div>`);
+  $('#oxWarnOk').onclick=()=>{OX.warn=false;$('#oxWarn').remove();};
+}
+/* 5 секундээс удаан өөр цонх, программ руу гарсныг тоолно: 1 дэх удаад анхааруулга, 2 дахь удаад дуусгана */
+function oxAway(){if(OX.inExam&&!OX.done&&!OX.awayAt)OX.awayAt=Date.now();}
+function oxBack(){
+  if(!OX.inExam||OX.done||!OX.awayAt)return;const d=Date.now()-OX.awayAt;OX.awayAt=0;if(d<5000)return;
+  OX.leaves++;
+  if(OX.leaves>=2)return oxFinish('left');
+  OX.warn=true;oxWarn();oxCall('oe_leave',{p_att:OX.att},true).then(r=>{if(r&&r.ended&&OX.inExam)oxFinish('left');}).catch(()=>{});
+}
+let oxGuarded=false;
+function oxGuard(){
+  if(oxGuarded)return;oxGuarded=true;
+  document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden')oxAway();else oxBack();});
+  let bt=null;
+  window.addEventListener('blur',()=>{clearTimeout(bt);bt=setTimeout(()=>{if(!document.hasFocus())oxAway();},400);});
+  window.addEventListener('focus',()=>{clearTimeout(bt);oxBack();});
+  ['copy','cut','contextmenu'].forEach(ev=>document.addEventListener(ev,e=>{if(OX.inExam)e.preventDefault();}));
+  window.addEventListener('beforeunload',e=>{if(OX.inExam&&!OX.done){e.preventDefault();e.returnValue='';}});
+}
+async function oxFinish(reason){
+  if(OX.done)return;OX.done=true;OX.inExam=false;clearInterval(OX.tick);clearTimeout(OX.saveT);
+  const body={p_att:OX.att,p_answers:OX.answers,p_reason:reason};
+  oxSave('pending',body);oxDel('state');
+  oxMsg('Илгээж байна...','<p>Түр хүлээнэ үү.</p>');
+  try{const r=await oxCall('oe_submit',body,true);oxShowResult(r,reason);}catch(e){oxResend(body);}
+}
+function oxShowResult(r,reason){
+  if(r&&(r.ok||r.already)){oxDel('pending');
+    const need=oxOrder().filter(i=>oxView(i).p!==3),got=need.filter(i=>oxFilled(i,oxView(i))).length;
+    oxMsg(reason==='left'?'Та шалгалтаас 2 удаа гарсан тул шалгалт дууслаа':reason==='time'?'⏱ Хугацаа дууслаа':'✅ Шалгалт амжилттай илгээгдлээ',
+      `<div class="sq-big">${got} / ${need.length}</div><p>асуултад хариулсан. Таны хариулт багшид очлоо — дүнгээ багшаасаа сонсоорой.</p>`,reason==='left'?'b':'');}
+  else oxMsg('Илгээж чадсангүй',`<p>${esc(r&&r.error||'')}</p>`,'b');
+}
+function oxResend(body){
+  oxMsg('Хариулт илгээгдээгүй байна','<p>Таны хариулт энэ утсан дээр хадгалагдсан байна. Интернэт холболтоо шалгаад доорх товчийг дарна уу.</p><div class="btns" style="justify-content:center"><button class="btn" id="oxRe">Дахин илгээх</button></div>','b');
+  $('#oxRe').onclick=async()=>{try{const r=await oxCall('oe_submit',body);oxShowResult(r,body.p_reason);}catch(e){oxResend(body);}};
+}
 
 /* ---------- vocabulary quiz: student page ---------- */
 const SQ={api:'',quizId:'',quiz:null,sel:{cls:'',c1:'',c2:''},who:null,att:null,order:[],opt:{},i:0,answers:[],leaves:0,done:false,tick:null,offset:0,lastLeave:0,warnPending:false,inQuiz:false};
@@ -6045,6 +6447,7 @@ function buildSecNav(box){
     const grp=x=>x==='s-mat'?'s-exams':x;
     [...nav.parentElement.children].forEach(c=>{if(c!==nav)c.classList.toggle('sec-off',grp(ids.includes(c.id)?c.id:'s-back')!==grp(id));});
     nav.querySelectorAll('a').forEach(a=>a.classList.toggle('on',a.getAttribute('href')==='#'+id));
+    if(id==='s-online'&&window.oeRender)oeRender();
     const el=document.getElementById(id),top=(id==='s-mat'&&el?el:nav.parentElement).getBoundingClientRect().top+scrollY-hdrH()-(id==='s-mat'?nav.offsetHeight+12:8);
     if(id==='s-mat'||scrollY>top)scrollTo(0,Math.max(0,top));
   };
@@ -6949,8 +7352,8 @@ document.addEventListener('click',e=>{
   setTimeout(()=>{const f=$(b.dataset.lp==='up'?'#upName':'#inEmail');if(f&&!f.closest('[hidden]'))f.focus();},120);
 });
 
-if(new URLSearchParams(location.search).get('quiz'))startStudent();
-else authBoot();
+{const sp=new URLSearchParams(location.search);
+  if(sp.get('quiz'))startStudent();else if(sp.get('exam'))startExam();else authBoot();}
 </script>
 </body>
 </html>
