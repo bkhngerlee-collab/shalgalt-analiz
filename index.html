@@ -83,10 +83,16 @@ nav button[aria-selected="true"]::after{background:var(--leaf);transform:scaleX(
 .sn-ic{font-style:normal;margin-right:6px;font-size:1.05em;line-height:1}
 /* Том дэлгэц дээр цонхны цэс (Шалгалт, Хариулт оруулах, Анализ) зүүн талд дээрээс доош жагсана */
 @media(min-width:1100px){
-  .wrap{max-width:1240px}
-  .has-side{display:grid;grid-template-columns:228px minmax(0,1fr);column-gap:22px;align-items:start}
+  /* Цэс дэлгэцийн зүүн захад наалдана, агуулга үлдсэн зайн голд байрлана.
+     Цэсгүй цонхнууд (Заавар, Шинэ үг г.м.) өмнөх шигээ голдоо 1240 өргөнтэй. */
+  .wrap{max-width:none}
+  main>section{max-width:1240px;margin:0 auto}
+  main>#tab-setup,main>#tab-entry,main>#tab-analysis{max-width:none}
+  #analysis:not(.has-side){max-width:1240px;margin:0 auto}
+  .has-side{display:grid;grid-template-columns:236px minmax(0,1fr);column-gap:28px;align-items:start}
   .has-side[hidden]{display:none}
   .has-side>*{grid-column:2;min-width:0}
+  .has-side>:not(.secnav){width:100%;max-width:1180px;justify-self:center}
   .has-side>.secnav{grid-column:1;grid-row:1/span 60;flex-direction:column;flex-wrap:nowrap;gap:3px;
     top:calc(var(--hdr,112px) + 10px);margin:0;padding:10px;background:var(--surface);border:1px solid var(--line);
     border-radius:var(--radius);box-shadow:var(--shadow)}
