@@ -81,23 +81,24 @@ nav button[aria-selected="true"]::after{background:var(--leaf);transform:scaleX(
 .secnav a.on{background:var(--leaf);border-color:var(--leaf);color:#fff;font-weight:600}
 @media (prefers-color-scheme:dark){.secnav a.on{color:#0e1a15}}
 .sn-ic{font-style:normal;margin-right:6px;font-size:1.05em;line-height:1}
-/* Том дэлгэц дээр "Шалгалт", "Хариулт оруулах" цонхны цэс зүүн талд дээрээс доош жагсана */
+/* Том дэлгэц дээр цонхны цэс (Шалгалт, Хариулт оруулах, Анализ) зүүн талд дээрээс доош жагсана */
 @media(min-width:1100px){
   .wrap{max-width:1240px}
-  #tab-setup,#tab-entry{display:grid;grid-template-columns:228px minmax(0,1fr);column-gap:22px;align-items:start}
-  #tab-setup[hidden],#tab-entry[hidden]{display:none}
-  #tab-setup>*,#tab-entry>*{grid-column:2;min-width:0}
-  #tab-setup>.secnav,#tab-entry>.secnav{grid-column:1;grid-row:1/span 60;flex-direction:column;flex-wrap:nowrap;gap:3px;
+  .has-side{display:grid;grid-template-columns:228px minmax(0,1fr);column-gap:22px;align-items:start}
+  .has-side[hidden]{display:none}
+  .has-side>*{grid-column:2;min-width:0}
+  .has-side>.secnav{grid-column:1;grid-row:1/span 60;flex-direction:column;flex-wrap:nowrap;gap:3px;
     top:calc(var(--hdr,112px) + 10px);margin:0;padding:10px;background:var(--surface);border:1px solid var(--line);
     border-radius:var(--radius);box-shadow:var(--shadow)}
-  #tab-setup>.secnav a,#tab-entry>.secnav a{display:flex;align-items:center;gap:2px;border-radius:10px;border-color:transparent;
+  .has-side>.secnav a{display:flex;align-items:center;gap:2px;border-radius:10px;border-color:transparent;
     background:transparent;padding:10px 12px;font-size:.93rem;white-space:normal;color:var(--ink)}
-  #tab-setup>.secnav a .sn-ic,#tab-entry>.secnav a .sn-ic{font-size:1.2em;width:1.6em;text-align:center;margin-right:8px;flex:0 0 auto}
-  #tab-setup>.secnav a:hover,#tab-entry>.secnav a:hover{background:var(--leaf-soft);border-color:transparent;color:var(--leaf)}
-  #tab-setup>.secnav a.on,#tab-entry>.secnav a.on{background:var(--leaf);color:#fff}
-  #tab-setup>.secnav a[hidden],#tab-entry>.secnav a[hidden]{display:none}
+  .has-side>.secnav a .sn-ic{font-size:1.2em;width:1.6em;text-align:center;margin-right:8px;flex:0 0 auto}
+  .has-side>.secnav a .sn-b{margin-left:auto}
+  .has-side>.secnav a:hover{background:var(--leaf-soft);border-color:transparent;color:var(--leaf)}
+  .has-side>.secnav a.on{background:var(--leaf);color:#fff}
+  .has-side>.secnav a[hidden]{display:none}
 }
-@media print{#tab-setup,#tab-entry{display:block}}
+@media print{.has-side{display:block}}
 main>section>.panel,.omr-card{scroll-margin-top:calc(var(--hdr,112px) + 56px)}
 /* Утсан дээр цэс нэг мөрөнд багтаж, хажуу тийш гүйлгэнэ */
 @media(max-width:660px){
@@ -758,7 +759,7 @@ body.student #studentApp{display:block}
 
 <main class="wrap">
 <!-- ============ 1. SETUP ============ -->
-<section id="tab-setup">
+<section id="tab-setup" class="has-side">
   <nav class="secnav noprint" data-tabs="setup" aria-label="Шалгалт цонхны хэсгүүд">
     <a href="#s-exams"><i class="sn-ic" aria-hidden="true">📚</i>Миний шалгалтууд</a>
     <a href="#s-mat"><i class="sn-ic" aria-hidden="true">📝</i>Шалгалтын материал</a>
@@ -971,7 +972,7 @@ body.student #studentApp{display:block}
 </section>
 
 <!-- ============ 2. ENTRY ============ -->
-<section id="tab-entry" hidden>
+<section id="tab-entry" class="has-side" hidden>
   <nav class="secnav noprint" aria-label="Хариулт оруулах цонхны хэсгүүд">
     <a href="#e-fill"><i class="sn-ic" aria-hidden="true">✍️</i>Гараар бөглөх</a>
     <a href="#e-scan"><i class="sn-ic" aria-hidden="true">📷</i>Зургаас унших</a>
@@ -6428,20 +6429,22 @@ $('#hpPrint').addEventListener('click',()=>{hpAll(true);setTimeout(()=>window.pr
 
 /* data-sec гэж тэмдэглэсэн хэсгүүдээс шилжих цэсийг өөрөө угсарна.
    Байхгүй хэсэг (жишээ нь чанарын шинжилгээ) бол цэсэнд ч гарахгүй. */
-const SEC_IC={'Ерөнхий':'ic-gauge','График':'ic-chart','Асуулт бүрээр':'ic-list','Чанар':'ic-shield','Агуулга':'ic-layers',
-  'Түвшин':'ic-stairs','Стандарт биелэлт':'ic-table','Дүнгийн хүснэгт':'ic-grid','Сурагч бүрээр':'ic-users'};
+const SEC_IC={'Ерөнхий':'🎯','График':'📊','Асуулт бүрээр':'❓','Чанар':'🔬','Агуулга':'📚',
+  'Түвшин':'📶','Стандарт биелэлт':'✅','Дүнгийн хүснэгт':'🧮','Сурагч бүрээр':'👥'};
 function buildSecNav(box){
   if(!box)return;
   const old=box.firstElementChild;
   if(old&&old.classList.contains('secnav'))old.remove();
   const secs=[...box.children].filter(e=>e.dataset&&e.dataset.sec);
+  box.classList.toggle('has-side',secs.length>=3);
   if(secs.length<3)return;
   const nav=document.createElement('nav');
   nav.className='secnav noprint';nav.setAttribute('aria-label','Цонхны хэсгүүд');
   secs.forEach((s,i)=>{
     if(!s.id)s.id='sec-'+(box.id||'x')+'-'+i;
-    const a=document.createElement('a');a.href='#'+s.id;a.textContent=s.dataset.sec;
-    if(SEC_IC[s.dataset.sec])a.className='ic '+SEC_IC[s.dataset.sec];
+    const a=document.createElement('a');a.href='#'+s.id;
+    if(SEC_IC[s.dataset.sec]){const ic=document.createElement('i');ic.className='sn-ic';ic.setAttribute('aria-hidden','true');ic.textContent=SEC_IC[s.dataset.sec];a.appendChild(ic);}
+    a.appendChild(document.createTextNode(s.dataset.sec));
     /* data-badge: тухайн хэсэгт анхаарах зүйлийн тоо (улаан) эсвэл зүгээр тоо (data-badge-n) */
     const bn=s.dataset.badge||s.dataset.badgeN;
     if(bn&&bn!=='0'){const b=document.createElement('span');b.className='sn-b'+(s.dataset.badge?'':' n');b.textContent=bn;
