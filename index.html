@@ -80,6 +80,24 @@ nav button[aria-selected="true"]::after{background:var(--leaf);transform:scaleX(
 .secnav a:hover{background:var(--leaf-soft);border-color:var(--leaf)}
 .secnav a.on{background:var(--leaf);border-color:var(--leaf);color:#fff;font-weight:600}
 @media (prefers-color-scheme:dark){.secnav a.on{color:#0e1a15}}
+.sn-ic{font-style:normal;margin-right:6px;font-size:1.05em;line-height:1}
+/* Том дэлгэц дээр "Шалгалт", "Хариулт оруулах" цонхны цэс зүүн талд дээрээс доош жагсана */
+@media(min-width:1100px){
+  .wrap{max-width:1240px}
+  #tab-setup,#tab-entry{display:grid;grid-template-columns:228px minmax(0,1fr);column-gap:22px;align-items:start}
+  #tab-setup[hidden],#tab-entry[hidden]{display:none}
+  #tab-setup>*,#tab-entry>*{grid-column:2;min-width:0}
+  #tab-setup>.secnav,#tab-entry>.secnav{grid-column:1;grid-row:1/span 60;flex-direction:column;flex-wrap:nowrap;gap:3px;
+    top:calc(var(--hdr,112px) + 10px);margin:0;padding:10px;background:var(--surface);border:1px solid var(--line);
+    border-radius:var(--radius);box-shadow:var(--shadow)}
+  #tab-setup>.secnav a,#tab-entry>.secnav a{display:flex;align-items:center;gap:2px;border-radius:10px;border-color:transparent;
+    background:transparent;padding:10px 12px;font-size:.93rem;white-space:normal;color:var(--ink)}
+  #tab-setup>.secnav a .sn-ic,#tab-entry>.secnav a .sn-ic{font-size:1.2em;width:1.6em;text-align:center;margin-right:8px;flex:0 0 auto}
+  #tab-setup>.secnav a:hover,#tab-entry>.secnav a:hover{background:var(--leaf-soft);border-color:transparent;color:var(--leaf)}
+  #tab-setup>.secnav a.on,#tab-entry>.secnav a.on{background:var(--leaf);color:#fff}
+  #tab-setup>.secnav a[hidden],#tab-entry>.secnav a[hidden]{display:none}
+}
+@media print{#tab-setup,#tab-entry{display:block}}
 main>section>.panel,.omr-card{scroll-margin-top:calc(var(--hdr,112px) + 56px)}
 /* Утсан дээр цэс нэг мөрөнд багтаж, хажуу тийш гүйлгэнэ */
 @media(max-width:660px){
@@ -742,13 +760,13 @@ body.student #studentApp{display:block}
 <!-- ============ 1. SETUP ============ -->
 <section id="tab-setup">
   <nav class="secnav noprint" data-tabs="setup" aria-label="Шалгалт цонхны хэсгүүд">
-    <a href="#s-exams">Миний шалгалтууд</a>
-    <a href="#s-mat">Шалгалтын материал</a>
-    <a href="#s-sheet">Хариултын хуудас</a>
-    <a href="#s-online">📱 Цахим шалгалт</a>
-    <a href="#s-cls">Ангиуд, нэрс</a>
-    <a href="#s-back">Нөөц</a>
-    <a href="#invitePanel" id="secOwn" hidden>Багш нарын эрх</a>
+    <a href="#s-exams"><i class="sn-ic" aria-hidden="true">📚</i>Миний шалгалтууд</a>
+    <a href="#s-mat"><i class="sn-ic" aria-hidden="true">📝</i>Шалгалтын материал</a>
+    <a href="#s-sheet"><i class="sn-ic" aria-hidden="true">🖨️</i>Хариултын хуудас</a>
+    <a href="#s-online"><i class="sn-ic" aria-hidden="true">📱</i>Цахим шалгалт</a>
+    <a href="#s-cls"><i class="sn-ic" aria-hidden="true">👥</i>Ангиуд, нэрс</a>
+    <a href="#s-back"><i class="sn-ic" aria-hidden="true">💾</i>Нөөц</a>
+    <a href="#invitePanel" id="secOwn" hidden><i class="sn-ic" aria-hidden="true">🔑</i>Багш нарын эрх</a>
   </nav>
   <div class="panel" id="s-exams">
     <h2>Миний шалгалтууд</h2>
@@ -955,10 +973,10 @@ body.student #studentApp{display:block}
 <!-- ============ 2. ENTRY ============ -->
 <section id="tab-entry" hidden>
   <nav class="secnav noprint" aria-label="Хариулт оруулах цонхны хэсгүүд">
-    <a href="#e-fill">Гараар бөглөх</a>
-    <a href="#e-scan">Зургаас унших</a>
-    <a href="#e-xlsx">Excel-ээр оруулах</a>
-    <a href="#e-list">Оруулсан сурагчид</a>
+    <a href="#e-fill"><i class="sn-ic" aria-hidden="true">✍️</i>Гараар бөглөх</a>
+    <a href="#e-scan"><i class="sn-ic" aria-hidden="true">📷</i>Зургаас унших</a>
+    <a href="#e-xlsx"><i class="sn-ic" aria-hidden="true">📗</i>Excel-ээр оруулах</a>
+    <a href="#e-list"><i class="sn-ic" aria-hidden="true">📋</i>Оруулсан сурагчид</a>
   </nav>
   <div class="panel" id="e-fill">
     <h2>Хариултын хуудас бөглөх</h2>
@@ -6436,6 +6454,8 @@ function buildSecNav(box){
 (function(){
   const hd=document.querySelector('header'),b=document.body,root=document.documentElement;
   const hdrH=()=>parseInt(getComputedStyle(root).getPropertyValue('--hdr'))||112;
+  /* Зүүн талын босоо цэс агуулгыг дарахгүй тул өндрийг нь тооцохгүй */
+  const snH=sn=>getComputedStyle(sn).flexDirection==='column'?0:sn.getBoundingClientRect().height;
   const setH=()=>root.style.setProperty('--hdr',Math.round(hd.getBoundingClientRect().height)+'px');
   const onScroll=()=>{
     const y=window.scrollY||root.scrollTop;
@@ -6451,7 +6471,7 @@ function buildSecNav(box){
     const el=document.querySelector(a.getAttribute('href'));if(!el)return;
     /* Эхлээд толгойг агшаагаад ДАРАА нь хэмжинэ — тэгэхгүй бол байрлал зөрнө */
     b.classList.add('sc');void hd.offsetHeight;setH();
-    const sn=a.closest('.secnav'),gap=hd.getBoundingClientRect().height+sn.getBoundingClientRect().height+12;
+    const sn=a.closest('.secnav'),gap=hd.getBoundingClientRect().height+snH(sn)+12;
     window.scrollTo(0,Math.max(0,el.getBoundingClientRect().top+window.scrollY-gap));
     setH();mark();
   });
@@ -6459,7 +6479,7 @@ function buildSecNav(box){
   const mark=()=>{
     const sn=[...document.querySelectorAll('.secnav')].find(n=>n.offsetParent!==null);
     if(!sn||sn.dataset.tabs)return;   // таб хэлбэрийн цэс өөрөө тодруулна
-    const links=[...sn.querySelectorAll('a')],lim=hdrH()+sn.getBoundingClientRect().height+24;
+    const links=[...sn.querySelectorAll('a')],lim=hdrH()+snH(sn)+24;
     let cur=links[0];
     links.forEach(a=>{const el=document.querySelector(a.getAttribute('href'));
       if(el&&el.offsetParent!==null&&el.getBoundingClientRect().top<=lim)cur=a;});
@@ -6483,7 +6503,7 @@ function buildSecNav(box){
     [...nav.parentElement.children].forEach(c=>{if(c!==nav)c.classList.toggle('sec-off',grp(ids.includes(c.id)?c.id:'s-back')!==grp(id));});
     nav.querySelectorAll('a').forEach(a=>a.classList.toggle('on',a.getAttribute('href')==='#'+id));
     if(id==='s-online'&&window.oeRender)oeRender();
-    const el=document.getElementById(id),top=(id==='s-mat'&&el?el:nav.parentElement).getBoundingClientRect().top+scrollY-hdrH()-(id==='s-mat'?nav.offsetHeight+12:8);
+    const el=document.getElementById(id),top=(id==='s-mat'&&el?el:nav.parentElement).getBoundingClientRect().top+scrollY-hdrH()-(id==='s-mat'?snH(nav)+12:8);
     if(id==='s-mat'||scrollY>top)scrollTo(0,Math.max(0,top));
   };
   let first='s-exams';try{first=localStorage.getItem('shalgalt-setup-sec')||first;}catch(x){}
