@@ -748,10 +748,18 @@ tr.pick{cursor:pointer} tr.pick:hover{background:var(--bg)} tr.sel{background:va
 .qtext{font-weight:400;margin-top:2px;white-space:pre-line}
 .qopts{font-size:.9rem;color:var(--muted);margin:4px 0 0;padding:0;list-style:none}
 .collapsible>summary{cursor:pointer;font-weight:600;color:var(--leaf)}
+.cls-warn{margin:8px 0 2px;padding:9px 12px;border-radius:10px;background:var(--iodine-soft);border:1px solid var(--iodine);color:var(--ink);font-size:.9rem}
 .chart-controls{display:flex;gap:12px;flex-wrap:wrap;margin:10px 0 14px}
 .chart-controls>div{flex:1 1 200px}
 .chart-box{overflow-x:auto}
 .chart-box svg{display:block;width:100%;height:auto;font-family:inherit}
+/* Графикийн дэвсгэр: хайрцаг дээрх өнгөний хувьсагчийг SVG доторх var(--…) удамшиж авна */
+.chart-box.cb-dark,.chart-box.cb-green{border-radius:18px;padding:18px 14px 12px;color:var(--ink);--pill-bg:transparent;--shadow:none}
+.chart-box.cb-dark{background:radial-gradient(120% 90% at 0% 0%,#24344A 0%,#161F2B 60%);
+  --ink:#EDF2F7;--muted:#97A6B7;--line:#2E3D50;--bg:#1E2A39;--surface:#161F2B;--leaf:#3DD68C;--iodine:#F6BE4F;--stain:#FF6B7D}
+.chart-box.cb-green{background:radial-gradient(120% 90% at 0% 0%,#17634A 0%,#0C3B2D 65%);
+  --ink:#F0FAF5;--muted:#A8D3BF;--line:#256B53;--bg:#11513D;--surface:#0C3B2D;--leaf:#7BE8AE;--iodine:#FFC83D;--stain:#FF8A96}
+.chart-box.cb-dark .pie-legend,.chart-box.cb-green .pie-legend{color:var(--ink)}
 .pie-wrap{display:flex;gap:20px;align-items:center;flex-wrap:wrap}
 .pie-wrap svg{width:260px;max-width:100%}
 .pie-legend{display:grid;gap:6px;font-size:.9rem}
@@ -1199,6 +1207,7 @@ body.student #studentApp{display:block}
       <div><label for="cls">Анги</label><select id="cls"></select></div>
       <div style="flex:2 1 220px"><label for="name">Сурагчийн нэр</label><input id="name" placeholder="Доороос сонгох эсвэл бичих"></div>
     </div>
+    <div class="cls-warn" id="clsWarn" role="alert" hidden></div>
     <div class="ef-tools">
       <label class="ef-find"><b>Хайлт:</b><input id="rFind" type="search" placeholder="🔍 Сурагч, дугаараар шүүх…" autocomplete="off" aria-label="Сурагчийг нэр, дугаараар шүүх"></label>
       <div class="ef-seg" id="rSeg" role="group" aria-label="Төлөвөөр шүүх">
@@ -2485,7 +2494,9 @@ function fixCodes(c){
 }
 db.classes.forEach(fixCodes);
 let entryCls='',editId=null,rosterCls='',entryVar=0;
-function openExam(id){state=db.exams.find(e=>e.id===id)||db.exams[0];db.cur=state.id;draft=[];selId=null;filterCls='';filterVar='';editId=null;
+function openExam(id){const prev=state&&state.id;state=db.exams.find(e=>e.id===id)||db.exams[0];
+  if(state.id!==prev){entryCls=examCls(state)||entryCls;const s=document.getElementById("sCls");if(s)s.innerHTML="";}  // шалгалт солиход тэр шалгалтын анги сонгогдоно
+  db.cur=state.id;draft=[];selId=null;filterCls='';filterVar='';editId=null;
   finalCls='';   // нэгдсэн анализ шинэ шалгалтын ангиас эхэлнэ
   matOpen='';    // шалгалт солиход материал дахин түгжигдэнэ
   save();renderSetup();}
@@ -2579,6 +2590,13 @@ function examName(e){
   s=s.replace(/\s*,\s*,/g,',').replace(/\(\s*\)/g,'').replace(/^[\s,.:\-–]+|[\s,.:\-–]+$/g,'').replace(/\s{2,}/g,' ');
   return s?s.charAt(0).toUpperCase()+s.slice(1):t;
 }
+/* Энэ шалгалтыг авах анги: багшийн сүүлд сонгосон → хариулт нь орсон сурагчдын хамгийн олон анги → шалгалтын ангийн түвшинтэй таарах анхны анги */
+function examCls(e){e=e||state;const has=n=>db.classes.some(c=>c.name===n);
+  if(e.exam.cls&&has(e.exam.cls))return e.exam.cls;
+  const cnt={};(e.students||[]).forEach(s=>{if(has(s.cls))cnt[s.cls]=(cnt[s.cls]||0)+1;});
+  const top=Object.keys(cnt).sort((a,b)=>cnt[b]-cnt[a])[0];if(top)return top;
+  const g=examGrade(e),c=g&&db.classes.find(k=>+classParts(k.name).grade===g);return c?c.name:"";}
+const clsGrade=n=>+classParts(n).grade||0;
 function examLabel(e){const g=examGrade(e);
   return(g?'['+g+'-р анги] ':'')+examName(e)+(e.exam.date?' · '+e.exam.date:'')+' · '+e.students.length+' сурагч';}
 let exGrade='all';try{exGrade=localStorage.getItem('shalgalt-ex-grade')||'all';}catch(x){}
@@ -3009,7 +3027,7 @@ $('#exFind').addEventListener('input',renderExams);
 $('#newExam').addEventListener('click',()=>{addExam(blank(5));$('#title').focus();});
 $('#copyExam').addEventListener('click',()=>{
   const e=blank(1);e.exam=JSON.parse(JSON.stringify(state.exam));e.exam.title=(state.exam.title||'Шалгалт')+' (давтан)';e.exam.date=today();
-  delete e.exam.online;delete e.exam.absent;   // цахим холбоос, ирц нь хуучин шалгалтынх
+  delete e.exam.online;delete e.exam.absent;delete e.exam.cls;   // цахим холбоос, ирц нь хуучин шалгалтынх
   addExam(e);$('#title').focus();$('#title').select();
 });
 function dlBackup(data,name){
@@ -3544,10 +3562,18 @@ $('#sample').addEventListener('click',()=>{
 function renderEntryClasses(){
   const sel=$('#cls');
   if(entryCls&&!db.classes.find(c=>c.name===entryCls))entryCls='';
-  if(!entryCls&&db.classes.length)entryCls=db.classes[0].name;
-  sel.innerHTML=db.classes.length?db.classes.map(c=>`<option${c.name===entryCls?' selected':''}>${esc(c.name)}</option>`).join('')
-    :'<option value="">Эхлээд "Шалгалтын сан" хэсэгт анги нэмнэ үү</option>';
+  if(!entryCls&&db.classes.length)entryCls=examCls()||db.classes[0].name;
+  const g=examGrade(state),opt=c=>`<option${c.name===entryCls?' selected':''}>${esc(c.name)}</option>`;
+  const mine=g?db.classes.filter(c=>clsGrade(c.name)===g):[],rest=db.classes.filter(c=>!mine.includes(c));
+  sel.innerHTML=!db.classes.length?'<option value="">Эхлээд "Шалгалтын сан" хэсэгт анги нэмнэ үү</option>'
+    :mine.length&&rest.length?`<optgroup label="Энэ шалгалтын анги (${g}-р)">${mine.map(opt).join('')}</optgroup><optgroup label="Бусад анги">${rest.map(opt).join('')}</optgroup>`
+    :db.classes.map(opt).join('');
+  clsWarn();
 }
+/* Шалгалт 11-р ангийнх атал 10А сонгогдсон бол анхааруулна */
+function clsWarn(){const w=$('#clsWarn');if(!w)return;const g=examGrade(state),cg=clsGrade(entryCls);
+  const bad=!!(g&&cg&&g!==cg);w.hidden=!bad;
+  if(bad)w.innerHTML=`⚠ Энэ шалгалт <b>${g}-р ангийнх</b>, харин <b>${esc(entryCls)}</b> анги сонгогдсон байна. Зөв шалгалт, зөв анги эсэхээ шалгана уу.`;}
 /* Энэ шалгалтад ирээгүй сурагчид: state.exam.absent = {анги:[нэр,...]} */
 const absList=cls=>((state.exam.absent||{})[cls])||[];
 const isAbsent=(cls,n)=>absList(cls).includes(n);
@@ -3615,7 +3641,7 @@ $('#fillKey').addEventListener('click',()=>{
   if(!state.exam.questions.some(q=>q.key)){m.style.color='var(--stain)';m.textContent='Энэ шалгалтад зөв хариулт оруулаагүй байна. "Шалгалтын сан" хэсэгт оруулна уу.';return;}
   draft=keyDraft();renderSheet();
   m.style.color='';m.textContent='Зөв хариултаар дүүргэлээ. Алдсан хариултыг нь дарж өөрчилнө үү.';});
-$('#cls').addEventListener('change',e=>{entryCls=e.target.value;$('#name').value='';editId=null;draft=[];$('#saveStudent').textContent='Хариултыг хадгалах';renderRoster();renderSheet();renderList();});
+$('#cls').addEventListener('change',e=>{entryCls=e.target.value;if(entryCls){state.exam.cls=entryCls;save();}clsWarn();$('#name').value='';editId=null;draft=[];$('#saveStudent').textContent='Хариултыг хадгалах';renderRoster();renderSheet();renderList();});
 $('#roster').addEventListener('click',e=>{const b=e.target.closest('[data-n]');if(!b)return;
   if(isAbsent(entryCls,b.dataset.n)){toggleAbsent(b.dataset.n);}pickStudent(b.dataset.n);});
 $('#roster').addEventListener('contextmenu',e=>{const b=e.target.closest('[data-n]');if(!b)return;e.preventDefault();toggleAbsent(b.dataset.n);});
@@ -4425,7 +4451,7 @@ function renderSheetPanel(){
   const nv=vCount();$('#sVarWrap').hidden=nv<2;
   if(nv>1){const cur=+($('#sVar').value||0)||0;
     $('#sVar').innerHTML=Array.from({length:nv},(_,v)=>`<option value="${v}"${v===cur?' selected':''}>${VNAMES[v]} хувилбар</option>`).join('');}
-  const sel=$('#sCls'),cur=sel.value;
+  const sel=$('#sCls'),cur=sel.value||examCls();
   sel.innerHTML=db.classes.map(c=>`<option${c.name===cur?' selected':''}>${esc(c.name)}</option>`).join('');
   const c=db.classes.find(x=>x.name===sel.value),m=$('#sMsg');m.textContent='';m.style.color='';
   let st=null;
@@ -4446,7 +4472,7 @@ $('#sLetters').addEventListener('change',e=>{
 });
 $('#sMode').addEventListener('change',renderSheetPanel);
 $('#sVar').addEventListener('change',renderSheetPanel);
-$('#sCls').addEventListener('change',renderSheetPanel);
+$('#sCls').addEventListener('change',e=>{if(e.target.value){state.exam.cls=entryCls=e.target.value;save();}renderSheetPanel();});
 function printPages(html,margin){
   const pa=$('#printArea');pa.innerHTML=html;document.body.classList.add('printing');
   const ps=document.createElement('style');ps.textContent='@page{size:A4;margin:'+(margin||'0')+'}';document.head.appendChild(ps);
@@ -4593,7 +4619,7 @@ function renderFinal(){
       <option value="trend"${finalChart==='trend'?' selected':''}>Ангийн дундаж, шалгалт бүрээр</option>
       <option value="students"${finalChart==='students'?' selected':''}>Сурагчдын эцсийн дүн</option>
       <option value="topics"${finalChart==='topics'?' selected':''}>Агуулга тус бүрийн нэгдсэн дүн</option></select></div></div>
-    <div class="chart-box">${chart}</div>
+    <div class="chart-box${cbCls()}">${chart}</div>
   </div>
   <div class="panel"><h2>Сурагч тус бүрийн эцсийн дүн</h2>
     <p class="hint">Эцсийн дүн нь сонгосон шалгалтуудын жигнэсэн дундаж. Шалгалт өгөөгүй бол (–) тэр шалгалтыг тооцохгүй. Ахиц нь өгсөн эхний болон сүүлийн шалгалтын зөрүү. "Дунджаас зөрүү" нь эцсийн дүн ангийн нэгдсэн дунджаас хэдэн хувиар зөрүүтэйг заана.</p>
@@ -4767,7 +4793,7 @@ const LIGHT={leaf:'#047857',iodine:'#A3620A',stain:'#B4314A',ink:'#101A16',muted
 function svgToPng(svg){
   return new Promise((res,rej)=>{
     const vb=(svg.match(/viewBox="0 0 ([\d.]+) ([\d.]+)"/)||[]),W=+vb[1]||640,H=+vb[2]||320,sc=2;
-    let src=svg.replace(/var\(--([a-z-]+)\)/g,(m,v)=>LIGHT[v]||'#000').replace(/style="[^"]*"/,'')
+    let src=svg.replace(/var\(--([a-z-]+)(?:,\s*([^)]+))?\)/g,(m,v,fb)=>LIGHT[v]||fb||'#000').replace(/style="[^"]*"/,'')
       .replace('<svg ',`<svg width="${W}" height="${H}" font-family="Arial,Helvetica,sans-serif" `);
     if(!/xmlns=/.test(src))src=src.replace('<svg','<svg xmlns="http://www.w3.org/2000/svg"');
     const img=new Image();
@@ -5351,7 +5377,9 @@ function omrMatch(it){
   it.cls=c?c.name:'';it.name='';
   if(c&&it.r.code){const n=c.students.find(x=>c.codes[x]===+it.r.code);if(n)it.name=n;}
 }
-const omrReady=it=>it.r.ok&&it.cls&&it.name&&!it.r.idAmb&&!it.r.amb.some(Boolean)
+/* Хуудсан дээрх анги нь сонгосон шалгалтын ангиас өөр бол — буруу шалгалт сонгогдсон байх магадлалтай */
+const gradeBad=gr=>{const g=examGrade(state);return!!(g&&+gr&&+gr!==g);};
+const omrReady=it=>it.r.ok&&it.cls&&it.name&&!gradeBad(it.r.grade)&&!it.r.idAmb&&!it.r.amb.some(Boolean)
   &&(it.r.p3idx||[]).every(i=>it.answers[i]!=='');
 async function omrAdd(files){
   const m=$('#omrMsg'),qs=state.exam.questions,letters=sheetLetters(),auto=$('#omrAuto').checked;let k=0,autoN=0;
@@ -5380,8 +5408,8 @@ function renderOmr(){
     const amb=it.answers.filter((a,i)=>r.amb[i]&&!isP3(qs[i])).length,
       empty=it.answers.filter((a,i)=>!a&&!isP3(qs[i])).length;
     const ex=it.cls&&it.name&&state.students.find(x=>x.cls===it.cls&&x.name===it.name);
-    const warn=!c?`<div class="omr-st b">${r.grade&&r.letter?esc(r.grade+r.letter)+' анги жагсаалтад алга.':'Анги уншигдсангүй.'} Ангиа доороос сонгоно уу.</div>`
-      :!it.name?`<div class="omr-st b">Ийм кодтой сурагч ${esc(c.name)} ангид алга. Сурагчаа доороос сонгоно уу.</div>`:'';
+    const warn=(gradeBad(r.grade)?`<div class="omr-st b">⚠ Энэ хуудас <b>${+r.grade}-р ангийнх</b>, харин сонгосон шалгалт <b>${examGrade(state)}-р ангийнх</b>. Буруу шалгалт сонгогдсон бол "Шалгалтын сан" хэсгээс зөв шалгалтаа сонгоод дахин уншуулна уу.</div>`:"")+(!c?`<div class="omr-st b">${r.grade&&r.letter?esc(r.grade+r.letter)+' анги жагсаалтад алга.':'Анги уншигдсангүй.'} Ангиа доороос сонгоно уу.</div>`
+      :!it.name?`<div class="omr-st b">Ийм кодтой сурагч ${esc(c.name)} ангид алга. Сурагчаа доороос сонгоно уу.</div>`:'');
     const pick=`<div class="row" style="margin-top:6px"><div><label>Анги</label><select data-f="cls"><option value="">Сонгох</option>${db.classes.map(k=>`<option${k.name===it.cls?' selected':''}>${esc(k.name)}</option>`).join('')}</select></div>
         <div style="flex:2 1 200px"><label>Сурагч</label><select data-f="name"><option value="">Сонгох</option>${c?c.students.map(n=>`<option value="${esc(n)}"${n===it.name?' selected':''}>${pad2(c.codes[n])} ${esc(n)}</option>`).join(''):''}</select></div></div>`;
     const btns=`<div class="btns">${it.saved?`<span class="g">✓ Хадгалсан</span><button class="btn ghost" data-act="resave">Засвараа хадгалах</button><button class="btn ghost" data-act="close">Хураах</button>`:`<button class="btn" data-act="save"${it.cls&&it.name?'':' disabled'}>Хадгалах</button>`}<button class="btn danger" data-act="del">Хасах</button></div>`;
@@ -5523,7 +5551,7 @@ $('#omrList').addEventListener('click',e=>{
   if(b.dataset.act==='zoom'){const d=document.createElement('div');d.className='qr-full';d.innerHTML=`<img src="${it.r.preview}" style="max-height:92vh;max-width:96vw">`;d.onclick=()=>d.remove();document.body.appendChild(d);}
 });
 $('#omrSaveAll').addEventListener('click',()=>{
-  const ready=omrItems.filter(it=>it.r.ok&&!it.saved&&it.cls&&it.name&&!it.r.amb.some(Boolean)&&!it.r.idAmb);
+  const ready=omrItems.filter(it=>it.r.ok&&!it.saved&&it.cls&&it.name&&!gradeBad(it.r.grade)&&!it.r.amb.some(Boolean)&&!it.r.idAmb);
   const skip=omrItems.filter(it=>it.r.ok&&!it.saved).length-ready.length;
   ready.forEach(omrSave);save();renderOmr();renderRoster();renderList();
   $('#omrMsg').style.color='';$('#omrMsg').textContent=ready.length+' хуудас хадгалагдлаа.'+(skip?' '+skip+' хуудсыг шалгаж, тус тусад нь хадгална уу (эргэлзээтэй эсвэл сурагч тодорхойгүй).':gapMsg());
@@ -5712,6 +5740,7 @@ function liveTick(){
     const flag=(why)=>{const fk=(id.cls+id.name||idTxt)+'|'+key;if(LS.flagged[fk])return;LS.flagged[fk]=1;
       const it={id:uid(),file:'Камер '+new Date().toLocaleTimeString(),saved:false,r:omrRead(im,qs,sheetLetters())};
       if(it.r.ok){omrMatch(it);it.answers=it.r.answers.slice();omrItems.push(it);}};
+    if(gradeBad(r.grade)){liveBanner(`<big>⚠ Өөр ангийн хуудас</big>Энэ хуудас ${+r.grade}-р ангийнх, харин сонгосон шалгалт ${examGrade(state)}-р ангийнх. Хадгалсангүй. "Дуусгах" дараад зөв шалгалтаа сонгоно уу.`,"warn");return;}
     if(!id.name||r.idAmb){liveBanner(`<big>Сурагч танигдсангүй</big>Хуудсан дээр: ${idTxt}. Шалгах жагсаалтад нэмлээ, дараа нь гараар сонгоно.`,'warn');if(LS.stable>=3)flag();return;}
     if(nAmb){liveBanner(`<big>${esc(id.name)}</big>${nAmb} асуулт эргэлзээтэй (${r.amb.map((a,i)=>a?i+1:0).filter(Boolean).join(', ')}). Гэрэлтэй газар тэгш барина уу.`+(LS.stable>=5?' Шалгах жагсаалтад нэмлээ.':''),'warn');if(LS.stable>=5)flag();return;}
     /* Нэмэлт хуудас нь ӨӨРИЙН асуултаа л авчирна — 1-р хуудсаа дарж болохгүй */
@@ -5736,22 +5765,27 @@ function liveTick(){
 $('#liveBtn').addEventListener('click',liveOpen);
 
 /* ---------- charts ---------- */
-let chartData='q',chartType='bar',chartStyle='cyl',lastD=null,chSeq=0;
-const STYLE_NEW=[['cyl','🧪 Шилэн цилиндр (3D)'],['cone','🔺 Конус (3D)'],['peak','⛰️ Оргил'],['pill','🌙 Бөөрөнхий, бараан дэвсгэр'],['ribbon','🎀 Тууз, урт сүүдэртэй'],['gauge','⏱️ Секундомер']];
+let chartData='q',chartType='bar',chartStyle='modern',lastD=null,chSeq=0;
+const STYLE_NEW=[['modern','✨ Орчин үеийн (босго, дундажтай)'],['cyl','🧪 Шилэн цилиндр (3D)'],['cone','🔺 Конус (3D)'],['peak','⛰️ Оргил'],['pill','🌙 Бөөрөнхий, бараан дэвсгэр'],['ribbon','🎀 Тууз, урт сүүдэртэй'],['gauge','⏱️ Секундомер']];
 const STYLE_OLD=[['deep','Хайрцаг 3D (хуучин)'],['soft','Зөөлөн сүүдэртэй'],['flat','Энгийн хавтгай (хэвлэхэд)']];
 const STYLE_OPTS=[...STYLE_NEW,...STYLE_OLD];
 const CLR_OPTS=[['lv','Түвшнээр (ногоон / шар / улаан)'],['rb','Олон өнгө']];
 /* Графикийн төрөл бүрт тохирох загвар. Тохирохгүй бол ойролцоо загвараар зурна. */
-const STY_OK={hbar:['cyl','pill','ribbon','gauge','deep','soft','flat'],line:['soft','flat'],pie:['cyl','cone','deep','soft','flat']};
+const STY_OK={hbar:['modern','cyl','pill','ribbon','gauge','deep','soft','flat'],line:['soft','flat'],pie:['cyl','cone','deep','soft','flat']};
+/* Графикийн дэвсгэр — бүх графикт (шинжилгээ, нэгдсэн тайлан). Word тайлан хэвлэхэд зориулж цагаан хэвээр. */
+const BG_OPTS=[['auto','⬜ Цагаан (энгийн)'],['dark','⬛ Бараан'],['green','🟩 Ногоон']];
+const curBg=()=>['dark','green'].includes(chcfg().bg)?chcfg().bg:'auto';
+const cbCls=()=>curBg()==='auto'?'':' cb-'+curBg();
 function effStyle(type,st){const ok=STY_OK[type];if(!ok||ok.includes(st))return st;
   return type==='hbar'?(st==='cone'?'cyl':'ribbon'):'soft';}
 /* Хуучин "deep" (3D) сонголттой байсныг шинэ шилэн цилиндр рүү нэг удаа шилжүүлнэ */
-function chcfg(){db.chart=db.chart||{};const c=db.chart;if(!c.v2){c.v2=1;if(!c.style||c.style==='deep')c.style='cyl';}return c;}
-const curStyle=()=>STYLE_OPTS.some(o=>o[0]===chcfg().style)?chcfg().style:'cyl';
+function chcfg(){db.chart=db.chart||{};const c=db.chart;if(!c.v3){c.v3=1;if(!c.style||c.style==='deep'||c.style==='cyl')c.style='modern';}return c;}
+const curStyle=()=>STYLE_OPTS.some(o=>o[0]===chcfg().style)?chcfg().style:'modern';
 const curClr=()=>chcfg().clr==='rb'?'rb':'lv';
 const VIVID=['#C8174F','#FF2D3D','#FFC400','#12C9DE','#0A9BEA','#0E4F7A','#8E2BFF','#FF5A0A','#2ED8A8','#3D7BFF'];
 const LV_VIVID={good:'#1FA463',mid:'#F2A80C',bad:'#E5364B'};
-const hue=(it,i,S)=>it.c||(S.pct&&curClr()==='lv'?LV_VIVID[lvl(it.v)]:VIVID[i%VIVID.length]);
+const LV_ON_GREEN={good:'#7BE8AE',mid:'#FFC83D',bad:'#FF6B7D'};   // ногоон дэвсгэр дээр ногоон нь уусахгүй
+const hue=(it,i,S)=>it.c||(S.pct&&curClr()==='lv'?(curBg()==='green'?LV_ON_GREEN:LV_VIVID)[lvl(it.v)]:VIVID[i%VIVID.length]);
 /* t>0 бол цайруулна, t<0 бол бараан болгоно */
 function tint(h,t){const n=parseInt(h.slice(1),16),to=t>0?255:0,a=Math.abs(t),f=x=>Math.round(x+(to-x)*a);
   return'#'+((1<<24)|(f(n>>16)<<16)|(f(n>>8&255)<<8)|f(n&255)).toString(16).slice(1);}
@@ -5767,7 +5801,7 @@ const shadowGrad=id=>`<radialGradient id="${id}"><stop offset="0" stop-color="#0
 /* Босоо загваруудын нийтлэг хэмжээс */
 function vGeo(S,o={}){
   const n=S.items.length,rot=n>8,W=Math.max(640,n*(rot?36:(o.wide||60))+60),H=rot?370:330,L=o.L==null?24:o.L,T=o.T||30,B=rot?92:46,ih=H-T-B;
-  return{n,rot,W,H,L,T,B,ih,max:S.pct?100:Math.max(1,...S.items.map(i=>i.v)),cw:(W-L-14)/n,base:T+ih};
+  return{n,rot,W,H,L,T,B,ih,max:S.pct?100:Math.max(1,...S.items.map(i=>i.v)),cw:(W-L-(o.R||14))/n,base:T+ih};
 }
 function xLabs(S,G,fill){let s='';S.items.forEach((it,i)=>{const cx=G.L+G.cw*i+G.cw/2;
   s+=G.rot?`<text transform="translate(${cx+4},${G.base+16}) rotate(-45)" text-anchor="end" font-size="11" fill="${fill}">${esc(cut(it.l,14))}</text>`
@@ -5825,7 +5859,7 @@ function svgPeak(S){
 function svgPill(S){
   const G=vGeo(S,{T:30,L:20}),P='pl'+(++chSeq),bw=Math.min(78,G.cw*.74);
   let defs=`<linearGradient id="${P}f" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#000" stop-opacity="0"/><stop offset="1" stop-color="#000" stop-opacity=".32"/></linearGradient>`;
-  let body=`<rect width="${G.W}" height="${G.H}" rx="16" fill="#232E3E"/>`;
+  let body=`<rect width="${G.W}" height="${G.H}" rx="16" fill="var(--pill-bg,#232E3E)"/>`;
   S.items.forEach((it,i)=>{const c=hue(it,i,S),cx=G.L+G.cw*i+G.cw/2,x=cx-bw/2,h=G.ih*Math.max(0,it.v)/G.max,y=G.base-h,r=Math.min(bw/2,h);
     if(h>0.5)body+=`<g>${tipOf(it,S)}<path d="M${x},${G.base} L${x},${y+r} A${bw/2},${r} 0 0 1 ${x+bw},${y+r} L${x+bw},${G.base} Z" fill="${c}"/>`
       +`<rect x="${x}" y="${G.base-Math.min(16,h)}" width="${bw}" height="${Math.min(16,h)}" fill="url(#${P}f)"/></g>`;
@@ -5877,7 +5911,7 @@ function svgCylH(S){
 /* 🌙 Хэвтээ бөөрөнхий, бараан дэвсгэр */
 function svgPillH(S){
   const n=S.items.length,L=176,W=690,R=20,row=38,bh=24,T=16,H=T+n*row+8,iw=W-L-R,max=S.pct?100:Math.max(1,...S.items.map(i=>i.v));
-  let body=`<rect width="${W}" height="${H}" rx="16" fill="#232E3E"/>`;
+  let body=`<rect width="${W}" height="${H}" rx="16" fill="var(--pill-bg,#232E3E)"/>`;
   S.items.forEach((it,i)=>{const c=hue(it,i,S),y=T+i*row,w=Math.max(iw*Math.max(0,it.v)/max,bh);
     body+=`<text x="${L-12}" y="${y+bh/2+5}" text-anchor="end" font-size="12" fill="#B9C3D0">${esc(cut(it.full,24))}</text>`
       +`<rect x="${L}" y="${y}" width="${iw}" height="${bh}" rx="${bh/2}" fill="#fff" fill-opacity=".06"/>`
@@ -5908,8 +5942,62 @@ function svgGauge(S){
   });
   return svgOut(W,H,'',body,`width:${W}px;max-width:100%`);
 }
-const NEWV={cyl:svgCyl,cone:svgCone,peak:svgPeak,pill:svgPill,ribbon:svgRibbonV,gauge:svgGauge};
-const NEWH={cyl:svgCylH,pill:svgPillH,ribbon:svgRibbonH,gauge:svgGauge};
+/* ✨ Орчин үеийн: дугаартай тэмдэг, зөөлөн зам, градиент багана, үзүүрт нь хувь,
+   60% / 80% босго ба дунджийн шугам — аль асуулт босгоос доор байгаа нь шууд харагдана. */
+const badgeOf=(it,i)=>/^\d+$/.test(it.l)?it.l:String(i+1);
+const textOf=it=>String(it.full).replace(/^\d+\.\s*/,'')||it.l;
+function modernGuides(S,pos,span,vert){ // босго ба дундаж: pos(v) → координат
+  if(!S.pct)return'';const avg=S.items.reduce((a,i)=>a+i.v,0)/(S.items.length||1);let g='';
+  const L=[[60,'var(--iodine)','60% босго',1],[80,'var(--leaf)','80% сайн',1],[avg,'var(--ink)','Дундаж '+Math.round(avg)+'%',0]];
+  L.forEach(([v,c,t,dash])=>{const p=pos(v);
+    g+=vert?`<line x1="${span[0]}" x2="${span[1]}" y1="${p}" y2="${p}" stroke="${c}"${dash?' stroke-dasharray="5 4" stroke-opacity=".7"':' stroke-opacity=".6" stroke-width="1.5"'}/>`
+      :`<line x1="${p}" x2="${p}" y1="${span[0]}" y2="${span[1]}" stroke="${c}"${dash?' stroke-dasharray="5 4" stroke-opacity=".7"':' stroke-opacity=".6" stroke-width="1.5"'}/>`;});
+  if(vert){ // баруун талд нь дээрээс доош эрэмбэлж, хоорондоо давхцахгүй байхаар байрлуулна
+    const lab=L.map(([v,c,t])=>({y:pos(v),c,t})).sort((a,b)=>a.y-b.y);
+    for(let k=1;k<lab.length;k++)if(lab[k].y<lab[k-1].y+14)lab[k].y=lab[k-1].y+14;
+    lab.forEach(o=>{g+=vTxt(span[1]+6,o.y+4,o.t,{a:'start',fs:10.5,fw:600,fill:o.c});});
+  }else{
+    L.slice(0,2).forEach(([v,c,t])=>{g+=vTxt(pos(v),span[0]-6,t,{fs:10.5,fw:600,fill:c});});
+    g+=vTxt(pos(avg),span[1]+14,L[2][2],{fs:10.5,fw:700,halo:1});
+  }
+  return g;
+}
+function svgModernH(S){
+  const n=S.items.length,W=720,L=206,R=58,row=n>24?27:31,bh=n>24?11:13,T=30,H=T+n*row+26,iw=W-L-R,P='mh'+(++chSeq);
+  const max=S.pct?100:Math.max(1,...S.items.map(i=>i.v)),X=v=>L+iw*Math.max(0,v)/max;
+  let defs=`<filter id="${P}f" x="-10%" y="-80%" width="120%" height="260%"><feDropShadow dx="0" dy="2" stdDeviation="2.2" flood-opacity=".22"/></filter>`,body='',bars='';
+  for(let k=0;k<=4;k++){const x=X(max*k/4);body+=`<line x1="${x}" x2="${x}" y1="${T-4}" y2="${T+n*row}" stroke="var(--line)"/>`;}
+  S.items.forEach((it,i)=>{const c=hue(it,i,S),y=T+i*row,cy=y+row/2,w=X(it.v)-L,id=P+'_'+i;
+    defs+=`<linearGradient id="${id}" x1="0" x2="1"><stop offset="0" stop-color="${tint(c,.45)}"/><stop offset="1" stop-color="${c}"/></linearGradient>`;
+    if(i%2)body+=`<rect x="4" y="${y}" width="${W-8}" height="${row}" rx="8" fill="var(--bg)" opacity=".7"/>`;
+    const fit=Math.floor((L-52)/6.4);
+    body+=`<circle cx="22" cy="${cy}" r="11" fill="${c}"/>`+vTxt(22,cy+4,esc(badgeOf(it,i)),{fill:onClr(c),fs:10.5})
+      +`<text x="40" y="${cy+4.5}" font-size="12" fill="var(--ink)">${esc(cut(textOf(it),fit))}</text>`;
+    bars+=`<g>${tipOf(it,S)}<rect x="${L}" y="${cy-bh/2}" width="${iw}" height="${bh}" rx="${bh/2}" fill="var(--line)" opacity=".55"/>`
+      +(w>0.5?`<rect x="${L}" y="${cy-bh/2}" width="${Math.max(w,bh)}" height="${bh}" rx="${bh/2}" fill="url(#${id})" filter="url(#${P}f)"/>`:'')+'</g>';
+    const t=fmt(it.v,S.pct),pw=t.length*7+14,px=Math.min(L+Math.max(w,bh)+6,W-pw-4);
+    bars+=`<rect x="${px}" y="${cy-10}" width="${pw}" height="20" rx="10" fill="${c}"/>`+vTxt(px+pw/2,cy+4.2,t,{fill:onClr(c),fs:11.5});
+  });
+  const ticks=[0,1,2,3,4].map(k=>vTxt(X(max*k/4),T+n*row+15,S.pct?k*25+'%':r1(max*k/4),{fs:10,fw:400,fill:'var(--muted)'})).join('');
+  return svgOut(W,H+8,defs,body+modernGuides(S,X,[T-2,T+n*row+2],false)+bars+(S.pct?'':ticks),'min-width:560px');
+}
+function svgModernV(S){
+  const G=vGeo(S,{T:34,L:40,wide:58,R:84}),P='mv'+(++chSeq),bw=Math.min(40,G.cw*.56),Y=v=>G.base-G.ih*Math.max(0,v)/G.max;
+  let defs=`<filter id="${P}f" x="-40%" y="-10%" width="180%" height="130%"><feDropShadow dx="0" dy="3" stdDeviation="2.6" flood-opacity=".2"/></filter>`,body='',lab='';
+  for(let k=0;k<=4;k++){const y=Y(G.max*k/4);body+=`<line x1="${G.L}" x2="${G.W-80}" y1="${y}" y2="${y}" stroke="var(--line)"/>`
+    +vTxt(G.L-6,y+4,S.pct?k*25+'%':r1(G.max*k/4),{a:'end',fs:10,fw:400,fill:'var(--muted)'});}
+  S.items.forEach((it,i)=>{const c=hue(it,i,S),cx=G.L+G.cw*i+G.cw/2,x=cx-bw/2,y=Y(it.v),h=G.base-y,id=P+'_'+i,r=Math.min(8,bw/2);
+    defs+=`<linearGradient id="${id}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${c}"/><stop offset="1" stop-color="${tint(c,.5)}"/></linearGradient>`;
+    body+=`<g>${tipOf(it,S)}<rect x="${x}" y="${G.base-G.ih}" width="${bw}" height="${G.ih}" rx="${r}" fill="var(--line)" opacity=".45"/>`
+      +(h>0.5?`<path d="M${x},${G.base} L${x},${y+Math.min(r,h)} Q${x},${y} ${x+Math.min(r,h)},${y} L${x+bw-Math.min(r,h)},${y} Q${x+bw},${y} ${x+bw},${y+Math.min(r,h)} L${x+bw},${G.base} Z" fill="url(#${id})" filter="url(#${P}f)"/>`:'')+'</g>';
+    const t=fmt(it.v,S.pct);
+    if(G.rot)lab+=vTxt(cx,y-6,t,{fs:10,halo:1});
+    else{const pw=t.length*7+12;lab+=`<rect x="${cx-pw/2}" y="${y-26}" width="${pw}" height="19" rx="9.5" fill="${c}"/>`+vTxt(cx,y-12.5,t,{fill:onClr(c),fs:11});}
+  });
+  return svgOut(G.W,G.H,defs,body+modernGuides(S,Y,[G.L,G.W-80],true)+lab+xLabs(S,G,'var(--ink)'));
+}
+const NEWV={modern:svgModernV,cyl:svgCyl,cone:svgCone,peak:svgPeak,pill:svgPill,ribbon:svgRibbonV,gauge:svgGauge};
+const NEWH={modern:svgModernH,cyl:svgCylH,pill:svgPillH,ribbon:svgRibbonH,gauge:svgGauge};
 function chartDefs(){return `<defs>
   <linearGradient id="cGloss" x1="0" y1="0" x2="0" y2="1">
     <stop offset="0" stop-color="#fff" stop-opacity=".36"/><stop offset=".5" stop-color="#fff" stop-opacity=".08"/><stop offset="1" stop-color="#000" stop-opacity=".1"/></linearGradient>
@@ -6088,9 +6176,10 @@ function renderChart(){
         return`<option value="${o[0]}"${o[0]===chartType?' selected':''}${no?' disabled':''}>${o[1]}${no?' (зөвхөн түвшин, хүндрэлд)':''}</option>`;}).join('')}</select></div>
       <div><label for="cstyle">Загвар</label><select id="cstyle"${sp?' disabled':''}><optgroup label="Шинэ загвар">${STYLE_NEW.map(stOpt).join('')}</optgroup><optgroup label="Энгийн">${STYLE_OLD.map(stOpt).join('')}</optgroup></select></div>
       <div><label for="cclr">Өнгө</label><select id="cclr"${sp||chartType==='line'?' disabled':''}>${CLR_OPTS.map(o=>`<option value="${o[0]}"${o[0]===clr?' selected':''}>${o[1]}</option>`).join('')}</select></div>
+      <div><label for="cbg">Дэвсгэр</label><select id="cbg">${BG_OPTS.map(o=>`<option value="${o[0]}"${o[0]===curBg()?" selected":""}>${o[1]}</option>`).join("")}</select></div>
     </div>
     <h3 id="ctitle" style="margin:0 0 8px;font-size:1rem">${esc(title)}${filterCls&&chartData!=='c'?', '+esc(filterCls)+' анги':''}</h3>
-    <div class="chart-box" id="cbox">${body}</div>
+    <div class="chart-box${cbCls()}" id="cbox">${body}</div>
     ${S.pct&&chartType!=='pie'&&(clr==='lv'||chartType==='line')?'<div class="legend">Ногоон: 80%-аас дээш. Шар: 60–79%. Улаан: 60%-аас доош.</div>':''}
     ${chartData==='hm'?'<div class="legend">Улаан нүд — тэр ангийн олонх нь алдсан асуулт. Нүдэн дээр очиход асуултын агуулга харагдана.</div>':''}
     ${chartData==='rd'?'<div class="legend">Тэнхлэг бүр нэг агуулга. Төвөөс хол байх тусам сайн. Тасархай шугам — 60%.</div>':''}
@@ -6099,12 +6188,13 @@ function renderChart(){
   $('#ctype').addEventListener('change',e=>{chartType=e.target.value;renderChart();});
   $('#cstyle').addEventListener('change',e=>{chartStyle=e.target.value;chcfg().style=chartStyle;save();renderChart();});
   $('#cclr').addEventListener('change',e=>{chcfg().clr=e.target.value;save();renderChart();});
+  $("#cbg").addEventListener("change",e=>{chcfg().bg=e.target.value;save();renderChart();if(typeof renderFinal==="function")try{renderFinal();}catch(x){}});
   $('#cpng').addEventListener('click',()=>downloadChart(title));
 }
 function downloadChart(title){
   const svg=$('#cbox svg');if(!svg)return;
-  const cs=getComputedStyle(document.documentElement);
-  let src=svg.outerHTML.replace(/var\(--([a-z-]+)\)/g,(m,v)=>cs.getPropertyValue('--'+v).trim()||'#000');
+  const cs=getComputedStyle(svg);   // дэвсгэрийн өнгө (бараан, ногоон) графикийн хайрцагнаас удамшина
+  let src=svg.outerHTML.replace(/var\(--([a-z-]+)(?:,\s*([^)]+))?\)/g,(m,v,fb)=>cs.getPropertyValue('--'+v).trim()||fb||'#000');
   const vb=svg.viewBox.baseVal,sc=2,W=vb.width,H=vb.height+40,cv=document.createElement('canvas');
   cv.width=W*sc;cv.height=H*sc;const x=cv.getContext('2d');x.scale(sc,sc);
   x.fillStyle=cs.getPropertyValue('--surface').trim()||'#fff';x.fillRect(0,0,W,H);
