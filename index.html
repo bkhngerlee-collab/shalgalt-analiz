@@ -5000,6 +5000,7 @@ async function exportExamXlsx(){
 async function exportExamDocx(){
   const X=examExportData(),{d,qs}=X,best=d.topics[0],worst=d.topics[d.topics.length-1],D=docxBuilder();
   if(!d.n)throw new Error('сурагчийн хариулт алга');
+  const CH=exportCharts(d,stylePicker());
   D.h1(X.title+': шалгалтын анализ');
   D.p([{t:'Огноо: ',b:true},state.exam.date||'–',{t:'   Хамрах хүрээ: ',b:true},X.scope,{t:'   Асуулт: ',b:true},qs.length+' ('+r1(d.total)+' оноо)']);
   D.h2('Ерөнхий үзүүлэлт');
@@ -5007,7 +5008,7 @@ async function exportExamDocx(){
   if(best)D.p([{t:'Хамгийн сайн эзэмшсэн агуулга: ',b:true},{t:best.t+' ('+Math.round(best.pct)+'%)',color:'1F5A41',b:true}]);
   if(d.topics.length>1)D.p([{t:'Цаашид анхаарах агуулга: ',b:true},{t:worst.t+' ('+Math.round(worst.pct)+'%)',color:'B4314A',b:true}]);
   D.h2('Асуулт тус бүрийн гүйцэтгэл');
-  await D.image(svgBar({pct:true,items:qs.map((q,i)=>({l:String(i+1),full:topicOf(i),v:d.qPct[i]}))},false));
+  if(CH.q)await D.image(CH.q.svg);
   const kin=(q,o)=>keyVs(q).some(k=>isP2(q)?keyNorm(k).includes(o):o===k);
   D.table(['№','Агуулга','Зөв','Гүйцэтгэл',...X.LT],qs.map((q,i)=>[{t:i+1+(isP2(q)?' (II)':''),al:'center'},topicOf(i),{t:keyLbl(q),al:'center',b:true},pctCell(d.qPct[i]),
     ...X.LT.map(o=>!isP2(q)&&!opts1().includes(o)?{t:'',al:'center'}:{t:X.dist[i][o],al:'center',b:kin(q,o),color:kin(q,o)?'1F5A41':undefined})]),
@@ -5028,8 +5029,9 @@ async function exportExamDocx(){
     +'III хэсгийн задгай даалгаварт D-г "бүтэн оноо авсан эсэх"-ээр тооцов. rpb — асуултын оноо ба нийт онооны корреляц (−1…+1), 0.20-аас дээш байвал зохистой. '
     +'KR-20 — шалгалт бүхэлдээ хэр найдвартай хэмжиж байгаа нэг тоо: 0.80+ маш сайн, 0.70–0.79 сайн, 0.60–0.69 боломжийн, доош нь сул.');
   D.h2('Агуулга тус бүрийн гүйцэтгэл');
-  await D.image(svgHBar({pct:true,items:d.topics.map(t=>({l:t.t,full:t.t,v:t.pct}))}));
+  if(CH.t)await D.image(CH.t.svg);
   D.h2('Түвшний үнэлгээ');
+  if(CH.lv)await D.image(CH.lv.svg);
   D.table(['Түвшин','Гүйцэтгэл','Тоо','Хувь','Сурагчид'],X.levels.map(l=>[{t:l.g,b:true,al:'center'},l.range,{t:l.who.length,al:'center'},{t:(d.n?Math.round(l.who.length/d.n*100):0)+'%',al:'right'},l.who.map(r=>r.s.name).join(', ')||'–']),[0.9,1.2,0.7,0.8,5]);
   D.h2('Сурагч тус бүрийн дүн');
   D.note(X.viewNote);
@@ -5037,6 +5039,10 @@ async function exportExamDocx(){
   D.table(['№','Анги','Код','Нэр','Оноо','Хувь','Зөрүү','Түвшин','Байр','Алдсан агуулга'],X.V.map((r,k)=>[{t:k+1,al:'center'},r.s.cls,{t:codeOf(r.s.cls,r.s.name)||'–',al:'center'},{t:r.s.name,b:true},
     {t:r1(r.score)+'/'+r1(d.total),al:'right'},pctCell(r.pct),dc(r.pct),{t:r.lv,al:'center'},{t:r.rank+'/'+r.of,al:'center'},
     [...new Set(qs.map((q,i)=>i).filter(i=>!r.ok[i]).map(topicOf))].join(', ')||'–']),[0.5,0.8,0.7,2,0.9,0.8,0.8,0.9,0.8,2.8]);
+  /* "График" хэсгийн бусад төрөл — сонгосон ангийн өгөгдлөөр */
+  const extra=['s','c','qd','hm','rd'].filter(k=>CH[k]);
+  if(extra.length){D.h2('Графикууд');
+    for(const k of extra){D.p([{t:CH[k].title,b:true,color:'1F5A41'}]);await D.image(CH[k].svg);if(CH[k].note)D.note(CH[k].note);}}
   D.note('Тайлан үүсгэсэн огноо: '+todayStr());
   const name=fileSafe(X.title+(filterCls?' '+filterCls:'')+' analiz')+'.docx';
   saveBlob(D.build(),name);return name;
@@ -5085,7 +5091,10 @@ async function exportFinalDocx(){
   if(best)D.p([{t:'Хамгийн сайн эзэмшсэн агуулга: ',b:true},{t:best.t+' ('+Math.round(best.avg)+'%)',color:'1F5A41',b:true}]);
   if(F.topics.length>1)D.p([{t:'Цаашид анхаарах агуулга: ',b:true},{t:worst.t+' ('+Math.round(worst.avg)+'%)',color:'B4314A',b:true}]);
   D.h2('Ангийн дундаж, шалгалт бүрээр');
-  await D.image(svgBar({pct:true,items:R.map(r=>({l:lab(r),full:lab(r),v:r.d.avg}))},R.length>1));
+  const pk=stylePicker();
+  await D.image(R.length>1?svgBar({pct:true,items:R.map(r=>({l:lab(r),full:lab(r),v:r.d.avg}))},true):styledSvg(pk("bar",1),()=>svgBar({pct:true,items:R.map(r=>({l:lab(r),full:lab(r),v:r.d.avg}))},false)));
+  if(F.topics.length){D.p([{t:"Агуулга тус бүрийн нэгдсэн гүйцэтгэл",b:true,color:"1F5A41"}]);const TS={pct:true,items:F.topics.map(t=>({l:t.t,full:t.t,v:t.avg}))};
+    await D.image(styledSvg(pk(TS.items.length>16?"bar":"hbar",TS.items.length),()=>TS.items.length>16?svgBar(TS,false):svgHBar(TS)));}
   D.h2('Сурагч тус бүрийн эцсийн дүн');
   const V=viewRows(F.rows,{pct:r=>r.fin,name:r=>r.n,cls:()=>finalCls,show:fShow,sort:fSort,avg});
   D.note('Жагсаалт: '+showLabel(fShow).toLowerCase()+', '+SORT_OPTS.find(o=>o[0]===fSort)[1].toLowerCase()+' эрэмбэлсэн ('+V.length+' сурагч). Нэгдсэн дундаж '+Math.round(avg)+'%.');
@@ -5233,7 +5242,7 @@ const chunks=(a,n)=>{const o=[];for(let i=0;i<a.length;i+=n)o.push(a.slice(i,i+n
 async function exportExamPptx(){
   const X=examExportData(),{d,qs}=X;if(!d.n)throw new Error('сурагчийн хариулт алга');
   const P=pptxBuilder('Шалгалтын анализ · '+X.title),th=P.th,LC=v=>th.lv[lvl(v)];
-  const best=d.topics[0],worst=d.topics[d.topics.length-1];
+  const best=d.topics[0],worst=d.topics[d.topics.length-1],CH=exportCharts(d,stylePicker());
   /* 1. Нүүр */
   P.cover(X.title,'Шалгалтын үр дүнгийн анализ',[X.scope,(state.exam.date||todayStr()),d.n+' сурагч',qs.length+' асуулт']);
   /* 2. Ерөнхий үзүүлэлт */
@@ -5244,15 +5253,13 @@ async function exportExamPptx(){
   if(d.topics.length>1)P.shape(6.75,3.85,5.95,1.35,{fill:th.card,rad:9000,pad:.3,padY:.18,anchor:'ctr'},[[{t:'🎯 Цаашид анхаарах агуулга',sz:13,c:th.muted}],[{t:worst.t+' — '+Math.round(worst.pct)+'%',sz:20,b:true,c:th.lv.bad}]]);
   P.text(.6,5.45,12.1,.9,[[{t:'Дундаж гүйцэтгэл '+Math.round(d.avg)+'% буюу '+lvWord(d.avg)+' түвшинд байна. ',sz:15},{t:'KR-20 найдвартай байдал: '+(d.kr20==null?'–':f2(d.kr20))+' ('+KRLAB(d.kr20)[0]+').',sz:15,c:th.muted}]]);
   /* 3. Асуулт тус бүр */
-  P.page('Асуулт тус бүрийн гүйцэтгэл','Зөв хариулсан сурагчийн хувь. 60%-аас доош асуултад онцгой анхаар.');
-  const qItems=qs.map((q,i)=>({l:String(i+1),full:(i+1)+'. '+topicOf(i),v:d.qPct[i]}));
-  await P.chart(qs.length<=16?svgHBar({pct:true,items:qItems}):svgBar({pct:true,items:qItems},false),.6,1.5,12.1,5.35);
+  P.page(CH.q?CH.q.title:"Асуулт тус бүрийн гүйцэтгэл","Зөв хариулсан сурагчийн хувь. 60%-аас доош асуултад онцгой анхаар.");
+  if(CH.q)await P.chart(CH.q.svg,.6,1.5,12.1,5.35);
   /* 4. Агуулга */
-  if(d.topics.length){P.page('Агуулга тус бүрийн гүйцэтгэл','Ижил агуулгатай асуултуудын нэгдсэн дүн');
-    await P.chart(svgHBar({pct:true,items:d.topics.map(t=>({l:t.t,full:t.t,v:t.pct}))}),.6,1.5,12.1,5.35);}
+  if(CH.t){P.page(CH.t.title,'Ижил агуулгатай асуултуудын нэгдсэн дүн');await P.chart(CH.t.svg,.6,1.5,12.1,5.35);}
   /* 5. Түвшин */
-  P.page('Түвшний тархалт','Сурагчдын гүйцэтгэлийн түвшин (I–VIII)');
-  await P.chart(svgBar({pct:false,items:X.levels.slice().reverse().map(l=>({l:l.g,full:l.g+' түвшин ('+l.range+')',v:l.who.length}))},false),.6,1.5,7.6,5.35);
+  P.page('Түвшний тархалт'+(filterCls?', '+filterCls+' анги':''),'Сурагчдын гүйцэтгэлийн түвшин (I–VIII)');
+  if(CH.lv)await P.chart(CH.lv.svg,.6,1.5,7.6,5.35);
   P.table(8.5,1.7,4.2,['Түвшин','Хувь','Тоо'],X.levels.map(l=>[{t:l.g,b:true,al:'center'},{t:l.range,al:'center'},{t:l.who.length,al:'center',b:true}]),[1,1.4,.8],{rh:.5,sz:13});
   /* 6. Анхаарах асуултууд */
   const kin=(q,o)=>keyVs(q).some(k=>isP2(q)?keyNorm(k).includes(o):o===k);
@@ -5263,6 +5270,8 @@ async function exportExamPptx(){
       const wrong=isP3(q)||isP4(q)?null:X.LT.filter(o=>!kin(q,o)&&X.dist[i][o]>0).sort((a,b)=>X.dist[i][b]-X.dist[i][a])[0];
       return[{t:i+1,al:'center',b:true},topicOf(i),{t:Math.round(d.qPct[i])+'%',al:'center',b:true,c:LC(d.qPct[i])},{t:keyLbl(q),al:'center'},
         {t:wrong?wrong+' ('+X.dist[i][wrong]+' сурагч)':'–',al:'center'}];}),[.6,4.6,1.4,1.6,2.2],{rh:.4,sz:13});});}
+  /* "График" хэсгийн бусад төрөл — слайд бүрд нэг график */
+  for(const k of ['s','c','qd','hm','rd'])if(CH[k]){P.page(CH[k].title,CH[k].note||'');await P.chart(CH[k].svg,.6,1.5,12.1,5.35);}
   /* 7. Сурагчдын дүн — "Зөвхөн кодоор" сонгосон бол нэрийн оронд код гарна */
   /* Слайд бүрд хоёр багана хүснэгт (26 сурагч) — олон слайд болохоос сэргийлнэ */
   const V=X.V,many=new Set(V.map(r=>r.s.cls)).size>1,pages=chunks(V,26);
@@ -5296,9 +5305,11 @@ async function exportFinalPptx(){
   if(best)P.shape(.6,3.85,5.95,1.35,{fill:th.card,rad:9000,pad:.3,padY:.18,anchor:'ctr'},[[{t:'💪 Хамгийн сайн эзэмшсэн агуулга',sz:13,c:th.muted}],[{t:best.t+' — '+Math.round(best.avg)+'%',sz:20,b:true,c:th.lv.good}]]);
   if(F.topics.length>1)P.shape(6.75,3.85,5.95,1.35,{fill:th.card,rad:9000,pad:.3,padY:.18,anchor:'ctr'},[[{t:'🎯 Цаашид анхаарах агуулга',sz:13,c:th.muted}],[{t:worst.t+' — '+Math.round(worst.avg)+'%',sz:20,b:true,c:th.lv.bad}]]);
   P.page('Ангийн дундаж, шалгалт бүрээр',R.length+' шалгалт: '+lab(R[0])+(R.length>1?' – '+lab(R[R.length-1]):''));
-  await P.chart(svgBar({pct:true,items:R.map(r=>({l:lab(r),full:lab(r)+' '+(r.e.exam.title||''),v:r.d.avg}))},R.length>1),.6,1.5,12.1,5.35);
+  const pk=stylePicker(),RS={pct:true,items:R.map(r=>({l:lab(r),full:lab(r)+" "+(r.e.exam.title||""),v:r.d.avg}))};
+  await P.chart(R.length>1?svgBar(RS,true):styledSvg(pk("bar",1),()=>svgBar(RS,false)),.6,1.5,12.1,5.35);
   if(F.topics.length){P.page('Агуулга тус бүрийн гүйцэтгэл','Сонгосон шалгалтуудаар нэгтгэсэн дундаж');
-    await P.chart(svgHBar({pct:true,items:F.topics.map(t=>({l:t.t,full:t.t,v:t.avg}))}),.6,1.5,12.1,5.35);}
+    const TS={pct:true,items:F.topics.map(t=>({l:t.t,full:t.t,v:t.avg}))},big=TS.items.length>16;
+    await P.chart(styledSvg(pk(big?"bar":"hbar",TS.items.length),()=>big?svgBar(TS,false):svgHBar(TS)),.6,1.5,12.1,5.35);}
   if(R.length>1){
     const cnt={up:0,flat:0,down:0,alert:0};F.rows.forEach(r=>{if(r.st)cnt[r.st]++;});
     P.page('Сурагчдын ахиц','Шалгалт бүрийн дүнгээр татсан чиг шугамаар');
@@ -5996,7 +6007,8 @@ function effStyle(type,st){const ok=STY_OK[type];if(!ok||ok.includes(st))return 
   return type==='hbar'?(st==='cone'?'cyl':'ribbon'):'soft';}
 /* Хуучин "deep" (3D) сонголттой байсныг шинэ шилэн цилиндр рүү нэг удаа шилжүүлнэ */
 function chcfg(){db.chart=db.chart||{};const c=db.chart;if(!c.v3){c.v3=1;if(!c.style||c.style==='deep'||c.style==='cyl')c.style='modern';}return c;}
-const curStyle=()=>STYLE_OPTS.some(o=>o[0]===chcfg().style)?chcfg().style:'modern';
+let chartOv=null;   // татахад графикийн загварыг түр солино
+const curStyle=()=>chartOv||(STYLE_OPTS.some(o=>o[0]===chcfg().style)?chcfg().style:'modern');
 const curClr=()=>chcfg().clr==='rb'?'rb':'lv';
 const VIVID=['#C8174F','#FF2D3D','#FFC400','#12C9DE','#0A9BEA','#0E4F7A','#8E2BFF','#FF5A0A','#2ED8A8','#3D7BFF'];
 const LV_VIVID={good:'#1FA463',mid:'#F2A80C',bad:'#E5364B'};
@@ -6214,6 +6226,30 @@ function svgModernV(S){
 }
 const NEWV={modern:svgModernV,cyl:svgCyl,cone:svgCone,peak:svgPeak,pill:svgPill,ribbon:svgRibbonV,gauge:svgGauge};
 const NEWH={modern:svgModernH,cyl:svgCylH,pill:svgPillH,ribbon:svgRibbonH,gauge:svgGauge};
+/* Татах (Word, PowerPoint) үед график бүрд "Загвар" жагсаалтаас санамсаргүй, давтагдахгүй загвар сонгоно.
+   Олон зүйлтэй графикт уншигдахгүй загварыг (олон секундомер, давхцсан оргил) алгасна. */
+function stylePicker(){let bag=[];const all=STYLE_OPTS.map(o=>o[0]);
+  return(type,n)=>{const ok=all.filter(s=>effStyle(type,s)===s&&!(s==='gauge'&&n>12)&&!(s==='peak'&&n>16)&&!(s==='cone'&&n>24));
+    if(!ok.length)return'modern';
+    if(!bag.some(s=>ok.includes(s)))bag=shuffleArr(all);
+    const i=bag.findIndex(s=>ok.includes(s));return bag.splice(i,1)[0];};}
+function styledSvg(st,fn){const o=chartOv;chartOv=st;try{return fn();}finally{chartOv=o;}}
+const stripTags=h=>String(h).replace(/<\/div>/g,'; ').replace(/<[^>]+>/g,'').replace(/&amp;/g,'&').replace(/[;\s]+$/,'');
+/* "График" хэсгийн бүх төрлийг сонгосон ангийн (filterCls) өгөгдлөөр зурна: [{key,title,svg,note}] */
+function exportCharts(d,pick,keys){
+  keys=keys||DATA_OPTS.map(o=>o[0]);const out={};
+  keys.forEach(key=>{const base=DATA_OPTS.find(o=>o[0]===key)[1],title=base+(filterCls&&key!=='c'?', '+filterCls+' анги':'');
+    try{
+      if(key==='hm'){out.hm={key,title,svg:svgHeat(),note:'Нүдэн дэх тоо — зөв хариулсан хувь. Улаан нүд — тэр ангийн олонх нь алдсан асуулт.'};return;}
+      if(key==='rd'){const r=svgRadar(d),m=r.html&&r.html.match(/<svg[\s\S]*?<\/svg>/);
+        if(m)out.rd={key,title,svg:m[0],note:'Тэнхлэг бүр нэг агуулга, тасархай шугам — 60%. '+stripTags((r.html.match(/<div class="pie-legend">([\s\S]*)<\/div><\/div>$/)||[])[1]||'')};return;}
+      const S=series(d,key),n=S.items.length;if(!n||(key==='c'&&n<2))return;
+      const type=n>16?'bar':key==='t'?'hbar':Math.random()<.5?'hbar':'bar',st=pick(type,n);
+      out[key]={key,title,st,svg:styledSvg(st,()=>type==='hbar'?svgHBar(S):svgBar(S,false)),
+        note:key==='c'&&filterCls?'Бүх ангийн дундаж — харьцуулахын тулд.':S.pct&&curClr()==='lv'?'Ногоон: 80%-аас дээш, шар: 60–79%, улаан: 60%-аас доош.':''};
+    }catch(e){console.error(e);}});
+  return out;
+}
 function chartDefs(){return `<defs>
   <linearGradient id="cGloss" x1="0" y1="0" x2="0" y2="1">
     <stop offset="0" stop-color="#fff" stop-opacity=".36"/><stop offset=".5" stop-color="#fff" stop-opacity=".08"/><stop offset="1" stop-color="#000" stop-opacity=".1"/></linearGradient>
@@ -6230,15 +6266,15 @@ const DATA_OPTS=[['q','Асуулт тус бүрийн гүйцэтгэл'],['t
 const SPECIAL=['hm','rd'],PIE_OK=['lv','qd'];
 const TYPE_OPTS=[['bar','Босоо багана'],['hbar','Хэвтээ багана'],['line','Шугаман'],['pie','Дугуй']];
 const PIE_COLORS=['#1F5A41','#3E8A63','#78B48F','#A96A12','#D19A3E','#B4314A','#D46A80','#8A93A6'];
-function series(d){
+function series(d,k){k=k||chartData;
   const qs=state.exam.questions;
-  if(chartData==='q')return{pct:true,items:qs.map((q,i)=>({l:String(i+1),full:(i+1)+'. '+topicOf(i),v:d.qPct[i]}))};
-  if(chartData==='t')return{pct:true,items:d.topics.map(t=>({l:t.t,full:t.t,v:t.pct}))};
-  if(chartData==='lv')return{pct:false,items:LEVELS.map(l=>({l:l[0],full:l[0]+' түвшин ('+l[1]+'–'+l[2]+'%)',v:d.rows.filter(r=>r.lv===l[0]).length}))};
-  if(chartData==='s')return{pct:true,items:d.rows.map(r=>{const nm=dName(r.s.cls,r.s.name);return{l:nm,full:nm+(r.s.cls?' ('+r.s.cls+')':''),v:r.pct};})};
-  if(chartData==='qd'){const k=f=>d.qPct.filter(f).length;
-    return{pct:false,items:[{l:'Хялбар',full:'Хялбар (80%+ зөв хариулсан)',v:k(p=>p>=80),c:'#3E8A63'},
-      {l:'Дунд',full:'Дунд (40–79% зөв)',v:k(p=>p>=40&&p<80),c:'#D19A3E'},{l:'Хүнд',full:'Хүнд (40%-аас доош зөв)',v:k(p=>p<40),c:'#B4314A'}],unit:'асуулт'};}
+  if(k==="q")return{pct:true,items:qs.map((q,i)=>({l:String(i+1),full:(i+1)+'. '+topicOf(i),v:d.qPct[i]}))};
+  if(k==="t")return{pct:true,items:d.topics.map(t=>({l:t.t,full:t.t,v:t.pct}))};
+  if(k==="lv")return{pct:false,items:LEVELS.map(l=>({l:l[0],full:l[0]+' түвшин ('+l[1]+'–'+l[2]+'%)',v:d.rows.filter(r=>r.lv===l[0]).length}))};
+  if(k==="s")return{pct:true,items:d.rows.map(r=>{const nm=dName(r.s.cls,r.s.name);return{l:nm,full:nm+(r.s.cls?' ('+r.s.cls+')':''),v:r.pct};})};
+  if(k==="qd"){const cnt=f=>d.qPct.filter(f).length;
+    return{pct:false,items:[{l:"Хялбар",full:"Хялбар (80%+ зөв хариулсан)",v:cnt(p=>p>=80),c:"#3E8A63"},
+      {l:"Дунд",full:"Дунд (40–79% зөв)",v:cnt(p=>p>=40&&p<80),c:"#D19A3E"},{l:"Хүнд",full:"Хүнд (40%-аас доош зөв)",v:cnt(p=>p<40),c:"#B4314A"}],unit:"асуулт"};}
   const cs=[...new Set(state.students.map(s=>s.cls||'Ангигүй'))].sort((a,b)=>a.localeCompare(b,'mn',{numeric:true}));
   return{pct:true,items:cs.map(c=>({l:c,full:c+' анги',v:compute(state.students.filter(s=>(s.cls||'Ангигүй')===c)).avg}))};
 }
