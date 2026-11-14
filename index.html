@@ -113,7 +113,7 @@ body.sc .nav-leaf{font-size:1.6rem}
      Цэсгүй цонхнууд (Заавар, Шинэ үг г.м.) өмнөх шигээ голдоо 1240 өргөнтэй. */
   .wrap{max-width:none}
   main>section{max-width:1240px;margin:0 auto}
-  main>#tab-setup,main>#tab-entry,main>#tab-analysis{max-width:none}
+  main>#tab-setup,main>#tab-entry,main>#tab-analysis,main>#tab-vocab{max-width:none}
   #analysis:not(.has-side){max-width:1240px;margin:0 auto}
   .has-side{display:grid;grid-template-columns:236px minmax(0,1fr);column-gap:28px;align-items:start}
   .has-side[hidden]{display:none}
@@ -444,6 +444,13 @@ td input,td select{min-width:70px}
 .ex-d,.ex-n{font-size:.86rem;color:var(--muted);white-space:nowrap;font-variant-numeric:tabular-nums}
 .ex-row.ex-empty .ex-t>span{color:var(--muted);font-weight:500}
 .ex-none{margin:0;padding:18px;text-align:center;color:var(--muted)}
+.vana-two{display:grid;grid-template-columns:minmax(0,1.4fr) minmax(0,1fr);gap:0 20px}
+@media(max-width:860px){.vana-two{grid-template-columns:1fr}}
+.vana-tiles{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:10px}
+.vana-tile{border:1px solid var(--line);border-radius:12px;padding:12px 14px;background:var(--surface)}
+.vana-tile b{display:block;font-size:1.7rem;line-height:1.1}.vana-tile span{font-size:.85rem;color:var(--muted)}
+.vana-tile.g b{color:var(--leaf)}.vana-tile.m b{color:var(--iodine)}.vana-tile.b b{color:var(--stain)}
+.vana-sum{margin:0;padding-left:20px;line-height:1.7}.vana-sum li{margin:4px 0}
 @media(max-width:660px){
   .ex-row{grid-template-columns:auto minmax(0,1fr) auto 34px;gap:4px 10px;padding:10px 12px}
   .ex-t{grid-column:1/-1;grid-row:2}
@@ -1065,8 +1072,8 @@ body.student #studentApp{display:block}
     <div class="row">
       <div><label for="sLetters">Бүлгийн үсгүүд (хуудсанд гарах)</label><input id="sLetters" placeholder="А Б В Г"></div>
       <div><label for="sMode">Хэвлэх төрөл</label><select id="sMode">
-        <option value="blank">Хоосон хуудас (олшруулж тараана)</option>
-        <option value="class">Сурагч бүрд нэр, кодыг нь будсан</option></select></div>
+        <option value="blank">📄 Хоосон хуудас (олшруулж тараана)</option>
+        <option value="class">👥 Сурагч бүрд нэр, кодыг нь будсан</option></select></div>
       <div id="sClsWrap" hidden><label for="sCls">Анги</label><select id="sCls"></select></div>
       <div id="sVarWrap" hidden><label for="sVar">Хувилбар</label><select id="sVar"></select></div>
     </div>
@@ -1288,7 +1295,14 @@ body.student #studentApp{display:block}
 </section>
 
 <!-- ============ 3. ANALYSIS ============ -->
-<section id="tab-vocab" hidden>
+<section id="tab-vocab" class="has-side" hidden>
+  <nav class="secnav noprint" data-tabs="vocab" aria-label="Шинэ үгийн сорил цонхны хэсгүүд">
+    <a href="#v-sets"><i class="sn-ic" aria-hidden="true">🗂️</i>Миний сорилууд</a>
+    <a href="#v-new"><i class="sn-ic" aria-hidden="true">📝</i>Шинэ сорил</a>
+    <a href="#v-res"><i class="sn-ic" aria-hidden="true">📋</i>Сорилын дүн</a>
+    <a href="#v-ana"><i class="sn-ic" aria-hidden="true">📈</i>Анализ</a>
+    <a href="#vGooglePanel" id="vSecGoogle"><i class="sn-ic" aria-hidden="true">🔗</i>Google холболт</a>
+  </nav>
   <!-- Хуучин Google холболт. Дансаар нэвтэрсэн бол сорил Supabase-аар ажиллах тул нуугдана. -->
   <div class="panel" id="vGooglePanel">
     <details class="collapsible" id="vPanel"><summary><span style="font-size:1.15rem">Google Sheets холболт (хуучин арга)</span> <span id="vSum" style="font-weight:400;color:var(--muted);font-size:.9rem"></span></summary>
@@ -1321,18 +1335,20 @@ body.student #studentApp{display:block}
     </details>
   </div>
 
-  <div class="panel">
-    <h2>Шинэ сорил үүсгэх</h2>
+  <div class="panel" id="v-sets">
+    <h2>🗂️ Миний сорилууд</h2>
+    <p class="hint">Урьдчилан бэлдсэн сорилууд ангиараа тусдаа жагсана — ангиуд хоорондоо холилдохгүй. "Нээх" дарахад үгс, тохиргоо нь "Шинэ сорил" хэсэгт бүхэлдээ буцаж орно. Сурагчдад зөвхөн "Сорил нийтлэх" дарсны дараа очно.</p>
+    <div class="ex-tools">
+      <input id="vSetFind" type="search" placeholder="🔍 Сорил хайх…" aria-label="Бэлдсэн сорилыг нэрээр хайх" autocomplete="off">
+      <div class="ex-chips" id="vSetGrades" role="group" aria-label="Ангиар шүүх"></div>
+    </div>
+    <div id="vSetList"></div>
+    <div class="btns"><button class="btn" id="vSetNew">📝 Шинэ сорил бэлдэх</button></div>
+  </div>
+
+  <div class="panel" id="v-new">
+    <h2>📝 Шинэ сорил үүсгэх</h2>
     <p class="hint">Үгсээ доорх хүснэгтэд бичнэ, эсвэл Excel-ээс 2–3 баганаар нь хуулаад эхний нүдэнд дараад Ctrl + V дарж буулгана. Нэг үг хоёр зөв орчуулгатай бол хоёр дахийг нь 3-р баганад бичнэ, аль нь ч зөвд тооцогдоно.</p>
-    <div class="row" style="margin-bottom:4px">
-      <div style="flex:3 1 300px"><label for="vSetSel">Урьдчилан бэлдсэн сорилууд</label><select id="vSetSel"></select></div>
-    </div>
-    <div class="btns" style="margin-top:6px">
-      <button class="btn ghost" id="vSetLoad">Сонгосныг нээх</button>
-      <button class="btn ghost" id="vSetSave">Энэ сорилыг хадгалах</button>
-      <button class="btn danger" id="vSetDel">Хадгалсныг устгах</button>
-    </div>
-    <p class="hint" style="margin:6px 0 14px;font-size:.85rem">Үгсээ урьдчилан оруулаад "Энэ сорилыг хадгалах" дарвал энд жагсана (10 хүртэл). Хэрэгтэй үед нь сонгоод "Сонгосныг нээх" дарахад үгс, тохиргоо нь бүхэлдээ буцаж орно. Хадгалсан сорил зөвхөн энэ компьютерт байх ба сурагчдад харагдахгүй — "Сорил нийтлэх" дарж байж тэдэнд очно.</p>
     <div class="row"><div style="flex:3 1 300px"><label for="vTitle">Сорилын нэр</label><input id="vTitle" placeholder="Жишээ: Unit 3 шинэ үг"></div></div>
     <div class="scroll" style="margin-top:12px;max-height:440px;overflow-y:auto;border:1px solid var(--line);border-radius:6px">
       <table class="wgrid"><thead><tr><th>№</th><th>Англи үг</th><th>Монгол орчуулга</th><th>Өөр зөв хариулт (заавал биш)</th></tr></thead><tbody id="vGrid"></tbody></table>
@@ -1346,34 +1362,36 @@ body.student #studentApp{display:block}
     <div class="avgsum" style="margin-top:10px"><span id="vScoreInfo">0 үг</span></div>
     <div class="row" style="margin-top:10px">
       <div><label for="vDir">Чиглэл</label><select id="vDir">
-        <option value="en">Англи → Монгол</option><option value="mn">Монгол → Англи</option><option value="mix">Холимог</option></select></div>
+        <option value="en">🔤 Англи → Монгол</option><option value="mn">🔤 Монгол → Англи</option><option value="mix">🔀 Холимог</option></select></div>
       <div><label for="vType">Хариулах арга</label><select id="vType">
-        <option value="type">Бичиж хариулах</option><option value="choice">4 хувилбараас сонгох</option></select></div>
+        <option value="type">⌨️ Бичиж хариулах</option><option value="choice">🔘 4 хувилбараас сонгох</option></select></div>
       <div><label for="vView">Харуулах хэлбэр</label><select id="vView">
-        <option value="list">Бүх үг нэг хуудсанд, эцэст нь "Илгээх"</option><option value="single">Нэг нэгээр нь</option></select></div>
+        <option value="list">📄 Бүх үг нэг хуудсанд, эцэст нь "Илгээх"</option><option value="single">👉 Нэг нэгээр нь</option></select></div>
       <div><label for="vTime">Хугацаа (минут, 0 = хязгааргүй)</label><input id="vTime" type="number" min="0" max="120" value="10"></div>
     </div>
     <div class="row" style="margin-top:10px">
       <div style="flex:2 1 320px" id="vTolWrap"><label for="vTol">Үсгийн алдаа</label><select id="vTol">
-        <option value="0">Яг зөв бичсэн байх</option>
-        <option value="1">1 үсгийн алдааг зөвд тооцох (4 ба түүнээс урт үгэнд)</option>
-        <option value="2" selected>Уян хатан: 2 хүртэл алдааг зөвд тооцох, 3 ба түүнээс олон бол буруу (6+ үсэгтэй үгэнд 2, 4–5 үсэгтэй үгэнд 1)</option></select>
+        <option value="0">🎯 Яг зөв бичсэн байх</option>
+        <option value="1">✏️ 1 үсгийн алдааг зөвд тооцох (4 ба түүнээс урт үгэнд)</option>
+        <option value="2" selected>🤸 Уян хатан: 2 хүртэл алдааг зөвд тооцох, 3 ба түүнээс олон бол буруу (6+ үсэгтэй үгэнд 2, 4–5 үсэгтэй үгэнд 1)</option></select>
         <div class="hint" style="margin:4px 0 0;font-size:.82rem">о/ө, у/ү, е/э, и/й гэх мэт ойролцоо үсгийг хольж бичвэл хагас алдаа гэж тооцно. Үр дүнгээс багш үг бүрийг гараар "Зөв болгох" боломжтой.</div></div>
       <div style="flex:2 1 320px"><label for="vLogin">Сурагч нэвтрэх арга</label><select id="vLogin">
-        <option value="names">Ангиа сонгоод нэрсийн жагсаалтаас нэрээ дарна</option>
-        <option value="code">Ангиа сонгоод 2 оронтой кодоо оруулна (илүү найдвартай)</option></select></div>
+        <option value="names">👆 Ангиа сонгоод нэрсийн жагсаалтаас нэрээ дарна</option>
+        <option value="code">🔢 Ангиа сонгоод 2 оронтой кодоо оруулна (илүү найдвартай)</option></select></div>
       <div style="flex:2 1 320px"><label for="vMode">Сорилоос гарвал</label><select id="vMode">
-        <option value="strict">Сорил шууд дуусна, буцаж үргэлжлүүлэх боломжгүй</option>
-        <option value="warn">Анхааруулж, гарсан тоог тэмдэглэнэ, үргэлжлүүлж болно</option></select></div>
+        <option value="strict">⛔ Сорил шууд дуусна, буцаж үргэлжлүүлэх боломжгүй</option>
+        <option value="warn">⚠️ Анхааруулж, гарсан тоог тэмдэглэнэ, үргэлжлүүлж болно</option></select></div>
     </div>
     <div style="margin-top:12px"><label>Оролцох ангиуд</label><div id="vClasses" class="roster"></div></div>
-    <div class="btns"><button class="btn" id="vPublish">Сорил нийтлэх</button></div>
+    <div class="btns"><button class="btn" id="vPublish">🚀 Сорил нийтлэх</button><button class="btn ghost" id="vSetSave">💾 Миний сорилуудад хадгалах</button></div>
+    <p class="hint" style="margin:6px 0 0;font-size:.85rem">"Миний сорилуудад хадгалах" нь сонгосон ангийнх нь жагсаалтад хадгална. Анги сонгоогүй бол нэрээс нь (жишээ нь "10-р анги …") таньж ангилна.</p>
     <div class="msg" id="vPubMsg" role="status"></div>
   </div>
 
-  <div class="panel">
-    <h2>Сорилын дүн ба анализ</h2>
+  <div class="panel" id="v-res">
+    <h2>📋 Сорилын дүн</h2>
     <p class="hint">Сурагчдын илгээсэн хариулт энд гарна: эрэмбэ, оноо (100-аас), хугацаа, түвшин, ороогүй сурагчид, хамгийн их алдсан үгс. Сурагчийн нэр дээр дарвал үг бүрт юу гэж бичсэнийг харна.</p>
+    <div class="ex-tools"><div class="ex-chips" id="vResGrades" role="group" aria-label="Ангиар шүүх"></div></div>
     <div id="vHist"></div>
     <div class="row">
       <div style="flex:3 1 280px"><label for="vQuizSel">Сорил</label><select id="vQuizSel"><option value="">Холболт шалгасны дараа жагсаалт гарна</option></select></div>
@@ -1388,6 +1406,12 @@ body.student #studentApp{display:block}
     <div class="msg" id="vResMsg" role="status"></div>
     <div id="vShare"></div>
     <div id="vResults"></div>
+  </div>
+
+  <div class="panel" id="v-ana">
+    <h2>📈 Анализ</h2>
+    <p class="hint">Ангийн бүх сорилын дүнг нэгтгэнэ: үзүүлэлт, график, сурагч бүрийн ахиц, хамгийн их алдсан үгс, дүгнэлт. Дүн энэ төхөөрөмж болон дансанд хадгалагддаг тул сорилыг устгасан ч анализ нь хэвээр үлдэнэ.</p>
+    <div id="vAna"></div>
   </div>
 </section>
 
@@ -3565,7 +3589,7 @@ function renderEntryClasses(){
   const sel=$('#cls');
   if(entryCls&&!db.classes.find(c=>c.name===entryCls))entryCls='';
   if(!entryCls&&db.classes.length)entryCls=examCls()||db.classes[0].name;
-  const g=examGrade(state),opt=c=>`<option${c.name===entryCls?' selected':''}>${esc(c.name)}</option>`;
+  const g=examGrade(state),opt=c=>`<option value="${esc(c.name)}"${c.name===entryCls?' selected':''}>👥 ${esc(c.name)}</option>`;
   const mine=g?db.classes.filter(c=>clsGrade(c.name)===g):[],rest=db.classes.filter(c=>!mine.includes(c));
   sel.innerHTML=!db.classes.length?'<option value="">Эхлээд "Шалгалтын сан" хэсэгт анги нэмнэ үү</option>'
     :mine.length&&rest.length?`<optgroup label="Энэ шалгалтын анги (${g}-р)">${mine.map(opt).join('')}</optgroup><optgroup label="Бусад анги">${rest.map(opt).join('')}</optgroup>`
@@ -3805,8 +3829,8 @@ function viewRows(rows,o){
 const showLabel=v=>SHOW_OPTS.find(o=>o[0]===v)[1];
 function viewControls(id,show,sort){
   return`<div class="row noprint" style="margin:6px 0 10px">
-    <div><label for="${id}Show">Харуулах</label><select id="${id}Show">${SHOW_OPTS.map(o=>`<option value="${o[0]}"${o[0]===show?' selected':''}>${o[1]}</option>`).join('')}</select></div>
-    <div><label for="${id}Sort">Эрэмбэлэх</label><select id="${id}Sort">${SORT_OPTS.map(o=>`<option value="${o[0]}"${o[0]===sort?' selected':''}>${o[1]}</option>`).join('')}</select></div></div>`;
+    <div><label for="${id}Show">Харуулах</label><select id="${id}Show">${SHOW_OPTS.map(o=>`<option value="${o[0]}"${o[0]===show?' selected':''}>${({all:"👥",above:"⬆️",below:"⬇️",fail:"⚠️"})[o[0]]} ${o[1]}</option>`).join('')}</select></div>
+    <div><label for="${id}Sort">Эрэмбэлэх</label><select id="${id}Sort">${SORT_OPTS.map(o=>`<option value="${o[0]}"${o[0]===sort?' selected':''}>${({name:"🔤",code:"🔢",desc:"📉",asc:"📈"})[o[0]]} ${o[1]}</option>`).join('')}</select></div></div>`;
 }
 function avgSummary(rows,pct,avg,extra){
   const up=rows.filter(r=>pct(r)>=avg-1e-9).length,dn=rows.length-up,fl=rows.filter(r=>pct(r)<60).length;
@@ -4083,8 +4107,8 @@ function renderAnalysis(){
     <div class="row">
       <div style="flex:3 1 240px"><h2>${esc(state.exam.title||'Шалгалтын анализ')}</h2>
         <p class="hint" style="margin:0">${qs.length} асуулт, нийт ${r1(d.total)} оноо</p></div>
-      <div><label for="fcls">Анги</label><select id="fcls"><option value="">Бүх анги</option>${classes.map(c=>`<option${c===filterCls?' selected':''}>${esc(c)}</option>`).join('')}</select></div>
-      ${varOn()?`<div><label for="fvar">Хувилбар</label><select id="fvar"><option value="">Бүх хувилбар</option>${Array.from({length:vCount()},(_,v)=>`<option value="${v}"${String(v)===filterVar?' selected':''}>Зөвхөн ${VNAMES[v]} хувилбар</option>`).join('')}</select></div>`:''}
+      <div><label for="fcls">Анги</label><select id="fcls"><option value="">🏫 Бүх анги</option>${classes.map(c=>`<option value="${esc(c)}"${c===filterCls?' selected':''}>👥 ${esc(c)}</option>`).join('')}</select></div>
+      ${varOn()?`<div><label for="fvar">Хувилбар</label><select id="fvar"><option value="">🔀 Бүх хувилбар</option>${Array.from({length:vCount()},(_,v)=>`<option value="${v}"${String(v)===filterVar?' selected':''}>Зөвхөн ${VNAMES[v]} хувилбар</option>`).join('')}</select></div>`:''}
       <div><label for="anonSel">Сурагчийг харуулах</label><select id="anonSel">
         <option value="name"${anonOn()?'':' selected'}>Нэрээр</option>
         <option value="code"${anonOn()?' selected':''}>Зөвхөн кодоор</option></select></div>
@@ -4456,7 +4480,7 @@ function renderSheetPanel(){
   if(nv>1){const cur=+($('#sVar').value||0)||0;
     $('#sVar').innerHTML=Array.from({length:nv},(_,v)=>`<option value="${v}"${v===cur?' selected':''}>${VNAMES[v]} хувилбар</option>`).join('');}
   const sel=$('#sCls'),cur=sel.value||examCls();
-  sel.innerHTML=db.classes.map(c=>`<option${c.name===cur?' selected':''}>${esc(c.name)}</option>`).join('');
+  sel.innerHTML=db.classes.map(c=>`<option value="${esc(c.name)}"${c.name===cur?' selected':''}>👥 ${esc(c.name)}</option>`).join('');
   const c=db.classes.find(x=>x.name===sel.value),m=$('#sMsg');m.textContent='';m.style.color='';
   let st=null;
   if(mode==='class'&&c){
@@ -4584,7 +4608,7 @@ function renderFinal(){
   <div class="panel noprint">
     <h2>Нэгдсэн анализ</h2>
     <p class="hint">Ангиа сонгоод тооцох шалгалтуудаа чагтална. Жин нь шалгалт бүр эцсийн дүнд хэр нөлөөлөхийг заана: бүгд 1 бол энгийн дундаж. Жишээ нь явцын шалгалтуудыг 1, улирлын шалгалтыг 2 гэвэл улирлынх нь хоёр дахин их нөлөөлнө.</p>
-    <div class="row"><div style="max-width:260px"><label for="fcls2">Анги</label><select id="fcls2">${classes.map(c=>`<option${c===finalCls?' selected':''}>${esc(c)}</option>`).join('')}</select></div>
+    <div class="row"><div style="max-width:260px"><label for="fcls2">Анги</label><select id="fcls2">${classes.map(c=>`<option value="${esc(c)}"${c===finalCls?' selected':''}>👥 ${esc(c)}</option>`).join('')}</select></div>
       <div style="max-width:260px"><label for="anonSel2">Сурагчийг харуулах</label><select id="anonSel2">
         <option value="name"${anonOn()?'':' selected'}>Нэрээр</option>
         <option value="code"${anonOn()?' selected':''}>Зөвхөн кодоор</option></select></div></div>
@@ -4621,9 +4645,9 @@ function renderFinal(){
   </div>`:''}
   <div class="panel">
     <div class="row noprint" style="margin-bottom:10px"><div style="max-width:320px"><label for="fchart">График</label><select id="fchart">
-      <option value="trend"${finalChart==='trend'?' selected':''}>Ангийн дундаж, шалгалт бүрээр</option>
-      <option value="students"${finalChart==='students'?' selected':''}>Сурагчдын эцсийн дүн</option>
-      <option value="topics"${finalChart==='topics'?' selected':''}>Агуулга тус бүрийн нэгдсэн дүн</option></select></div></div>
+      <option value="trend"${finalChart==='trend'?' selected':''}>📈 Ангийн дундаж, шалгалт бүрээр</option>
+      <option value="students"${finalChart==='students'?' selected':''}>👥 Сурагчдын эцсийн дүн</option>
+      <option value="topics"${finalChart==='topics'?' selected':''}>📚 Агуулга тус бүрийн нэгдсэн дүн</option></select></div></div>
     <div class="chart-box${cbCls()}">${chart}</div>
   </div>
   <div class="panel"><h2>Сурагч тус бүрийн эцсийн дүн</h2>
@@ -5994,9 +6018,9 @@ $('#liveBtn').addEventListener('click',liveOpen);
 /* ---------- charts ---------- */
 let chartData='q',chartType='bar',chartStyle='modern',lastD=null,chSeq=0;
 const STYLE_NEW=[['modern','✨ Орчин үеийн (босго, дундажтай)'],['cyl','🧪 Шилэн цилиндр (3D)'],['cone','🔺 Конус (3D)'],['peak','⛰️ Оргил'],['pill','🌙 Бөөрөнхий, бараан дэвсгэр'],['ribbon','🎀 Тууз, урт сүүдэртэй']];
-const STYLE_OLD=[['deep','Хайрцаг 3D (хуучин)'],['soft','Зөөлөн сүүдэртэй'],['flat','Энгийн хавтгай (хэвлэхэд)']];
+const STYLE_OLD=[["deep","🧊 Хайрцаг 3D (хуучин)"],["soft","☁️ Зөөлөн сүүдэртэй"],["flat","📄 Энгийн хавтгай (хэвлэхэд)"]];
 const STYLE_OPTS=[...STYLE_NEW,...STYLE_OLD];
-const CLR_OPTS=[['lv','Түвшнээр (ногоон / шар / улаан)'],['rb','Олон өнгө']];
+const CLR_OPTS=[["lv","🚦 Түвшнээр (ногоон / шар / улаан)"],["rb","🌈 Олон өнгө"]];
 /* Графикийн төрөл бүрт тохирох загвар. Тохирохгүй бол ойролцоо загвараар зурна. */
 const STY_OK={hbar:['modern','cyl','pill','ribbon','deep','soft','flat'],line:['soft','flat'],pie:['cyl','cone','deep','soft','flat']};
 /* Графикийн дэвсгэр — бүх графикт (шинжилгээ, нэгдсэн тайлан). Word тайлан хэвлэхэд зориулж цагаан хэвээр. */
@@ -6265,6 +6289,7 @@ const DATA_OPTS=[['q','Асуулт тус бүрийн гүйцэтгэл'],['t
 /* Өөрийн тусгай зурагтай өгөгдөл — графикийн төрөл сонгох шаардлагагүй */
 const SPECIAL=['hm','rd'],PIE_OK=['lv','qd'];
 const TYPE_OPTS=[['bar','Босоо багана'],['hbar','Хэвтээ багана'],['line','Шугаман'],['pie','Дугуй']];
+const DATA_IC={q:"❓",t:"📚",lv:"📶",s:"👥",c:"🏫",qd:"⚖️",hm:"🌡️",rd:"🕸️"},TYPE_IC={bar:"📊",hbar:"📏",line:"📈",pie:"🥧"};
 const PIE_COLORS=['#1F5A41','#3E8A63','#78B48F','#A96A12','#D19A3E','#B4314A','#D46A80','#8A93A6'];
 function series(d,k){k=k||chartData;
   const qs=state.exam.questions;
@@ -6423,9 +6448,9 @@ function renderChart(){
       :chartType==='pie'?svgPie(S):chartType==='hbar'?svgHBar(S):svgBar(S,chartType==='line');}
   p.innerHTML=`<h2>График</h2>
     <div class="chart-controls">
-      <div><label for="cdata">Юуг харуулах</label><select id="cdata">${DATA_OPTS.map(o=>`<option value="${o[0]}"${o[0]===chartData?' selected':''}>${o[1]}</option>`).join('')}</select></div>
+      <div><label for="cdata">Юуг харуулах</label><select id="cdata">${DATA_OPTS.map(o=>`<option value="${o[0]}"${o[0]===chartData?' selected':''}>${DATA_IC[o[0]]||""} ${o[1]}</option>`).join('')}</select></div>
       <div><label for="ctype">Графикийн төрөл</label><select id="ctype"${sp?' disabled':''}>${TYPE_OPTS.map(o=>{const no=o[0]==='pie'&&!PIE_OK.includes(chartData);
-        return`<option value="${o[0]}"${o[0]===chartType?' selected':''}${no?' disabled':''}>${o[1]}${no?' (зөвхөн түвшин, хүндрэлд)':''}</option>`;}).join('')}</select></div>
+        return`<option value="${o[0]}"${o[0]===chartType?' selected':''}${no?' disabled':''}>${TYPE_IC[o[0]]||""} ${o[1]}${no?' (зөвхөн түвшин, хүндрэлд)':''}</option>`;}).join('')}</select></div>
       <div><label for="cstyle">Загвар</label><select id="cstyle"${sp?' disabled':''}><optgroup label="Шинэ загвар">${STYLE_NEW.map(stOpt).join('')}</optgroup><optgroup label="Энгийн">${STYLE_OLD.map(stOpt).join('')}</optgroup></select></div>
       <div><label for="cclr">Өнгө</label><select id="cclr"${sp||chartType==='line'?' disabled':''}>${CLR_OPTS.map(o=>`<option value="${o[0]}"${o[0]===clr?' selected':''}>${o[1]}</option>`).join('')}</select></div>
       <div><label for="cbg">Дэвсгэр</label><select id="cbg">${BG_OPTS.map(o=>`<option value="${o[0]}"${o[0]===curBg()?" selected":""}>${o[1]}</option>`).join("")}</select></div>
@@ -6481,7 +6506,8 @@ async function qrSvg(text){
 }
 
 /* ---------- vocabulary quiz: teacher ---------- */
-let vList=[],vSel='',vRes=null,vCls='',vTimer=null;
+let vList=[],vSel='',vRes=null,vCls='',vTimer=null,vAnaCls='',vSyncing=false;
+let vResGrade='all';try{vResGrade=localStorage.getItem('shalgalt-vres-grade')||'all';}catch(x){}
 function vcfg(){db.vocab=db.vocab||{api:'',key:'',base:''};return db.vocab;}
 /* Шинэ үгийн сорил: дансаар нэвтэрсэн бол Supabase-аар (Google хэрэггүй).
    Хариултын хэлбэр нь хуучин Google серверийнхтэй яг ижил тул бусад код хөндөгдөхгүй. */
@@ -6581,18 +6607,55 @@ $('#vWordsFile').addEventListener('change',async e=>{
 });
 $('#vType').addEventListener('change',()=>{$('#vTolWrap').hidden=$('#vType').value!=='type';});
 
-/* ---------- урьдчилан бэлдсэн сорилууд (10 хүртэл, зөвхөн энэ компьютерт) ---------- */
-const VSET_MAX=10;
+/* ---------- "Миний сорилууд": урьдчилан бэлдсэн сорилууд, ангиараа тусдаа ----------
+   Анги нь хадгалахдаа сонгосон ангиудаас (хамгийн олон нь), эсвэл нэрээс ("10-р анги …") тодорхойлогдоно. */
+const VSET_MAX=100;
 function vsets(){db.vsets=db.vsets||[];return db.vsets;}
 const vSetFields=()=>({dir:$('#vDir').value,type:$('#vType').value,view:$('#vView').value,
   time:$('#vTime').value,tol:$('#vTol').value,login:$('#vLogin').value,mode:$('#vMode').value,
   cls:[...document.querySelectorAll('#vClasses input:checked')].map(x=>x.value)});
+const titleGrade=t=>{t=String(t||'');const m=t.match(/(?:^|[\s,(])(\d{1,2})\s*-?\s*р\s+анги/i)||t.match(/^\s*(\d{1,2})(?=[\s\-.,:]|[А-ЯӨҮЁа-яөүё]|$)/);
+  const g=m?+m[1]:0;return g>=1&&g<=12?g:0;};
+function vGradeOf(cls,title){const c={};(cls||[]).forEach(n=>{const g=clsGrade(n);if(g)c[g]=(c[g]||0)+1;});
+  const t=Object.keys(c).sort((a,b)=>c[b]-c[a])[0];return t?+t:titleGrade(title);}
+/* Ангиар шүүх товчнууд (шалгалтын жагсаалттай ижил) */
+function gradeChips(el,all,gOf,cur){
+  const grades=[...new Set(all.map(gOf))].sort((a,b)=>a-b);
+  if(cur!=='all'&&!grades.includes(+cur))cur='all';
+  if(el)el.innerHTML=grades.length>1?[['all','Бүгд ('+all.length+')'],...grades.map(g=>[String(g),(g?g+'-р анги':'Ангигүй')+' ('+all.filter(x=>gOf(x)===g).length+')'])]
+    .map(([v,l])=>`<button type="button" class="ex-chip" data-g="${v}" aria-pressed="${cur===v}">${esc(l)}</button>`).join(''):'';
+  return cur;
+}
+const gBadge=g=>`<span class="ex-g${g?' g'+Math.min(12,Math.max(9,g)):''}">${g?g+'-р анги':'—'}</span>`;
+const V_DIR={en:'🔤 Англи → Монгол',mn:'🔤 Монгол → Англи',mix:'🔀 Холимог'};
+let vSetGrade='all';try{vSetGrade=localStorage.getItem('shalgalt-vset-grade')||'all';}catch(x){}
 function vSetRender(){
-  const sel=$('#vSetSel');if(!sel)return;const list=vsets();
-  sel.innerHTML=list.length
-    ? list.map(s=>`<option value="${esc(s.id)}">${esc(s.title||'Нэргүй сорил')} — ${s.rows.length} үг${s.saved?', '+esc(s.saved):''}</option>`).join('')
-    : '<option value="">Хадгалсан сорил алга</option>';
-  $('#vSetLoad').disabled=$('#vSetDel').disabled=!list.length;
+  const box=$('#vSetList');if(!box)return;
+  const all=vsets().slice().sort((a,b)=>String(b.saved||'').localeCompare(String(a.saved||''))),gOf=s=>vGradeOf(s.cls,s.title);
+  vSetGrade=gradeChips($('#vSetGrades'),all,gOf,vSetGrade);
+  const nz=s=>String(s||'').toLowerCase().replace(/\s+/g,' ').trim(),q=nz($('#vSetFind').value);
+  const list=all.filter(s=>(vSetGrade==='all'||gOf(s)===+vSetGrade)&&(!q||nz(s.title).includes(q)));
+  box.className='ex-list';box.setAttribute('role','listbox');box.setAttribute('aria-label','Миний сорилууд');
+  box.innerHTML=list.length?list.map(s=>{const g=gOf(s);
+    const sub=[(s.cls||[]).length?'👥 '+esc(s.cls.join(', ')):'',V_DIR[s.dir]||'',s.type==='choice'?'🔘 4 хувилбараас':'⌨️ Бичиж хариулах',+s.time?'⏱️ '+esc(s.time)+' мин':''].filter(Boolean).join(' · ');
+    return`<div class="ex-row" role="option" tabindex="0" data-vs="${esc(s.id)}" title="Нээж засах, нийтлэх">${gBadge(g)}
+      <span class="ex-t"><span>${esc(s.title||'Нэргүй сорил')}</span><small>${sub}</small></span>
+      <span class="ex-d">📅 ${esc(s.saved||'огноогүй')}</span><span class="ex-n">🔤 ${s.rows.length} үг</span>
+      <button type="button" class="ex-del" data-vsdel="${esc(s.id)}" title="Устгах" aria-label="${esc(s.title||'Нэргүй сорил')} сорилыг устгах">🗑</button></div>`;}).join('')
+    :`<p class="ex-none">${q?'"'+esc($('#vSetFind').value)+'" нэртэй сорил олдсонгүй.':all.length?'Энэ ангид бэлдсэн сорил алга.':'Бэлдсэн сорил алга. "Шинэ сорил" хэсэгт үгсээ оруулаад "Миний сорилуудад хадгалах" дарна уу.'}</p>`;
+}
+function vSetOpen(id){
+  const s=vsets().find(x=>x.id===id),m=$('#vPubMsg');if(!s)return;
+  if(vGridData.some(r=>r.some(x=>String(x).trim()))&&!confirm('"Шинэ сорил" хүснэгтэд байгаа үгсийг "'+(s.title||'')+'" сорилоор солих уу?'))return;
+  vGridData=s.rows.map(r=>r.slice(0,3));while(vGridData.length<s.rows.length+5)vGridData.push(['','','']);
+  vGridSave();vGridRender();
+  $('#vTitle').value=s.title||'';
+  [['vDir','dir'],['vType','type'],['vView','view'],['vTime','time'],['vTol','tol'],['vLogin','login'],['vMode','mode']]
+    .forEach(([id2,k])=>{if(s[k]!=null)$('#'+id2).value=s[k];});
+  $('#vTolWrap').hidden=$('#vType').value!=='type';
+  document.querySelectorAll('#vClasses input').forEach(x=>{x.checked=(s.cls||[]).includes(x.value);});
+  secTab('v-new','vocab');
+  m.style.color='';m.textContent='"'+(s.title||'')+'" нээгдлээ: '+s.rows.length+' үг. Шалгаад "Сорил нийтлэх" дарна уу.';
 }
 $('#vSetSave').addEventListener('click',()=>{
   const m=$('#vPubMsg'),rows=vGridData.filter(r=>r.some(x=>String(x).trim())).map(r=>r.slice(0,3));
@@ -6603,30 +6666,24 @@ $('#vSetSave').addEventListener('click',()=>{
   if(i>=0){if(!confirm('"'+title+'" нэртэй сорил аль хэдийн хадгалагдсан байна. Дээр нь бичих үү?'))return;item.id=list[i].id;list[i]=item;}
   else{
     if(list.length>=VSET_MAX){m.style.color='var(--stain)';
-      m.textContent=VSET_MAX+' сорил хадгалсан байна. Шинээр хадгалахын тулд аль нэгийг нь устгана уу.';return;}
+      m.textContent=VSET_MAX+' сорил хадгалсан байна. Шинээр хадгалахын тулд "Миний сорилууд"-аас аль нэгийг нь устгана уу.';return;}
     list.push(item);
   }
-  save();vSetRender();$('#vSetSel').value=item.id;
-  m.style.color='';m.textContent='"'+title+'" хадгалагдлаа ('+rows.length+' үг). Хэрэгтэй үед дээрээс сонгоод нээнэ.';
+  save();const g=vGradeOf(item.cls,title);vSetGrade='all';vSetRender();
+  m.style.color='';m.textContent='"'+title+'" '+(g?g+'-р ангийн ':'')+'"Миний сорилууд" жагсаалтад хадгалагдлаа ('+rows.length+' үг).'+(g?'':' Анги сонгоогүй тул "Ангигүй" бүлэгт орлоо.');
 });
-$('#vSetLoad').addEventListener('click',()=>{
-  const s=vsets().find(x=>x.id===$('#vSetSel').value),m=$('#vPubMsg');if(!s)return;
-  if(vGridData.some(r=>r.some(x=>String(x).trim()))&&!confirm('Одоогийн хүснэгтийг "'+(s.title||'')+'" сорилоор солих уу?'))return;
-  vGridData=s.rows.map(r=>r.slice(0,3));while(vGridData.length<s.rows.length+5)vGridData.push(['','','']);
-  vGridSave();vGridRender();
-  $('#vTitle').value=s.title||'';
-  [['vDir','dir'],['vType','type'],['vView','view'],['vTime','time'],['vTol','tol'],['vLogin','login'],['vMode','mode']]
-    .forEach(([id,k])=>{if(s[k]!=null)$('#'+id).value=s[k];});
-  $('#vTolWrap').hidden=$('#vType').value!=='type';
-  document.querySelectorAll('#vClasses input').forEach(x=>{x.checked=(s.cls||[]).includes(x.value);});
-  m.style.color='';m.textContent='"'+(s.title||'')+'" нээгдлээ: '+s.rows.length+' үг. Шалгаад "Сорил нийтлэх" дарна уу.';
-});
-$('#vSetDel').addEventListener('click',()=>{
-  const s=vsets().find(x=>x.id===$('#vSetSel').value),m=$('#vPubMsg');if(!s)return;
-  if(!confirm('"'+(s.title||'')+'" сорилыг хадгалсан жагсаалтаас устгах уу? Хүснэгт дэх үгс хэвээр үлдэнэ.'))return;
-  db.vsets=vsets().filter(x=>x.id!==s.id);save();vSetRender();
-  m.style.color='';m.textContent='"'+(s.title||'')+'" устлаа. Үлдсэн: '+vsets().length+'/'+VSET_MAX+'.';
-});
+$('#vSetGrades').addEventListener('click',e=>{const b=e.target.closest('[data-g]');if(!b)return;vSetGrade=b.dataset.g;
+  try{localStorage.setItem('shalgalt-vset-grade',vSetGrade);}catch(x){}vSetRender();});
+$('#vSetFind').addEventListener('input',vSetRender);
+$('#vSetList').addEventListener('click',e=>{
+  const d=e.target.closest('[data-vsdel]');
+  if(d){const s=vsets().find(x=>x.id===d.dataset.vsdel);if(!s)return;
+    if(!confirm('"'+(s.title||'')+'" сорилыг "Миний сорилууд"-аас устгах уу? Нийтэлсэн сорил, түүний дүн хэвээр үлдэнэ.'))return;
+    db.vsets=vsets().filter(x=>x.id!==s.id);save();vSetRender();return;}
+  const r=e.target.closest('[data-vs]');if(r)vSetOpen(r.dataset.vs);});
+$('#vSetList').addEventListener('keydown',e=>{if(e.key!=='Enter')return;const r=e.target.closest('[data-vs]');if(r&&!e.target.closest('[data-vsdel]'))vSetOpen(r.dataset.vs);});
+$('#vSetNew').addEventListener('click',()=>{secTab('v-new','vocab');$('#vTitle').focus();});
+
 /* localhost бол зөвхөн энэ компьютер дээр ажиллана — сурагчдын холбоос болгож болохгүй */
 const isLocalPage=()=>location.protocol==='file:'||/^(localhost|127\.0\.0\.1|\[?::1\]?)$/i.test(location.hostname)||/\.localhost$/i.test(location.hostname);
 const isPublicPage=()=>/^https?:$/.test(location.protocol)&&!isLocalPage();
@@ -6650,18 +6707,22 @@ function renderVocab(){
   if(!vPanelOnce){vPanelOnce=true;$('#vPanel').open=!vset&&!vSb();}
   /* дансаар нэвтэрсэн бол Google тохиргоо хэрэггүй — нууж, сорилуудаа шууд ачаална */
   $('#vGooglePanel').hidden=vSb();
+  if($('#vSecGoogle').hidden!==vSb()){$('#vSecGoogle').hidden=vSb();let s='';try{s=localStorage.getItem('shalgalt-vocab-sec')||'';}catch(x){}secTab(s||'v-sets','vocab');}
   if(vSb()&&!vSbLoaded){vSbLoaded=true;vLoadList().then(()=>{if(vSel)vShowQuiz();}).catch(e=>{vSbLoaded=false;const m=$('#vResMsg');if(m){m.style.color='var(--stain)';m.textContent=e.message;}});}
   vSetRender();
   const prev=new Set([...document.querySelectorAll('#vClasses input:checked')].map(x=>x.value));
   $('#vClasses').innerHTML=db.classes.length?db.classes.map(k=>`<label class="chip" style="display:inline-flex;gap:6px;align-items:center;margin:0"><input type="checkbox" value="${esc(k.name)}" style="width:auto"${prev.has(k.name)?' checked':''}> ${esc(k.name)} (${k.students.length})</label>`).join('')
     :'<span class="progress">"Шалгалтын сан" хэсэгт анги, сурагчдын нэрс оруулна уу.</span>';
   renderVQuizList();
+  const on=document.querySelector('.secnav[data-tabs="vocab"] a.on');if(on)vTabShown(on.getAttribute('href').slice(1));
 }
 function renderVQuizList(){
   const sel=$('#vQuizSel');
   const when=c=>{const s=String(c||'');if(!s)return'огноогүй';
     const d=new Date(s);return isNaN(d)?s.slice(0,10):s.slice(0,10)+' '+d.toTimeString().slice(0,5);};
-  sel.innerHTML=vList.length?vList.map(q=>`<option value="${esc(q.id)}"${q.id===vSel?' selected':''}>${esc(q.title||'Нэргүй сорил')} — ${esc(when(q.created))}, ${q.count} оролдлого${q.open?'':', хаалттай'}</option>`).join('')
+  vResGrade=gradeChips($('#vResGrades'),vList,vQGrade,vResGrade);
+  const shown=vList.filter(q=>vResGrade==='all'||vQGrade(q)===+vResGrade||q.id===vSel);
+  sel.innerHTML=shown.length?shown.map(q=>{const g=vQGrade(q);return`<option value="${esc(q.id)}"${q.id===vSel?' selected':''}>${q.open?'🟢':'🔒'} ${g?'['+g+'-р анги] ':''}${esc(q.title||'Нэргүй сорил')} — ${esc(when(q.created))}, ${q.count} оролдлого</option>`;}).join('')
     :'<option value="">'+(vSb()?'Сорил алга. Доорх "Шинэ сорил үүсгэх"-ээр нэмнэ үү.':vcfg().api?'Сорил алга. "Холболт шалгах" дарж шинэчилнэ үү.':'Холболт шалгасны дараа жагсаалт гарна')+'</option>';
   const q=vList.find(x=>x.id===vSel);$('#vToggle').textContent=q&&!q.open?'Сорилыг нээх':'Сорилыг хаах';
   vHistRender(when);
@@ -6670,21 +6731,22 @@ function renderVQuizList(){
    дээрх цэснээс сонгогдох хэвээр — серверт хадгалагдсаар байна. */
 function vHistRender(when){
   const box=$('#vHist');if(!box)return;
-  const last=vList.slice(0,5);
+  const mine=vList.filter(q=>vResGrade==='all'||vQGrade(q)===+vResGrade),last=mine.slice(0,5);
   if(!last.length){box.innerHTML='';return;}
   box.innerHTML=`<h3 style="margin:4px 0 8px;font-size:1rem">Сүүлийн ${last.length} сорил</h3>
     <div class="vh-list">${last.map(q=>`<div class="vh-card${q.id===vSel?' on':''}">
       <div class="vh-top"><b>${esc(q.title||'Нэргүй сорил')}</b><span class="oe-pill${q.open?'':' off'}">${q.open?'нээлттэй':'хаалттай'}</span></div>
-      <small>${esc(when(q.created))} · ${q.count} сурагч өгсөн</small>
+      <small>${vQGrade(q)?gBadge(vQGrade(q))+' ':''}📅 ${esc(when(q.created))} · 👥 ${q.count} сурагч өгсөн</small>
       <div class="vh-btns"><button type="button" class="btn${q.id===vSel?'':' ghost'}" data-vh="${esc(q.id)}">${q.id===vSel?'Нээлттэй байна':'Анализ харах'}</button>
         <button type="button" class="btn danger" data-vhdel="${esc(q.id)}">Устгах</button></div></div>`).join('')}</div>
-    ${vList.length>5?`<p class="hint" style="margin:6px 0 0;font-size:.84rem">Өмнөх ${vList.length-5} сорил доорх "Сорил" цэснээс сонгогдоно.</p>`:''}`;
+    ${mine.length>5?`<p class="hint" style="margin:6px 0 0;font-size:.84rem">Өмнөх ${mine.length-5} сорил доорх "Сорил" цэснээс сонгогдоно.</p>`:''}`;
   box.querySelectorAll('[data-vh]').forEach(b=>b.onclick=()=>{vSel=b.dataset.vh;vRes=null;vCls='';renderVQuizList();vShowQuiz();});
   box.querySelectorAll('[data-vhdel]').forEach(b=>b.onclick=()=>vDeleteQuiz(b.dataset.vhdel));
 }
 async function vDeleteQuiz(id){
   const q=vList.find(x=>x.id===id);if(!q)return;
-  if(!confirm('"'+(q.title||'Нэргүй сорил')+'" сорил болон '+q.count+' сурагчийн хариултыг бүрмөсөн устгах уу?\n\nУстгасны дараа сэргээх боломжгүй.'))return;
+  if(!confirm('"'+(q.title||'Нэргүй сорил')+'" сорил болон '+q.count+' сурагчийн хариултыг бүрмөсөн устгах уу?\n\nУстгасны дараа сэргээх боломжгүй. Харин "Анализ" хэсэгт энэ сорилын дүн (оноо, алдсан үгс) хадгалагдсан хэвээр үлдэнэ.'))return;
+  if(vSel===id&&vRes)vSnap(id,vRes);
   try{await vCall({action:'deleteQuiz',quizId:id});if(vSel===id){vSel='';vRes=null;}await vLoadList();vShowQuiz();
     const m=$('#vResMsg');m.style.color='';m.textContent='Сорил устгагдлаа.';}
   catch(e){$('#vResMsg').textContent=e.message;}
@@ -6721,7 +6783,9 @@ $('#vPublish').addEventListener('click',async()=>{
     dir:$('#vDir').value,view:$('#vView').value,login:$('#vLogin').value,tol:type==='type'?+$('#vTol').value:0,maxScore:100,
     classes,questions:buildQuestions(words,$('#vDir').value,type),created:todayStr()};
   m.style.color='';m.textContent='Нийтэлж байна...';
-  try{const r=await vCall({action:'saveQuiz',quiz});vSel=r.id;await vLoadList();
+  try{const r=await vCall({action:'saveQuiz',quiz});vSel=r.id;
+    vstats()[r.id]={t:quiz.title,c:quiz.created,cls:clsNames,cnt:0,q:quiz.questions.map(x=>[x.prompt,x.answer]),roster:classes.map(k=>[k.name,k.students.length]),a:[]};save();
+    await vLoadList();
     m.textContent=words.length+' үгтэй сорил нийтлэгдлээ. Доорх холбоос эсвэл QR кодыг сурагчдад өгнө үү.';vShowQuiz();
   }catch(e){err(e.message);}
 });
@@ -6762,14 +6826,15 @@ const vOvr=()=>{
 };
 function vMatch(q,ans,tol){const a=vNorm(ans);if(!a)return 0;
   for(const y of(q.accepted||[q.answer])){const t=vNorm(y);if(t===a)return 2;if(tol>0&&levD(t,a)<=tolAllowed(t,tol))return 1;}return 0;}
-function vRegrade(){
-  if(!vRes||vRes._graded)return;const q=vRes.quiz,tol=q.type==='type'?+(q.tol||0):0;
-  vRes.attempts.forEach(a=>{if(a.status==='started'||!a.answers)return;
+function vGradeRes(R){
+  if(!R||R._graded)return;const q=R.quiz,tol=q.type==='type'?+(q.tol||0):0;
+  R.attempts.forEach(a=>{if(a.status==='started'||!a.answers)return;
     a.marks=q.questions.map((x,i)=>q.type==='choice'?(a.answers[i]&&vNorm(a.answers[i])===vNorm(x.answer)?2:0):vMatch(x,a.answers[i],tol));
     const o=vOvr()[a.attemptId]||{};Object.keys(o).forEach(i=>{a.marks[+i]=o[i]?3:-1;});
     a.detail=a.marks.map(m=>m>0?1:0);a.correct=a.detail.reduce((s,x)=>s+x,0);a.total=q.questions.length;});
-  vRes._graded=true;
+  R._graded=true;
 }
+function vRegrade(){vGradeRes(vRes);}
 const vScore=a=>a.total?Math.round(a.correct/a.total*1000)/10:0;
 let vDetailId='';
 function vRanked(){
@@ -6786,11 +6851,12 @@ function vRanked(){
 const V_STATUS={started:'Өгч байна',done:'Дууссан',time:'Хугацаа дууссан',left:'Гарснаар дууссан'};
 function renderVResults(){
   const box=$('#vResults');if(!vRes){box.innerHTML='';return;}
+  vSnap(vSel,vRes);
   const q=vRes.quiz,R=vRanked(),n=q.questions.length,cls=[...new Set((q.classes||[]).map(k=>k.name))];
   const avg=R.fin.length?R.fin.reduce((s,a)=>s+(a.correct||0),0)/R.fin.length:0;
   const avgT=R.fin.length?R.fin.reduce((s,a)=>s+(a.durationSec||0),0)/R.fin.length:0;
   box.innerHTML=`
-  <div class="row" style="margin:6px 0 12px"><div style="max-width:240px"><label for="vClsSel">Анги</label><select id="vClsSel"><option value="">Бүх анги</option>${cls.map(c=>`<option${c===vCls?' selected':''}>${esc(c)}</option>`).join('')}</select></div></div>
+  <div class="row" style="margin:6px 0 12px"><div style="max-width:240px"><label for="vClsSel">Анги</label><select id="vClsSel"><option value="">🏫 Бүх анги</option>${cls.map(c=>`<option value="${esc(c)}"${c===vCls?' selected':''}>👥 ${esc(c)}</option>`).join('')}</select></div></div>
   <div class="stats">
     <div class="stat"><b>${R.fin.length}</b><span>Дуусгасан</span></div>
     <div class="stat"><b>${R.live.length}</b><span>Одоо өгч байгаа</span></div>
@@ -6859,6 +6925,141 @@ $('#vXlsx').addEventListener('click',()=>runExport(async()=>{
   const ms={name:'Ороогүй',widths:[8,6,24],rows:[['Анги','Код','Нэр'].map(v=>({v,s:'h'})),...R.missing.map(s=>[s.cls,pad2(s.code),s.name])]};
   const name=fileSafe((q.title||'shine ug')+(vCls?' '+vCls:'')+' ur dun')+'.xlsx';saveBlob(buildXlsx([res,ws,ms]),name);return name;
 },'#vResMsg'));
+
+/* ---------- Сорилын дүнгийн хураангуй (анализад) ----------
+   Сорил бүрийн дүнг товчилж хадгална: db.vstat[id] = {t,c,cls,cnt,q:[[асуулт,зөв]],roster:[[анги,тоо]],a:[{k анги,d код,n нэр,s оноо,u сек,b "1011"}]}.
+   Дансанд хамт хадгалагдах тул сорилыг серверээс устгасан ч анализ нь хэвээр үлдэнэ. */
+function vstats(){db.vstat=db.vstat||{};return db.vstat;}
+function vQGrade(q){const s=vstats()[q.id];return vGradeOf(s&&s.cls,q.title);}
+function vSnap(id,R){
+  if(!id||!R||!R.quiz)return;vGradeRes(R);const q=R.quiz,L=vList.find(x=>x.id===id)||{},old=vstats()[id];
+  const snap={t:q.title||L.title||'',c:String(q.created||L.created||'').slice(0,10),cls:(q.classes||[]).map(k=>k.name),
+    cnt:L.count!=null?L.count:R.attempts.length,q:q.questions.map(x=>[String(x.prompt||''),String(x.answer||'')]),
+    roster:(q.classes||[]).map(k=>[k.name,(k.students||[]).length]),
+    a:R.attempts.filter(a=>a.status!=='started'&&a.detail).map(a=>({k:a.cls,d:Number(a.code)||0,n:a.name,s:vScore(a),u:Math.round(a.durationSec||0),b:a.detail.join('')}))};
+  if(!old||JSON.stringify(old)!==JSON.stringify(snap)){vstats()[id]=snap;save();}
+}
+$('#vResGrades').addEventListener('click',e=>{const b=e.target.closest('[data-g]');if(!b)return;vResGrade=b.dataset.g;
+  try{localStorage.setItem('shalgalt-vres-grade',vResGrade);}catch(x){}renderVQuizList();});
+/* Хураангуй байхгүй, эсвэл хойно нь шинэ оролдлого нэмэгдсэн сорилын дүнг серверээс татна */
+async function vSyncAll(force){
+  if(vSyncing)return 0;
+  if(!vList.length){try{await vLoadList();}catch(e){return 0;}}
+  const S=vstats(),need=vList.filter(q=>force||!S[q.id]||S[q.id].cnt!==q.count||(q.count&&!(S[q.id].a||[]).length));
+  if(!need.length)return 0;
+  vSyncing=true;let k=0;
+  const msg=t=>{const m=$('#vAnaMsg');if(m){m.style.color='';m.textContent=t;}};
+  try{for(const q of need){k++;msg('⏳ Сорилын дүн татаж байна: '+k+' / '+need.length+'…');
+      try{const R=await vCall({action:'results',quizId:q.id});R._graded=false;vSnap(q.id,R);}catch(e){console.error(e);}}}
+  finally{vSyncing=false;}
+  return need.length;
+}
+function vAnaClasses(){const set=new Set();Object.values(vstats()).forEach(s=>{(s.a||[]).forEach(a=>{if(a.k)set.add(a.k);});});
+  return[...set].sort((a,b)=>a.localeCompare(b,'mn',{numeric:true}));}
+/* Ангийн бүх сорилыг нэгтгэнэ */
+function vAnaData(C){
+  const Q=Object.entries(vstats()).map(([id,s])=>({id,...s,A:(s.a||[]).filter(a=>a.k===C)})).filter(s=>s.A.length)
+    .sort((a,b)=>String(a.c).localeCompare(String(b.c))||String(a.t).localeCompare(String(b.t)));
+  const k=db.classes.find(x=>x.name===C);
+  const rosterN=Math.max(k?k.students.length:0,...Q.map(q=>((q.roster||[]).find(r=>r[0]===C)||[0,0])[1]));
+  const mean=a=>a.length?a.reduce((s,x)=>s+x,0)/a.length:0;
+  Q.forEach(q=>{q.avg=mean(q.A.map(a=>a.s));q.part=rosterN?q.A.length/rosterN*100:0;q.time=mean(q.A.map(a=>a.u));});
+  const AA=Q.flatMap(q=>q.A);
+  /* сурагч бүр: нэрсийн жагсаалтаас + сорил өгсөн боловч жагсаалтад байхгүй */
+  const st=new Map();
+  (k?k.students:[]).forEach(n=>st.set(n,{n,code:k.codes[n]||'',sc:[]}));
+  Q.forEach((q,qi)=>q.A.forEach(a=>{if(!st.has(a.n))st.set(a.n,{n:a.n,code:a.d||'',sc:[]});st.get(a.n).sc.push({qi,s:a.s});}));
+  const S=[...st.values()].map(s=>{const v=s.sc.map(x=>x.s),sl=trendSlope(s.sc.map(x=>[x.qi,x.s]));
+    return{...s,taken:v.length,miss:Q.length-v.length,avg:v.length?mean(v):null,last:v.length?v[v.length-1]:null,slope:sl,
+      st:!v.length?'none':mean(v)<60?(sl!=null&&sl>=TREND_STEP?'up':'alert'):sl!=null&&sl<=-TREND_STEP?'down':sl!=null&&sl>=TREND_STEP?'up':'flat'};});
+  /* үг бүрийн гүйцэтгэл (сорил бүрээр) */
+  /* ижил үг олон сорилд давтагдвал нэгтгэнэ */
+  const wm=new Map();Q.forEach(q=>(q.q||[]).forEach((w,i)=>{const A=q.A.filter(a=>a.b&&a.b.length>i);if(!A.length)return;
+    const key=vNorm(w[0]);if(!wm.has(key))wm.set(key,{w:w[0],ans:w[1],n:0,c:0,ts:[]});const x=wm.get(key);
+    x.n+=A.length;x.c+=A.filter(a=>a.b[i]==='1').length;if(!x.ts.includes(q.t))x.ts.push(q.t);}));
+  const W=[...wm.values()].map(x=>({...x,t:x.ts.join(', '),pct:x.c/x.n*100})).sort((a,b)=>a.pct-b.pct||b.n-a.n);
+  return{C,Q,AA,S,W,rosterN,avg:mean(Q.map(q=>q.avg)),part:mean(Q.map(q=>q.part)),time:mean(AA.map(a=>a.u)),
+    succ:AA.length?AA.filter(a=>a.s>=60).length/AA.length*100:0,qual:AA.length?AA.filter(a=>a.s>=80).length/AA.length*100:0};
+}
+const V_ST={up:['▲ Ахиж байна','g'],flat:['● Тогтвортой',''],down:['▼ Буурч байна','m'],alert:['⚠ Анхаарах','b'],none:['○ Өгөөгүй','m']};
+function vAnaRender(){
+  const box=$('#vAna');if(!box)return;
+  const classes=vAnaClasses();
+  if(!classes.length){
+    box.innerHTML=`<div class="empty">📭 Анализ хийх дүн алга. Сорил нийтэлж, сурагчид өгсний дараа энд гарна.</div>
+      <div class="btns"><button class="btn ghost" id="vAnaSync">🔄 Сорилын дүнг татах</button></div><div class="msg" id="vAnaMsg" role="status"></div>`;
+    $('#vAnaSync').onclick=async()=>{await vSyncAll(true);vAnaRender();};return;}
+  if(!classes.includes(vAnaCls))vAnaCls=classes[0];
+  const D=vAnaData(vAnaCls),LCc=v=>({good:'g',mid:'m',bad:'b'})[lvl(v)],pc=v=>v==null?'–':Math.round(v)+'%';
+  const byG={};classes.forEach(c=>{const g=clsGrade(c);(byG[g]=byG[g]||[]).push(c);});
+  const sel=Object.keys(byG).sort((a,b)=>a-b).map(g=>`<optgroup label="${+g?g+'-р анги':'Бусад'}">${byG[g].map(c=>`<option value="${esc(c)}"${c===vAnaCls?' selected':''}>👥 ${esc(c)}</option>`).join('')}</optgroup>`).join('');
+  const Sx=D.S.filter(s=>s.taken).sort((a,b)=>b.avg-a.avg),best=Sx.slice(0,3),att=D.S.filter(s=>s.st==='alert'||s.st==='down'||(s.miss>=2&&D.Q.length>=2));
+  const first=D.Q[0],lastQ=D.Q[D.Q.length-1],ch=D.Q.length>1?lastQ.avg-first.avg:null;
+  const cnt={up:0,flat:0,down:0,alert:0,none:0};D.S.forEach(s=>cnt[s.st]++);
+  const lv=LEVELS.slice().reverse().map(l=>({l:l[0],full:l[0]+' түвшин ('+l[1]+'–'+l[2]+'%)',v:Sx.filter(s=>levelOf(s.avg)===l[0]).length}));
+  const trendS={pct:true,items:D.Q.map(q=>({l:(q.c||'').slice(5)||'?',full:(q.c||'')+' '+q.t,v:q.avg}))};
+  const hard=D.W.slice(0,12),stuS={pct:true,items:Sx.map(s=>({l:s.n,full:s.n,v:s.avg}))};
+  const box2=`chart-box${cbCls()}`;
+  box.innerHTML=`
+  <div class="row noprint" style="align-items:flex-end">
+    <div style="max-width:260px"><label for="vAnaSel">Анги</label><select id="vAnaSel">${sel}</select></div>
+    <div class="btns" style="margin:0"><button class="btn ghost" id="vAnaSync">🔄 Дүнг шинэчлэх</button><button class="btn xl" id="vAnaXlsx">Excel файлаар татах</button></div>
+  </div>
+  <div class="msg" id="vAnaMsg" role="status"></div>
+  <div class="stats">
+    <div class="stat"><b>${D.Q.length}</b><span>📝 Сорил</span></div>
+    <div class="stat ${toneOf(D.avg,80,60)}"><b>${Math.round(D.avg)}</b><span>⭐ Дундаж оноо (100)</span>${ch!=null?`<small>${ch>=0?'▲ +':'▼ '}${Math.round(ch)} (эхний → сүүлийн)</small>`:''}</div>
+    <div class="stat ${toneOf(D.part,90,70)}"><b>${Math.round(D.part)}%</b><span>🙋 Оролцоо</span><small>${D.rosterN} сурагчаас</small></div>
+    <div class="stat ${toneOf(D.succ,70,50)}"><b>${Math.round(D.succ)}%</b><span>✅ Амжилт (60+)</span></div>
+    <div class="stat ${toneOf(D.qual,40,20)}"><b>${Math.round(D.qual)}%</b><span>🏆 Чанар (80+)</span></div>
+    <div class="stat"><b>${mmss(D.time)}</b><span>⏱️ Дундаж хугацаа</span></div>
+  </div>
+  <div class="insights">
+    <div class="ins up"><h3>🌟 Шилдэг сурагчид</h3><p>${best.length?best.map(s=>esc(s.n)+' ('+Math.round(s.avg)+')').join(', '):'–'}</p><small>Бүх сорилын дундаж оноогоор</small></div>
+    <div class="ins down"><h3>🎯 Анхаарах сурагчид (${att.length})</h3><p>${att.length?att.slice(0,6).map(s=>esc(s.n)).join(', ')+(att.length>6?'…':''):'Алга — сайн байна!'}</p><small>Дундаж 60-аас доош, буурч байгаа, эсвэл 2+ сорил өгөөгүй</small></div>
+  </div>
+  <h3 style="margin:18px 0 8px">📈 Ангийн дундаж оноо, сорил бүрээр</h3>
+  <div class="${box2}">${svgBar(trendS,D.Q.length>1)}</div>
+  ${hard.length?`<h3 style="margin:18px 0 8px">🧩 Хамгийн их алдсан үгс</h3><div class="${box2}">${svgHBar({pct:true,items:hard.map(x=>({l:x.w+' → '+x.ans,full:x.w+' → '+x.ans,v:x.pct}))})}</div>`:''}
+  <div class="vana-two">
+    <div><h3 style="margin:18px 0 8px">📶 Түвшний тархалт</h3><div class="${box2}">${svgBar({pct:false,items:lv},false)}</div></div>
+    <div><h3 style="margin:18px 0 8px">🧭 Сурагчдын ахиц</h3>
+      <div class="vana-tiles">${['up','flat','down','alert','none'].map(k=>`<div class="vana-tile ${V_ST[k][1]}"><b>${cnt[k]}</b><span>${V_ST[k][0]}</span></div>`).join('')}</div></div>
+  </div>
+  ${Sx.length?`<h3 style="margin:18px 0 8px">👥 Сурагч бүрийн дундаж оноо</h3><div class="${box2}">${Sx.length<=16?svgHBar(stuS):svgBar(stuS,false)}</div>`:''}
+  <h3 style="margin:18px 0 8px">📋 Сурагч тус бүр</h3>
+  <div class="scroll"><table><thead><tr><th>№</th><th>Код</th><th>Нэр</th><th class="num">Өгсөн</th><th class="num">Дундаж</th><th class="num">Сүүлийн</th><th class="num">Түвшин</th><th>Төлөв</th>${D.Q.map(q=>`<th class="num" title="${esc(q.t)}">${esc((q.c||'').slice(5)||'?')}</th>`).join('')}</tr></thead><tbody>
+  ${D.S.slice().sort((a,b)=>(b.avg==null?-1:b.avg)-(a.avg==null?-1:a.avg)).map((s,i)=>`<tr><td>${i+1}</td><td>${s.code?pad2(s.code):'–'}</td><td><b>${esc(s.n)}</b></td>
+    <td class="num">${s.taken} / ${D.Q.length}</td><td class="num">${s.avg==null?'–':`<b class="${LCc(s.avg)}">${Math.round(s.avg)}</b>`}</td>
+    <td class="num">${s.last==null?'–':Math.round(s.last)}</td><td class="num">${s.avg==null?'–':levelOf(s.avg)}</td><td><span class="${V_ST[s.st][1]}">${V_ST[s.st][0]}</span></td>
+    ${D.Q.map((q,qi)=>{const x=s.sc.find(y=>y.qi===qi);return`<td class="num">${x?`<span class="${LCc(x.s)}">${Math.round(x.s)}</span>`:'<span class="m">–</span>'}</td>`;}).join('')}</tr>`).join('')}
+  </tbody></table></div>
+  <h3 style="margin:18px 0 8px">💡 Дүгнэлт ба зөвлөмж</h3>
+  <ul class="vana-sum">
+    <li>${esc(vAnaCls)} анги ${D.Q.length} сорил өгсөн, дундаж оноо <b class="${LCc(D.avg)}">${Math.round(D.avg)}</b> — ${lvWord(D.avg)}.${ch!=null?' Эхний сорилоос '+(ch>=TREND_STEP?'<b class="g">'+Math.round(ch)+' оноогоор өссөн</b>.':ch<=-TREND_STEP?'<b class="b">'+Math.round(-ch)+' оноогоор буурсан</b>.':'бараг өөрчлөгдөөгүй.'):''}</li>
+    <li>Оролцоо ${Math.round(D.part)}%.${D.part<90?' Сорил өгөөгүй сурагчдыг дахин хамруулах шаардлагатай.':' Маш сайн оролцоотой байна.'}</li>
+    ${hard.length?`<li>Хамгийн их алдсан үгс: <b>${hard.slice(0,5).map(x=>esc(x.w)+' ('+Math.round(x.pct)+'%)').join(', ')}</b> — дараагийн хичээлд давтах.</li>`:''}
+    ${att.length?`<li>${att.length} сурагчтай ганцаарчлан ажиллах: ${att.slice(0,8).map(s=>esc(s.n)).join(', ')}${att.length>8?'…':''}.</li>`:'<li>Анхаарах сурагч алга — ангийн түвшин жигд байна.</li>'}
+    ${best.length?`<li>Урамшуулах: ${best.map(s=>esc(s.n)).join(', ')} — ангидаа тэргүүлж байна.</li>`:''}
+  </ul>`;
+  $('#vAnaSel').onchange=e=>{vAnaCls=e.target.value.replace(/^👥\s*/,'');vAnaRender();};
+  $('#vAnaSync').onclick=async()=>{const n=await vSyncAll(true);vAnaRender();const m=$('#vAnaMsg');if(m)m.textContent=n?'🔄 '+n+' сорилын дүн шинэчлэгдлээ.':'Шинэчлэх дүн алга (сервертэй холбогдоогүй байж болно).';};
+  $('#vAnaXlsx').onclick=()=>runExport(async()=>{
+    const sum={name:'Тойм',widths:[12,34,10,10,12],rows:[[{v:vAnaCls+' анги: шинэ үгийн сорилын анализ',s:'t'}],[{v:'Татсан: '+todayStr(),s:'n'}],[],
+      ['Огноо','Сорил','Өгсөн','Оролцоо','Дундаж оноо'].map(v=>({v,s:'h'})),...D.Q.map(q=>[q.c,q.t,q.A.length,P(q.part),Math.round(q.avg*10)/10])]};
+    const stu={name:'Сурагчид',freeze:1,widths:[5,6,22,8,10,10,8,14,...D.Q.map(()=>10)],rows:[
+      ['№','Код','Нэр','Өгсөн','Дундаж','Сүүлийн','Түвшин','Төлөв',...D.Q.map(q=>q.c||q.t)].map(v=>({v,s:'h'})),
+      ...D.S.slice().sort((a,b)=>(b.avg==null?-1:b.avg)-(a.avg==null?-1:a.avg)).map((s,i)=>[i+1,s.code?pad2(s.code):'',s.n,s.taken+' / '+D.Q.length,s.avg==null?'':Math.round(s.avg*10)/10,
+        s.last==null?'':Math.round(s.last*10)/10,s.avg==null?'':levelOf(s.avg),V_ST[s.st][0],...D.Q.map((q,qi)=>{const x=s.sc.find(y=>y.qi===qi);return x?Math.round(x.s*10)/10:'';})])]};
+    const ws={name:'Үгс',freeze:1,widths:[22,22,30,10],rows:[['Үг','Зөв хариулт','Сорил','Гүйцэтгэл'].map(v=>({v,s:'h'})),...D.W.map(x=>[x.w,x.ans,x.t,P(x.pct)])]};
+    const name=fileSafe(vAnaCls+' shine ug analiz')+'.xlsx';saveBlob(buildXlsx([sum,stu,ws]),name);return name;},'#vAnaMsg');
+}
+/* Таб нээгдэхэд: "Анализ" бол дүнг автоматаар шинэчилнэ */
+function vTabShown(id){
+  if($('#tab-vocab').hidden)return;
+  if(id==='v-sets')vSetRender();
+  if(id==='v-ana'){vAnaRender();if(vSb()||vcfg().api)vSyncAll().then(n=>{if(n)vAnaRender();});}
+}
 
 /* ---------- цахим шалгалт: багш ----------
    Шалгалтыг QR / холбоосоор нийтэлж, сурагчдын утаснаас ирсэн хариултыг энэ шалгалтад сурагч бүрээр нь
@@ -7456,7 +7657,7 @@ function buildSecNav(box){
   document.addEventListener('click',e=>{
     const a=e.target.closest('.secnav a');if(!a)return;
     e.preventDefault();
-    if(a.closest('.secnav').dataset.tabs)return secTab(a.getAttribute('href').slice(1));
+    if(a.closest('.secnav').dataset.tabs)return secTab(a.getAttribute('href').slice(1),a.closest('.secnav').dataset.tabs);
     const el=document.querySelector(a.getAttribute('href'));if(!el)return;
     /* Эхлээд толгойг агшаагаад ДАРАА нь хэмжинэ — тэгэхгүй бол байрлал зөрнө */
     b.classList.add('sc');void hd.offsetHeight;setH();
@@ -7482,21 +7683,27 @@ function buildSecNav(box){
   window.secMark=mark;
   /* "Шалгалтын сан" цонх: хэсгүүд доош урсахгүй, таб шиг нэг удаад нэг нь харагдана.
      Цэсэнд байхгүй хэсэг (s-cloud) "Нөөц"-тэй хамт гарна. Сонголт энэ төхөөрөмж дээр хадгалагдана. */
-  window.secTab=id=>{
-    const nav=document.querySelector('.secnav[data-tabs]');if(!nav)return;
+  /* Ижил аргаар "Шинэ үгийн сорил" цонх ч (data-tabs="vocab") таб хэлбэрийн зүүн цэстэй */
+  window.secTab=(id,name)=>{
+    name=name||'setup';
+    const nav=document.querySelector('.secnav[data-tabs="'+name+'"]');if(!nav)return;
     const ids=[...nav.querySelectorAll('a')].filter(a=>!a.hidden).map(a=>a.getAttribute('href').slice(1));
     if(!ids.includes(id))id=ids[0];   // жишээ нь "Багш нарын эрх" нь эзэн тодорхой болохоос өмнө нуугдмал
-    else try{localStorage.setItem('shalgalt-setup-sec',id);}catch(x){}
+    else try{localStorage.setItem('shalgalt-'+name+'-sec',id);}catch(x){}
     /* "Миний шалгалтууд", "Шалгалтын материал" хоёр хамт харагдана — нэгийг нь сонгоход нөгөө нь нуугдахгүй */
     const grp=x=>x==='s-mat'?'s-exams':x;
-    [...nav.parentElement.children].forEach(c=>{if(c!==nav)c.classList.toggle('sec-off',grp(ids.includes(c.id)?c.id:'s-back')!==grp(id));});
+    [...nav.parentElement.children].forEach(c=>{if(c!==nav)c.classList.toggle('sec-off',grp(ids.includes(c.id)?c.id:(name==='setup'?'s-back':''))!==grp(id));});
     nav.querySelectorAll('a').forEach(a=>a.classList.toggle('on',a.getAttribute('href')==='#'+id));
+    if(name==='vocab'){if(window.vTabShown)vTabShown(id);
+      const top=nav.parentElement.getBoundingClientRect().top+scrollY-hdrH()-8;if(scrollY>top)scrollTo(0,Math.max(0,top));return;}
     if(id==='s-online'&&window.oeRender)oeRender();
     const el=document.getElementById(id),top=(id==='s-mat'&&el?el:nav.parentElement).getBoundingClientRect().top+scrollY-hdrH()-(id==='s-mat'?snH(nav)+12:8);
     if(id==='s-mat'||scrollY>top)scrollTo(0,Math.max(0,top));
   };
   let first='s-exams';try{first=localStorage.getItem('shalgalt-setup-sec')||first;}catch(x){}
   secTab(first);
+  let vfirst='v-sets';try{vfirst=localStorage.getItem('shalgalt-vocab-sec')||vfirst;}catch(x){}
+  secTab(vfirst,'vocab');
 })();
 
 /* ---------- usage licence (time-limited activation codes) ---------- */
