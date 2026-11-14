@@ -33,8 +33,9 @@
 <style>
 :root{
   /* Гол өнгө: орчин үеийн маргад ногоон (emerald). Дэвсгэр маш цайвар — цагаан картууд тодорч харагдана. */
-  --bg:#F5F7F6; --surface:#FFFFFF; --ink:#101A16; --muted:#66736D; --line:#E1E7E4;
-  --field:#FFFFFF; --field-line:#CFD8D3;
+  /* 2026-11-15: цайвар цагаан биш — маш бүдэг шаргал (цөцгий) туяатай дэвсгэр, картууд нь бараг цагаан */
+  --bg:#F8F4E6; --surface:#FFFDF7; --ink:#101A16; --muted:#66736D; --line:#E8E2D0;
+  --field:#FFFEFA; --field-line:#D8D1BE;
   --leaf:#047857; --leaf-soft:#E2F4EC; --stain:#B4314A; --stain-soft:#FBE9ED;
   --iodine:#A3620A; --iodine-soft:#FEF6E7; --radius:14px;
   --shadow:0 1px 2px rgba(16,26,22,.04),0 4px 14px rgba(16,26,22,.05);
@@ -50,7 +51,7 @@
 *{box-sizing:border-box}
 body{margin:0;background:var(--bg);color:var(--ink);
   font-family:"Segoe UI",Roboto,"Noto Sans","Helvetica Neue",Arial,sans-serif;font-size:16px;line-height:1.5}
-header{background:linear-gradient(180deg,#E9F6EF 0%,var(--bg) 100%);color:var(--ink);padding:12px 20px 12px;position:sticky;top:0;z-index:30}
+header{background:linear-gradient(180deg,#F1F5E6 0%,var(--bg) 100%);color:var(--ink);padding:12px 20px 12px;position:sticky;top:0;z-index:30}
 @media (prefers-color-scheme:dark){header{background:var(--bg)}}
 /* Доош гүйлгэхэд толгой хэсэг агшиж, цэс нь дэлгэцэн дээр үлдэнэ */
 body.sc header{padding-top:6px;padding-bottom:8px;box-shadow:0 4px 16px rgba(16,26,22,.08)}
@@ -653,6 +654,17 @@ body.sc .sync-pill{font-size:.7rem}
 .t-grp>.t-list,.t-grp>.btns{padding:0 10px 10px}
 .t-n{min-width:24px;padding:1px 8px;border-radius:999px;background:var(--leaf-soft);color:var(--leaf);font-size:.82rem;text-align:center}
 .sec-off{display:none!important}
+/* Нэгдсэн тайлангийн доод цэс */
+.fnav{position:fixed;left:50%;bottom:16px;transform:translateX(-50%);z-index:25;display:flex;gap:4px;padding:6px;background:var(--surface);
+  border:1px solid var(--line);border-radius:999px;box-shadow:0 10px 30px rgba(60,48,20,.18);max-width:calc(100vw - 24px);overflow-x:auto;scrollbar-width:none}
+.fnav[hidden]{display:none}
+.fnav a{display:flex;align-items:center;gap:7px;padding:9px 16px;border-radius:999px;color:var(--ink);text-decoration:none;font-size:.92rem;font-weight:600;white-space:nowrap}
+.fnav a i{font-style:normal;font-size:1.1em}
+.fnav a:hover{background:var(--leaf-soft);color:var(--leaf)}
+.fnav a.on{background:var(--leaf);color:#fff}
+#tab-final{padding-bottom:90px}
+@media(max-width:640px){.fnav{bottom:10px}.fnav a{padding:8px 11px;font-size:.82rem;gap:5px}}
+@media print{.fnav{display:none!important}#tab-final{padding-bottom:0}}
 .t-row{display:grid;grid-template-columns:1fr auto;gap:6px 12px;align-items:center;border:1px solid var(--line);border-radius:10px;padding:10px 12px;background:var(--surface)}
 .t-who small{display:block;color:var(--muted);font-size:.8rem}
 .t-st{text-align:right;font-size:.9rem}
@@ -4110,8 +4122,8 @@ function renderAnalysis(){
       <div><label for="fcls">Анги</label><select id="fcls"><option value="">🏫 Бүх анги</option>${classes.map(c=>`<option value="${esc(c)}"${c===filterCls?' selected':''}>👥 ${esc(c)}</option>`).join('')}</select></div>
       ${varOn()?`<div><label for="fvar">Хувилбар</label><select id="fvar"><option value="">🔀 Бүх хувилбар</option>${Array.from({length:vCount()},(_,v)=>`<option value="${v}"${String(v)===filterVar?' selected':''}>Зөвхөн ${VNAMES[v]} хувилбар</option>`).join('')}</select></div>`:''}
       <div><label for="anonSel">Сурагчийг харуулах</label><select id="anonSel">
-        <option value="name"${anonOn()?'':' selected'}>Нэрээр</option>
-        <option value="code"${anonOn()?' selected':''}>Зөвхөн кодоор</option></select></div>
+        <option value="name"${anonOn()?'':' selected'}>🙂 Нэрээр</option>
+        <option value="code"${anonOn()?' selected':''}>🔢 Зөвхөн кодоор</option></select></div>
     </div>
     ${anonOn()?'<p class="hint" style="margin:0">Сурагчдын нэр дэлгэц, график, хэвлэлт дээр код (№) болж харагдана. Код нь "Нэрс" хэсэгт сурагч бүрд өгсөн дугаар. <b>Татаж авсан Excel, Word файлд нэр хэвээр бичигдэнэ.</b></p>':''}
     <div class="btns noprint">
@@ -4610,8 +4622,8 @@ function renderFinal(){
     <p class="hint">Ангиа сонгоод тооцох шалгалтуудаа чагтална. Жин нь шалгалт бүр эцсийн дүнд хэр нөлөөлөхийг заана: бүгд 1 бол энгийн дундаж. Жишээ нь явцын шалгалтуудыг 1, улирлын шалгалтыг 2 гэвэл улирлынх нь хоёр дахин их нөлөөлнө.</p>
     <div class="row"><div style="max-width:260px"><label for="fcls2">Анги</label><select id="fcls2">${classes.map(c=>`<option value="${esc(c)}"${c===finalCls?' selected':''}>👥 ${esc(c)}</option>`).join('')}</select></div>
       <div style="max-width:260px"><label for="anonSel2">Сурагчийг харуулах</label><select id="anonSel2">
-        <option value="name"${anonOn()?'':' selected'}>Нэрээр</option>
-        <option value="code"${anonOn()?' selected':''}>Зөвхөн кодоор</option></select></div></div>
+        <option value="name"${anonOn()?'':' selected'}>🙂 Нэрээр</option>
+        <option value="code"${anonOn()?' selected':''}>🔢 Зөвхөн кодоор</option></select></div></div>
     ${F.exams.length?`<div class="scroll" style="margin-top:12px"><table class="exlist">
       <thead><tr><th></th><th>Огноо</th><th>Шалгалт</th><th class="num">Сурагч</th><th class="num">Ангийн дундаж</th><th class="num">Жин</th><th class="num">Нөлөө</th></tr></thead>
       <tbody>${F.exams.map(e=>{const on=F.cfg.ids.includes(e.id),r=R.find(x=>x.e.id===e.id),
@@ -4726,6 +4738,35 @@ $('#finalBox').addEventListener('click',e=>{
   if(e.target.id==='fDocx')runExport(exportFinalDocx,'#fMsg');
   if(e.target.id==="fPptx")runExport(exportFinalPptx,"#fMsg");
 });
+/* Нэгдсэн тайлангийн хэсгүүдийн цэс — дэлгэцийн доод хэсэгт зэрэгцсэн товчнууд.
+   Хэсгийг гарчгаар нь таньж, дарахад тэр хэсэг рүү гүйлгэнэ; гүйлгэхэд одоогийн хэсэг тодорно. */
+const FNAV=[[/^Нэгдсэн анализ$/,'⚙️','Тохиргоо'],[/нэгдсэн дүн$/,'🎯','Ерөнхий'],[/^График$/,'📊','График'],
+  [/эцсийн дүн$/,'👥','Эцсийн дүн'],[/ахиц/i,'📈','Ахиц'],[/Агуулгын эзэмшил/,'🧩','Агуулга']];
+function buildFinalNav(){
+  const tab=$('#tab-final');if(!tab)return;let nav=$('#fnav');
+  if(!nav){nav=document.createElement('nav');nav.id='fnav';nav.className='fnav noprint';nav.setAttribute('aria-label','Нэгдсэн тайлангийн хэсгүүд');tab.appendChild(nav);}
+  const items=[];
+  [...$('#finalBox').children].forEach((p,i)=>{if(!p.classList.contains('panel'))return;
+    const h=p.querySelector('h2'),t=h?h.textContent.replace(/^[^\wА-Яа-яӨөҮүЁё]+/,'').trim():p.querySelector('#fchart')?'График':'';
+    const m=FNAV.find(f=>f[0].test(t));if(!m||items.some(x=>x.m===m))return;
+    if(!p.id)p.id='fsec-'+i;items.push({m,id:p.id});});
+  nav.hidden=items.length<2;
+  nav.innerHTML=items.map(x=>`<a href="#${x.id}"><i aria-hidden="true">${x.m[1]}</i><span>${x.m[2]}</span></a>`).join('');
+  finalNavMark();
+}
+function finalNavMark(){
+  const nav=$('#fnav');if(!nav||nav.hidden||$('#tab-final').hidden)return;
+  const links=[...nav.querySelectorAll('a')],lim=(parseInt(getComputedStyle(document.documentElement).getPropertyValue('--hdr'))||112)+90;
+  let cur=links[0];links.forEach(a=>{const el=document.getElementById(a.getAttribute('href').slice(1));if(el&&el.getBoundingClientRect().top<=lim)cur=a;});
+  if(innerHeight+scrollY>=document.body.scrollHeight-6)cur=links[links.length-1];
+  links.forEach(a=>a.classList.toggle('on',a===cur));
+}
+$('#tab-final').addEventListener('click',e=>{const a=e.target.closest('#fnav a');if(!a)return;e.preventDefault();
+  const el=document.getElementById(a.getAttribute('href').slice(1));if(!el)return;
+  document.body.classList.add('sc');const hd=document.querySelector('header');
+  scrollTo({top:Math.max(0,el.getBoundingClientRect().top+scrollY-hd.getBoundingClientRect().height-12),behavior:'smooth'});});
+addEventListener('scroll',finalNavMark,{passive:true});
+{const _rf=renderFinal;renderFinal=function(){const r=_rf.apply(this,arguments);buildFinalNav();return r;};}
 
 /* ---------- Excel / Word export (no external libraries) ---------- */
 const CRC_T=(()=>{const t=new Uint32Array(256);for(let n=0;n<256;n++){let c=n;for(let k=0;k<8;k++)c=c&1?0xEDB88320^(c>>>1):c>>>1;t[n]=c>>>0;}return t;})();
