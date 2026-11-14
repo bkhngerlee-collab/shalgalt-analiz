@@ -5736,9 +5736,180 @@ function liveTick(){
 $('#liveBtn').addEventListener('click',liveOpen);
 
 /* ---------- charts ---------- */
-let chartData='q',chartType='bar',chartStyle='deep',lastD=null;
-const STYLE_OPTS=[['deep','Эзэлхүүнтэй (3D)'],['soft','Зөөлөн сүүдэртэй'],['flat','Энгийн хавтгай']];
-function chcfg(){db.chart=db.chart||{style:'deep'};return db.chart;}
+let chartData='q',chartType='bar',chartStyle='cyl',lastD=null,chSeq=0;
+const STYLE_NEW=[['cyl','🧪 Шилэн цилиндр (3D)'],['cone','🔺 Конус (3D)'],['peak','⛰️ Оргил'],['pill','🌙 Бөөрөнхий, бараан дэвсгэр'],['ribbon','🎀 Тууз, урт сүүдэртэй'],['gauge','⏱️ Секундомер']];
+const STYLE_OLD=[['deep','Хайрцаг 3D (хуучин)'],['soft','Зөөлөн сүүдэртэй'],['flat','Энгийн хавтгай (хэвлэхэд)']];
+const STYLE_OPTS=[...STYLE_NEW,...STYLE_OLD];
+const CLR_OPTS=[['lv','Түвшнээр (ногоон / шар / улаан)'],['rb','Олон өнгө']];
+/* Графикийн төрөл бүрт тохирох загвар. Тохирохгүй бол ойролцоо загвараар зурна. */
+const STY_OK={hbar:['cyl','pill','ribbon','gauge','deep','soft','flat'],line:['soft','flat'],pie:['cyl','cone','deep','soft','flat']};
+function effStyle(type,st){const ok=STY_OK[type];if(!ok||ok.includes(st))return st;
+  return type==='hbar'?(st==='cone'?'cyl':'ribbon'):'soft';}
+/* Хуучин "deep" (3D) сонголттой байсныг шинэ шилэн цилиндр рүү нэг удаа шилжүүлнэ */
+function chcfg(){db.chart=db.chart||{};const c=db.chart;if(!c.v2){c.v2=1;if(!c.style||c.style==='deep')c.style='cyl';}return c;}
+const curStyle=()=>STYLE_OPTS.some(o=>o[0]===chcfg().style)?chcfg().style:'cyl';
+const curClr=()=>chcfg().clr==='rb'?'rb':'lv';
+const VIVID=['#C8174F','#FF2D3D','#FFC400','#12C9DE','#0A9BEA','#0E4F7A','#8E2BFF','#FF5A0A','#2ED8A8','#3D7BFF'];
+const LV_VIVID={good:'#1FA463',mid:'#F2A80C',bad:'#E5364B'};
+const hue=(it,i,S)=>it.c||(S.pct&&curClr()==='lv'?LV_VIVID[lvl(it.v)]:VIVID[i%VIVID.length]);
+/* t>0 бол цайруулна, t<0 бол бараан болгоно */
+function tint(h,t){const n=parseInt(h.slice(1),16),to=t>0?255:0,a=Math.abs(t),f=x=>Math.round(x+(to-x)*a);
+  return'#'+((1<<24)|(f(n>>16)<<16)|(f(n>>8&255)<<8)|f(n&255)).toString(16).slice(1);}
+const onClr=c=>{const n=parseInt(c.slice(1),16);return((n>>16)*.299+(n>>8&255)*.587+(n&255)*.114)>165?'#1E1E1E':'#fff';};
+const tipOf=(it,S)=>`<title>${esc(it.full)}: ${fmt(it.v,S.pct)}</title>`;
+const vTxt=(x,y,t,o={})=>`<text x="${x}" y="${y}" text-anchor="${o.a||'middle'}" font-size="${o.fs||12}" font-weight="${o.fw||700}" fill="${o.fill||'var(--ink)'}"`
+  +(o.halo?` paint-order="stroke" stroke="${o.halo===1?'var(--surface)':o.halo}" stroke-width="3" stroke-linejoin="round"`:'')+` pointer-events="none">${t}</text>`;
+function cylGrad(id,c,vert){return`<linearGradient id="${id}" x1="0" y1="0" x2="${vert?0:1}" y2="${vert?1:0}"><stop offset="0" stop-color="${tint(c,-.28)}"/>`
+  +`<stop offset=".3" stop-color="${tint(c,.3)}"/><stop offset=".62" stop-color="${c}"/><stop offset="1" stop-color="${tint(c,-.4)}"/></linearGradient>`;}
+const glassGrad=(id,vert)=>`<linearGradient id="${id}" x1="0" y1="0" x2="${vert?0:1}" y2="${vert?1:0}"><stop offset="0" stop-color="#fff" stop-opacity=".15"/>`
+  +`<stop offset=".3" stop-color="#fff" stop-opacity=".75"/><stop offset=".7" stop-color="#fff" stop-opacity=".2"/><stop offset="1" stop-color="#8996A3" stop-opacity=".25"/></linearGradient>`;
+const shadowGrad=id=>`<radialGradient id="${id}"><stop offset="0" stop-color="#000" stop-opacity=".3"/><stop offset="1" stop-color="#000" stop-opacity="0"/></radialGradient>`;
+/* Босоо загваруудын нийтлэг хэмжээс */
+function vGeo(S,o={}){
+  const n=S.items.length,rot=n>8,W=Math.max(640,n*(rot?36:(o.wide||60))+60),H=rot?370:330,L=o.L==null?24:o.L,T=o.T||30,B=rot?92:46,ih=H-T-B;
+  return{n,rot,W,H,L,T,B,ih,max:S.pct?100:Math.max(1,...S.items.map(i=>i.v)),cw:(W-L-14)/n,base:T+ih};
+}
+function xLabs(S,G,fill){let s='';S.items.forEach((it,i)=>{const cx=G.L+G.cw*i+G.cw/2;
+  s+=G.rot?`<text transform="translate(${cx+4},${G.base+16}) rotate(-45)" text-anchor="end" font-size="11" fill="${fill}">${esc(cut(it.l,14))}</text>`
+    :`<text x="${cx}" y="${G.base+24}" text-anchor="middle" font-size="12" fill="${fill}">${esc(cut(it.l,Math.max(4,Math.floor(G.cw/7))))}</text>`;});return s;}
+const svgOut=(W,H,defs,body,st)=>`<svg viewBox="0 0 ${W} ${H}" style="${st||'min-width:'+(W>720?W:0)+'px'}" xmlns="http://www.w3.org/2000/svg"><defs>${defs}</defs>${body}</svg>`;
+/* 🧪 Шилэн цилиндр: тунгалаг хоолой = 100%, өнгөт шингэн = үр дүн */
+function svgCyl(S){
+  const G=vGeo(S,{T:34}),P='cy'+(++chSeq),bw=Math.min(56,G.cw*.6),ry=Math.max(3,bw*.17),top=G.base-G.ih;
+  let defs=shadowGrad(P+'s')+glassGrad(P+'g'),body='';
+  S.items.forEach((it,i)=>{const c=hue(it,i,S),cx=G.L+G.cw*i+G.cw/2,x=cx-bw/2,h=G.ih*Math.max(0,it.v)/G.max,y=G.base-h,id=P+'_'+i;
+    const body3=yy=>`M${x},${yy} L${x},${G.base} A${bw/2},${ry} 0 0 0 ${x+bw},${G.base} L${x+bw},${yy} Z`;
+    defs+=cylGrad(id,c);
+    body+=`<g>${tipOf(it,S)}<ellipse cx="${cx}" cy="${G.base+ry*.7}" rx="${bw*.82}" ry="${ry*1.5}" fill="url(#${P}s)"/>`
+      +`<path d="${body3(top)}" fill="var(--bg)" stroke="var(--line)"/><path d="${body3(top)}" fill="url(#${P}g)"/>`
+      +`<ellipse cx="${cx}" cy="${top}" rx="${bw/2}" ry="${ry}" fill="var(--line)" stroke="var(--muted)" stroke-opacity=".35"/>`
+      +(h>0.5?`<path d="${body3(y)}" fill="url(#${id})"/><ellipse cx="${cx}" cy="${y}" rx="${bw/2}" ry="${ry}" fill="${tint(c,.18)}" stroke="${tint(c,-.2)}" stroke-opacity=".5"/>`:'')+'</g>';
+    const inside=h>=34&&bw>=30;
+    body+=inside?vTxt(cx,Math.max(y+ry+15,y+h/2+5),fmt(it.v,S.pct),{fill:onClr(c),fs:bw>=44?13:11})
+      :vTxt(cx,y-ry-6,fmt(it.v,S.pct),{fs:11,halo:1});
+  });
+  return svgOut(G.W,G.H,defs,body+xLabs(S,G,'var(--ink)'));
+}
+/* 🔺 Конус: бүтэн конус = 100%, өнгөт хэсэг = үр дүн */
+function svgCone(S){
+  const G=vGeo(S,{T:24}),P='cn'+(++chSeq),bw=Math.min(70,G.cw*.72),hw0=bw/2,ry=Math.max(3,bw*.15),top=G.base-G.ih;
+  let defs=shadowGrad(P+'s')+glassGrad(P+'g'),body='';
+  S.items.forEach((it,i)=>{const c=hue(it,i,S),cx=G.L+G.cw*i+G.cw/2,f=Math.min(1,Math.max(0,it.v)/G.max),h=G.ih*f,y=G.base-h,hw=hw0*(1-f),ryy=ry*(1-f),id=P+'_'+i;
+    const arc=`A${hw0},${ry} 0 0 1 ${cx-hw0},${G.base}`;
+    defs+=cylGrad(id,c);
+    body+=`<g>${tipOf(it,S)}<ellipse cx="${cx}" cy="${G.base+ry*.7}" rx="${bw*.8}" ry="${ry*1.5}" fill="url(#${P}s)"/>`
+      +`<path d="M${cx-hw0},${G.base} L${cx},${top} L${cx+hw0},${G.base} ${arc} Z" fill="var(--bg)" stroke="var(--line)"/>`
+      +`<path d="M${cx-hw0},${G.base} L${cx},${top} L${cx+hw0},${G.base} ${arc} Z" fill="url(#${P}g)"/>`
+      +(h>0.5?`<path d="M${cx-hw0},${G.base} L${cx-hw},${y} L${cx+hw},${y} L${cx+hw0},${G.base} ${arc} Z" fill="url(#${id})"/>`
+        +(hw>1?`<ellipse cx="${cx}" cy="${y}" rx="${hw}" ry="${ryy}" fill="${tint(c,.18)}" stroke="${tint(c,-.2)}" stroke-opacity=".5"/>`:''):'')+'</g>';
+    const yl=G.base-h*.42,wl=2*hw0*(1-f*.58);
+    body+=h>=32&&wl>=36?vTxt(cx,yl+4,fmt(it.v,S.pct),{fill:onClr(c),fs:wl>=46?13:11})
+      :vTxt(cx,y-Math.max(ryy,2)-6,fmt(it.v,S.pct),{fs:11,halo:1});
+  });
+  return svgOut(G.W,G.H,defs,body+xLabs(S,G,'var(--ink)'));
+}
+/* ⛰️ Оргил: доошоо уусаж алга болох нарийн оргил, хөршүүдтэйгээ давхцана */
+function svgPeak(S){
+  const G=vGeo(S,{T:34,L:20}),P='pk'+(++chSeq),sp=Math.min(G.cw*1.15,130);
+  let defs='',body='',lab='';
+  S.items.forEach((it,i)=>{const c=hue(it,i,S),cx=G.L+G.cw*i+G.cw/2,h=G.ih*Math.max(0,it.v)/G.max,y=G.base-h,id=P+'_'+i;
+    defs+=`<linearGradient id="${id}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${c}" stop-opacity=".95"/><stop offset=".5" stop-color="${c}" stop-opacity=".5"/><stop offset="1" stop-color="${c}" stop-opacity=".04"/></linearGradient>`;
+    const pk=s=>`M${cx-s},${G.base} C${cx-s*.32},${G.base} ${cx-1.2},${y+h*.5} ${cx},${y} C${cx+1.2},${y+h*.5} ${cx+s*.32},${G.base} ${cx+s},${G.base} Z`;
+    body+=`<g>${tipOf(it,S)}<path d="${pk(sp)}" fill="url(#${id})"/><path d="${pk(sp*.3)}" fill="url(#${id})"/></g>`;
+    lab+=vTxt(cx,y-8,fmt(it.v,S.pct),{fs:G.rot?11:14,fw:G.rot?600:500,halo:1})
+      +`<path d="M${cx-3},${G.base+9} L${cx},${G.base+4} L${cx+3},${G.base+9} Z" fill="${c}"/>`;
+  });
+  return svgOut(G.W,G.H,defs,body+lab+xLabs(S,{...G,base:G.base+4},'var(--ink)'));
+}
+/* 🌙 Бөөрөнхий оройтой багана, бараан дэвсгэр дээр — танилцуулга, проекторт тод */
+function svgPill(S){
+  const G=vGeo(S,{T:30,L:20}),P='pl'+(++chSeq),bw=Math.min(78,G.cw*.74);
+  let defs=`<linearGradient id="${P}f" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#000" stop-opacity="0"/><stop offset="1" stop-color="#000" stop-opacity=".32"/></linearGradient>`;
+  let body=`<rect width="${G.W}" height="${G.H}" rx="16" fill="#232E3E"/>`;
+  S.items.forEach((it,i)=>{const c=hue(it,i,S),cx=G.L+G.cw*i+G.cw/2,x=cx-bw/2,h=G.ih*Math.max(0,it.v)/G.max,y=G.base-h,r=Math.min(bw/2,h);
+    if(h>0.5)body+=`<g>${tipOf(it,S)}<path d="M${x},${G.base} L${x},${y+r} A${bw/2},${r} 0 0 1 ${x+bw},${y+r} L${x+bw},${G.base} Z" fill="${c}"/>`
+      +`<rect x="${x}" y="${G.base-Math.min(16,h)}" width="${bw}" height="${Math.min(16,h)}" fill="url(#${P}f)"/></g>`;
+    const inside=h>=Math.max(36,bw*.7)&&bw>=30;
+    body+=inside?vTxt(cx,y+Math.min(bw/2,26)+6,fmt(it.v,S.pct),{fill:onClr(c),fs:bw>=50?15:12,fw:500})
+      :vTxt(cx,y-8,fmt(it.v,S.pct),{fill:'#fff',fs:12,fw:500});
+  });
+  return svgOut(G.W,G.H,defs,body+xLabs(S,G,'#B9C3D0'));
+}
+/* 🎀 Тууз: хавтгай өнгөт багана, урт ташуу сүүдэртэй */
+function svgRibbonV(S){
+  const G=vGeo(S,{T:30}),P='rv'+(++chSeq),bw=Math.min(52,G.cw*.56);
+  let defs=`<linearGradient id="${P}s" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#000" stop-opacity=".24"/><stop offset="1" stop-color="#000" stop-opacity="0"/></linearGradient>`,body='';
+  S.items.forEach((it,i)=>{const c=hue(it,i,S),cx=G.L+G.cw*i+G.cw/2,x=cx-bw/2,h=G.ih*Math.max(0,it.v)/G.max,y=G.base-h,sd=Math.min(bw*.7,h);
+    if(h>0.5)body+=`<g>${tipOf(it,S)}<path d="M${x+bw},${y} L${x+bw+sd},${y+sd} L${x+bw+sd},${G.base} L${x+bw},${G.base} Z" fill="url(#${P}s)"/>`
+      +`<rect x="${x}" y="${y}" width="${bw}" height="${h}" rx="2" fill="${c}"/></g>`;
+    body+=h>=26&&bw>=30?vTxt(cx,y+17,fmt(it.v,S.pct),{fill:onClr(c),fs:11}):vTxt(cx,y-7,fmt(it.v,S.pct),{fs:11,halo:1});
+  });
+  return svgOut(G.W,G.H,defs,`<line x1="${G.L}" x2="${G.W-10}" y1="${G.base}" y2="${G.base}" stroke="var(--line)"/>`+body+xLabs(S,G,'var(--ink)'));
+}
+/* 🎀 Тууз (хэвтээ): нэр нь туузан дотроо, ташуу сүүдэр доороо */
+function svgRibbonH(S){
+  const n=S.items.length,W=680,L=14,R=70,row=44,bh=28,T=8,H=T+n*row+14,iw=W-L-R,P='rh'+(++chSeq),max=S.pct?100:Math.max(1,...S.items.map(i=>i.v));
+  let defs=`<linearGradient id="${P}s" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#000" stop-opacity=".26"/><stop offset="1" stop-color="#000" stop-opacity="0"/></linearGradient>`,body='';
+  S.items.forEach((it,i)=>{const c=hue(it,i,S),y=T+i*row,w=Math.max(iw*Math.max(0,it.v)/max,3),fit=Math.floor((w-22)/6.8);
+    body+=`<g>${tipOf(it,S)}<path d="M${L},${y+bh} L${L+w},${y+bh} L${L+w+14},${y+bh+12} L${L+16},${y+bh+12} Z" fill="url(#${P}s)"/>`
+      +`<rect x="${L}" y="${y}" width="${w}" height="${bh}" fill="${c}"/></g>`;
+    if(fit>=7)body+=vTxt(L+11,y+bh/2+4.5,esc(cut(it.full.toUpperCase(),fit)),{a:'start',fill:onClr(c),fs:11.5});
+    body+=`<text x="${L+w+10}" y="${y+bh/2+5}" font-size="13" font-weight="600" fill="var(--ink)" pointer-events="none">${fmt(it.v,S.pct)}`
+      +(fit<7?`<tspan font-weight="400" fill="var(--muted)"> · ${esc(cut(it.full,40))}</tspan>`:'')+'</text>';
+  });
+  return svgOut(W,H,defs,body,'min-width:520px');
+}
+/* 🧪 Хэвтээ шилэн хоолой */
+function svgCylH(S){
+  const n=S.items.length,L=176,W=690,R=60,row=40,bh=24,T=12,H=T+n*row+10,iw=W-L-R,ex=bh*.22,P='ch'+(++chSeq),max=S.pct?100:Math.max(1,...S.items.map(i=>i.v));
+  let defs=glassGrad(P+'g',1),body='';
+  S.items.forEach((it,i)=>{const c=hue(it,i,S),y=T+i*row,w=iw*Math.max(0,it.v)/max,id=P+'_'+i;
+    const tube=x2=>`M${L},${y} L${x2},${y} L${x2},${y+bh} L${L},${y+bh} A${ex},${bh/2} 0 0 1 ${L},${y} Z`;
+    defs+=cylGrad(id,c,1);
+    body+=`<text x="${L-14}" y="${y+bh/2+5}" text-anchor="end" font-size="12" fill="var(--ink)">${esc(cut(it.full,24))}</text>`
+      +`<g>${tipOf(it,S)}<path d="${tube(L+iw)}" fill="var(--bg)" stroke="var(--line)"/><path d="${tube(L+iw)}" fill="url(#${P}g)"/>`
+      +`<ellipse cx="${L+iw}" cy="${y+bh/2}" rx="${ex}" ry="${bh/2}" fill="var(--line)" stroke="var(--muted)" stroke-opacity=".35"/>`
+      +(w>0.5?`<path d="${tube(L+w)}" fill="url(#${id})"/><ellipse cx="${L+w}" cy="${y+bh/2}" rx="${ex}" ry="${bh/2}" fill="${tint(c,.18)}" stroke="${tint(c,-.2)}" stroke-opacity=".5"/>`:'')+'</g>'
+      +vTxt(L+iw+ex+10,y+bh/2+5,fmt(it.v,S.pct),{a:'start',fs:12.5});
+  });
+  return svgOut(W,H,defs,body,'min-width:520px');
+}
+/* 🌙 Хэвтээ бөөрөнхий, бараан дэвсгэр */
+function svgPillH(S){
+  const n=S.items.length,L=176,W=690,R=20,row=38,bh=24,T=16,H=T+n*row+8,iw=W-L-R,max=S.pct?100:Math.max(1,...S.items.map(i=>i.v));
+  let body=`<rect width="${W}" height="${H}" rx="16" fill="#232E3E"/>`;
+  S.items.forEach((it,i)=>{const c=hue(it,i,S),y=T+i*row,w=Math.max(iw*Math.max(0,it.v)/max,bh);
+    body+=`<text x="${L-12}" y="${y+bh/2+5}" text-anchor="end" font-size="12" fill="#B9C3D0">${esc(cut(it.full,24))}</text>`
+      +`<rect x="${L}" y="${y}" width="${iw}" height="${bh}" rx="${bh/2}" fill="#fff" fill-opacity=".06"/>`
+      +`<rect x="${L}" y="${y}" width="${w}" height="${bh}" rx="${bh/2}" fill="${c}">${tipOf(it,S)}</rect>`
+      +(w>=52?vTxt(L+w-10,y+bh/2+4.5,fmt(it.v,S.pct),{a:'end',fill:onClr(c),fs:12,fw:600}):vTxt(L+w+8,y+bh/2+4.5,fmt(it.v,S.pct),{a:'start',fill:'#fff',fs:12,fw:600}));
+  });
+  return svgOut(W,H,'',body,'min-width:520px');
+}
+/* ⏱️ Секундомер: зүйл бүрд нэг цаг. Хувь бол шууд, тоо бол нийтээс эзлэх хувиар. */
+function svgGauge(S){
+  const n=S.items.length,cols=Math.min(n,n<=4?n:n<=10?5:6),rows=Math.ceil(n/cols),cw=150,chh=178,W=cols*cw,H=rows*chh+6,R=50;
+  const tot=S.items.reduce((a,i)=>a+Math.max(0,i.v),0)||1;
+  let body='';
+  S.items.forEach((it,i)=>{const c=hue(it,i,S),cx=(i%cols)*cw+cw/2,cy=Math.floor(i/cols)*chh+96,f=Math.min(1,Math.max(0,S.pct?it.v/100:it.v/tot)),r=R-7;
+    const a=-Math.PI/2+f*2*Math.PI,exx=cx+r*Math.cos(a),eyy=cy+r*Math.sin(a);
+    const wedge=f>=.999?`<circle cx="${cx}" cy="${cy}" r="${r}" fill="${c}"/>`:f>0?`<path d="M${cx},${cy} L${cx},${cy-r} A${r},${r} 0 ${f>.5?1:0} 1 ${exx},${eyy} Z" fill="${c}"/>`:'';
+    body+=`<g>${tipOf(it,S)}`
+      +`<circle cx="${cx}" cy="${cy-R-24}" r="9" fill="none" stroke="var(--ink)" stroke-width="3.5"/>`
+      +`<rect x="${cx-7}" y="${cy-R-16}" width="14" height="13" rx="2" fill="var(--ink)"/>`
+      +[-42,42].map(d=>`<rect x="-5" y="${-R-14}" width="10" height="13" rx="2" fill="var(--ink)" transform="translate(${cx},${cy}) rotate(${d})"/>`).join('')
+      +`<circle cx="${cx}" cy="${cy}" r="${R}" fill="var(--surface)" stroke="var(--ink)" stroke-width="3.5"/>`
+      +`<circle cx="${cx}" cy="${cy}" r="${r}" fill="var(--line)"/>${wedge}`
+      +(f>0&&f<.999?`<line x1="${cx}" y1="${cy}" x2="${exx}" y2="${eyy}" stroke="#fff" stroke-opacity=".8" stroke-width="1.5"/>`:'')
+      +`<circle cx="${cx}" cy="${cy}" r="${R*.36}" fill="var(--ink)"/></g>`
+      +vTxt(cx,cy+4.5,S.pct?Math.round(it.v)+'%':String(it.v),{fill:'var(--surface)',fs:12.5})
+      +vTxt(cx,cy+R+22,esc(cut(it.full,20)),{fs:12,fw:500})
+      +(S.pct?'':vTxt(cx,cy+R+37,Math.round(f*100)+'%',{fs:11,fw:400,fill:'var(--muted)'}));
+  });
+  return svgOut(W,H,'',body,`width:${W}px;max-width:100%`);
+}
+const NEWV={cyl:svgCyl,cone:svgCone,peak:svgPeak,pill:svgPill,ribbon:svgRibbonV,gauge:svgGauge};
+const NEWH={cyl:svgCylH,pill:svgPillH,ribbon:svgRibbonH,gauge:svgGauge};
 function chartDefs(){return `<defs>
   <linearGradient id="cGloss" x1="0" y1="0" x2="0" y2="1">
     <stop offset="0" stop-color="#fff" stop-opacity=".36"/><stop offset=".5" stop-color="#fff" stop-opacity=".08"/><stop offset="1" stop-color="#000" stop-opacity=".1"/></linearGradient>
@@ -5776,14 +5947,15 @@ function axisY(L,T,W,ih,max,pct){
   return g;
 }
 function svgBar(S,line){
-  const d3=chartStyle==='deep'&&!line,soft=chartStyle!=='flat';
+  const st=effStyle(line?"line":"bar",curStyle());if(!line&&NEWV[st])return NEWV[st](S);
+  const d3=st==="deep"&&!line,soft=st!=="flat",rb=!line&&curClr()==="rb";
   const n=S.items.length,rot=n>8,W=Math.max(640,n*(rot?34:56)+60),H=rot?360:320,L=46,T=24,B=rot?90:44,ih=H-T-B;
   const max=S.pct?100:Math.max(1,...S.items.map(i=>i.v)),cw=(W-L-10)/n,bw=Math.min(46,cw*.62);
   const dz=d3?Math.max(5,Math.min(13,bw*.3)):0,base=T+ih;
   let bars='',marks='',labels='',pts=[];
   S.items.forEach((it,i)=>{
     const cx=L+cw*i+cw/2,h=Math.max(ih*it.v/max,1),y=base-h,x=cx-bw/2;
-    const c=col(it.v,S.pct),tip=`<title>${esc(it.full)}: ${fmt(it.v,S.pct)}</title>`;
+    const c=rb?VIVID[i%VIVID.length]:col(it.v,S.pct),tip=`<title>${esc(it.full)}: ${fmt(it.v,S.pct)}</title>`;
     if(line){
       pts.push(cx+','+y);
       marks+=`<circle cx="${cx}" cy="${y}" r="${soft?5.5:5}" fill="${c}" stroke="var(--surface)" stroke-width="2"${soft?' filter="url(#cSh)"':''}>${tip}</circle>`;
@@ -5810,10 +5982,11 @@ function svgBar(S,line){
   return`<svg viewBox="0 0 ${W} ${H}" style="min-width:${W>720?W:0}px" xmlns="http://www.w3.org/2000/svg">${chartDefs()}${g}${labels}</svg>`;
 }
 function svgHBar(S){
-  const d3=chartStyle==='deep',soft=chartStyle!=='flat';
+  const st=effStyle("hbar",curStyle());if(NEWH[st])return NEWH[st](S);
+  const d3=st==="deep",soft=st!=="flat",rb=curClr()==="rb";
   const n=S.items.length,L=170,W=680,R=56,row=d3?34:30,T=12,H=T+n*row+14,max=S.pct?100:Math.max(1,...S.items.map(i=>i.v)),iw=W-L-R;
   const bh=d3?20:18,dz=d3?6:0;
-  let g='';S.items.forEach((it,i)=>{const y=T+i*row,w=Math.max(iw*it.v/max,2),c=col(it.v,S.pct);
+  let g='';S.items.forEach((it,i)=>{const y=T+i*row,w=Math.max(iw*it.v/max,2),c=rb?VIVID[i%VIVID.length]:col(it.v,S.pct);
     const tip=`<title>${esc(it.full)}: ${fmt(it.v,S.pct)}</title>`;
     g+=`<text x="${L-8}" y="${y+bh/2+5}" text-anchor="end" font-size="12" fill="var(--ink)">${esc(cut(it.full,24))}</text>
       <rect x="${L}" y="${y}" width="${iw}" height="${bh}" rx="${bh/2}" fill="var(--bg)"/>`;
@@ -5827,10 +6000,10 @@ function svgHBar(S){
   return`<svg viewBox="0 0 ${W} ${H}" style="min-width:520px" xmlns="http://www.w3.org/2000/svg">${chartDefs()}${g}</svg>`;
 }
 function svgPie(S){
-  const d3=chartStyle==='deep',soft=chartStyle!=='flat';
+  const st=effStyle("pie",curStyle()),d3=["deep","cyl","cone"].includes(st),soft=st!=="flat",rb=curClr()==="rb";
   const items=S.items.filter(i=>i.v>0),tot=items.reduce((a,i)=>a+i.v,0)||1;
   const c=130,rx=118,ry=d3?70:118,cy=d3?112:130,dep=d3?26:0,H=d3?232:260;
-  const clrOf=(it,k)=>it.c||PIE_COLORS[LEVELS.findIndex(l=>l[0]===it.l)]||PIE_COLORS[k%8];
+  const clrOf=(it,k)=>it.c||(rb?VIVID[k%VIVID.length]:null)||PIE_COLORS[LEVELS.findIndex(l=>l[0]===it.l)]||PIE_COLORS[k%8];
   const path=(a0,a1,y)=>items.length===1
     ? `M${c-rx},${y} a${rx},${ry} 0 1 0 ${rx*2},0 a${rx},${ry} 0 1 0 ${-rx*2},0`
     : `M${c},${y} L${c+rx*Math.cos(a0)},${y+ry*Math.sin(a0)} A${rx},${ry} 0 ${a1-a0>Math.PI?1:0} 1 ${c+rx*Math.cos(a1)},${y+ry*Math.sin(a1)} Z`;
@@ -5898,8 +6071,9 @@ function svgRadar(d){
 }
 function renderChart(){
   const p=$('#chartPanel');if(!p||!lastD)return;
-  chartStyle=chcfg().style||'deep';
   if(chartType==='pie'&&!PIE_OK.includes(chartData))chartType='bar';
+  chartStyle=effStyle(chartType,curStyle());const clr=curClr(),okSt=STY_OK[chartType];
+  const stOpt=o=>{const no=okSt&&!okSt.includes(o[0]);return`<option value="${o[0]}"${o[0]===chartStyle?' selected':''}${no?' disabled':''}>${o[1]}</option>`;};
   const sp=SPECIAL.includes(chartData),title=DATA_OPTS.find(o=>o[0]===chartData)[1];
   let S={items:[]},body;
   if(chartData==='hm')body=svgHeat()+'<div class="heat-scale">0%<i></i>100% зөв хариулсан</div>';
@@ -5912,17 +6086,19 @@ function renderChart(){
       <div><label for="cdata">Юуг харуулах</label><select id="cdata">${DATA_OPTS.map(o=>`<option value="${o[0]}"${o[0]===chartData?' selected':''}>${o[1]}</option>`).join('')}</select></div>
       <div><label for="ctype">Графикийн төрөл</label><select id="ctype"${sp?' disabled':''}>${TYPE_OPTS.map(o=>{const no=o[0]==='pie'&&!PIE_OK.includes(chartData);
         return`<option value="${o[0]}"${o[0]===chartType?' selected':''}${no?' disabled':''}>${o[1]}${no?' (зөвхөн түвшин, хүндрэлд)':''}</option>`;}).join('')}</select></div>
-      <div><label for="cstyle">Загвар</label><select id="cstyle"${sp?' disabled':''}>${STYLE_OPTS.map(o=>`<option value="${o[0]}"${o[0]===chartStyle?' selected':''}>${o[1]}</option>`).join('')}</select></div>
+      <div><label for="cstyle">Загвар</label><select id="cstyle"${sp?' disabled':''}><optgroup label="Шинэ загвар">${STYLE_NEW.map(stOpt).join('')}</optgroup><optgroup label="Энгийн">${STYLE_OLD.map(stOpt).join('')}</optgroup></select></div>
+      <div><label for="cclr">Өнгө</label><select id="cclr"${sp||chartType==='line'?' disabled':''}>${CLR_OPTS.map(o=>`<option value="${o[0]}"${o[0]===clr?' selected':''}>${o[1]}</option>`).join('')}</select></div>
     </div>
     <h3 id="ctitle" style="margin:0 0 8px;font-size:1rem">${esc(title)}${filterCls&&chartData!=='c'?', '+esc(filterCls)+' анги':''}</h3>
     <div class="chart-box" id="cbox">${body}</div>
-    ${S.pct&&chartType!=='pie'?'<div class="legend">Ногоон: 80%-аас дээш. Шар: 60–79%. Улаан: 60%-аас доош.</div>':''}
+    ${S.pct&&chartType!=='pie'&&(clr==='lv'||chartType==='line')?'<div class="legend">Ногоон: 80%-аас дээш. Шар: 60–79%. Улаан: 60%-аас доош.</div>':''}
     ${chartData==='hm'?'<div class="legend">Улаан нүд — тэр ангийн олонх нь алдсан асуулт. Нүдэн дээр очиход асуултын агуулга харагдана.</div>':''}
     ${chartData==='rd'?'<div class="legend">Тэнхлэг бүр нэг агуулга. Төвөөс хол байх тусам сайн. Тасархай шугам — 60%.</div>':''}
     <div class="btns"><button class="btn ghost" id="cpng">Графикийг зураг болгож татах</button></div>`;
   $('#cdata').addEventListener('change',e=>{chartData=e.target.value;renderChart();});
   $('#ctype').addEventListener('change',e=>{chartType=e.target.value;renderChart();});
   $('#cstyle').addEventListener('change',e=>{chartStyle=e.target.value;chcfg().style=chartStyle;save();renderChart();});
+  $('#cclr').addEventListener('change',e=>{chcfg().clr=e.target.value;save();renderChart();});
   $('#cpng').addEventListener('click',()=>downloadChart(title));
 }
 function downloadChart(title){
