@@ -5993,12 +5993,12 @@ $('#liveBtn').addEventListener('click',liveOpen);
 
 /* ---------- charts ---------- */
 let chartData='q',chartType='bar',chartStyle='modern',lastD=null,chSeq=0;
-const STYLE_NEW=[['modern','✨ Орчин үеийн (босго, дундажтай)'],['cyl','🧪 Шилэн цилиндр (3D)'],['cone','🔺 Конус (3D)'],['peak','⛰️ Оргил'],['pill','🌙 Бөөрөнхий, бараан дэвсгэр'],['ribbon','🎀 Тууз, урт сүүдэртэй'],['gauge','⏱️ Секундомер']];
+const STYLE_NEW=[['modern','✨ Орчин үеийн (босго, дундажтай)'],['cyl','🧪 Шилэн цилиндр (3D)'],['cone','🔺 Конус (3D)'],['peak','⛰️ Оргил'],['pill','🌙 Бөөрөнхий, бараан дэвсгэр'],['ribbon','🎀 Тууз, урт сүүдэртэй']];
 const STYLE_OLD=[['deep','Хайрцаг 3D (хуучин)'],['soft','Зөөлөн сүүдэртэй'],['flat','Энгийн хавтгай (хэвлэхэд)']];
 const STYLE_OPTS=[...STYLE_NEW,...STYLE_OLD];
 const CLR_OPTS=[['lv','Түвшнээр (ногоон / шар / улаан)'],['rb','Олон өнгө']];
 /* Графикийн төрөл бүрт тохирох загвар. Тохирохгүй бол ойролцоо загвараар зурна. */
-const STY_OK={hbar:['modern','cyl','pill','ribbon','gauge','deep','soft','flat'],line:['soft','flat'],pie:['cyl','cone','deep','soft','flat']};
+const STY_OK={hbar:['modern','cyl','pill','ribbon','deep','soft','flat'],line:['soft','flat'],pie:['cyl','cone','deep','soft','flat']};
 /* Графикийн дэвсгэр — бүх графикт (шинжилгээ, нэгдсэн тайлан). Word тайлан хэвлэхэд зориулж цагаан хэвээр. */
 const BG_OPTS=[['auto','⬜ Цагаан (энгийн)'],['dark','⬛ Бараан'],['green','🟩 Ногоон']];
 const curBg=()=>['dark','green'].includes(chcfg().bg)?chcfg().bg:'auto';
@@ -6224,8 +6224,8 @@ function svgModernV(S){
   });
   return svgOut(G.W,G.H,defs,body+modernGuides(S,Y,[G.L,G.W-80],true)+lab+xLabs(S,G,'var(--ink)'));
 }
-const NEWV={modern:svgModernV,cyl:svgCyl,cone:svgCone,peak:svgPeak,pill:svgPill,ribbon:svgRibbonV,gauge:svgGauge};
-const NEWH={modern:svgModernH,cyl:svgCylH,pill:svgPillH,ribbon:svgRibbonH,gauge:svgGauge};
+const NEWV={modern:svgModernV,cyl:svgCyl,cone:svgCone,peak:svgPeak,pill:svgPill,ribbon:svgRibbonV};
+const NEWH={modern:svgModernH,cyl:svgCylH,pill:svgPillH,ribbon:svgRibbonH};
 /* Татах (Word, PowerPoint) үед график бүрд "Загвар" жагсаалтаас санамсаргүй, давтагдахгүй загвар сонгоно.
    Олон зүйлтэй графикт уншигдахгүй загварыг (олон секундомер, давхцсан оргил) алгасна. */
 function stylePicker(){let bag=[];const all=STYLE_OPTS.map(o=>o[0]);
