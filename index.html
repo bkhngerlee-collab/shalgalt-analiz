@@ -233,12 +233,14 @@ td input,td select{min-width:70px}
 .stat:hover,.ins:hover{transform:translateY(-2px);box-shadow:0 6px 18px rgba(16,26,22,.09)}
 @media (prefers-reduced-motion:reduce){.stat,.ins{transition:none}.stat:hover,.ins:hover{transform:none}}
 /* Excel (ногоон), Word (цэнхэр) товч — танил өнгөөр шууд ялгагдана */
-.btn.xl,.btn.wd{background:var(--surface);color:var(--ink);border-color:var(--field-line);box-shadow:none}
+.btn.xl,.btn.wd,.btn.pp{background:var(--surface);color:var(--ink);border-color:var(--field-line);box-shadow:none}
 .btn.xl:hover{border-color:#1D6F42;background:rgba(29,111,66,.08);filter:none;box-shadow:none}
 .btn.wd:hover{border-color:#2B579A;background:rgba(43,87,154,.09);filter:none;box-shadow:none}
-.btn.xl::before,.btn.wd::before{content:"X";display:inline-grid;place-items:center;width:20px;height:20px;border-radius:5px;
+.btn.pp:hover{border-color:#C43E1C;background:rgba(196,62,28,.08);filter:none;box-shadow:none}
+.btn.xl::before,.btn.wd::before,.btn.pp::before{content:"X";display:inline-grid;place-items:center;width:20px;height:20px;border-radius:5px;
   margin:0 8px 0 -4px;color:#fff;font-size:.72rem;font-weight:800;line-height:1;background:#1D6F42;vertical-align:-4px}
 .btn.wd::before{content:"W";background:#2B579A}
+.btn.pp::before{content:"P";background:#C43E1C}
 /* Анализын дэд цэсний тоон тэмдэглэгээ */
 .secnav .sn-b{display:inline-block;min-width:18px;padding:0 5px;margin-left:6px;border-radius:999px;font-size:.72rem;font-weight:700;
   line-height:18px;text-align:center;background:var(--stain);color:#fff}
@@ -4091,6 +4093,7 @@ function renderAnalysis(){
     <div class="btns noprint">
       <button class="btn xl" id="xXlsx">Excel файлаар татах</button>
       <button class="btn wd" id="xDocx">Word тайлангаар татах</button>
+      <button class="btn pp" id="xPptx">PowerPoint илтгэл татах</button>
       <button class="btn ghost" onclick="window.print()">Хэвлэх</button>
     </div>
     <div class="msg noprint" id="xMsg" role="status"></div>
@@ -4194,6 +4197,7 @@ function renderAnalysis(){
   $('#stable').addEventListener('click',pick);$('#stable').addEventListener('keydown',pick);
   $('#xXlsx').addEventListener('click',()=>runExport(exportExamXlsx,'#xMsg'));
   $('#xDocx').addEventListener('click',()=>runExport(exportExamDocx,'#xMsg'));
+  $("#xPptx").addEventListener("click",()=>runExport(exportExamPptx,"#xMsg"));
   $('#mxXlsx').addEventListener('click',()=>runExport(exportMatrixXlsx,'#mxMsg'));
   $('#stdXlsx').addEventListener('click',()=>runExport(exportStdXlsx,'#stdMsg'));
 }
@@ -4601,6 +4605,7 @@ function renderFinal(){
     <div class="btns noprint">
       <button class="btn xl" id="fXlsx">Excel файлаар татах</button>
       <button class="btn wd" id="fDocx">Word тайлангаар татах</button>
+      <button class="btn pp" id="fPptx">PowerPoint илтгэл татах</button>
       <button class="btn ghost" onclick="window.print()">Хэвлэх</button>
     </div>
     <div class="msg noprint" id="fMsg" role="status"></div></div>
@@ -4695,6 +4700,7 @@ $('#finalBox').addEventListener('click',e=>{
   if(e.target.id==='fNone'){cfg.ids=[];save();renderFinal();}
   if(e.target.id==='fXlsx')runExport(exportFinalXlsx,'#fMsg');
   if(e.target.id==='fDocx')runExport(exportFinalDocx,'#fMsg');
+  if(e.target.id==="fPptx")runExport(exportFinalPptx,"#fMsg");
 });
 
 /* ---------- Excel / Word export (no external libraries) ---------- */
@@ -4790,15 +4796,16 @@ function buildXlsx(sheets){
 }
 /* --- DOCX --- */
 const LIGHT={leaf:'#047857',iodine:'#A3620A',stain:'#B4314A',ink:'#101A16',muted:'#66736D',line:'#E1E7E4',bg:'#F5F7F6',surface:'#FFFFFF','leaf-soft':'#E2F4EC','stain-soft':'#FBE9ED','iodine-soft':'#FEF6E7'};
-function svgToPng(svg){
+function svgToPng(svg,o={}){
+  const pal=o.pal||LIGHT;
   return new Promise((res,rej)=>{
-    const vb=(svg.match(/viewBox="0 0 ([\d.]+) ([\d.]+)"/)||[]),W=+vb[1]||640,H=+vb[2]||320,sc=2;
-    let src=svg.replace(/var\(--([a-z-]+)(?:,\s*([^)]+))?\)/g,(m,v,fb)=>LIGHT[v]||fb||'#000').replace(/style="[^"]*"/,'')
+    const vb=(svg.match(/viewBox="0 0 ([\d.]+) ([\d.]+)"/)||[]),W=+vb[1]||640,H=+vb[2]||320,sc=o.sc||2;
+    let src=svg.replace(/var\(--([a-z-]+)(?:,\s*([^)]+))?\)/g,(m,v,fb)=>pal[v]||fb||'#000').replace(/style="[^"]*"/,'')
       .replace('<svg ',`<svg width="${W}" height="${H}" font-family="Arial,Helvetica,sans-serif" `);
     if(!/xmlns=/.test(src))src=src.replace('<svg','<svg xmlns="http://www.w3.org/2000/svg"');
     const img=new Image();
     img.onload=()=>{try{const cv=document.createElement('canvas');cv.width=W*sc;cv.height=H*sc;const x=cv.getContext('2d');
-      x.fillStyle='#fff';x.fillRect(0,0,cv.width,cv.height);x.scale(sc,sc);x.drawImage(img,0,0,W,H);
+      x.fillStyle=o.fill||'#fff';x.fillRect(0,0,cv.width,cv.height);x.scale(sc,sc);x.drawImage(img,0,0,W,H);
       cv.toBlob(b=>b?b.arrayBuffer().then(ab=>res({bytes:new Uint8Array(ab),w:W,h:H})):rej(new Error('зураг')),'image/png');}catch(e){rej(e);}};
     img.onerror=()=>rej(new Error('график зурж чадсангүй'));
     img.src='data:image/svg+xml;charset=utf-8,'+encodeURIComponent(src);
@@ -5109,6 +5116,215 @@ async function exportFinalDocx(){
     {t:ar(t.slope),al:'center',color:t.slope>=TREND_STEP?'1F5A41':t.slope<=-TREND_STEP?'B4314A':undefined}]),[3,...R.map(()=>1.1),1.1,0.6]);
   D.note('Тайлан үүсгэсэн огноо: '+todayStr());
   const name=fileSafe(finalCls+' negdsen analiz')+'.docx';saveBlob(D.build(),name);return name;
+}
+
+/* ---------- PowerPoint (.pptx) илтгэл — гадны сангүй ----------
+   16:9 слайд. Өнгө нь графикийн "Дэвсгэр" сонголтыг дагана (цагаан / бараан / ногоон),
+   график нь багшийн сонгосон загвараар зурагдаж зураг болж орно. */
+const PPT_TH={
+  auto:{bg:'FFFFFF',ink:'14211B',muted:'5E6E67',acc:'1F5A41',onAcc:'FFFFFF',card:'F1F6F3',line:'DCE5E0',deco:'2E8B5E',
+    lv:{good:'1F8A50',mid:'B8740B',bad:'C8364B'},pal:LIGHT,fill:'#FFFFFF'},
+  dark:{bg:'161F2B',ink:'EDF2F7',muted:'97A6B7',acc:'3DD68C',onAcc:'0E1620',card:'1E2A39',line:'2E3D50',deco:'3DD68C',
+    lv:{good:'3DD68C',mid:'F6BE4F',bad:'FF6B7D'},fill:'#161F2B',
+    pal:{ink:'#EDF2F7',muted:'#97A6B7',line:'#2E3D50',bg:'#1E2A39',surface:'#161F2B',leaf:'#3DD68C',iodine:'#F6BE4F',stain:'#FF6B7D','pill-bg':'#161F2B'}},
+  green:{bg:'0C3B2D',ink:'F0FAF5',muted:'A8D3BF',acc:'7BE8AE',onAcc:'0C3B2D',card:'11513D',line:'256B53',deco:'7BE8AE',
+    lv:{good:'7BE8AE',mid:'FFC83D',bad:'FF8A96'},fill:'#0C3B2D',
+    pal:{ink:'#F0FAF5',muted:'#A8D3BF',line:'#256B53',bg:'#11513D',surface:'#0C3B2D',leaf:'#7BE8AE',iodine:'#FFC83D',stain:'#FF8A96','pill-bg':'#0C3B2D'}}};
+function pptxBuilder(footer){
+  const th=PPT_TH[curBg()],EMU=914400,E=v=>Math.round(v*EMU),slides=[],media=[];let cur=null;
+  const NS='xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main"';
+  const GRP='<p:nvGrpSpPr><p:cNvPr id="1" name=""/><p:cNvGrpSpPr/><p:nvPr/></p:nvGrpSpPr><p:grpSpPr><a:xfrm><a:off x="0" y="0"/><a:ext cx="0" cy="0"/><a:chOff x="0" y="0"/><a:chExt cx="0" cy="0"/></a:xfrm></p:grpSpPr>';
+  const clr=(c,alpha)=>`<a:srgbClr val="${c}"${alpha!=null?`><a:alpha val="${Math.round(alpha*100000)}"/></a:srgbClr>`:'/>'}`;
+  const xfrm=(x,y,w,h)=>`<a:xfrm><a:off x="${E(x)}" y="${E(y)}"/><a:ext cx="${E(w)}" cy="${E(h)}"/></a:xfrm>`;
+  const run=(r,o)=>{r=r&&typeof r==='object'?r:{t:r};const b=r.b!=null?r.b:o.b;
+    return`<a:r><a:rPr lang="mn-MN" sz="${Math.round((r.sz||o.sz||18)*100)}"${b?' b="1"':''} dirty="0"><a:solidFill>${clr(r.c||o.c||th.ink)}</a:solidFill><a:latin typeface="Arial"/><a:cs typeface="Arial"/></a:rPr><a:t>${xe(r.t==null?'':String(r.t))}</a:t></a:r>`;};
+  const para=(p,o)=>`<a:p><a:pPr algn="${({center:'ctr',right:'r'})[o.al]||'l'}"${o.bullet?' marL="320040" indent="-320040"':''}>`
+    +(o.gap?`<a:spcBef><a:spcPts val="${o.gap*100}"/></a:spcBef>`:'')
+    +(o.bullet?`<a:buClr>${clr(th.acc)}</a:buClr><a:buFont typeface="Arial"/><a:buChar char="●"/>`:'<a:buNone/>')
+    +`</a:pPr>${(Array.isArray(p)?p:[p]).map(r=>run(r,o)).join('')}</a:p>`;
+  const api={th,
+    slide(){cur={sp:[],rels:[],id:2};slides.push(cur);return api;},
+    /* Хэлбэр (тэгш өнцөгт, бөөрөнхий, дугуй) — дотроо бичигтэй байж болно */
+    shape(x,y,w,h,o={},paras){const id=cur.id++;
+      const geom=o.geom==='ellipse'?'<a:prstGeom prst="ellipse"><a:avLst/></a:prstGeom>'
+        :o.rad?`<a:prstGeom prst="roundRect"><a:avLst><a:gd name="adj" fmla="val ${o.rad}"/></a:avLst></a:prstGeom>`:'<a:prstGeom prst="rect"><a:avLst/></a:prstGeom>';
+      const tx=paras&&paras.length?`<p:txBody><a:bodyPr wrap="square" lIns="${E(o.pad==null?.1:o.pad)}" tIns="${E(o.padY==null?.05:o.padY)}" rIns="${E(o.pad==null?.1:o.pad)}" bIns="${E(o.padY==null?.05:o.padY)}" anchor="${o.anchor||'t'}" rtlCol="0"><a:normAutofit/></a:bodyPr><a:lstStyle/>${paras.map(p=>para(p,o)).join('')}</p:txBody>`:'';
+      cur.sp.push(`<p:sp><p:nvSpPr><p:cNvPr id="${id}" name="Shape ${id}"/><p:cNvSpPr/><p:nvPr/></p:nvSpPr><p:spPr>${xfrm(x,y,w,h)}${geom}`
+        +(o.fill?`<a:solidFill>${clr(o.fill,o.alpha)}</a:solidFill>`:'<a:noFill/>')
+        +(o.ln?`<a:ln w="${o.lnW||12700}"><a:solidFill>${clr(o.ln)}</a:solidFill></a:ln>`:'<a:ln><a:noFill/></a:ln>')+`</p:spPr>${tx}</p:sp>`);
+      return api;},
+    text(x,y,w,h,paras,o={}){return api.shape(x,y,w,h,{pad:0,padY:0,...o},Array.isArray(paras)?paras:[paras]);},
+    /* PNG зургийг хайрцагт багтааж, голлуулж тавина */
+    image(im,x,y,w,h){const n=media.length+1,rid='rIdImg'+n,k=Math.min(w/im.w,h/im.h),iw=im.w*k,ih=im.h*k,id=cur.id++;
+      media.push({name:`media/image${n}.png`,bytes:im.bytes});cur.rels.push({id:rid,t:`../media/image${n}.png`});
+      cur.sp.push(`<p:pic><p:nvPicPr><p:cNvPr id="${id}" name="Chart ${id}"/><p:cNvPicPr><a:picLocks noChangeAspect="1"/></p:cNvPicPr><p:nvPr/></p:nvPicPr><p:blipFill><a:blip r:embed="${rid}"/><a:stretch><a:fillRect/></a:stretch></p:blipFill><p:spPr>${xfrm(x+(w-iw)/2,y+(h-ih)/2,iw,ih)}<a:prstGeom prst="rect"><a:avLst/></a:prstGeom></p:spPr></p:pic>`);
+      return api;},
+    /* Хүснэгт: cell = текст | {t, c (өнгө), b, al} */
+    table(x,y,w,head,rows,widths,o={}){const id=cur.id++,rh=o.rh||.34,sz=o.sz||12,tot=widths.reduce((a,b)=>a+b,0),ws=widths.map(v=>E(w*v/tot));
+      const tc=(c,hdr,ri)=>{c=c&&typeof c==='object'?c:{t:c};const fill=hdr?th.acc:c.fill||(ri%2?th.card:th.bg);
+        return`<a:tc><a:txBody><a:bodyPr/><a:lstStyle/><a:p><a:pPr algn="${({center:'ctr',right:'r'})[c.al]||'l'}"/>${run({t:c.t==null||c.t===''?'–':c.t,b:hdr||c.b,c:hdr?th.onAcc:c.c||th.ink},{sz})}</a:p></a:txBody>`
+          +`<a:tcPr marL="${E(.09)}" marR="${E(.09)}" marT="${E(.03)}" marB="${E(.03)}" anchor="ctr"><a:lnL w="0"><a:noFill/></a:lnL><a:lnR w="0"><a:noFill/></a:lnR><a:lnT w="0"><a:noFill/></a:lnT>`
+          +`<a:lnB w="6350"><a:solidFill>${clr(th.line)}</a:solidFill></a:lnB><a:solidFill>${clr(fill)}</a:solidFill></a:tcPr></a:tc>`;};
+      const tr=(r,hdr,ri)=>`<a:tr h="${E(rh)}">${r.map(c=>tc(c,hdr,ri)).join('')}</a:tr>`;
+      cur.sp.push(`<p:graphicFrame><p:nvGraphicFramePr><p:cNvPr id="${id}" name="Table ${id}"/><p:cNvGraphicFramePr><a:graphicFrameLocks noGrp="1"/></p:cNvGraphicFramePr><p:nvPr/></p:nvGraphicFramePr>`
+        +`<p:xfrm><a:off x="${E(x)}" y="${E(y)}"/><a:ext cx="${ws.reduce((a,b)=>a+b,0)}" cy="${E(rh*(rows.length+1))}"/></p:xfrm><a:graphic><a:graphicData uri="http://schemas.openxmlformats.org/drawingml/2006/table">`
+        +`<a:tbl><a:tblPr firstRow="1" bandRow="1"/><a:tblGrid>${ws.map(v=>`<a:gridCol w="${v}"/>`).join('')}</a:tblGrid>${tr(head,true,0)}${rows.map((r,i)=>tr(r,false,i)).join('')}</a:tbl></a:graphicData></a:graphic></p:graphicFrame>`);
+      return api;},
+    /* Нүүр слайд */
+    cover(title,sub,chips){api.slide();
+      api.shape(9.2,-1.6,6,6,{geom:'ellipse',fill:th.deco,alpha:.13}).shape(10.9,3.9,4.2,4.2,{geom:'ellipse',fill:th.deco,alpha:.08})
+        .shape(.8,1.55,.16,2.1,{fill:th.acc,rad:50000})
+        .text(1.2,1.4,9.6,1.5,[{t:title,sz:38,b:true}],{anchor:'b'})
+        .text(1.2,2.95,9.6,.8,[{t:sub,sz:20,c:th.muted}]);
+      let cx=1.2;chips.forEach(t=>{const w=Math.max(1.4,String(t).length*.1+.5);
+        api.shape(cx,4.55,w,.5,{fill:th.card,rad:50000,anchor:'ctr',al:'center',pad:.12,padY:0},[{t,sz:13,c:th.ink,b:true}]);cx+=w+.18;});
+      api.text(1.2,6.55,9,.4,[{t:footer,sz:11,c:th.muted}]);return api;},
+    /* Агуулгын слайдын толгой, хөл */
+    page(title,sub){api.slide();
+      api.shape(.6,.5,.12,.62,{fill:th.acc,rad:50000}).text(.9,.4,11.6,.6,[{t:title,sz:26,b:true}],{anchor:'ctr'});
+      if(sub)api.text(.9,1.0,11.6,.4,[{t:sub,sz:13,c:th.muted}]);
+      api.text(.6,7.0,9,.3,[{t:footer,sz:10,c:th.muted}]);cur.num=true;return api;},
+    /* Тоон үзүүлэлтийн карт */
+    kpi(x,y,w,h,val,label,c,note){api.shape(x,y,w,h,{fill:th.card,rad:9000});
+      api.shape(x,y+.3,.07,h-.6,{fill:c||th.acc,rad:50000});
+      api.text(x+.35,y+.15,w-.5,h*.5,[{t:val,sz:40,b:true,c:c||th.ink}],{anchor:'b'})
+        .text(x+.35,y+h*.66,w-.5,.4,[{t:label,sz:14,c:th.muted}]);
+      if(note)api.text(x+.35,y+h*.58+.36,w-.5,.35,[{t:note,sz:11,c:th.muted}]);return api;},
+    async chart(svg,x,y,w,h){try{api.image(await svgToPng(svg,{pal:th.pal,fill:th.fill,sc:2.5}),x,y,w,h);}
+      catch(e){api.text(x,y,w,.5,[{t:'(График оруулж чадсангүй.)',sz:14,c:th.muted}]);}return api;},
+    build(){
+      const n=slides.length;
+      const sx=(s,i)=>{const nb=s.num?`<p:sp><p:nvSpPr><p:cNvPr id="${s.id}" name="Num"/><p:cNvSpPr/><p:nvPr/></p:nvSpPr><p:spPr>${xfrm(11.2,6.98,1.55,.32)}<a:prstGeom prst="rect"><a:avLst/></a:prstGeom><a:noFill/><a:ln><a:noFill/></a:ln></p:spPr><p:txBody><a:bodyPr wrap="square" lIns="0" tIns="0" rIns="0" bIns="0" anchor="ctr"/><a:lstStyle/>${para([{t:(i+1)+' / '+n,sz:10,c:th.muted}],{al:'right'})}</p:txBody></p:sp>`:'';
+        return`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><p:sld ${NS}><p:cSld><p:bg><p:bgPr><a:solidFill>${clr(th.bg)}</a:solidFill><a:effectLst/></p:bgPr></p:bg><p:spTree>${GRP}${s.sp.join('')}${nb}</p:spTree></p:cSld><p:clrMapOvr><a:masterClrMapping/></p:clrMapOvr></p:sld>`;};
+      const REL='http://schemas.openxmlformats.org/officeDocument/2006/relationships/',CT='application/vnd.openxmlformats-officedocument.presentationml.';
+      const rels=list=>`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">${list.map(r=>`<Relationship Id="${r[0]}" Type="${REL+r[1]}" Target="${r[2]}"/>`).join('')}</Relationships>`;
+      const acc=['1F5A41','2E8B5E','B8740B','C8364B','0A9BEA','8E2BFF'];
+      const theme=`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><a:theme xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" name="Shalgalt"><a:themeElements><a:clrScheme name="Shalgalt"><a:dk1><a:srgbClr val="14211B"/></a:dk1><a:lt1><a:srgbClr val="FFFFFF"/></a:lt1><a:dk2><a:srgbClr val="1F5A41"/></a:dk2><a:lt2><a:srgbClr val="F1F6F3"/></a:lt2>${acc.map((c,i)=>`<a:accent${i+1}><a:srgbClr val="${c}"/></a:accent${i+1}>`).join('')}<a:hlink><a:srgbClr val="0A6FC2"/></a:hlink><a:folHlink><a:srgbClr val="6B4BA8"/></a:folHlink></a:clrScheme>`
+        +`<a:fontScheme name="Shalgalt"><a:majorFont><a:latin typeface="Arial"/><a:ea typeface=""/><a:cs typeface=""/></a:majorFont><a:minorFont><a:latin typeface="Arial"/><a:ea typeface=""/><a:cs typeface=""/></a:minorFont></a:fontScheme>`
+        +`<a:fmtScheme name="Shalgalt"><a:fillStyleLst>${'<a:solidFill><a:schemeClr val="phClr"/></a:solidFill>'.repeat(3)}</a:fillStyleLst><a:lnStyleLst>${'<a:ln w="6350"><a:solidFill><a:schemeClr val="phClr"/></a:solidFill></a:ln>'.repeat(3)}</a:lnStyleLst><a:effectStyleLst>${'<a:effectStyle><a:effectLst/></a:effectStyle>'.repeat(3)}</a:effectStyleLst><a:bgFillStyleLst>${'<a:solidFill><a:schemeClr val="phClr"/></a:solidFill>'.repeat(3)}</a:bgFillStyleLst></a:fmtScheme></a:themeElements><a:objectDefaults/><a:extraClrSchemeLst/></a:theme>`;
+      const master=`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><p:sldMaster ${NS}><p:cSld><p:bg><p:bgRef idx="1001"><a:schemeClr val="bg1"/></p:bgRef></p:bg><p:spTree>${GRP}</p:spTree></p:cSld><p:clrMap bg1="lt1" tx1="dk1" bg2="lt2" tx2="dk2" accent1="accent1" accent2="accent2" accent3="accent3" accent4="accent4" accent5="accent5" accent6="accent6" hlink="hlink" folHlink="folHlink"/><p:sldLayoutIdLst><p:sldLayoutId id="2147483649" r:id="rId1"/></p:sldLayoutIdLst><p:txStyles><p:titleStyle><a:lvl1pPr><a:defRPr sz="3200"/></a:lvl1pPr></p:titleStyle><p:bodyStyle><a:lvl1pPr><a:defRPr sz="1800"/></a:lvl1pPr></p:bodyStyle><p:otherStyle><a:lvl1pPr><a:defRPr sz="1800"/></a:lvl1pPr></p:otherStyle></p:txStyles></p:sldMaster>`;
+      const layout=`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><p:sldLayout ${NS} type="blank" preserve="1"><p:cSld name="Blank"><p:spTree>${GRP}</p:spTree></p:cSld><p:clrMapOvr><a:masterClrMapping/></p:clrMapOvr></p:sldLayout>`;
+      const pres=`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><p:presentation ${NS} saveSubsetFonts="1"><p:sldMasterIdLst><p:sldMasterId id="2147483648" r:id="rId1"/></p:sldMasterIdLst><p:sldIdLst>${slides.map((s,i)=>`<p:sldId id="${256+i}" r:id="rId${i+10}"/>`).join('')}</p:sldIdLst><p:sldSz cx="12192000" cy="6858000"/><p:notesSz cx="6858000" cy="9144000"/></p:presentation>`;
+      return zipFiles([
+        {name:'[Content_Types].xml',data:`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Default Extension="png" ContentType="image/png"/>`
+          +`<Override PartName="/ppt/presentation.xml" ContentType="${CT}presentation.main+xml"/><Override PartName="/ppt/slideMasters/slideMaster1.xml" ContentType="${CT}slideMaster+xml"/><Override PartName="/ppt/slideLayouts/slideLayout1.xml" ContentType="${CT}slideLayout+xml"/>`
+          +`<Override PartName="/ppt/theme/theme1.xml" ContentType="application/vnd.openxmlformats-officedocument.theme+xml"/><Override PartName="/ppt/presProps.xml" ContentType="${CT}presProps+xml"/><Override PartName="/ppt/tableStyles.xml" ContentType="${CT}tableStyles+xml"/>`
+          +slides.map((s,i)=>`<Override PartName="/ppt/slides/slide${i+1}.xml" ContentType="${CT}slide+xml"/>`).join('')+'</Types>'},
+        {name:'_rels/.rels',data:rels([['rId1','officeDocument','ppt/presentation.xml']])},
+        {name:'ppt/presentation.xml',data:pres},
+        {name:'ppt/_rels/presentation.xml.rels',data:rels([['rId1','slideMaster','slideMasters/slideMaster1.xml'],['rId2','theme','theme/theme1.xml'],['rId3','presProps','presProps.xml'],['rId4','tableStyles','tableStyles.xml'],
+          ...slides.map((s,i)=>['rId'+(i+10),'slide','slides/slide'+(i+1)+'.xml'])])},
+        {name:'ppt/presProps.xml',data:`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><p:presentationPr ${NS}/>`},
+        {name:'ppt/tableStyles.xml',data:'<?xml version="1.0" encoding="UTF-8" standalone="yes"?><a:tblStyleLst xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" def="{5C22544A-7EE6-4342-B048-85BDC9FD1C3A}"/>'},
+        {name:'ppt/theme/theme1.xml',data:theme},
+        {name:'ppt/slideMasters/slideMaster1.xml',data:master},
+        {name:'ppt/slideMasters/_rels/slideMaster1.xml.rels',data:rels([['rId1','slideLayout','../slideLayouts/slideLayout1.xml'],['rId2','theme','../theme/theme1.xml']])},
+        {name:'ppt/slideLayouts/slideLayout1.xml',data:layout},
+        {name:'ppt/slideLayouts/_rels/slideLayout1.xml.rels',data:rels([['rId1','slideMaster','../slideMasters/slideMaster1.xml']])},
+        ...slides.map((s,i)=>({name:`ppt/slides/slide${i+1}.xml`,data:sx(s,i)})),
+        ...slides.map((s,i)=>({name:`ppt/slides/_rels/slide${i+1}.xml.rels`,data:rels([['rId1','slideLayout','../slideLayouts/slideLayout1.xml'],...s.rels.map(r=>[r.id,'image',r.t])])})),
+        ...media.map(m=>({name:'ppt/'+m.name,data:m.bytes}))],'application/vnd.openxmlformats-officedocument.presentationml.presentation');
+    }};
+  return api;
+}
+const lvWord=v=>v>=80?'сайн':v>=60?'дунд':'анхаарах шаардлагатай';
+/* Урт жагсаалтыг слайд бүрд багтах хэсгүүдэд хуваана */
+const chunks=(a,n)=>{const o=[];for(let i=0;i<a.length;i+=n)o.push(a.slice(i,i+n));return o.length?o:[[]];};
+async function exportExamPptx(){
+  const X=examExportData(),{d,qs}=X;if(!d.n)throw new Error('сурагчийн хариулт алга');
+  const P=pptxBuilder('Шалгалтын анализ · '+X.title),th=P.th,LC=v=>th.lv[lvl(v)];
+  const best=d.topics[0],worst=d.topics[d.topics.length-1];
+  /* 1. Нүүр */
+  P.cover(X.title,'Шалгалтын үр дүнгийн анализ',[X.scope,(state.exam.date||todayStr()),d.n+' сурагч',qs.length+' асуулт']);
+  /* 2. Ерөнхий үзүүлэлт */
+  P.page('Ерөнхий үзүүлэлт',X.scope+' · нийт '+r1(d.total)+' оноо');
+  [[String(d.n),'Оролцсон сурагч',th.acc],[Math.round(d.avg)+'%','Дундаж гүйцэтгэл',LC(d.avg)],[Math.round(X.success)+'%','Амжилт (60%-аас дээш)',LC(X.success)],[Math.round(X.quality)+'%','Чанар (80%-аас дээш)',LC(X.quality)]]
+    .forEach((k,i)=>P.kpi(.6+i*3.08,1.65,2.85,1.85,k[0],k[1],k[2]));
+  if(best)P.shape(.6,3.85,5.95,1.35,{fill:th.card,rad:9000,pad:.3,padY:.18,anchor:'ctr'},[[{t:'💪 Хамгийн сайн эзэмшсэн агуулга',sz:13,c:th.muted}],[{t:best.t+' — '+Math.round(best.pct)+'%',sz:20,b:true,c:th.lv.good}]]);
+  if(d.topics.length>1)P.shape(6.75,3.85,5.95,1.35,{fill:th.card,rad:9000,pad:.3,padY:.18,anchor:'ctr'},[[{t:'🎯 Цаашид анхаарах агуулга',sz:13,c:th.muted}],[{t:worst.t+' — '+Math.round(worst.pct)+'%',sz:20,b:true,c:th.lv.bad}]]);
+  P.text(.6,5.45,12.1,.9,[[{t:'Дундаж гүйцэтгэл '+Math.round(d.avg)+'% буюу '+lvWord(d.avg)+' түвшинд байна. ',sz:15},{t:'KR-20 найдвартай байдал: '+(d.kr20==null?'–':f2(d.kr20))+' ('+KRLAB(d.kr20)[0]+').',sz:15,c:th.muted}]]);
+  /* 3. Асуулт тус бүр */
+  P.page('Асуулт тус бүрийн гүйцэтгэл','Зөв хариулсан сурагчийн хувь. 60%-аас доош асуултад онцгой анхаар.');
+  const qItems=qs.map((q,i)=>({l:String(i+1),full:(i+1)+'. '+topicOf(i),v:d.qPct[i]}));
+  await P.chart(qs.length<=16?svgHBar({pct:true,items:qItems}):svgBar({pct:true,items:qItems},false),.6,1.5,12.1,5.35);
+  /* 4. Агуулга */
+  if(d.topics.length){P.page('Агуулга тус бүрийн гүйцэтгэл','Ижил агуулгатай асуултуудын нэгдсэн дүн');
+    await P.chart(svgHBar({pct:true,items:d.topics.map(t=>({l:t.t,full:t.t,v:t.pct}))}),.6,1.5,12.1,5.35);}
+  /* 5. Түвшин */
+  P.page('Түвшний тархалт','Сурагчдын гүйцэтгэлийн түвшин (I–VIII)');
+  await P.chart(svgBar({pct:false,items:X.levels.slice().reverse().map(l=>({l:l.g,full:l.g+' түвшин ('+l.range+')',v:l.who.length}))},false),.6,1.5,7.6,5.35);
+  P.table(8.5,1.7,4.2,['Түвшин','Хувь','Тоо'],X.levels.map(l=>[{t:l.g,b:true,al:'center'},{t:l.range,al:'center'},{t:l.who.length,al:'center',b:true}]),[1,1.4,.8],{rh:.5,sz:13});
+  /* 6. Анхаарах асуултууд */
+  const kin=(q,o)=>keyVs(q).some(k=>isP2(q)?keyNorm(k).includes(o):o===k);
+  const hard=qs.map((q,i)=>i).filter(i=>d.qPct[i]<60).sort((a,b)=>d.qPct[a]-d.qPct[b]);
+  if(hard.length){chunks(hard,12).forEach((part,k)=>{
+    P.page('Анхаарах асуултууд'+(k?' (үргэлжлэл)':''),hard.length+' асуултад сурагчдын 60%-аас цөөн нь зөв хариулсан');
+    P.table(.6,1.55,12.1,['№','Агуулга','Гүйцэтгэл','Зөв хариулт','Олон сонгосон буруу'],part.map(i=>{const q=qs[i];
+      const wrong=isP3(q)||isP4(q)?null:X.LT.filter(o=>!kin(q,o)&&X.dist[i][o]>0).sort((a,b)=>X.dist[i][b]-X.dist[i][a])[0];
+      return[{t:i+1,al:'center',b:true},topicOf(i),{t:Math.round(d.qPct[i])+'%',al:'center',b:true,c:LC(d.qPct[i])},{t:keyLbl(q),al:'center'},
+        {t:wrong?wrong+' ('+X.dist[i][wrong]+' сурагч)':'–',al:'center'}];}),[.6,4.6,1.4,1.6,2.2],{rh:.4,sz:13});});}
+  /* 7. Сурагчдын дүн — "Зөвхөн кодоор" сонгосон бол нэрийн оронд код гарна */
+  /* Слайд бүрд хоёр багана хүснэгт (26 сурагч) — олон слайд болохоос сэргийлнэ */
+  const V=X.V,many=new Set(V.map(r=>r.s.cls)).size>1,pages=chunks(V,26);
+  pages.forEach((part,k)=>{
+    P.page('Сурагч тус бүрийн дүн'+(pages.length>1?' ('+(k+1)+'/'+pages.length+')':''),X.viewNote);
+    chunks(part,13).forEach((half,h)=>{if(!half.length)return;
+      P.table(.6+h*6.15,1.5,5.95,['№',...(many?['Анги']:[]),'Сурагч','Оноо','Хувь','Түвшин'],half.map((r,j)=>[{t:k*26+h*13+j+1,al:'center'},...(many?[{t:r.s.cls||'–',al:'center'}]:[]),
+        {t:dName(r.s.cls,r.s.name),b:true},{t:r1(r.score)+'/'+r1(d.total),al:'center'},{t:Math.round(r.pct)+'%',al:'center',b:true,c:LC(r.pct)},{t:r.lv,al:'center'}]),
+        [.55,...(many?[.7]:[]),2.3,1,.8,.85],{rh:.36,sz:11.5});});});
+  /* 8. Дүгнэлт */
+  const weak=d.topics.filter(t=>t.pct<60).slice(-3).reverse(),vhard=qs.map((q,i)=>i).filter(i=>d.qPct[i]<40);
+  P.page('Дүгнэлт ба зөвлөмж');
+  const B=[[{t:'Дундаж гүйцэтгэл ',sz:18},{t:Math.round(d.avg)+'%',sz:18,b:true,c:LC(d.avg)},{t:' — '+lvWord(d.avg)+'. Амжилт '+Math.round(X.success)+'%, чанар '+Math.round(X.quality)+'%.',sz:18}]];
+  if(best)B.push([{t:'Сайн эзэмшсэн: ',sz:18},{t:best.t+' ('+Math.round(best.pct)+'%)',sz:18,b:true,c:th.lv.good}]);
+  if(weak.length)B.push([{t:'Сул агуулга: ',sz:18},{t:weak.map(t=>t.t+' ('+Math.round(t.pct)+'%)').join(', '),sz:18,b:true,c:th.lv.bad}]);
+  if(vhard.length)B.push([{t:'Хүнд асуулт (40%-аас доош): ',sz:18},{t:vhard.length+' — №'+vhard.map(i=>i+1).join(', '),sz:18,b:true}]);
+  B.push([{t:weak.length?'Зөвлөмж: '+weak[0].t+' агуулгыг давтан заах, ижил төрлийн дасгал ажиллуулах.':'Зөвлөмж: сайн үр дүнг бататгаж, дараагийн сэдэв рүү шилжих.',sz:18}]);
+  const low=d.rows.filter(r=>r.pct<60).length;if(low)B.push([{t:low+' сурагч 60%-аас доош авсан — тэдэнтэй ганцаарчлан ажиллах.',sz:18}]);
+  P.text(.9,1.6,11.6,5,B,{bullet:true,gap:14});
+  const name=fileSafe(X.title+(filterCls?' '+filterCls:'')+' iltgel')+'.pptx';saveBlob(P.build(),name);return name;
+}
+async function exportFinalPptx(){
+  const F=finalData(),R=F.res,n=F.rows.length;if(!R.length)throw new Error('шалгалт сонгоогүй байна');
+  const avg=n?F.rows.reduce((a,r)=>a+r.fin,0)/n:0,share=m=>n?F.rows.filter(r=>r.fin>=m).length/n*100:0,lab=r=>(r.e.exam.date||'Огноогүй');
+  const P=pptxBuilder(finalCls+' анги · нэгдсэн анализ'),th=P.th,LC=v=>th.lv[lvl(v)];
+  const best=F.topics[0],worst=F.topics[F.topics.length-1];
+  P.cover(finalCls+' анги: нэгдсэн анализ',R.length+' шалгалтын дүнгийн нэгтгэл',[finalCls+' анги',n+' сурагч',R.length+' шалгалт',todayStr()]);
+  P.page('Ерөнхий үзүүлэлт','Эцсийн дүн нь шалгалт бүрийн жинг харгалзсан дундаж');
+  [[String(n),'Сурагч',th.acc],[Math.round(avg)+'%','Нэгдсэн дундаж',LC(avg)],[Math.round(share(60))+'%','Амжилт (60%-аас дээш)',LC(share(60))],[Math.round(share(80))+'%','Чанар (80%-аас дээш)',LC(share(80))]]
+    .forEach((k,i)=>P.kpi(.6+i*3.08,1.65,2.85,1.85,k[0],k[1],k[2]));
+  if(best)P.shape(.6,3.85,5.95,1.35,{fill:th.card,rad:9000,pad:.3,padY:.18,anchor:'ctr'},[[{t:'💪 Хамгийн сайн эзэмшсэн агуулга',sz:13,c:th.muted}],[{t:best.t+' — '+Math.round(best.avg)+'%',sz:20,b:true,c:th.lv.good}]]);
+  if(F.topics.length>1)P.shape(6.75,3.85,5.95,1.35,{fill:th.card,rad:9000,pad:.3,padY:.18,anchor:'ctr'},[[{t:'🎯 Цаашид анхаарах агуулга',sz:13,c:th.muted}],[{t:worst.t+' — '+Math.round(worst.avg)+'%',sz:20,b:true,c:th.lv.bad}]]);
+  P.page('Ангийн дундаж, шалгалт бүрээр',R.length+' шалгалт: '+lab(R[0])+(R.length>1?' – '+lab(R[R.length-1]):''));
+  await P.chart(svgBar({pct:true,items:R.map(r=>({l:lab(r),full:lab(r)+' '+(r.e.exam.title||''),v:r.d.avg}))},R.length>1),.6,1.5,12.1,5.35);
+  if(F.topics.length){P.page('Агуулга тус бүрийн гүйцэтгэл','Сонгосон шалгалтуудаар нэгтгэсэн дундаж');
+    await P.chart(svgHBar({pct:true,items:F.topics.map(t=>({l:t.t,full:t.t,v:t.avg}))}),.6,1.5,12.1,5.35);}
+  if(R.length>1){
+    const cnt={up:0,flat:0,down:0,alert:0};F.rows.forEach(r=>{if(r.st)cnt[r.st]++;});
+    P.page('Сурагчдын ахиц','Шалгалт бүрийн дүнгээр татсан чиг шугамаар');
+    [[cnt.up,'▲ Ахиж байна',th.lv.good],[cnt.flat,'● Тогтвортой',th.muted],[cnt.down,'▼ Буурч байна',th.lv.mid],[cnt.alert,'⚠ Анхаарах',th.lv.bad]]
+      .forEach((k,i)=>P.kpi(.6+i*3.08,1.6,2.85,1.6,String(k[0]),k[1],k[2]));
+    const PR=F.rows.filter(r=>r.st==='alert'||r.st==='down').sort((a,b)=>TREND_ORD[a.st]-TREND_ORD[b.st]||(a.slope||0)-(b.slope||0)).slice(0,8);
+    if(PR.length)P.table(.6,3.5,12.1,['Сурагч','Эхний','Сүүлийн','Ахиц','Төлөв','Сул агуулга'],PR.map(r=>{const v=r.p.filter(x=>x!=null);return[{t:dName(finalCls,r.n),b:true},
+      {t:v.length?Math.round(v[0])+'%':'–',al:'center'},{t:r.last==null?'–':Math.round(r.last)+'%',al:'center',b:true,c:r.last==null?undefined:LC(r.last)},
+      {t:r.slope==null?'–':(r.slope>0?'+':'')+(Math.round(r.slope*10)/10),al:'center'},{t:TREND_LAB[r.st]||'–',c:r.st==='alert'?th.lv.bad:th.lv.mid,b:true},r.weak.slice(0,3).map(w=>w.t).join(', ')||'–'];}),[2.6,1,1,.9,1.5,4.4],{rh:.36,sz:12});
+    else P.text(.6,3.7,12.1,.6,[{t:'Буурч байгаа сурагч алга — сайн байна! 🎉',sz:18,c:th.lv.good,b:true}]);
+  }
+  const V=viewRows(F.rows,{pct:r=>r.fin,name:r=>r.n,cls:()=>finalCls,show:fShow,sort:fSort,avg});
+  const RR=R.slice(-4),off=R.length-RR.length;   // слайдад багтахаар сүүлийн 4 шалгалт
+  chunks(V,13).forEach((part,k)=>{
+    P.page('Сурагч тус бүрийн эцсийн дүн'+(V.length>13?' ('+(k+1)+'/'+Math.ceil(V.length/13)+')':''),R.length>4?'Сүүлийн 4 шалгалт харагдаж байна. Эцсийн дүнд бүх '+R.length+' шалгалт орсон.':'');
+    P.table(.6,1.5,12.1,['№','Сурагч',...RR.map(lab),'Эцсийн','Түвшин','Байр'],part.map((r,j)=>[{t:k*13+j+1,al:'center'},{t:dName(finalCls,r.n),b:true},
+      ...RR.map((x,i)=>{const v=r.p[off+i];return{t:v==null?'–':Math.round(v)+'%',al:'center',c:v==null?undefined:LC(v)};}),
+      {t:Math.round(r.fin)+'%',al:'center',b:true,c:LC(r.fin)},{t:r.lv,al:'center'},{t:r.rank+' / '+n,al:'center'}]),[.6,3.2,...RR.map(()=>1.2),1.2,1,1],{rh:.36,sz:12});});
+  P.page('Дүгнэлт ба зөвлөмж');
+  const TK={strong:'Бат эзэмшсэн',weak:'Байнга сул',fading:'Мартагдаж буй'},KC={strong:th.lv.good,weak:th.lv.bad,fading:th.lv.mid};
+  const B=[[{t:'Нэгдсэн дундаж ',sz:18},{t:Math.round(avg)+'%',sz:18,b:true,c:LC(avg)},{t:' — '+lvWord(avg)+'. Амжилт '+Math.round(share(60))+'%, чанар '+Math.round(share(80))+'%.',sz:18}]];
+  ['strong','weak','fading'].forEach(k=>{const g=F.topics.filter(t=>t.kind===k);if(g.length)B.push([{t:TK[k]+': ',sz:18},{t:g.slice(0,4).map(t=>t.t).join(', '),sz:18,b:true,c:KC[k]}]);});
+  const w=F.topics.filter(t=>t.kind==='weak'||t.kind==='fading');
+  B.push([{t:w.length?'Зөвлөмж: '+w.slice(0,2).map(t=>t.t).join(', ')+' агуулгыг давтах, бататгах дасгал хийлгэх.':'Зөвлөмж: тогтвортой сайн үр дүнг хадгалах.',sz:18}]);
+  P.text(.9,1.6,11.6,5,B,{bullet:true,gap:14});
+  const name=fileSafe(finalCls+' negdsen iltgel')+'.pptx';saveBlob(P.build(),name);return name;
 }
 
 /* ---------- Excel reading (no libraries) ---------- */
