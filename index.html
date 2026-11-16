@@ -4870,11 +4870,9 @@ function renderAnalysis(){
         <p class="hint" style="margin:0">${qs.length} асуулт, нийт ${r1(d.total)} оноо</p></div>
       <div><label for="fcls">Анги</label><select id="fcls"><option value="">🏫 Бүх анги</option>${classes.map(c=>`<option value="${esc(c)}"${c===filterCls?' selected':''}>👥 ${esc(c)}</option>`).join('')}</select></div>
       ${varOn()?`<div><label for="fvar">Хувилбар</label><select id="fvar"><option value="">🔀 Бүх хувилбар</option>${Array.from({length:vCount()},(_,v)=>`<option value="${v}"${String(v)===filterVar?' selected':''}>Зөвхөн ${VNAMES[v]} хувилбар</option>`).join('')}</select></div>`:''}
-      <div><label for="anonSel">Сурагчийг харуулах</label><select id="anonSel">
-        <option value="name"${anonOn()?'':' selected'}>🙂 Нэрээр</option>
-        <option value="code"${anonOn()?' selected':''}>🔢 Зөвхөн кодоор</option></select></div>
+      <div><label for="anonSel">Сурагчийг харуулах</label><select id="anonSel">${anonOpts()}</select></div>
     </div>
-    ${anonOn()?'<p class="hint" style="margin:0">Сурагчдын нэр дэлгэц, график, хэвлэлт дээр код (№) болж харагдана. Код нь "Нэрс" хэсэгт сурагч бүрд өгсөн дугаар. <b>Татаж авсан Excel, Word файлд нэр хэвээр бичигдэнэ.</b></p>':''}
+    ${anonOn()?`<p class="hint" style="margin:0">${anonHint()}</p>`:''}
     <div class="btns noprint">
       <button class="btn xl" id="xXlsx">Excel файлаар татах</button>
       <button class="btn wd" id="xDocx">Word тайлангаар татах</button>
@@ -5422,9 +5420,8 @@ function renderFinal(){
     <h2>Нэгдсэн анализ</h2>
     <p class="hint">Ангиа сонгоод тооцох шалгалтуудаа чагтална. Жин нь шалгалт бүр эцсийн дүнд хэр нөлөөлөхийг заана: бүгд 1 бол энгийн дундаж. Жишээ нь явцын шалгалтуудыг 1, улирлын шалгалтыг 2 гэвэл улирлынх нь хоёр дахин их нөлөөлнө.</p>
     <div class="row"><div style="max-width:260px"><label for="fcls2">Анги</label><select id="fcls2">${classes.map(c=>`<option value="${esc(c)}"${c===finalCls?' selected':''}>👥 ${esc(c)}</option>`).join('')}</select></div>
-      <div style="max-width:260px"><label for="anonSel2">Сурагчийг харуулах</label><select id="anonSel2">
-        <option value="name"${anonOn()?'':' selected'}>🙂 Нэрээр</option>
-        <option value="code"${anonOn()?' selected':''}>🔢 Зөвхөн кодоор</option></select></div></div>
+      <div style="max-width:260px"><label for="anonSel2">Сурагчийг харуулах</label><select id="anonSel2">${anonOpts()}</select></div></div>
+    ${anonOn()?`<p class="hint" style="margin:0 0 8px">${anonHint()}</p>`:''}
     ${F.exams.length?`<div class="scroll" style="margin-top:12px"><table class="exlist">
       <thead><tr><th></th><th>Огноо</th><th>Шалгалт</th><th class="num">Сурагч</th><th class="num">Ангийн дундаж</th><th class="num">Жин</th><th class="num">Нөлөө</th></tr></thead>
       <tbody>${F.exams.map(e=>{const on=F.cfg.ids.includes(e.id),r=R.find(x=>x.e.id===e.id),
@@ -5718,8 +5715,17 @@ const lvColor=v=>v==null?'5C6B64':({good:'1F5A41',mid:'A96A12',bad:'B4314A'})[lv
 const pctCell=v=>v==null?{t:'–',al:'right'}:{t:Math.round(v)+'%',color:lvColor(v),al:'right',b:true};
 const codeOf=(cls,name)=>{const c=db.classes.find(x=>x.name===cls);return c&&c.codes&&c.codes[name]?pad2(c.codes[name]):'';};
 /* Анализ дээр сурагчийн нэрийг нуух сонголт: db.anon==='code' бол нэрийн оронд код гарна */
-const anonOn=()=>db.anon==='code';
-const dName=(cls,name)=>{if(!anonOn())return String(name||'');const c=codeOf(cls,name);return c?'№'+c:'№–';};
+/* Сурагчийг харуулах: нэрээр, ангийн кодоор (№07), эсвэл сургуулийн кодоор (GTIS23080044) */
+const anonOn=()=>db.anon==='code'||db.anon==='sid';
+const anonOpts=()=>[['name','🙂 Нэрээр'],['code','🔢 Ангийн кодоор (№)'],['sid','🏫 Сургуулийн кодоор']]
+  .map(([v,t])=>`<option value="${v}"${(db.anon||'name')===v?' selected':''}>${t}</option>`).join('');
+const anonHint=()=>(db.anon==='sid'
+  ?'Сурагчдын нэр дэлгэц, график, хэвлэлт дээр сургуулийн код болж харагдана. Сургуулийн кодгүй сурагч ангийн кодоороо (№) гарна. Сургуулийн кодыг "Нэрс" хэсэгт оруулна.'
+  :'Сурагчдын нэр дэлгэц, график, хэвлэлт дээр код (№) болж харагдана. Код нь "Нэрс" хэсэгт сурагч бүрд өгсөн дугаар.')
+  +' <b>Татаж авсан Excel, Word файлд нэр хэвээр бичигдэнэ.</b>';
+const dName=(cls,name)=>{if(!anonOn())return String(name||'');
+  if(db.anon==='sid'){const s=sidOf(cls,name);if(s)return s;}
+  const c=codeOf(cls,name);return c?'№'+c:'№–';};
 const todayStr=()=>new Date().toISOString().slice(0,10);
 /* --- single exam data --- */
 function examExportData(){
