@@ -950,6 +950,13 @@ body.student #studentApp{display:block}
   .sheet{width:210mm;height:296mm;overflow:hidden;break-after:page}
   .sheet:last-child,.codes-print:last-child{break-after:auto}
   .sheet svg{display:block;width:210mm;height:296mm}
+  /* Нэг A4-т 2 / 4 хуудас: хүрээ бүрт 4 мм зай (хэвлэгч захыг хэвлэдэггүй), хайчлах тасархай зураас */
+  .nup{display:grid;overflow:hidden;break-after:page}
+  .nup:last-child{break-after:auto}
+  .nup4{width:210mm;height:296mm;grid-template-columns:1fr 1fr;grid-template-rows:1fr 1fr}
+  .nup2{width:297mm;height:209mm;grid-template-columns:1fr 1fr;grid-template-rows:1fr}
+  .nup .cell{box-sizing:border-box;padding:4mm;overflow:hidden;outline:.2mm dashed #aaa;outline-offset:-.1mm}
+  .nup .cell svg{display:block;width:100%;height:100%}
   .codes-print{color:#000;font-family:Arial,sans-serif}}
 /* PDF-ээс шалгалт үүсгэх цонх */
 .pi-dlg{width:min(1180px,96vw);max-height:94vh;border:1px solid var(--line);border-radius:18px;padding:0;background:var(--bg);color:var(--ink);box-shadow:0 24px 70px rgba(0,0,0,.35)}
@@ -974,6 +981,8 @@ body.student #studentApp{display:block}
 .pi-ch{display:flex;gap:6px;align-items:center;padding:8px 10px;border-bottom:1px solid var(--line)}
 .pi-ch b{min-width:34px;font-size:1.05rem}
 .pi-ch select{width:auto;padding:4px 6px}.pi-ch input{flex:1;min-width:0;padding:4px 8px}
+.pi-ch input.pt{flex:0 0 3.6em;width:3.6em;padding:4px 2px;text-align:center}
+.pi-set.pi-src{grid-template-columns:1fr 1fr}
 .pi-ch button{border:1px solid var(--line);background:var(--bg);color:var(--ink);border-radius:8px;padding:4px 8px;cursor:pointer;font:inherit}
 .pi-ch button:hover{border-color:var(--leaf);color:var(--leaf)}
 .pi-card img{display:block;width:100%;height:auto;max-height:420px;object-fit:contain;object-position:top left;background:#fff;cursor:zoom-in}
@@ -996,7 +1005,7 @@ body.student #studentApp{display:block}
 .pi-box .h[data-e="l"]{left:-8px}.pi-box .h[data-e="r"]{right:-8px}
 .pi-box .h::after{content:"";position:absolute;inset:5px;border-radius:4px;background:#0EA371;opacity:.55}
 .pi-new{position:absolute;border:2px dashed #2563EB;background:rgba(37,99,235,.08);pointer-events:none}
-@media (max-width:760px){.pi-pick,.pi-set{grid-template-columns:1fr}.pi-dlg{width:100vw;max-width:100vw;max-height:100vh;height:100vh;border-radius:0}.pi-grid{grid-template-columns:1fr}
+@media (max-width:760px){.pi-pick,.pi-set,.pi-set.pi-src{grid-template-columns:1fr}.pi-dlg{width:100vw;max-width:100vw;max-height:100vh;height:100vh;border-radius:0}.pi-grid{grid-template-columns:1fr}
   #piBody{padding:12px}.pi-foot{gap:6px;padding:8px 10px}.pi-foot .btn{flex:1 1 40%;padding:8px 10px;font-size:.9rem}.pi-foot .msg{flex-basis:100%;font-size:.85rem}#piMake,#piEdDone{flex-basis:100%}}
 </style>
 </head>
@@ -1139,6 +1148,19 @@ body.student #studentApp{display:block}
       <div id="sClsWrap" hidden><label for="sCls">Анги</label><select id="sCls"></select></div>
       <div id="sVarWrap" hidden><label for="sVar">Хувилбар</label><select id="sVar"></select></div>
     </div>
+    <div class="row">
+      <div><label for="sAbc">Бүлгийн үсэг (фонт)</label><select id="sAbc">
+        <option value="mn">Мон — кирилл: А Б В Г Д</option>
+        <option value="us">US — латин: A B C D E</option></select></div>
+      <div><label for="sDense">Дугуйн зай</label><select id="sDense">
+        <option value="0">Энгийн</option>
+        <option value="1">Нягт — дугуйнууд ойрхон</option></select></div>
+      <div id="sNupWrap"><label for="sNup">Нэг A4 цаасанд</label><select id="sNup">
+        <option value="1">1 хуудас</option>
+        <option value="2">2 хуудас (A5, хэвтээ)</option>
+        <option value="4">4 хуудас (A6)</option></select></div>
+    </div>
+    <p class="hint" id="sAbcHint" style="font-size:.85rem;margin:4px 0 0">Латин үсгийг байрлалаар нь уншина: A=А, B=Б, C=В, D=Г, E=Д, F=Е, G=Ё, H=Ж, I=З, J=И. Жишээ нь «9b» анги = 9Б.</p>
     <div class="sheet-preview" id="sPreview"></div>
     <div class="btns"><button class="btn" id="sPrint">Хуудас хэвлэх</button></div>
     <div class="msg" id="sMsg" role="status"></div>
@@ -1633,16 +1655,17 @@ body.student #studentApp{display:block}
     </table>
     <div class="hp-warn">Word дээр зөв хариултыг <b>тодруулж эсвэл доогуур зурж</b> тэмдэглэсэн бол хуулагдахгүй. Асуулт орсны дараа "Зөв" баганаас сонгож өгнө.</div>
     <div class="hp-tip">Асуултын текстэнд <code>/ 2 оноо /</code> гэж бичсэн бол оноог өөрөө авна. Зургийг асуултын текстийн нүдэн дээр <b>Ctrl + V</b>-ээр шууд буулгаж болно.</div>
-    <h3>📄 Бэлэн PDF шалгалтаас (IGCSE г.м.)</h3>
-    <p><b>"Миний шалгалтууд"</b> → <b>"📄 PDF-ээс шалгалт үүсгэх"</b>. Асуулт бүрийг <b>схем, хүснэгт, A–D хувилбартай нь</b> эх хувиар нь зураг болгон тайрч оруулна — юу ч хуулж, шивэх шаардлагагүй.</p>
+    <h3>📄 Бэлэн PDF шалгалтаас (ЭЕШ, IGCSE г.м.)</h3>
+    <p><b>"Миний шалгалтууд"</b> → <b>"📄 PDF-ээс шалгалт үүсгэх"</b>. Асуулт бүрийг <b>схем, хүснэгт, A–E хувилбартай нь</b> эх хувиар нь зураг болгон тайрч оруулна — юу ч хуулж, шивэх шаардлагагүй.</p>
     <div class="hp-step"><div class="hp-num">1</div><div><b>Файлаа сонгоно</b>
-      Асуултын PDF (<code>…_qp_12.pdf</code>), хүсвэл хариултын PDF (<code>…_ms_12.pdf</code>). Хоёуланг нь нэг дор сонгож болно. Хариултын PDF байхгүй бол <code>BCDAA…</code> гэж бичиж болно.</div></div>
+      Асуултын PDF (<code>bio_a 2013.pdf</code>, <code>…_qp_12.pdf</code>), хүсвэл хариултын PDF (<code>tulhuur 2013.pdf</code>, <code>…_ms_12.pdf</code>). Хоёуланг нь нэг дор сонгож болно. Хариултын PDF байхгүй бол <code>BCDAA…</code> гэж бичиж болно.</div></div>
+    <div class="hp-ok"><b>ЭЕШ-ийн файл:</b> олон хичээлийн, A/B/C/D хувилбартай нэг түлхүүрийн файлаас <b>тухайн хичээл, тухайн хувилбарын</b> хариултыг өөрөө олж сонгоно (жишээ нь «2013 оны Биологи · A хувилбар»). Асуулт бүрийн оноог (<code>/2 оноо/</code>) ч уншина. 4 хувилбар нэг PDF-д байвал (2006–2011 оны ном) хувилбараа сонгоно; ийм файлын төгсгөлд байдаг түлхүүрийг ч өөрөө уншина. <b>Сонгосон хичээл, хувилбар зөв эсэхийг шалгах цонхонд заавал харна уу.</b></div>
     <div class="hp-step"><div class="hp-num">2</div><div><b>Шалгана</b>
       Асуулт бүр зурагтайгаа, зөв хариулттайгаа гарна. Зураг дээр дарвал томорно. Хүрээ буруу бол <b>✎</b> дарж ирмэгийг нь чирж засна. <b>"🖼️ Хуудсаар харах"</b>-аас дутуу асуултыг хулганаар хүрээлж нэмнэ. <b>"Агуулга оноох"</b>-оор жишээ нь 1–13-р асуултад <code>Биологи</code> гэж нэг дор оноож болно.</div></div>
     <div class="hp-step"><div class="hp-num">3</div><div><b>"✓ Шалгалт үүсгэх"</b>
       Шинэ шалгалт асуулт бүрийн зураг, зөв хариулт, агуулгатай үүснэ. Хариултын хуудас хэвлэх, цахим шалгалт (сурагч зургийг утсан дээрээ харна), анализ бүгд ердийнхөөрөө ажиллана.</div></div>
     <div class="hp-ok">PDF файл таны компьютерээс гарахгүй — бүгд хөтөч дотор боловсруулагдана. 40 асуулттай шалгалт ойролцоогоор 1 МБ зай эзэлнэ.</div>
-    <div class="hp-warn">Сканнердсан (зураг) PDF-д асуултын дугаар автоматаар олдохгүй — тэр үед асуулт бүрийг хулганаар хүрээлж оруулна.</div>
+    <div class="hp-warn">Сканнердсан (зураг) PDF-д (жишээ нь 2018 оны ЭЕШ) асуултын дугаар автоматаар олдохгүй — тэр үед асуулт бүрийг хулганаар хүрээлж оруулна. «Харгалзуулах, нөхөх» даалгавар (2.1, 2.2…) автоматаар орохгүй — зөвхөн сонгох даалгавар орно.</div>
     <h3>III хэсэг: үнэн / худал</h3>
     <p>Мэдэгдэл бүрийн текст, зөв хариултыг (<b>Үнэн / Худал</b> товч) оруулна. Оноо стандартаар:</p>
     <table>
@@ -3046,7 +3069,21 @@ async function piPages(doc,onp,stop){
   }
   return out;
 }
-const PI_STOP=/^(BLANK PAGE|Permission to reproduce|To avoid the issue of disclosure|Cambridge (Assessment )?International Education is part|The Periodic Table of (the )?Elements|END OF (THE )?(PAPER|TEST|EXAM(INATION)?)|Шалгалт дууслаа)/i;
+const PI_STOP=/^(BLANK PAGE|Permission to reproduce|To avoid the issue of disclosure|Cambridge (Assessment )?International Education is part|The Periodic Table of (the )?Elements|END OF (THE )?(PAPER|TEST|EXAM(INATION)?)|Шалгалт дууслаа|(ХОЁР|ГУРАВ|ДӨРӨВ|ТАВ)ДУГААР\s*ХЭСЭГ|(II|III|IV)\s*[-.]?\s*ХЭСЭГ)/i;
+/* Хуучин монгол фонт (Arial Mon г.м.) кирилл үсгийг À, Â, Ð… гэж өгдөг — таних зорилгоор кирилл болгоно */
+const piLegacy=s=>s.replace(/[À-ÿ]/g,c=>String.fromCharCode(c.charCodeAt(0)+0x350));
+/* Нэг мөрөнд байгаа бичвэрүүд: tk = үг бүр (x байрлалтай), txt = мөрийн бичвэр */
+function piRows(items){
+  const rows=[];
+  items.forEach(it=>{const r=rows.find(r=>Math.abs(r.top-it.top)<Math.max(3,it.h*.45));if(r)r.its.push(it);else rows.push({top:it.top,its:[it]});});
+  rows.sort((a,b)=>a.top-b.top);
+  rows.forEach(r=>{r.its.sort((a,b)=>a.x-b.x);const tk=[];let txt='',prev=null;
+    r.its.forEach(it=>{const w=(it.x2-it.x)/Math.max(1,it.s.length),re=/\S+/g;let m;
+      while((m=re.exec(it.s)))tk.push({s:m[0],x:it.x+m.index*w,x2:it.x+(m.index+m[0].length)*w});
+      txt+=(prev&&it.x-prev.x2>it.h*.2?' ':'')+it.s;prev=it;});
+    r.tk=tk;r.txt=txt;});
+  return rows;
+}
 const PI_FURN=/^(©\s*UCLES|\[?\s*Turn over\s*\]?|©\s*Cambridge|\*\s*\d{6,}\s*\*|DO NOT WRITE IN THIS MARGIN|Page \d+( of \d+)?|\d+\s*\/\s*\d+)$/i;
 /* Толгой, хөл: хуудасны дугаар, ©, "Turn over", хуудас бүрт яг ижил өндөрт давтагддаг бичвэр */
 function piFurniture(pages){
@@ -3054,20 +3091,27 @@ function piFurniture(pages){
   const key=it=>it.s+'@'+Math.round(it.top/4);
   const cnt={};pages.forEach(pg=>{const seen=new Set();pg.items.forEach(it=>{const k=key(it);if(!seen.has(k)){seen.add(k);cnt[k]=(cnt[k]||0)+1;}});});
   const many=Math.max(2,Math.ceil(pages.length*.4));
+  /* Хуудасны дугаар булан дээр (зүүн/баруун ээлжилж) байж болно: олон хуудсанд яг ижил өндөрт байгаа ганц тоо */
+  const numY={};pages.forEach(pg=>{const seen=new Set();pg.items.forEach(it=>{if(!/^\d{1,3}$/.test(it.s))return;const k=Math.round(it.top/4);if(!seen.has(k)){seen.add(k);numY[k]=(numY[k]||0)+1;}});});
   pages.forEach(pg=>{const band=pg.H*.11;
-    pg.items.forEach(it=>{const edge=it.bot<band||it.top>pg.H-band;
-      it.furn=PI_FURN.test(it.s)||(edge&&(cnt[key(it)]>=many||(/^\d{1,3}$/.test(it.s)&&Math.abs((it.x+it.x2)/2-pg.W/2)<pg.W*.12)));});
+    pg.items.forEach(it=>{const edge=it.bot<band||it.top>pg.H-band,num=/^\d{1,3}$/.test(it.s);
+      it.rep=edge&&cnt[key(it)]>=many;
+      it.furn=PI_FURN.test(it.s)||(edge&&((num&&Math.abs((it.x+it.x2)/2-pg.W/2)<pg.W*.12)||(num&&pages.length>=4&&it.top>pg.H-band&&numY[Math.round(it.top/4)]>=many)));});
+    /* Давтагддаг бичвэр (жишээ нь "(2 оноо)") асуултын мөрөнд байвал толгой биш — мөр бүхэлдээ давтагдаж байж толгой */
+    pg.items.forEach(it=>{if(it.rep&&!it.furn)it.furn=!pg.items.some(o=>o!==it&&!o.rep&&!o.furn&&Math.abs(o.top-it.top)<it.h*.5);});
     const hd=pg.items.filter(it=>it.furn&&it.bot<pg.H*.15),ft=pg.items.filter(it=>it.furn&&it.top>pg.H*.85);
     pg.cTop=hd.length?Math.max(...hd.map(i=>i.bot))+2:0;
     pg.cBot=ft.length?Math.min(...ft.map(i=>i.top))-2:pg.H;
-    pg.stops=pg.items.filter(it=>!it.furn&&PI_STOP.test(it.s)).map(i=>i.top).sort((a,b)=>a-b);
+    pg.rows=piRows(pg.items);
+    pg.stops=pg.rows.filter(r=>(!r.its[0].furn&&PI_STOP.test(piLegacy(r.txt)))||r.its.some(it=>!it.furn&&PI_STOP.test(it.s))).map(r=>r.top).sort((a,b)=>a-b);
   });
 }
 /* Асуултын дугаар: мөрийнхөө хамгийн зүүн талд, нэг баганад, 1, 2, 3… гэж дараалсан тоо */
-const PI_NUM=/^(?:№\s*)?(\d{1,3})\s*[.)]?$/, PI_NUMTXT=/^(?:№\s*)?(\d{1,3})\s*[.)]\s*[^\d\s.,)]/;
-function piAnchors(pages){
+/* "12." эсвэл "12. Текст…", "50. 1990 онд…" (дугаарын ард зай аваад тоо) — гэхдээ "2.1." гэх мэт дэд дугаарыг биш */
+const PI_NUM=/^(?:№\s*)?(\d{1,3})\s*[.)]?$/, PI_NUMTXT=/^(?:№\s*)?(\d{1,3})\s*[.)](?:\s+\S|[^\d\s.,)])/;
+function piCands(pages){
   const cand=[];
-  pages.forEach(pg=>pg.items.forEach(it=>{if(it.furn)return;
+  pages.forEach(pg=>pg.items.forEach(it=>{if(it.furn||it.kt)return;
     const m=it.s.match(PI_NUM)||it.s.match(PI_NUMTXT);if(!m)return;const v=+m[1];if(v<1||v>200)return;
     if(pg.items.some(o=>o!==it&&!o.furn&&o.x2<it.x-1&&Math.abs(o.top-it.top)<it.h*.6))return;
     const x2=PI_NUM.test(it.s)?it.x2:it.x+it.h*.6*(m[1].length+1);
@@ -3077,12 +3121,24 @@ function piAnchors(pages){
   const W=pages.length?pages[0].W:600;
   cand.forEach(c=>{c.col=c.x>W*.45?1:0;});
   cand.sort((a,b)=>a.p-b.p||a.col-b.col||a.top-b.top||a.x-b.x);
+  return cand;
+}
+function piAnchors(pages){return piChain(piCands(pages));}
+/* Нэг PDF-д хэд хэдэн хувилбар (A, B, C, D) эсвэл хэсэг 1-ээс дахин дугаарлагдсан бол тус бүрийг тусад нь олно */
+function piSections(pages){
+  const out=[],all=piCands(pages);let rest=all;
+  for(let g=0;g<12&&rest.length;g++){
+    const ch=piChain(rest,all);if(ch.length<(out.length?Math.max(8,out[0].length*.5):2))break;out.push(ch);
+    const L=ch[ch.length-1];rest=rest.filter(c=>c.p>L.p||(c.p===L.p&&(c.col>L.col||(c.col===L.col&&c.top>L.bot))));}
+  return out;
+}
+function piChain(cand,all){
   const near=(c,b)=>Math.abs(c.x-b.x)<=4||Math.abs(c.x2-b.x2)<=2.5;
   const reps=side=>{const r=[];cand.filter(c=>c.col===side).forEach(c=>{const g=r.find(b=>near(c,b));if(g)g.n++;else r.push({x:c.x,x2:c.x2,n:1});});
     return r.sort((a,b)=>b.n-a.n).slice(0,6);};
   const L=reps(0),R=reps(1),combos=[];
   L.forEach(b=>{combos.push([b]);R.forEach(c=>combos.push([b,c]));});R.forEach(c=>combos.push([c]));
-  let best=[];
+  const chains=[];
   combos.forEach(set=>{
     const col=cand.filter(c=>set.some(b=>near(c,b)));if(!col.length)return;
     const start=col.some(c=>c.v===1)?1:Math.min(...col.map(c=>c.v));
@@ -3090,19 +3146,24 @@ function piAnchors(pages){
     col.forEach(c=>{if(c.v!==exp)return;
       if(last&&c.p===last.p&&c.col===last.col&&c.top<last.bot)return;
       ch.push(c);last=c;exp++;});
-    if(ch.length>best.length||(ch.length===best.length&&ch.length&&set.length<best._n)){best=ch;best._n=set.length;}
+    if(ch.length){ch._n=set.length;chains.push(ch);}
   });
   /* Уян арга: олон шалгалтаас эвлүүлсэн PDF-д дугаарын байрлал хуудас бүрт бага зэрэг зөрдөг.
      Тэр хуудасны (баганын) хамгийн зүүн талын дугаар байх ба өмнөх асуултын дугаараас хэт холгүй байх ёстой —
      асуултын доторх "1, 2, 3" мэдэгдлүүд илүү баруун талд байдаг тул андуурахгүй. */
-  const minX={};cand.forEach(c=>{const k=c.p+'/'+c.col;minX[k]=Math.min(minX[k]??1e9,c.x);});
+  /* Хуудасны хамгийн зүүн дугаарыг БҮХ дугаараас тооцно (дараагийн хувилбарыг хайхад үлдсэн хэсгээс биш) */
+  const minX={};(all||cand).forEach(c=>{const k=c.p+'/'+c.col;minX[k]=Math.min(minX[k]??1e9,c.x);});
   const start=cand.some(c=>c.v===1)?1:cand.length?Math.min(...cand.map(c=>c.v)):1;
   const ch2=[];let exp=start,last=null;
   cand.forEach(c=>{if(c.v!==exp||c.x>minX[c.p+'/'+c.col]+12)return;
     if(last&&c.col===last.col&&Math.abs(c.x-last.x)>22)return;
     if(last&&c.p===last.p&&c.col===last.col&&c.top<last.bot)return;
     ch2.push(c);last=c;exp++;});
-  if(ch2.length>best.length+1)best=ch2;
+  if(ch2.length){ch2._n=9;chains.push(ch2);}
+  /* Хамгийн урт дарааллуудаас (≥85%) баримтад хамгийн түрүүнд эхэлснийг — олон хувилбартай PDF-д
+     дараагийн хувилбарыг алгасахгүйн тулд. Тэнцвэл урт нь, дараа нь хатуу (нэг баганат) нь. */
+  const M=Math.max(0,...chains.map(c=>c.length)),pos=c=>cand.indexOf(c[0]);
+  const best=chains.filter(c=>c.length>=Math.max(2,M*.85)).sort((a,b)=>pos(a)-pos(b)||b.length-a.length||a._n-b._n)[0]||[];
   return best.length>=2?best:[];
 }
 /* Асуулт бүрийн хүрээ: дугаараас дараагийн дугаар хүртэл. Хуудас дамжвал дараагийн хуудсын эхнээс үргэлжилнэ. */
@@ -3115,34 +3176,120 @@ function piRegions(pages,anch){
   const left=anch.filter(a=>!a.col),right=anch.filter(a=>a.col);
   const X0=Math.max(0,(left.length?Math.min(...left.map(a=>a.x)):xs[Math.floor(xs.length*.02)]||0)-10);
   const XR=right.length?Math.max(0,Math.min(...right.map(a=>a.x))-10):null;
+  /* Асуултын дээд хил: ихэвчлэн дугаараас 4 цэг дээш. Мөр хоорондын зай бага бол өмнөх мөрийн доод захаас
+     доош — өмнөх асуултын сүүлийн мөрийг тасдахгүй, энэ асуултад оруулахгүй. */
+  const cut=a=>{const pg=byP(a.p);let pb=-1;
+    pg.items.forEach(it=>{if(it.furn||it.bot>a.top+1.5||it.top>a.top-a.h*.3)return;
+      if(XR!=null&&(it.x>=XR)!==!!a.col)return;if(it.bot>pb)pb=it.bot;});
+    return Math.min(a.top-.5,Math.max(a.top-4,pb+.6));};
   return anch.map((a,k)=>{
     const b=anch[k+1],pg=byP(a.p),segs=[];
     const W=pg.W,XE=Math.min(W,Math.max(W*.6,(xe.length?xe[xe.length-1]:W)+12));
     const x0=a.col?XR:X0,x1=XR!=null&&!a.col?XR-2:XE;
     const same=b&&b.p===a.p&&!!b.col===!!a.col;
-    segs.push({p:a.p,x0,x1,y0:Math.max(pg.cTop,a.top-4),y1:same?b.top-4:stopAt(pg,a.top)});
+    segs.push({p:a.p,x0,x1,y0:Math.max(pg.cTop,cut(a)),y1:same?Math.min(cut(b),stopAt(pg,a.top)):stopAt(pg,a.top)});
     if(b&&b.p>a.p&&XR==null)for(let q=a.p+1;q<=b.p;q++){const g=byP(q),y0=g.cTop+1;
       if(g.stops.length&&g.stops[0]<y0+40&&q!==b.p)continue;  // "BLANK PAGE"
-      const y1=q===b.p?b.top-4:stopAt(g,y0);if(y1-y0>14)segs.push({p:q,x0,x1,y0,y1,maybe:true});}
+      const y1=q===b.p?cut(b):stopAt(g,y0);if(y1-y0>14)segs.push({p:q,x0,x1,y0,y1,maybe:true});}
     return{n:a.v,segs,num:{p:a.p,x0:a.x-1.5,x1:a.x2+1.5,y0:a.top-1.5,y1:a.bot+1}};
   });
 }
-/* Хариултын түлхүүр: "12 B 1" гэх мэт мөрүүд, эсвэл "BCDA…" үсгүүдийн дараалал */
+/* Хариултын үсэг. Кирилл үсэг 2 янзаар бичигддэг: А Б В Г Д (= A B C D E) эсвэл латинтай адил харагдах
+   А В С Е (= A B C E). Б, Г, Д байвал эхнийх, үгүй бол хоёр дахь гэж үзнэ. */
+function piLetterMap(raw){
+  const up=raw.map(c=>piLegacy(c).toUpperCase()),mn=up.some(c=>/[БГД]/.test(c));
+  return c=>{c=piLegacy(c).toUpperCase();if(/^[A-E]$/.test(c))return c;
+    if(mn){const i='АБВГД'.indexOf(c);return i>=0?'ABCDE'[i]:'';}
+    return{'А':'A','В':'B','С':'C','Е':'E','Д':'D'}[c]||'';};
+}
+/* Бичсэн хариулт: "1 B, 2 C …" эсвэл "BCDA…" үсгүүдийн дараалал */
 function piKeyFromText(lines,want){
-  const key={};
-  lines.forEach(l=>{const m=l.match(/^\s*(?:Q(?:uestion)?\s*)?(\d{1,3})\s*[.):\-]?\s*([A-EА-Д])(?=\s|$|[,.;)])/i);
-    if(m){const n=+m[1],L='ABCDE'['ABCDEАБВГД'.indexOf(m[2].toUpperCase())%5];if(L&&key[n]==null)key[n]=L;}});
-  if(Object.keys(key).length<2){const s=lines.join(' ').toUpperCase().replace(/[^A-EАБВГД]/g,'').replace(/[АБВГД]/g,c=>'ABCDE'['АБВГД'.indexOf(c)]);
-    if(s.length>=2&&(!want||s.length===want)){Object.keys(key).forEach(k=>delete key[k]);[...s].forEach((L,i)=>key[i+1]=L);}}
+  const key={},raw=[];
+  lines.forEach(l=>{const m=l.match(/^\s*(?:Q(?:uestion)?\s*)?(\d{1,3})\s*[.):\-]?\s*([A-Ea-eА-Да-дЕеСс])(?=\s|$|[,.;)])/);
+    if(m&&key[m[1]]==null){key[m[1]]=m[2];raw.push(m[2]);}});
+  if(Object.keys(key).length<2){Object.keys(key).forEach(k=>delete key[k]);raw.length=0;
+    const s=[...lines.join(' ').replace(/[^A-Ea-eА-Да-дЕеСс]/g,'')];
+    if(s.length>=2&&(!want||s.length===want))s.forEach((L,i)=>{key[i+1]=L;raw.push(L);});}
+  const f=piLetterMap(raw);Object.keys(key).forEach(k=>{key[k]=f(key[k]);if(!key[k])delete key[k];});
   return key;
 }
-async function piKeyFromPdf(doc){
-  const pages=await piPages(doc),lines=[];
-  pages.forEach(pg=>{const rows=[];
-    pg.items.forEach(it=>{const r=rows.find(r=>Math.abs(r.top-it.top)<Math.max(3,it.h*.45));
-      if(r)r.its.push(it);else rows.push({top:it.top,its:[it]});});
-    rows.forEach(r=>lines.push(r.its.sort((a,b)=>a.x-b.x).map(i=>i.s).join(' ')));});
-  return piKeyFromText(lines);
+/* Түлхүүрийн хүснэгт: "12 B 2", "12 Е 1 C 1 E 1 A 1" (4 хувилбар, оноотой), "1 D 2 1 C 2 …" г.м. мөрүүд.
+   Нэг файлд олон хичээлийн / хувилбарын хүснэгт байж болно — тус бүрийг гарчигтай нь салгаж өгнө. */
+const PI_KL=/^([A-Ea-eАБВГДЕСабвгдесÀÂÄÅÑàâäåñ])[.)]?$/;
+function piKeyRow(r){
+  const t=r.tk,m=t.length>1&&t[0].s.match(/^(?:№\s*)?(\d{1,3})[.)]?$/);if(!m)return null;
+  const cells=[];let prevL=false;
+  for(let i=1;i<t.length;i++){const s=t[i].s,L=s.match(PI_KL);
+    if(L){cells.push({L:L[1],x:(t[i].x+t[i].x2)/2,pts:null});prevL=true;continue;}
+    if(/^\d{1,2}([.,]5)?$/.test(s)){if(prevL)cells[cells.length-1].pts=parseFloat(s.replace(',','.'));prevL=false;continue;}
+    if(/^(оноо|marks?)$/i.test(s)){if(cells.length)break;continue;}  // "… D 2 оноо | a 8 9" — баруун талд өөр хүснэгт
+    if(/[A-Za-zА-Яа-яЁёӨөҮү]{2}/.test(s))break;  // тайлбар, өөр хүснэгт эхэлсэн
+    prevL=false;}
+  if(!cells.length)return null;
+  /* "Оноо" нэг л баганатай бол бүх хувилбарт хамаарна */
+  const wp=cells.filter(c=>c.pts!=null);if(cells.length>1&&wp.length===1&&wp[0]===cells[cells.length-1])cells.forEach(c=>c.pts=wp[0].pts);
+  return{n:+m[1],cells,top:r.top,its:r.its};
+}
+const piVar=c=>({'А':'A','Б':'B','В':'B','С':'C','Г':'D','Д':'D'})[c.toUpperCase()]||c.toUpperCase();
+const PI_VARRE=[/хувилбар\s*[-:№]?\s*([A-DАБВГСД])(?![A-Za-zА-Яа-яЁёӨөҮү])/i,/(?:^|[^A-Za-zА-Яа-яЁёӨөҮү])([A-DАБВГСД])\s*[-.]?\s*хувилбар/i,/variant\s*[-:]?\s*([A-D])\b/i];
+function piVarOf(txt){txt=piLegacy(txt);for(const re of PI_VARRE){const m=txt.match(re);if(m)return piVar(m[1]);}return'';}
+function piKeyTables(pages,minRows){
+  const raw=[];let cur=null;
+  pages.forEach(pg=>{const rows=pg.rows||piRows(pg.items);
+    rows.forEach((r,ri)=>{const k=piKeyRow(r);if(!k)return;
+      if(cur&&k.n>cur.last&&k.n<=cur.last+3){cur.rows.push(k);cur.last=k.n;return;}
+      cur={p:pg.p,ri,rows:[k],last:k.n,pg:{rows}};raw.push(cur);});});
+  return raw.filter(t=>t.rows.length>=minRows).map(t=>{
+    t.rows.forEach(k=>k.its.forEach(it=>it.kt=true));
+    /* Баганууд: үсгүүдийн x байрлалаар бүлэглэнэ */
+    const xs=t.rows.flatMap(k=>k.cells.map(c=>c.x)).sort((a,b)=>a-b),cols=[];
+    xs.forEach(x=>{const c=cols[cols.length-1];if(c&&x-c.x1<28){c.x1=x;c.s+=x;c.n++;}else cols.push({x0:x,x1:x,s:x,n:1});});
+    const big=cols.filter(c=>c.n>=Math.max(2,t.rows.length*.3)).map(c=>({x:c.s/c.n,k:{},pts:{},label:''}));
+    if(!big.length)return null;
+    const all=t.rows.flatMap(k=>k.cells.map(c=>c.L)),f=piLetterMap(all);
+    t.rows.forEach(k=>k.cells.forEach(c=>{let b=null,d=1e9;big.forEach(o=>{const e=Math.abs(o.x-c.x);if(e<d){d=e;b=o;}});
+      if(b&&d<40&&b.k[k.n]==null){const L=f(c.L);if(L){b.k[k.n]=L;if(c.pts!=null&&c.pts>0&&c.pts<=20)b.pts[k.n]=c.pts;}}}));
+    /* Гарчиг ба "А хувилбар  В хувилбар…" толгой: хүснэгтийн дээрх мөрүүдээс */
+    const above=t.pg.rows.slice(Math.max(0,t.ri-8),t.ri).reverse();
+    const isV=w=>/^(хувилбар|variant)/i.test(piLegacy(w.s)),one=o=>!!o&&PI_KL.test(o.s)&&o.s.length<=2;
+    const isHead=r=>r.tk.some(isV)&&r.tk.some(one);
+    above.forEach(r=>{if(!isHead(r))return;
+      const vi=r.tk.map((w,i)=>isV(w)?i:-1).filter(i=>i>=0),pre=one(r.tk[vi[0]-1]);  // "А хувилбар" эсвэл "Хувилбар A"
+      vi.forEach(i=>{const w=r.tk[i],L=r.tk[pre?i-1:i+1];if(!one(L))return;
+        const x=pre?(L.x+w.x2)/2:(w.x+L.x2)/2;let b=null,d=1e9;big.forEach(o=>{const e=Math.abs(o.x-x);if(e<d){d=e;b=o;}});
+        if(b&&d<70&&!b.label)b.label=piVar(piLegacy(L.s.replace(/[.)]/,'')));});});
+    if(big.length>1)big.forEach((b,i)=>{if(!b.label)b.label='ABCDEFGH'[i];});
+    const word=w=>{w=piLegacy(w.s);return/^[A-Za-zА-Яа-яЁёӨөҮү-]{4,}/.test(w)&&!/^(оноо|зөв|хариу|хариулт|answer|marks?|question|хувилбар)/i.test(w);};
+    const tl=above.filter(r=>!isHead(r)&&r.tk.some(word)).map(r=>piLegacy(r.txt).trim()),ttl=tl.find(s=>/хичээл|түлхүүр/i.test(s))||tl[0];
+    return{title:(ttl||'').slice(0,70),p:t.p,n:t.rows.length,first:t.rows[0].n,last:t.last,cols:big};
+  }).filter(Boolean);
+}
+/* Тайлбартай түлхүүр: асуулт бүрийн доор "Зөв хариулт – В." / "Answer: B" гэж бичсэн PDF */
+function piKeyExplain(pages){
+  const re=/(?:Зөв\s+хариу(?:лт)?|Correct\s+answer|Answer)\s*(?:нь|is)?\s*[-–—:]?\s*([A-Ea-eАБВГДЕСабвгдес])(?![A-Za-zА-Яа-яЁёӨөҮү])/i;
+  const s=piSections(pages)[0];if(!s)return null;
+  const raw={},pts={};
+  /* "А, В, D, Е хариултууд … буруу" — 4 буруу хариултыг жагсаасан бол үлдсэн нэг нь зөв */
+  const re4=/(?:^|[^A-Za-zА-Яа-яЁёӨөҮү])([A-EАВСЕ])\s*,\s*([A-EАВСЕ])\s*,\s*([A-EАВСЕ])\s*,\s*([A-EАВСЕ])\s*(?:хариулт|нь)/,lk={'А':'A','В':'B','С':'C','Е':'E'};
+  const k4={};
+  piRegions(pages,s).forEach(r=>{const t=piLegacy(piRegText(pages,r)),m=t.match(re);const p=piPtsOf(t);if(p)pts[r.n]=p;
+    if(m){raw[r.n]=m[1];return;}
+    const w=t.match(re4);if(w){const set=new Set(w.slice(1,5).map(c=>lk[c]||c));if(set.size===4){const L=[...'ABCDE'].find(c=>!set.has(c));if(L)k4[r.n]=L;}}});
+  const f=piLetterMap(Object.values(raw)),k=Object.assign({},k4);Object.keys(raw).forEach(n=>{const L=f(raw[n]);if(L)k[n]=L;});
+  const n=Object.keys(k).length;
+  return n>=5?{title:'Тайлбартай түлхүүр',p:s[0].p,n,first:s[0].v,last:s[s.length-1].v,cols:[{label:piVarOf(pages[0].rows.slice(0,12).map(r=>r.txt).join(' ')),k,pts}]}:null;
+}
+/* Асуултын PDF-тэй хамгийн сайн таарах хүснэгт, багана: асуултын тоо, хичээлийн нэр, хувилбар */
+const PI_STOPW=/^(хичээ|шалга|түлхү|хариу|хувил|даалг|болов|үнэлг|зөв|оны|эеш|төв|хэсэг|нэгдү|сонго)/;
+function piKeyPick(tabs,want,qtxt,variant){
+  let best=null;
+  tabs.forEach((t,ti)=>{
+    const st=(t.title.toLowerCase().match(/[а-яёөү]{4,}/g)||[]).filter(w=>!PI_STOPW.test(w)).map(w=>w.slice(0,5));
+    const subj=st.length?st.filter(s=>qtxt.includes(s)).length/st.length:0;
+    t.cols.forEach((c,ci)=>{const n=Object.keys(c.k).length;
+      const s=(want?(n===want?6:Math.abs(n-want)<=2?2:0):0)+subj*4+(variant&&c.label===variant?3:0)-ci*.01-ti*.001;
+      if(!best||s>best.s)best={t:ti,c:ci,s};});});
+  return best;
 }
 /* Хуудсыг зураг болгож, хүрээгээр тайрна. Хоосон захыг хасаж, асуултын дугаарыг цагаанаар дарна.
    Санах ойг хэмнэхийн тулд хамгийн сүүлд ашигласан 4 хуудсыг л хадгална. */
@@ -3230,8 +3377,8 @@ function piPick(){
     <p class="hint" style="margin-top:0">Бэлэн шалгалтын PDF-ийг (жишээ нь IGCSE-ийн <b>question paper</b>) сонгоход асуулт бүрийг <b>схем, хүснэгт, A–D хувилбартай нь</b>
       яг эх хувиар нь зураг болгон тайрч, тусдаа асуулт болгоно. Хариултын PDF-ийг (<b>mark scheme</b>) сонговол зөв хариулт өөрөө орно.</p>
     <div class="pi-pick">
-      <label class="pi-file"><span>1. Асуултын PDF <b style="color:var(--stain)">*</b></span><small>Жишээ: 0654_m22_qp_12.pdf. Хоёр файлаа хамт сонгож болно.</small><input type="file" id="piQ" accept="application/pdf,.pdf" multiple></label>
-      <label class="pi-file"><span>2. Хариултын PDF <small>(заавал биш)</small></span><small>Жишээ: 0654_m22_ms_12.pdf</small><input type="file" id="piM" accept="application/pdf,.pdf"></label>
+      <label class="pi-file"><span>1. Асуултын PDF <b style="color:var(--stain)">*</b></span><small>Жишээ: bio_a 2013.pdf, 0654_m22_qp_12.pdf. Хоёр файлаа хамт сонгож болно.</small><input type="file" id="piQ" accept="application/pdf,.pdf" multiple></label>
+      <label class="pi-file"><span>2. Хариултын PDF <small>(заавал биш)</small></span><small>Жишээ: tulhuur 2013.pdf (олон хичээл, 4 хувилбартай байж болно), 0654_m22_ms_12.pdf</small><input type="file" id="piM" accept="application/pdf,.pdf"></label>
     </div>
     <label for="piKeyTxt">Эсвэл хариултаа бичих <small style="color:var(--muted)">(заавал биш — хариултын PDF байхгүй бол)</small></label>
     <input id="piKeyTxt" autocomplete="off" placeholder="BCDAA CBDAB …  эсвэл  1 B, 2 C, 3 D …">
@@ -3240,7 +3387,7 @@ function piPick(){
     <div class="msg" id="piMsg" role="status"></div>`;
   piFootSet(`<button class="btn" id="piGo" type="button">Унших →</button>`);
   $('#piQ').addEventListener('change',e=>{const fs=[...e.target.files];PI.pre=null;piMsg('');if(fs.length<2)return;
-    const ms=fs.find(f=>/(^|[_\-\s.])(ms|mark|answer|key|түлхүүр|хариулт)/i.test(f.name)&&!/(^|[_\-\s.])qp([_\-\s.]|$)/i.test(f.name));
+    const ms=fs.find(f=>/((^|[_\-\s.])(ms|mark|answer)|key|tulhuur|tulkhuur|t[uü]lh[uü][uü]r|түлхүүр|хариу)/i.test(f.name)&&!/(^|[_\-\s.])qp([_\-\s.]|$)/i.test(f.name));
     if(ms){PI.pre={q:fs.find(f=>f!==ms),m:ms};piMsg('Асуулт: '+PI.pre.q.name+' · Хариулт: '+ms.name);}
     else piMsg('Хоёр файлын аль нь хариулт болохыг танисангүй. Хариултын PDF-ийг 2-р нүдэнд сонгоно уу.',true);});
   $('#piGo').addEventListener('click',piRun);
@@ -3255,20 +3402,69 @@ async function piRun(){
     piProg('Файлыг нээж байна…',.05);const doc=await piOpen(qf);if(stop())return doc.destroy();me.doc=doc;me.file=qf.name;
     const pages=await piPages(doc,(p,n)=>piProg('Хуудас уншиж байна: '+p+' / '+n,.05+.25*p/n),stop);me.pages=pages;
     piFurniture(pages);
-    const anch=piAnchors(pages);
-    let keys={};me.keySrc='';
+    /* Асуултын PDF-ийн төгсгөлд түлхүүр байж болно — түүнийг асуулт гэж андуурахгүйн тулд эхэлж олно */
+    const own=piKeyTables(pages,10);
+    me.secs=piSections(pages);me.cache={};me.q='hi';me.keySrc='';me.tabs=[];
+    me.qtxt=piLegacy(pages.slice(0,2).flatMap(pg=>pg.rows.map(r=>r.txt)).join(' ')).toLowerCase();
+    me.variant=piVarOf(pages.length?pages[0].rows.slice(0,12).map(r=>r.txt).join(' '):'')||
+      ((qf.name.replace(/\.pdf$/i,'').match(/(?:^|[_\-\s.])([a-dA-D])(?=$|[_\-\s.(\d])/)||[])[1]||'').toUpperCase();
     if(mf){piProg('Хариултын файлыг уншиж байна…',.32);
-      const md=await piOpen(mf);try{keys=await piKeyFromPdf(md);}finally{md.destroy();}me.keySrc=mf.name;}
-    if(kt){const k2=piKeyFromText(kt.split(/[\n,;]+/),anch.length||null);if(Object.keys(k2).length){keys=Object.assign(keys,k2);me.keySrc=me.keySrc?me.keySrc+' + бичсэн':'бичсэн хариулт';}}
-    me.keys=keys;me.cache={};me.q='hi';
-    me.regs=piRegions(pages,anch).map(r=>({...r,id:uid(),key:keys[r.n]||'',topic:''}));
-    if(!me.regs.length){piFootSet('');me.step='review';me.regs=[];
-      piMsg('');piEditor(1,'Асуултын дугаарыг автоматаар олсонгүй (сканнердсан зураг PDF байж магадгүй). Асуулт бүрийг хулганаар хүрээлж оруулна уу.');return;}
-    await piCropAll(me.regs,(k,n)=>piProg('Асуулт тайрч байна: '+k+' / '+n,.35+.63*k/n),stop);
-    if(stop())return;
-    me.regs=me.regs.filter(r=>r.img);
-    piReview();
-  }catch(e){if(e.message==='stop')return;piProg('',null);piMsg(e.message||String(e),true);go.disabled=false;}
+      const md=await piOpen(mf);
+      try{const mp=await piPages(md);piFurniture(mp);me.tabs=piKeyTables(mp,3);
+        const ex=piKeyExplain(mp);if(ex&&!me.tabs.some(t=>t.n>=ex.n))me.tabs.unshift(ex);
+        if(!me.tabs.length){const k=piKeyFromText(mp.flatMap(pg=>piRows(pg.items).map(r=>r.txt)));
+          if(Object.keys(k).length)me.tabs=[{title:'',p:1,n:Object.keys(k).length,cols:[{label:'',k,pts:{}}]}];}}
+      finally{md.destroy();}
+      me.keySrc=mf.name;if(!me.tabs.length)me.keyWarn='"'+mf.name+'" файлаас хариулт олдсонгүй.';}
+    else if(own.length){me.tabs=own;me.keySrc=qf.name+' (дотор нь)';}
+    me.typed=kt?kt.split(/[\n,;]+/):null;if(kt)me.keySrc=me.keySrc?me.keySrc+' + бичсэн':'бичсэн хариулт';
+    /* Хэд хэдэн хувилбартай бол файлын нэр / бичвэрт заасан хувилбарыг, эс бөгөөс эхнийхийг */
+    me.secs.forEach((s,i)=>{s.label=piSecLabel(pages,s);});
+    const vi=me.secs.findIndex(s=>s.label&&s.label===me.variant);
+    await piLoadSec(vi>=0?vi:0,(k,n)=>piProg('Асуулт тайрч байна: '+k+' / '+n,.35+.63*k/n),stop);
+  }catch(e){if(e.message==='stop')return;piProg('',null);piMsg(e.message||String(e),true);if(go.isConnected)go.disabled=false;}
+}
+/* Хэсгийн (хувилбарын) нэр: эхний асуултын дээрх "ХУВИЛБАР B" гэх мэт бичвэрээс */
+function piSecLabel(pages,ch){
+  const a=ch[0],pg=pages[a.p-1];if(!pg)return'';
+  return piVarOf(pg.rows.filter(r=>r.top<a.top+2).slice(-10).map(r=>r.txt).join(' '));
+}
+/* Нэг хэсгийн асуултуудыг тайрч, хариулт ба оноог оноогоод шалгах цонхыг харуулна */
+async function piLoadSec(si,onp,stop){
+  const me=PI,anch=me.secs[si]||[];me.sec=si;
+  if(me.regs)me.regs.forEach(r=>{r.img='';});
+  me.regs=piRegions(me.pages,anch).map(r=>({...r,id:uid(),key:'',topic:'',points:null}));
+  me.regs.forEach(r=>{const t=piRegText(me.pages,r);r.tpts=piPtsOf(t);r.hasE=/(^|\s)[EЕ][.)]/.test(t);});
+  /* Шалгалтын нэр: PDF-ийн эхний хуудасны "… хичээлийн … даалгавар" гарчиг + хувилбар (багш засаагүй бол) */
+  if(!me.titleEdited&&!/^\d{4}_[msw]\d{2}_qp_/i.test(me.file||'')){const pg=me.pages[(anch[0]||{p:1}).p-1]||me.pages[0];
+    const hs=pg?pg.rows.slice(0,8).map(r=>piLegacy(r.txt).replace(/\s*(хувилбар\s*[-:№]?\s*[A-DАБВГСД](?![A-Za-zА-Яа-я])|(?<![A-Za-zА-Яа-я])[A-DАБВГСД]\s*[-.]?\s*хувилбар)\s*/i,' ').replace(/^[\s\-–—.,:]+|[\s\-–—.,:]+$/g,'').trim())
+      .filter(s=>s.length>=6&&s.length<=90&&!/^\d/.test(s)&&!/хэсэг|санамж|www\.|save my exams|revision/i.test(s)):[];
+    const h=hs.find(s=>/хичээл/i.test(s))||hs.find(s=>/шалгалт|даалгавар|test|exam/i.test(s));
+    const v=(me.secs[si]&&me.secs[si].label)||me.variant;
+    me.title=((h||piTitle(me.file))+(v?' · '+v+' хувилбар':'')).slice(0,120);}
+  me.pick=me.tabs.length?piKeyPick(me.tabs,anch.length,me.qtxt,(me.secs[si]&&me.secs[si].label)||me.variant):null;
+  piApplyKeys();
+  if(!me.regs.length){piFootSet('');me.step='review';me.regs=[];
+    piMsg('');piEditor(1,'Асуултын дугаарыг автоматаар олсонгүй (сканнердсан зураг PDF байж магадгүй). Асуулт бүрийг хулганаар хүрээлж оруулна уу.');return;}
+  await piCropAll(me.regs,onp,stop);
+  if(stop&&stop())return;
+  me.regs=me.regs.filter(r=>r.img);
+  piReview();
+}
+/* Хүрээн доторх бичвэр (оноо, E хувилбар байгаа эсэхийг шалгахад) */
+function piRegText(pages,r){
+  return r.segs.map(s=>(pages[s.p-1].rows||[]).filter(w=>w.top>=s.y0-2&&w.top<s.y1&&!w.its[0].furn).map(w=>w.its.filter(it=>it.x>=s.x0-2&&it.x<s.x1).map(it=>it.s).join(' ')).join(' ')).join(' ');
+}
+/* "/2 оноо/", "[1 оноо]", "(2 оноо)", "[1 mark]" */
+function piPtsOf(t){const m=piLegacy(t).match(/[\/\[(]\s*(\d{1,2}(?:[.,]5)?)\s*(?:оноо|marks?)\s*[\/\])]/i);
+  const v=m?parseFloat(m[1].replace(',','.')):null;return v>0&&v<=20?v:null;}
+/* Сонгосон түлхүүрийн хүснэгт/баганаас хариулт, оноог оноох. Бичсэн хариулт байвал түүнийг давуу үзнэ. */
+function piApplyKeys(){
+  const me=PI,c=me.pick&&me.tabs[me.pick.t]&&me.tabs[me.pick.t].cols[me.pick.c],keys=Object.assign({},c?c.k:{});
+  if(me.typed){const k2=piKeyFromText(me.typed,me.regs.length||null);Object.assign(keys,k2);}
+  me.keys=keys;
+  me.regs.forEach((r,i)=>{const n=r.n!=null?r.n:i+1;r.key=keys[n]||'';
+    const kp=c&&c.pts[n];r.points=kp||r.tpts||me.pts||1;});
 }
 async function piCropAll(regs,onp,stop){
   const q=PI_Q[PI.q]||PI_Q.hi,order=regs.slice().sort((a,b)=>a.segs[0].p-b.segs[0].p);
@@ -3283,22 +3479,32 @@ async function piCropAll(regs,onp,stop){
 function piSort(){const W=PI.pages[0].W;
   PI.regs.sort((a,b)=>{const s=a.segs[0],t=b.segs[0];return s.p-t.p||(s.x0>W*.45)-(t.x0>W*.45)||s.y0-t.y0;});}
 const piKB=()=>Math.round(PI.regs.reduce((a,r)=>a+(r.img||'').length,0)/1024);
-function piOptN(){return PI.regs.some(r=>r.key==='E')?5:4;}
+function piOptN(){const R=PI.regs;return R.some(r=>r.key==='E')||(R.length&&R.filter(r=>r.hasE).length>=R.length*.4)?5:4;}
+const piPtsSum=()=>Math.round(PI.regs.reduce((a,r)=>a+(+r.points||0),0)*10)/10;
 function piReview(){
   PI.step='review';piSort();
   const R=PI.regs,O=OPTS.slice(0,+(PI.optN||piOptN())),miss=R.filter(r=>!O.includes(r.key)).length;
   const kn=Object.keys(PI.keys||{}).length,more=kn>R.length?kn-R.length:0,kb=piKB();
   PI.title=PI.title||piTitle(PI.file||'PDF шалгалт');
+  const S=PI.secs||[],tabs=PI.tabs||[],pk=PI.pick;
+  const secSel=S.length>1?`<div><label for="piSec">Асуултын хэсэг / хувилбар</label><select id="piSec">${S.map((s,i)=>
+    `<option value="${i}"${i===PI.sec?' selected':''}>${s.label?esc(s.label)+' хувилбар':'Хэсэг '+(i+1)} · ${s.length} асуулт (х. ${s[0].p}–${s[s.length-1].p})</option>`).join('')}</select></div>`:'';
+  const kOpts=tabs.flatMap((t,ti)=>t.cols.map((c,ci)=>({ti,ci,txt:[t.title||(tabs.length>1?'Хүснэгт '+(ti+1)+' (х. '+t.p+')':''),c.label?c.label+' хувилбар':'',Object.keys(c.k).length+' хариулт'].filter(Boolean).join(' · ')})));
+  const keySel=kOpts.length>1?`<div><label for="piKeySel">Хариултын түлхүүр</label><select id="piKeySel">${kOpts.map(o=>
+    `<option value="${o.ti}/${o.ci}"${pk&&pk.t===o.ti&&pk.c===o.ci?' selected':''}>${esc(o.txt)}</option>`).join('')}<option value="-"${pk?'':' selected'}>— Түлхүүр ашиглахгүй</option></select></div>`:'';
   $('#piBody').innerHTML=`
     <div class="pi-sum"><span>✅ <b>${R.length}</b> асуулт</span><span>🔑 <b>${R.length-miss}</b> зөв хариулттай${PI.keySrc?' <small style="color:var(--muted)">('+esc(PI.keySrc)+')</small>':''}</span>
-      <span>📦 ≈ ${kb>1024?(kb/1024).toFixed(1)+' МБ':kb+' КБ'}</span></div>
+      <span>🎯 Нийт <b>${piPtsSum()}</b> оноо</span><span>📦 ≈ ${kb>1024?(kb/1024).toFixed(1)+' МБ':kb+' КБ'}</span></div>
+    ${PI.keyWarn?`<div class="hp-warn" style="margin:0 0 10px">${esc(PI.keyWarn)}</div>`:''}
+    ${secSel||keySel?`<div class="pi-set pi-src">${secSel}${keySel}</div>
+      ${keySel?'<p class="hint" style="margin:-4px 0 10px;font-size:.88rem">Түлхүүрийг хичээлийн нэр, асуултын тоо, хувилбараар нь автоматаар сонголоо — <b>зөв хичээл, зөв хувилбар</b> эсэхийг шалгана уу.</p>':''}`:''}
     ${miss?`<div class="hp-warn" style="margin:0 0 10px">${miss} асуултын зөв хариулт байхгүй байна (улаан хүрээтэй). Хариултыг нь сонгоно уу — эс бөгөөс тэр асуулт дүнд зөв тоологдохгүй.</div>`:''}
     ${more?`<div class="hp-warn" style="margin:0 0 10px">Хариултын файлд ${kn} асуулт байхад PDF-ээс ${R.length} асуулт олдлоо. Дутуу асуултыг <b>🖼️ Хуудсаар харах</b> товчоор орж хулганаар хүрээлж нэмнэ үү.</div>`:''}
     <p class="hint" style="margin:0 0 6px">Асуулт бүрийг <b>нүдээр шалгана уу</b>: зураг дээр дарвал томорно. Хүрээ буруу бол <b>✎</b> дарж засна.</p>
     <div class="pi-set">
       <div><label for="piTitleIn">Шалгалтын нэр</label><input id="piTitleIn" value="${esc(PI.title)}" maxlength="120"></div>
       <div><label for="piOpt">Хувилбарын тоо</label><select id="piOpt"><option value="4"${O.length===4?' selected':''}>4 (A–D)</option><option value="5"${O.length===5?' selected':''}>5 (A–E)</option><option value="3"${O.length===3?' selected':''}>3 (A–C)</option></select></div>
-      <div><label for="piPts">Асуулт бүрийн оноо</label><input id="piPts" type="number" min="0.5" max="20" step="0.5" value="${PI.pts||1}"></div>
+      <div><label for="piPts">Бүх асуултын оноо</label><input id="piPts" type="number" min="0.5" max="20" step="0.5" value="${new Set(R.map(r=>r.points)).size===1&&R.length?R[0].points:''}" placeholder="өөр өөр" title="Энд бичвэл бүх асуултад ижил оноо тавина. Асуулт бүрийн оноог картан дээр нь засна."></div>
     </div>
     <div class="pi-topic" role="group" aria-label="Агуулгыг олон асуултад нэг дор оноох">
       <div><label for="piTa">Агуулга оноох: №</label><input id="piTa" class="n" type="number" min="1" max="${R.length}" value="1"></div>
@@ -3312,16 +3518,24 @@ function piReview(){
     <button class="btn ghost" id="piBack" type="button">← Өөр файл</button>
     <button class="btn ghost" id="piPagesBtn" type="button">🖼️ Хуудсаар харах / нэмэх</button>
     <button class="btn" id="piMake" type="button">✓ Шалгалт үүсгэх (${R.length} асуулт)</button>`);
-  $('#piTitleIn').addEventListener('input',e=>{PI.title=e.target.value;});
-  $('#piPts').addEventListener('input',e=>{PI.pts=+e.target.value||1;});
+  $('#piTitleIn').addEventListener('input',e=>{PI.title=e.target.value;PI.titleEdited=true;});
+  $('#piPts').addEventListener('change',e=>{const v=piClamp(+e.target.value||0,0,20);if(!v)return;PI.pts=v;R.forEach(r=>r.points=v);piReview();});
   $('#piOpt').addEventListener('change',e=>{PI.optN=+e.target.value;piReview();});
+  if($('#piKeySel'))$('#piKeySel').addEventListener('change',e=>{const v=e.target.value;
+    PI.pick=v==='-'?null:{t:+v.split('/')[0],c:+v.split('/')[1]};piApplyKeys();piReview();});
+  if($('#piSec'))$('#piSec').addEventListener('change',async e=>{const i=+e.target.value,me=PI;
+    if(R.some(r=>r.topic)&&!confirm('Өөр хувилбар руу шилжвэл одоогийн агуулгын тэмдэглэгээ арилна. Шилжих үү?')){e.target.value=PI.sec;return;}
+    $('#piGrid').style.opacity=.4;e.target.disabled=true;
+    try{await piLoadSec(i,(k,n)=>piMsg('Асуулт тайрч байна: '+k+' / '+n),()=>me.stop);}catch(x){if(x.message!=='stop')piMsg(x.message||String(x),true);}});
   $('#piTgo').addEventListener('click',()=>{const a=Math.max(1,+$('#piTa').value||1),b=Math.min(R.length,+$('#piTb').value||R.length),t=$('#piTt').value.trim().slice(0,80);
     if(a>b){piMsg('"№ хүртэл" нь эхлэлээс бага байна.',true);return;}
     for(let i=a-1;i<b;i++)R[i].topic=t;piReview();
     piMsg(t?a+'–'+b+'-р асуултад "'+t+'" агуулга оноолоо.':a+'–'+b+'-р асуултын агуулгыг арилгалаа.');});
   $('#piGrid').addEventListener('change',e=>{const c=e.target.closest('.pi-card');if(!c)return;const r=R[+c.dataset.k];
     if(e.target.dataset.f==='key'){r.key=e.target.value;c.classList.toggle('nokey',!r.key);piSumKeys();}
-    if(e.target.dataset.f==='topic')r.topic=e.target.value.trim().slice(0,80);});
+    if(e.target.dataset.f==='topic')r.topic=e.target.value.trim().slice(0,80);
+    if(e.target.dataset.f==='pts'){const v=piClamp(+e.target.value||0,0,20);if(v){r.points=v;}e.target.value=r.points;
+      const s=$('#piBody .pi-sum span:nth-child(3) b');if(s)s.textContent=piPtsSum();const a=$('#piPts');if(a)a.value=new Set(R.map(r=>r.points)).size===1?R[0].points:'';}});
   $('#piGrid').addEventListener('click',e=>{const c=e.target.closest('.pi-card');if(!c)return;const k=+c.dataset.k,r=R[k];
     if(e.target.tagName==='IMG'){e.target.classList.toggle('big');return;}
     const f=e.target.dataset.f;
@@ -3336,6 +3550,7 @@ function piCard(r,i,O){
     <div class="pi-ch"><b>${i+1}.</b>
       <select data-f="key" aria-label="${i+1}-р асуултын зөв хариулт"><option value=""${O.includes(r.key)?'':' selected'}>—</option>${O.map(x=>`<option${r.key===x?' selected':''}>${x}</option>`).join('')}</select>
       <input data-f="topic" value="${esc(r.topic||'')}" placeholder="Агуулга" aria-label="${i+1}-р асуултын агуулга" maxlength="80">
+      <input data-f="pts" class="pt" type="number" min="0.5" max="20" step="0.5" value="${r.points||1}" title="Оноо" aria-label="${i+1}-р асуултын оноо">
       <button type="button" data-f="edit" title="Хүрээг засах">✎</button><button type="button" data-f="del" title="Энэ асуултыг хасах">✕</button></div>
     ${r.img?`<img src="${safeImg(r.img)}" alt="${i+1}-р асуулт" loading="lazy">`:'<p class="hint" style="padding:12px">Зураг алга</p>'}</div>`;
 }
@@ -3371,7 +3586,8 @@ async function piEditor(p,note,selId){
 async function piEdGo(p){const N=PI.pages.length;if(p<1||p>N)return;PI.edP=p;$('#piPgLbl').textContent='Хуудас '+p+' / '+N;await piEdDraw();$('#piPage').scrollIntoView({block:'start'});}
 async function piEdDraw(){
   const box=$('#piPage'),p=PI.edP,pg=PI.pages[p-1];
-  const cv=await piRender(PI.pages,p,PI.cache);if(PI.edP!==p||!$('#piPage'))return;
+  const me=PI;let cv;try{cv=await piRender(me.pages,p,me.cache);}catch(e){return;}  // цонх хаагдсан / зураг цуцлагдсан
+  if(PI!==me||PI.edP!==p||!$('#piPage'))return;
   box.innerHTML='';box.appendChild(cv);
   const pct=(v,t)=>(v/t*100)+'%';
   piSort();
@@ -3424,7 +3640,9 @@ async function piEdDone(){
   const b=$('#piEdDone');b.disabled=true;
   piSort();
   /* Шинээр нэмсэн асуулт: хариултын файлд тэр байрлалын дугаартай хариулт байвал оноох */
-  PI.regs.forEach((r,i)=>{if(r.added&&!r.key&&PI.keys&&PI.keys[i+1])r.key=PI.keys[i+1];});
+  const kc=PI.pick&&PI.tabs&&PI.tabs[PI.pick.t]&&PI.tabs[PI.pick.t].cols[PI.pick.c];
+  PI.regs.forEach((r,i)=>{if(r.added&&!r.key&&PI.keys&&PI.keys[i+1])r.key=PI.keys[i+1];
+    if(!r.points)r.points=(r.added&&kc&&kc.pts[i+1])||PI.pts||1;});
   const todo=PI.regs.filter(r=>r.dirty||!r.img);
   try{await piCropAll(todo,(k,n)=>{const m=$('#piFootMsg');if(m)m.textContent='Зургийг шинэчилж байна: '+k+' / '+n;});}
   catch(e){b.disabled=false;return;}
@@ -3434,13 +3652,13 @@ async function piEdDone(){
 function piMake(){
   const R=PI.regs;if(!R.length){piMsg('Асуулт алга байна.',true);return;}
   if(R.length>60){piMsg('Нэг шалгалтад 60 хүртэл асуулт оруулж болно. Илүүг ✕ дарж хасна уу ('+R.length+' байна).',true);return;}
-  const n=+(PI.optN||piOptN()),O=OPTS.slice(0,n),pts=Math.max(.5,Math.min(20,+$('#piPts').value||1));
+  const n=+(PI.optN||piOptN()),O=OPTS.slice(0,n),pts=r=>Math.max(.5,Math.min(20,+r.points||PI.pts||1));
   const miss=R.filter(r=>!O.includes(r.key)).length;
   if(miss&&!confirm(miss+' асуултын зөв хариулт сонгоогүй байна. Дараа нь "Шалгалтын материал" хэсэгт оруулж болно. Үргэлжлүүлэх үү?'))return;
   const e=blank(0);
   e.exam.title=($('#piTitleIn').value.trim()||piTitle(PI.file||'PDF шалгалт')).slice(0,120);
   e.exam.optN=n;e.exam.src='pdf';
-  e.exam.questions=R.map(r=>({topic:r.topic||'',key:O.includes(r.key)?r.key:'',points:pts,text:'',opts:Array(5).fill(''),img:safeImg(r.img)}));
+  e.exam.questions=R.map(r=>({topic:r.topic||'',key:O.includes(r.key)?r.key:'',points:pts(r),text:'',opts:Array(5).fill(''),img:safeImg(r.img)}));
   db.exams.push(e);
   if(!saveChecked()){db.exams.pop();saveChecked();
     if(PI.q!=='lo'){if(confirm('Хөтчийн санах ой хүрэлцэхгүй байна ('+Math.round(piKB()/1024*10)/10+' МБ зураг). Зургийг жижигрүүлж ('+PI_Q.lo.label+') дахин оролдох уу?'))piShrink();}
@@ -3932,7 +4150,7 @@ $('#addCls').addEventListener('click',()=>{
   const n=clsPretty(raw);
   ensureRoster(n);rosterCls=n;
   const lt=classParts(n).letter;
-  if(lt&&db.sheet&&db.sheet.letters&&!sheetLetters().some(x=>normL(x)===normL(lt)))db.sheet.letters=(db.sheet.letters+' '+lt).trim();
+  if(lt&&db.sheet&&db.sheet.letters&&!sheetLetters().some(x=>grpNorm(x)===grpNorm(lt)))db.sheet.letters=(db.sheet.letters+' '+lt).trim();
   save();renderRosterSetup();renderSheetPanel();$('#newCls').value='';
   m.style.color='';m.textContent=n+' анги нэмэгдлээ. Одоо сурагчдын нэрсийг оруулна уу.';const f0=$('#rGrid input[data-c="1"]');if(f0)f0.focus();
 });
@@ -4772,23 +4990,37 @@ function renderAnalysis(){
 /* ---------- answer sheet ---------- */
 const LOOK={A:'А',B:'В',C:'С',E:'Е',H:'Н',K:'К',M:'М',O:'О',P:'Р',T:'Т',X:'Х',Y:'У'};
 const normL=x=>String(x||'').trim().toUpperCase().replace(/[A-Z]/g,ch=>LOOK[ch]||ch);
+/* Бүлгийн үсэг: латин нэг үсгийг БАЙРЛАЛААР нь кирилл болгоно — A=А, B=Б, C=В, D=Г, E=Д, F=Е, G=Ё, H=Ж, I=З, J=И.
+   (US гараар "9b" гэж бичсэн багш 9Б-г хэлж байна, 9В-г биш.) Бусад бичвэрийг өмнөх шигээ. */
+const GRP_MN='АБВГДЕЁЖЗИ',GRP_US='ABCDEFGHIJ';
+const grpNorm=x=>{const s=String(x||'').trim();return/^[A-Ja-j]$/.test(s)?GRP_MN[GRP_US.indexOf(s.toUpperCase())]:normL(s);};
+const grpUS=()=>!!(db&&db.sheet&&db.sheet.abc==='us');
+/* Хуудсан дээр харуулах үсэг: тохиргооноос хамаарч кирилл (А Б В) эсвэл латин (A B C) */
+const grpShow=x=>{const k=grpNorm(x),i=GRP_MN.indexOf(k);return i<0?String(x||''):grpUS()?GRP_US[i]:k;};
 function classParts(n){const m=String(n||'').trim().match(/^(\d{1,2})\s*[-–.]?\s*(.*)$/);
   return m?{grade:m[1].padStart(2,'0'),letter:m[2].replace(/[\s-]*(анги|бүлэг)[\s.]*$/i,'').trim()}:{grade:'',letter:String(n||'').trim()};}
 /* Ангийн нэрийг нэг хэлбэрт оруулна: "10б анги", "10 Б", "10b" -> "10Б" */
 function clsPretty(n){const p=classParts(n);
-  return p.grade?String(+p.grade)+normL(p.letter).replace(/\s+/g,''):String(n||'').trim().replace(/\s+/g,' ');}
+  return p.grade?String(+p.grade)+grpNorm(p.letter).replace(/\s+/g,''):String(n||'').trim().replace(/\s+/g,' ');}
 const clsCanon=n=>clsPretty(n).toUpperCase();
 function findClass(n){const k=clsCanon(n);return db.classes.find(c=>clsCanon(c.name)===k)||null;}
 function queueStudent(cls,name,answers){if(typeof vcfg!=='function'||!vcfg().api||!vcfg().key)return;
   ccfg().queue.push({id:uid(),examId:state.id,cls,name,answers:answers.slice()});setTimeout(()=>cloudPoll(),400);}
 function sheetLetters(){
   if(!db.sheet||!db.sheet.letters){const f=[...new Set(db.classes.map(c=>classParts(c.name).letter).filter(Boolean))];
-    const base=['А','Б','В','Г'];f.forEach(x=>{if(!base.map(normL).includes(normL(x)))base.push(x);});return base.slice(0,10);}
+    const base=['А','Б','В','Г'];f.forEach(x=>{if(!base.map(grpNorm).includes(grpNorm(x)))base.push(x);});return base.slice(0,10);}
   return db.sheet.letters.split(/[\s,;]+/).filter(Boolean).slice(0,10);
 }
+/* Нягт загвар: хариултын дугуйнууд ойрхон. Ийм хуудасны дээд талд жижиг хар дөрвөлжин (DMARK) хэвлэгдэх тул
+   уншигч тохиргооноос үл хамааран аль загвар болохыг өөрөө танина — хуучин хуудас уншигдсаар байна. */
+const DMARK={x:128,y:10,s:6};
+let SHEET_OVR=null;   // уншиж байх үед: тухайн хуудсан дээрх тэмдгээс тогтоосон загвар
+const sheetDense=()=>SHEET_OVR!=null?SHEET_OVR:!!(db.sheet&&db.sheet.dense);
+const denseMarkSVG=()=>sheetDense()?`<rect x="${DMARK.x}" y="${DMARK.y}" width="${DMARK.s}" height="${DMARK.s}" fill="#000"/>`:'';
 /* Geometry in millimetres on an A4 page. The same layout will be used by the camera reader. */
 function sheetLayout(qs,letters){
   const n1=qs.filter(isP1).length,n2=qs.filter(isP2).length;   // задгай даалгавар 2-р хуудсанд
+  if(sheetDense())return sheetLayoutDense(qs,letters,n1,n2);
   const top=74,dy=6.2,col=(x,vals)=>({x,rows:vals.map((v,d)=>({v,y:top+d*dy}))}),digits=[...'0123456789'];
   const lc=Math.max(1,Math.ceil(letters.length/10)),lx=52;
   const L={fid:[[10,10],[192,10],[10,279],[192,279]],fs:8,r:2.3,top,dy,
@@ -4811,21 +5043,44 @@ function sheetLayout(qs,letters){
   L.bottom=n2?L.y2+11+Math.floor(Math.max(0,n2-1)/2)*7.5+6:(n1?aTop+(perCol-1)*ady+6:aTop);
   return L;
 }
+/* Нягт загвар: Анги/Бүлэг/Код хэсэг ижил. Хариултын дугуй хоорондын зай 1 мм орчим, мөр хоорондын зай бага,
+   нэг баганад 20 хүртэл асуулт. Дугуйн хэмжээ (r=2.3) ижил тул будах, уншихад хүндрэлгүй. */
+function sheetLayoutDense(qs,letters,n1,n2){
+  const top=74,dy=6.2,col=(x,vals)=>({x,rows:vals.map((v,d)=>({v,y:top+d*dy}))}),digits=[...'0123456789'];
+  const lc=Math.max(1,Math.ceil(letters.length/10)),lx=52;
+  const L={fid:[[10,10],[192,10],[10,279],[192,279]],fs:8,r:2.3,top,dy,dense:true,
+    grade:[col(24,digits),col(31.5,digits)],
+    letter:[...Array(lc)].map((_,k)=>col(lx+k*7.5,letters.slice(k*10,k*10+10))),
+    code:[col(lx+lc*7.5+16,digits),col(lx+lc*7.5+23.5,digits)]};
+  const O1=opts1();let ow=O1.length>=5?5.6:5.8;
+  const aTop=152,ady=6,maxRows=n2?15:20,cols=Math.max(1,Math.ceil(n1/maxRows)),x0=16;
+  let need=10+(O1.length-1)*ow+3,colW=Math.max(need+5,38);
+  if(x0+(cols-1)*colW+need>196){colW=(196-x0)/cols;ow=Math.min(ow,(colW-10-3)/Math.max(1,O1.length-1));need=10+(O1.length-1)*ow+3;}
+  const perCol=Math.ceil(n1/cols);
+  L.q=[...Array(n1)].map((_,i)=>{const c=Math.floor(i/perCol),x=x0+c*colW,y=aTop+(i%perCol)*ady;
+    return{n:i+1,x,y,opts:O1.map((o,k)=>({v:o,x:x+10+k*ow,y}))};});
+  L.y2=aTop+maxRows*ady+2;
+  L.q2=[...Array(n2)].map((_,j)=>{const x=16+(j%2)*92,y=L.y2+11+Math.floor(j/2)*7.5;
+    return{n:n1+j+1,x,y,opts:opts2().map((o,k)=>({v:o,x:x+11+k*7.5,y}))};});
+  L.bottom=n2?L.y2+11+Math.floor(Math.max(0,n2-1)/2)*7.5+6:(n1?aTop+(perCol-1)*ady+6:aTop);
+  return L;
+}
 /* Анги / Бүлэг / Код будах блок. Хоёр хуудсанд ижил байрлалтай тул
    уншигч хоёр хуудсыг ижил кодоор таних боломжтой. */
 function idGroupsSVG(L,st){
   const r=L.r;
-  const fill=(group,ci,val)=>st&&st[group]&&st[group][ci]!=null&&normL(st[group][ci])===normL(val);
+  const fill=(group,ci,val)=>st&&st[group]&&st[group][ci]!=null&&grpNorm(st[group][ci])===grpNorm(val);
+  const show=(key,v)=>key==='letter'?grpShow(v):v;
   const group=(cols,label,key)=>{
     let x0=cols[0].x-5,x1=cols[cols.length-1].x+5;if(x1-x0<16){const m=(x0+x1)/2;x0=m-8;x1=m+8;}
     let h=`<rect x="${x0}" y="50" width="${x1-x0}" height="${L.top+9*L.dy+6-50}" fill="none" stroke="#000" stroke-width=".35" rx="1.5"/>
       <text x="${(x0+x1)/2}" y="55" font-size="3.2" font-weight="700" text-anchor="middle">${label}</text>`;
     cols.forEach((c,ci)=>{
       h+=`<rect x="${c.x-3}" y="58" width="6" height="7" fill="#fff" stroke="#000" stroke-width=".25"/>`;
-      if(st&&st[key]&&st[key][ci]!=null)h+=`<text x="${c.x}" y="63.3" font-size="4" text-anchor="middle" font-weight="700">${esc(st[key][ci])}</text>`;
+      if(st&&st[key]&&st[key][ci]!=null)h+=`<text x="${c.x}" y="63.3" font-size="4" text-anchor="middle" font-weight="700">${esc(show(key,st[key][ci]))}</text>`;
       c.rows.forEach(rw=>{const f=fill(key,ci,rw.v);
         h+=`<circle cx="${c.x}" cy="${rw.y}" r="${r}" fill="${f?'#000':'#fff'}" stroke="#555" stroke-width=".25"/>`+
-          (f?'':`<text x="${c.x}" y="${rw.y+0.9}" font-size="2.5" fill="#b0b0b0" text-anchor="middle">${esc(rw.v)}</text>`);});
+          (f?'':`<text x="${c.x}" y="${rw.y+0.9}" font-size="2.5" fill="#b0b0b0" text-anchor="middle">${esc(show(key,rw.v))}</text>`);});
     });
     return h;
   };
@@ -4833,9 +5088,9 @@ function idGroupsSVG(L,st){
 }
 function sheetSVG(opts){
   const letters=sheetLetters(),L=sheetLayout(state.exam.questions,letters),r=L.r,st=opts.student;
-  const fill=(group,ci,val)=>st&&st[group]&&st[group][ci]!=null&&normL(st[group][ci])===normL(val);
   let g='';
   L.fid.forEach(([x,y])=>g+=`<rect x="${x}" y="${y}" width="${L.fs}" height="${L.fs}" fill="#000"/>`);
+  g+=denseMarkSVG();
   g+=`<text x="22" y="17" font-size="5.5" font-weight="700">Хариултын хуудас</text>
     <text x="188" y="17" font-size="3.2" text-anchor="end">${esc(state.exam.date||'')}</text>
     <text x="22" y="25" font-size="3.8">${esc(state.exam.title||'Шалгалт')}${(()=>{const n=sheet3Layout().extra.length;return n?' — 1 / '+(n+1)+' хуудас':'';})()}</text>
@@ -4899,14 +5154,14 @@ function p3IdLayout(){
 }
 function p3IdSVG(st){
   const H=p3IdLayout(),r=H.r;
-  const of=(key,ci,v)=>st&&st[key]&&st[key][ci]!=null&&normL(st[key][ci])===normL(v);
+  const of=(key,ci,v)=>st&&st[key]&&st[key][ci]!=null&&grpNorm(st[key][ci])===grpNorm(v);
   let g=`<rect x="14" y="30" width="182" height="${H.dy*H.rows+6}" fill="none" stroke="#000" stroke-width=".35" rx="1.5"/>`;
   const all=[...H.grade.map((rw,i)=>[rw,'grade',i]),...H.letter.map(rw=>[rw,'letter',0]),...H.code.map((rw,i)=>[rw,'code',i])];
   all.forEach(([rw,key,ci],k)=>{
     g+=`<text x="17" y="${rw.y+1}" font-size="2.7">${H.labels[k]}</text>`;
     rw.cols.forEach(c=>{const f=of(key,ci,c.v);
       g+=`<circle cx="${c.x}" cy="${rw.y}" r="${r}" fill="${f?'#000':'#fff'}" stroke="#555" stroke-width=".25"/>`
-        +(f?'':`<text x="${c.x}" y="${rw.y+0.9}" font-size="2.5" fill="#b0b0b0" text-anchor="middle">${esc(c.v)}</text>`);});
+        +(f?'':`<text x="${c.x}" y="${rw.y+0.9}" font-size="2.5" fill="#b0b0b0" text-anchor="middle">${esc(key==='letter'?grpShow(c.v):c.v)}</text>`);});
   });
   return g;
 }
@@ -4989,6 +5244,7 @@ function sheet3SVG(page,pno,total,opts){
   L.fid.forEach(([x,y])=>g+=`<rect x="${x}" y="${y}" width="${L.fs}" height="${L.fs}" fill="#000"/>`);
   for(let k=0;k<Math.min(P3MARK.max,pno);k++)
     g+=`<rect x="${p3MarkX(k)}" y="${P3MARK.y}" width="${P3MARK.s}" height="${P3MARK.s}" fill="#000"/>`;
+  g+=denseMarkSVG();
   g+=`<text x="22" y="17" font-size="5.5" font-weight="700">${page.tf.length&&!page.p3.length?'Үнэн / худал':'Үргэлжлэл'}</text>
     <text x="188" y="17" font-size="3.2" text-anchor="end">${esc(state.exam.date||'')}</text>
     <text x="22" y="25" font-size="3.8">${esc(state.exam.title||'Шалгалт')} — ${pno+1} / ${total+1} хуудас</text>
@@ -5012,13 +5268,15 @@ function allSheets(opts){
   return[sheetSVG(opts),...P.extra.map((p,k)=>sheet3SVG(p,k+1,P.extra.length,opts))];
 }
 function studentSheetData(c,n){
-  const p=classParts(c.name),letters=sheetLetters(),li=letters.findIndex(x=>normL(x)===normL(p.letter));
+  const p=classParts(c.name),letters=sheetLetters(),li=letters.findIndex(x=>grpNorm(x)===grpNorm(p.letter));
   return{name:n,cls:c.name,grade:p.grade?[...p.grade]:null,letter:li>=0?[letters[li]]:null,code:[...pad2(c.codes[n])]};
 }
 function renderSheetPanel(){
   if(!$('#sPreview'))return;
   if(document.activeElement!==$('#sLetters'))$('#sLetters').value=sheetLetters().join(' ');
   const mode=$('#sMode').value;$('#sClsWrap').hidden=mode!=='class';
+  const S=db.sheet||{};$('#sAbc').value=S.abc==='us'?'us':'mn';$('#sDense').value=S.dense?'1':'0';
+  $('#sNupWrap').hidden=mode!=='blank';$('#sNup').value=String([1,2,4].includes(+S.nup)?+S.nup:1);
   const nv=vCount();$('#sVarWrap').hidden=nv<2;
   if(nv>1){const cur=+($('#sVar').value||0)||0;
     $('#sVar').innerHTML=Array.from({length:nv},(_,v)=>`<option value="${v}"${v===cur?' selected':''}>${VNAMES[v]} хувилбар</option>`).join('');}
@@ -5030,13 +5288,20 @@ function renderSheetPanel(){
     if(!c.students.length){m.style.color='var(--stain)';m.textContent='Энэ ангид нэрс оруулаагүй байна.';}
     else st=studentSheetData(c,c.students[0]);
     const p=classParts(c.name);
-    if(!p.grade||!sheetLetters().some(x=>normL(x)===normL(p.letter))){m.style.color='var(--stain)';
+    if(!p.grade||!sheetLetters().some(x=>grpNorm(x)===grpNorm(p.letter))){m.style.color='var(--stain)';
       m.textContent='"'+c.name+'" ангийн нэрээс анги эсвэл бүлгийн үсгийг таньсангүй. Ангийн нэрийг "11С" гэх мэтээр бичиж, бүлгийн үсгүүдэд "'+p.letter+'" байгаа эсэхийг шалгана уу.';}
   }
   const sheets=allSheets({student:st,v:+($('#sVar').value||0)||0});
   $('#sPreview').innerHTML=sheets.join('<div style="height:8px;background:var(--bg)"></div>');
   if(sheets.length>1&&!m.textContent)m.textContent='Сурагч бүрд '+sheets.length+' хуудас хэвлэгдэнэ (1 тест + '+(sheets.length-1)+' задгай).';
+  if(mode==='blank'&&+S.nup===4&&!m.textContent){m.style.color='var(--stain)';
+    m.textContent='4 хуудсаар хэвлэхэд дугуй 2 дахин жижиг болно. Сурагчдад дугуйг бүтэн, нарийн будахыг сануулж, хайчаар 4 хэсэг болгоно. Уншуулахдаа хуудас бүрийг тусад нь, ойроос зургийг авна.';}
 }
+/* Тохиргоо: бүлгийн үсэг (Мон/US), дугуйн зай, нэг A4-т хэдэн хуудас */
+const sheetSet=(k,v)=>{db.sheet=db.sheet||{};db.sheet[k]=v;save();renderSheetPanel();};
+$('#sAbc').addEventListener('change',e=>sheetSet('abc',e.target.value));
+$('#sDense').addEventListener('change',e=>sheetSet('dense',e.target.value==='1'));
+$('#sNup').addEventListener('change',e=>sheetSet('nup',+e.target.value));
 $('#sLetters').addEventListener('change',e=>{
   const v=e.target.value.split(/[\s,;]+/).filter(Boolean);
   db.sheet=db.sheet||{};db.sheet.letters=(v.length?v:['А','Б','В','Г']).slice(0,10).join(' ');save();renderSheetPanel();
@@ -5044,16 +5309,21 @@ $('#sLetters').addEventListener('change',e=>{
 $('#sMode').addEventListener('change',renderSheetPanel);
 $('#sVar').addEventListener('change',renderSheetPanel);
 $('#sCls').addEventListener('change',e=>{if(e.target.value){state.exam.cls=entryCls=e.target.value;save();}renderSheetPanel();});
-function printPages(html,margin){
+function printPages(html,margin,land){
   const pa=$('#printArea');pa.innerHTML=html;document.body.classList.add('printing');
-  const ps=document.createElement('style');ps.textContent='@page{size:A4;margin:'+(margin||'0')+'}';document.head.appendChild(ps);
+  const ps=document.createElement('style');ps.textContent='@page{size:A4'+(land?' landscape':'')+';margin:'+(margin||'0')+'}';document.head.appendChild(ps);
   const done=()=>{document.body.classList.remove('printing');pa.innerHTML='';ps.remove();window.removeEventListener('afterprint',done);};
   window.addEventListener('afterprint',done);setTimeout(()=>window.print(),60);
 }
 $('#sPrint').addEventListener('click',()=>{
   const v=+($('#sVar')?$('#sVar').value:0)||0;
   const wrap=o=>allSheets(o).map(s=>`<div class="sheet">${s}</div>`).join('');
-  if($('#sMode').value==='blank'){printPages(wrap({print:true,v}));return;}
+  if($('#sMode').value==='blank'){
+    /* Нэргүй хуудас: нэг A4-т 2 (A5, хэвтээ) эсвэл 4 (A6) хувь. Хуудас бүр жигд жижгэрсэн тул уншигч өөрчлөлтгүй уншина. */
+    const n=+(db.sheet&&db.sheet.nup)||1;
+    if(n===2||n===4){const pages=allSheets({v});
+      printPages(pages.map(s=>`<div class="nup nup${n}">${Array(n).fill(`<div class="cell">${s}</div>`).join('')}</div>`).join(''),'0',n===2);return;}
+    printPages(wrap({print:true,v}));return;}
   const c=db.classes.find(x=>x.name===$('#sCls').value);
   if(!c||!c.students.length){$('#sMsg').style.color='var(--stain)';$('#sMsg').textContent='Анги сонгож, нэрсээ оруулна уу.';return;}
   printPages(c.students.map(n=>wrap({print:true,v,student:studentSheetData(c,n)})).join(''));
@@ -5062,7 +5332,7 @@ $('#printCodes').addEventListener('click',()=>{
   const c=db.classes.find(x=>x.name===rosterCls);if(!c||!c.students.length)return;
   const p=classParts(c.name),hasSid=!!(c.sids&&Object.keys(c.sids).length);
   printPages(`<div class="codes-print"><h2>${esc(c.name)} анги: сурагчдын код</h2>
-    <p>Хариултын хуудсан дээр Анги хэсэгт ${esc(p.grade)}, Бүлэг хэсэгт ${esc(p.letter)}, Код хэсэгт өөрийн кодыг будна.</p>
+    <p>Хариултын хуудсан дээр Анги хэсэгт ${esc(p.grade)}, Бүлэг хэсэгт ${esc(grpShow(p.letter))}, Код хэсэгт өөрийн кодыг будна.</p>
     <table><thead><tr><th>Код</th>${hasSid?'<th>Сургуулийн код</th>':''}<th>Нэр</th></tr></thead><tbody>${c.students.map(n=>`<tr><td><b>${pad2(c.codes[n])}</b></td>${hasSid?`<td>${esc(c.sids[n]||'')}</td>`:''}<td>${esc(n)}</td></tr>`).join('')}</tbody></table></div>`,'12mm');
 });
 
@@ -6121,6 +6391,11 @@ function omrRead(im,qs,letters,opt){opt=opt||{};
       for(let y=138.6;y<=140.6;y+=.4)hi+=val(...map(x,y))/6;c++;ln+=lo;bl+=hi;}
     const sc=(bl-ln)/c;if(!best||sc>best.sc)best={map,sc};}}
   if(!best||best.sc<4)return{ok:false,error:'Хуудасны байрлалыг тодорхойлж чадсангүй. Хуудсыг бүтэн, тэгш авна уу.'};
+  /* Нягт загварын тэмдэг (дээд талын жижиг хар дөрвөлжин) байгаа эсэх — хуудас бүрийг өөрийн загвараар нь уншина */
+  {const m0=best.map,av=(x0,y0,x1,y1)=>{let s=0,n=0;for(let x=x0;x<=x1;x+=.6)for(let y=y0;y<=y1;y+=.6){s+=val(...m0(x,y));n++;}return n?s/n:255;};
+    const ref=av(DMARK.x+DMARK.s+3,DMARK.y,DMARK.x+DMARK.s+11,DMARK.y+DMARK.s),ink=av(DMARK.x+1.5,DMARK.y+1.5,DMARK.x+DMARK.s-1.5,DMARK.y+DMARK.s-1.5);
+    SHEET_OVR=ref-ink>45;}
+  try{
   const map=best.map,L=sheetLayout(qs,letters);
   const score=(cx,cy)=>{
     const ring=[];for(let t=0;t<24;t++){const a=t/24*2*Math.PI;ring.push(val(...map(cx+3.1*Math.cos(a),cy+3.1*Math.sin(a))));}
@@ -6193,10 +6468,11 @@ function omrRead(im,qs,letters,opt){opt=opt||{};
   else [...L.q,...L.q2].forEach((q,i)=>{if(amb[i]){const o=q.opts;res.crops[i]=crop(Math.max(0,q.x-1),q.y-4,o[o.length-1].x+5,q.y+4);}});
   res.idCrop=pno?crop(14,29,196,34+5*7.2+4):crop(16,48,L.code[L.code.length-1].x+7,L.top+9*L.dy+8);
   res.preview=cv.toDataURL('image/jpeg',.8);return res;
+  }finally{SHEET_OVR=null;}
 }
 let omrItems=[];
 function omrMatch(it){
-  const c=db.classes.find(k=>{const p=classParts(k.name);return p.grade===it.r.grade&&normL(p.letter)===normL(it.r.letter);});
+  const c=db.classes.find(k=>{const p=classParts(k.name);return p.grade===it.r.grade&&grpNorm(p.letter)===grpNorm(it.r.letter);});
   it.cls=c?c.name:'';it.name='';
   if(c&&it.r.code){const n=c.students.find(x=>c.codes[x]===+it.r.code);if(n)it.name=n;}
 }
@@ -6500,7 +6776,7 @@ setInterval(cloudPoll,8000);
 let LS=null;
 function beep(){try{const a=new (window.AudioContext||window.webkitAudioContext)(),o=a.createOscillator(),g=a.createGain();o.frequency.value=1200;g.gain.value=.15;o.connect(g);g.connect(a.destination);o.start();o.stop(a.currentTime+.12);setTimeout(()=>a.close(),300);}catch(e){}}
 function identify(r){
-  const c=db.classes.find(k=>{const p=classParts(k.name);return p.grade===r.grade&&normL(p.letter)===normL(r.letter);});
+  const c=db.classes.find(k=>{const p=classParts(k.name);return p.grade===r.grade&&grpNorm(p.letter)===grpNorm(r.letter);});
   const name=c&&r.code?c.students.find(x=>c.codes[x]===+r.code):null;
   return{cls:c?c.name:'',name:name||''};
 }
