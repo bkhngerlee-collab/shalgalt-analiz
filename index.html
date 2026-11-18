@@ -373,6 +373,10 @@ td input,td select{min-width:70px}
 .ef-card.done{background:#DDF0DC;border-color:#8CC98A;color:#1E3D1D}.ef-card.done i{color:#2E8B3A}
 .ef-card.abs{background:#E3E8EF;border-color:#B8C2CE;color:#3B4654;font-weight:700}.ef-card.abs i{font-size:.95rem;letter-spacing:-2px}
 .ef-card.act{border-color:#3B82F6;box-shadow:0 0 0 3px rgba(59,130,246,.25);font-weight:700}
+/* утаснаас дөнгөж ирсэн хариулт — хэдэн секунд тодорно */
+.ef-card.new{border-color:#E0A800;box-shadow:0 0 0 3px rgba(246,196,69,.55);animation:efNew 1.2s ease-in-out 4}
+@keyframes efNew{50%{box-shadow:0 0 0 7px rgba(246,196,69,.25);transform:scale(1.03)}}
+@media (prefers-reduced-motion:reduce){.ef-card.new{animation:none}}
 .ef-none{grid-column:1/-1;margin:6px 0;color:var(--muted)}
 @media (prefers-color-scheme:dark){.ef-card{border-color:var(--line)}.ef-card.done{background:rgba(46,139,58,.22);border-color:#2E8B3A;color:#CDEBCB}
   .ef-card.abs{background:rgba(148,163,184,.16);border-color:#64748B;color:#CBD5E1}}
@@ -1338,11 +1342,13 @@ body.student #studentApp{display:block}
       <button class="btn ghost" id="omrSaveAll" hidden>Бэлэн бүх хуудсыг хадгалах</button>
     </div>
     <div id="scanVarWrap" hidden style="margin-top:10px;max-width:420px">
-      <label for="scanVar">Одоо уншиж буй хуудсуудын хувилбар</label>
+      <label for="scanVar">Хувилбарын дугуйгүй (хуучин) хуудсуудын хувилбар</label>
       <select id="scanVar"></select>
-      <p class="hint" style="margin:4px 0 0;font-size:.82rem">Нэг хувилбарын хуудсуудыг дараалан уншуулаад, дараа нь энэ цэсийг сольж нөгөөг нь уншуулна. Буруу хувилбар сонгосон бол дүн буруу гарна.</p>
+      <p class="hint" style="margin:4px 0 0;font-size:.82rem">Шинэ хуудсан дээр сурагч <b>хувилбараа будсан</b> бол программ өөрөө танина — энэ цэсийг сонгох шаардлагагүй. Будаагүй эсвэл хоёр будсан хуудсыг шалгах жагсаалтад гаргана. Энэ цэс зөвхөн хувилбарын дугуйгүй хуучин хуудсанд хэрэглэгдэнэ.</p>
     </div>
     <label style="display:flex;align-items:center;gap:8px;margin-top:10px;color:var(--ink)"><input type="checkbox" id="omrAuto" style="width:auto" checked> Итгэлтэй уншсан хуудсыг шууд хадгалах (сурагч танигдсан, эргэлзээтэй хариултгүй)</label>
+    <label style="display:flex;align-items:center;gap:8px;margin-top:8px;color:var(--ink)"><input type="checkbox" id="autoEntry" style="width:auto"> 💻 Утсаар уншуулахад <b>энэ төхөөрөмж</b> дээр «Хариултын бүртгэл»-ийг автоматаар нээж, уншиж буй анги, сурагчийг харуулах</label>
+    <p class="hint" style="margin:2px 0 0 26px;font-size:.82rem">Компьютер дээр асаалттай, утсан дээр унтраалттай байхад тохиромжтой. Хоёр төхөөрөмж нэг данстай нэвтэрсэн байх ёстой.</p>
     <div class="msg" id="omrMsg" role="status"></div>
     <div id="omrList"></div>
   </div>
@@ -4377,8 +4383,9 @@ function renderRoster(){
   const N=c.students.length,nd=c.students.filter(n=>done.has(n)).length,na=c.students.filter(n=>stOf(n)==='abs').length;
   const q=String($('#rFind').value||'').trim().toLowerCase();
   const list=c.students.filter(n=>(!rFilter||stOf(n)===rFilter)&&(!q||n.toLowerCase().includes(q)||pad2(c.codes[n]).includes(q)||String(c.codes[n])===q));
+  const fl=ENTRY_FLASH&&ENTRY_FLASH.cls===entryCls&&Date.now()<ENTRY_FLASH.until?ENTRY_FLASH.names:null;   // утаснаас дөнгөж ирсэн
   $('#roster').innerHTML=N?(list.length?list.map(n=>{const st=stOf(n);
-    return`<button type="button" class="ef-card ${st}${n===cur?' act':''}" data-n="${esc(n)}" title="${st==='abs'?'Ирээгүй — баруун товч дарж буцаана':st==='done'?'Хариулт орсон — дарж засна':'Дарж хариултыг нь оруулна. Баруун товч: ирээгүй'}">
+    return`<button type="button" class="ef-card ${st}${n===cur?' act':''}${fl&&fl.has(n)?' new':''}" data-n="${esc(n)}" title="${st==='abs'?'Ирээгүй — баруун товч дарж буцаана':st==='done'?'Хариулт орсон — дарж засна':'Дарж хариултыг нь оруулна. Баруун товч: ирээгүй'}">
       <span>${pad2(c.codes[n])} ${esc(n)}</span><i aria-hidden="true">${st==='done'?'✓':st==='abs'?'👤✕':''}</i></button>`;}).join('')
       :'<p class="ef-none">Шүүлтүүрт тохирох сурагч алга.</p>')
     :'<p class="ef-none">Энэ ангид нэрс оруулаагүй байна. "Шалгалтын сан" → "Ангиуд, нэрс" хэсгээс нэмнэ үү.</p>';
@@ -4410,7 +4417,10 @@ function pickStudent(n){
   $('#saveStudent').textContent=s?'Засварыг хадгалах':'Хариултыг хадгалах';
   renderSheet();renderRoster();
 }
-function renderEntry(){renderEntryClasses();renderRoster();renderVarPick();renderScanVar();renderSheet();renderList();renderOmrExam();$('#prefillKey').checked=!!ecfg().prefill;}
+function renderEntry(){renderEntryClasses();renderRoster();renderVarPick();renderScanVar();renderSheet();renderList();renderOmrExam();$('#prefillKey').checked=!!ecfg().prefill;
+  const ae=$('#autoEntry');if(ae)ae.checked=autoEntryOn();}
+$('#autoEntry').addEventListener('change',e=>{try{localStorage.setItem('shalgalt-autoentry',e.target.checked?'1':'0');}catch(x){}
+  toast(e.target.checked?'Энэ төхөөрөмж дээр утаснаас ирсэн хариултыг автоматаар харуулна.':'Автоматаар нээх унтарлаа.');});
 /* Уншуулахын өмнө аль шалгалт руу орох нь нүдэнд харагдаж байх ёстой —
    буруу шалгалт сонгоод уншуулбал бүх дүн утгагүй болдог. */
 function renderOmrExam(){
@@ -5015,8 +5025,18 @@ const DMARK={x:128,y:10,s:6};
 let SHEET_OVR=null;   // уншиж байх үед: тухайн хуудсан дээрх тэмдгээс тогтоосон загвар
 const sheetDense=()=>SHEET_OVR!=null?SHEET_OVR:!!(db.sheet&&db.sheet.dense);
 const denseMarkSVG=()=>sheetDense()?`<rect x="${DMARK.x}" y="${DMARK.y}" width="${DMARK.s}" height="${DMARK.s}" fill="#000"/>`:'';
-/* Geometry in millimetres on an A4 page. The same layout will be used by the camera reader. */
+/* Хувилбарын дугуй: хувилбартай шалгалтад "Код"-ын хажууд А Б В Г (эсвэл A B C D) багана нэмэгдэнэ.
+   Сурагч өөрийн хувилбарыг будна — уншигч хувилбарыг өөрөө танина. Ийм хуудасны дээд талд VMARK тэмдэг
+   хэвлэгдэх тул тэмдэггүй хуучин хуудсанд (тэр байрлалд зааврын бичвэр байдаг) энэ баганыг уншихгүй. */
+const VMARK={x:140,y:10,s:6};
 function sheetLayout(qs,letters){
+  const L=sheetLayout0(qs,letters),nv=vCount();
+  if(nv>1){const x=L.code[1].x+16;L.vb=[{x,rows:VNAMES.slice(0,nv).map((v,d)=>({v,y:L.top+d*L.dy}))}];}
+  L.ix=(L.vb?L.vb[0].x:L.code[1].x)+12;   // зааврын хайрцгийн зүүн ирмэг
+  return L;
+}
+/* Geometry in millimetres on an A4 page. The same layout will be used by the camera reader. */
+function sheetLayout0(qs,letters){
   const n1=qs.filter(isP1).length,n2=qs.filter(isP2).length;   // задгай даалгавар 2-р хуудсанд
   if(sheetDense())return sheetLayoutDense(qs,letters,n1,n2);
   const top=74,dy=6.2,col=(x,vals)=>({x,rows:vals.map((v,d)=>({v,y:top+d*dy}))}),digits=[...'0123456789'];
@@ -5068,9 +5088,10 @@ function sheetLayoutDense(qs,letters,n1,n2){
 function idGroupsSVG(L,st){
   const r=L.r;
   const fill=(group,ci,val)=>st&&st[group]&&st[group][ci]!=null&&grpNorm(st[group][ci])===grpNorm(val);
-  const show=(key,v)=>key==='letter'?grpShow(v):v;
+  const show=(key,v)=>key==='letter'||key==='vb'?grpShow(v):v;
   const group=(cols,label,key)=>{
-    let x0=cols[0].x-5,x1=cols[cols.length-1].x+5;if(x1-x0<16){const m=(x0+x1)/2;x0=m-8;x1=m+8;}
+    const mw=key==='vb'?18:16;
+    let x0=cols[0].x-5,x1=cols[cols.length-1].x+5;if(x1-x0<mw){const m=(x0+x1)/2;x0=m-mw/2;x1=m+mw/2;}
     let h=`<rect x="${x0}" y="50" width="${x1-x0}" height="${L.top+9*L.dy+6-50}" fill="none" stroke="#000" stroke-width=".35" rx="1.5"/>
       <text x="${(x0+x1)/2}" y="55" font-size="3.2" font-weight="700" text-anchor="middle">${label}</text>`;
     cols.forEach((c,ci)=>{
@@ -5082,27 +5103,31 @@ function idGroupsSVG(L,st){
     });
     return h;
   };
-  return group(L.grade,'Анги','grade')+group(L.letter,'Бүлэг','letter')+group(L.code,'Код','code');
+  return group(L.grade,'Анги','grade')+group(L.letter,'Бүлэг','letter')+group(L.code,'Код','code')+(L.vb?group(L.vb,'Хувилбар','vb'):'');
 }
 function sheetSVG(opts){
   const letters=sheetLetters(),L=sheetLayout(state.exam.questions,letters),r=L.r,st=opts.student;
   let g='';
   L.fid.forEach(([x,y])=>g+=`<rect x="${x}" y="${y}" width="${L.fs}" height="${L.fs}" fill="#000"/>`);
   g+=denseMarkSVG();
+  /* opts.v: -1 = хувилбарыг сурагч өөрөө будна; 0..3 = тэр хувилбарын хуудас (дугуй нь урьдчилан будсан) */
+  const ov=opts.v==null?-1:+opts.v;
+  if(L.vb)g+=`<rect x="${VMARK.x}" y="${VMARK.y}" width="${VMARK.s}" height="${VMARK.s}" fill="#000"/>`;
   g+=`<text x="22" y="17" font-size="5.5" font-weight="700">Хариултын хуудас</text>
     <text x="188" y="17" font-size="3.2" text-anchor="end">${esc(state.exam.date||'')}</text>
     <text x="22" y="25" font-size="3.8">${esc(state.exam.title||'Шалгалт')}${(()=>{const n=sheet3Layout().extra.length;return n?' — 1 / '+(n+1)+' хуудас':'';})()}</text>
-    ${vCount()>1?`<rect x="150" y="20" width="38" height="8" fill="none" stroke="#000" stroke-width=".4" rx="1.5"/>
-      <text x="169" y="26" font-size="4.6" font-weight="700" text-anchor="middle">${esc(VNAMES[opts.v||0])} хувилбар</text>`:''}
+    ${vCount()>1&&ov>=0?`<rect x="150" y="20" width="38" height="8" fill="none" stroke="#000" stroke-width=".4" rx="1.5"/>
+      <text x="169" y="26" font-size="4.6" font-weight="700" text-anchor="middle">${esc(grpShow(VNAMES[ov]))} хувилбар</text>`:''}
     <text x="22" y="38" font-size="3.6">Нэр:</text>
     ${st?`<text x="33" y="38" font-size="4.2" font-weight="700">${esc(st.name)}</text>`:''}
     <line x1="32" y1="39.5" x2="120" y2="39.5" stroke="#000" stroke-width=".25"/>
     <text x="126" y="38" font-size="3.6">Анги:</text>
     ${st?`<text x="138" y="38" font-size="4.2" font-weight="700">${esc(st.cls)}</text>`:''}
     <line x1="137" y1="39.5" x2="188" y2="39.5" stroke="#000" stroke-width=".25"/>`;
-  g+=idGroupsSVG(L,st);
-  const ix=L.code[1].x+12;
+  g+=idGroupsSVG(L,L.vb&&ov>=0?Object.assign({},st||{},{vb:[VNAMES[ov]]}):st);
+  const ix=L.ix;
   const tips=['Зааварчилгаа','Хар эсвэл хөх үзгээр дугуйг бүтэн будна.','Нэг асуултад зөвхөн нэг дугуй будна.','Анги: 11 бол хоёр баганад 1, 1-ийг будна.','Бүлэг: ангийнхаа үсгийг будна.','Код: багшийн өгсөн кодоо, жишээ нь 07','бол эхний баганад 0, дараагийнхад 7.','Хуудсыг нугалж, үрчийлгэхгүй.'];
+  if(L.vb)tips.splice(7,0,'Хувилбар: шалгалтын хувилбараа будна.');
   if(L.q2.length)tips.splice(3,0,'II хэсэг: зөв гэж үзсэн бүх хувилбараа будна.');
   g+=`<rect x="${ix}" y="50" width="${190-ix}" height="${L.top+9*L.dy+6-50}" fill="none" stroke="#000" stroke-width=".25" rx="1.5"/>`;
   tips.forEach((t,k)=>g+=`<text x="${ix+4}" y="${57+k*6.3}" font-size="${k?2.9:3.2}" font-weight="${k?400:700}">${t}</text>`);
@@ -5276,8 +5301,9 @@ function renderSheetPanel(){
   const S=db.sheet||{};$('#sAbc').value=S.abc==='us'?'us':'mn';$('#sDense').value=S.dense?'1':'0';
   $('#sNupWrap').hidden=mode!=='blank';$('#sNup').value=String([1,2,4].includes(+S.nup)?+S.nup:1);
   const nv=vCount();$('#sVarWrap').hidden=nv<2;
-  if(nv>1){const cur=+($('#sVar').value||0)||0;
-    $('#sVar').innerHTML=Array.from({length:nv},(_,v)=>`<option value="${v}"${v===cur?' selected':''}>${VNAMES[v]} хувилбар</option>`).join('');}
+  if(nv>1){const cur=sVarVal();
+    $('#sVar').innerHTML=`<option value="-1"${cur<0?' selected':''}>✏️ Сурагч хувилбараа өөрөө будна</option>`
+      +Array.from({length:nv},(_,v)=>`<option value="${v}"${v===cur?' selected':''}>${esc(grpShow(VNAMES[v]))} хувилбарын хуудас (дугуй нь будсан)</option>`).join('');}
   const sel=$('#sCls'),cur=sel.value||examCls();
   sel.innerHTML=db.classes.map(c=>`<option value="${esc(c.name)}"${c.name===cur?' selected':''}>👥 ${esc(c.name)}</option>`).join('');
   const c=db.classes.find(x=>x.name===sel.value),m=$('#sMsg');m.textContent='';m.style.color='';
@@ -5289,7 +5315,7 @@ function renderSheetPanel(){
     if(!p.grade||!sheetLetters().some(x=>grpNorm(x)===grpNorm(p.letter))){m.style.color='var(--stain)';
       m.textContent='"'+c.name+'" ангийн нэрээс анги эсвэл бүлгийн үсгийг таньсангүй. Ангийн нэрийг "11С" гэх мэтээр бичиж, бүлгийн үсгүүдэд "'+p.letter+'" байгаа эсэхийг шалгана уу.';}
   }
-  const sheets=allSheets({student:st,v:+($('#sVar').value||0)||0});
+  const sheets=allSheets({student:st,v:sVarVal()});
   $('#sPreview').innerHTML=sheets.join('<div style="height:8px;background:var(--bg)"></div>');
   if(sheets.length>1&&!m.textContent)m.textContent='Сурагч бүрд '+sheets.length+' хуудас хэвлэгдэнэ (1 тест + '+(sheets.length-1)+' задгай).';
   if(mode==='blank'&&+S.nup===4&&!m.textContent){m.style.color='var(--stain)';
@@ -5306,6 +5332,8 @@ $('#sLetters').addEventListener('change',e=>{
 });
 $('#sMode').addEventListener('change',renderSheetPanel);
 $('#sVar').addEventListener('change',renderSheetPanel);
+/* Хэвлэх хувилбар: -1 = сурагч өөрөө будна (анхдагч), 0..3 = тэр хувилбарын хуудас */
+function sVarVal(){const s=$('#sVar');if(!s||vCount()<2)return -1;const v=s.value===''?-1:+s.value;return isFinite(v)&&v<vCount()?v:-1;}
 $('#sCls').addEventListener('change',e=>{if(e.target.value){state.exam.cls=entryCls=e.target.value;save();}renderSheetPanel();});
 function printPages(html,margin,land){
   const pa=$('#printArea');pa.innerHTML=html;document.body.classList.add('printing');
@@ -5314,7 +5342,7 @@ function printPages(html,margin,land){
   window.addEventListener('afterprint',done);setTimeout(()=>window.print(),60);
 }
 $('#sPrint').addEventListener('click',()=>{
-  const v=+($('#sVar')?$('#sVar').value:0)||0;
+  const v=sVarVal();
   const wrap=o=>allSheets(o).map(s=>`<div class="sheet">${s}</div>`).join('');
   if($('#sMode').value==='blank'){
     /* Нэргүй хуудас: нэг A4-т 2 (A5, хэвтээ) эсвэл 4 (A6) хувь. Хуудас бүр жигд жижгэрсэн тул уншигч өөрчлөлтгүй уншина. */
@@ -6400,7 +6428,9 @@ function omrRead(im,qs,letters,opt){opt=opt||{};
   /* Нягт загварын тэмдэг (дээд талын жижиг хар дөрвөлжин) байгаа эсэх — хуудас бүрийг өөрийн загвараар нь уншина */
   {const m0=best.map,av=(x0,y0,x1,y1)=>{let s=0,n=0;for(let x=x0;x<=x1;x+=.6)for(let y=y0;y<=y1;y+=.6){s+=val(...m0(x,y));n++;}return n?s/n:255;};
     const ref=av(DMARK.x+DMARK.s+3,DMARK.y,DMARK.x+DMARK.s+11,DMARK.y+DMARK.s),ink=av(DMARK.x+1.5,DMARK.y+1.5,DMARK.x+DMARK.s-1.5,DMARK.y+DMARK.s-1.5);
-    SHEET_OVR=ref-ink>45;}
+    SHEET_OVR=ref-ink>45;
+    const vref=av(VMARK.x+VMARK.s+3,VMARK.y,VMARK.x+VMARK.s+11,VMARK.y+VMARK.s),vink=av(VMARK.x+1.5,VMARK.y+1.5,VMARK.x+VMARK.s-1.5,VMARK.y+VMARK.s-1.5);
+    var hasVB=vref-vink>45;}
   try{
   const map=best.map,L=sheetLayout(qs,letters);
   const score=(cx,cy)=>{
@@ -6408,7 +6438,7 @@ function omrRead(im,qs,letters,opt){opt=opt||{};
     ring.sort((a,b)=>a-b);const paper=ring[Math.floor(ring.length*.75)];let dk=0,n=0;
     for(let dx=-1.6;dx<=1.61;dx+=.2)for(let dy=-1.6;dy<=1.61;dy+=.2){if(dx*dx+dy*dy>2.56)continue;n++;if(val(...map(cx+dx,cy+dy))<paper*.7)dk++;}
     return dk/n;};
-  const FILL=.15,STRONG=.25;
+  const FILL=.15,STRONG=.25,MAYBE=.08;   // MAYBE: зураг дээр шар дугуйгаар тэмдэглэх босго (2026-10-29-нд алдагдсаныг сэргээв)
   /* Хоосон дугуй дотор нь хэвлэсэн үсэг, тоо байдаг тул огт будаагүй ч бага зэрэг
      "харанхуй" гардаг. Тиймээс нэг нүдийг дангаар нь биш, эгнээн дэх бусадтай нь
      ХАРЬЦУУЛЖ шийднэ: жинхэнэ будсан дугуй нь хоосныхоос олон дахин бараан байдаг. */
@@ -6460,7 +6490,10 @@ function omrRead(im,qs,letters,opt){opt=opt||{};
     if(P3.page0.p3.length)readP3(P3.page0.p3);   // ба задгай даалгавар
   }
   const digits=a=>a.every(x=>x.v!=='')?a.map(x=>x.v).join(''):'';
-  const res={ok:true,grade:digits(g),letter:lt.v,code:digits(cd),idAmb:g.some(x=>x.amb)||lt.amb||cd.some(x=>x.amb),answers,amb,p3:pno,p3idx,tfidx};
+  /* Хувилбарын дугуй: vb = 0..3 (танигдсан), -1 (тэмдэгтэй хуудас боловч будаагүй/эргэлзээтэй), null (хувилбарын баганагүй хуудас) */
+  let vb=null,vbAmb=false;
+  if(!pno&&hasVB&&L.vb){const r=pick1(readCol(L.vb[0]));vb=r.v?VNAMES.indexOf(r.v):-1;vbAmb=!!r.amb||vb<0;}
+  const res={ok:true,grade:digits(g),letter:lt.v,code:digits(cd),idAmb:g.some(x=>x.amb)||lt.amb||cd.some(x=>x.amb),answers,amb,p3:pno,p3idx,tfidx,vb,vbAmb};
   if(opt.preview===false)return res;
   const S=3,cv=document.createElement('canvas');cv.width=210*S;cv.height=297*S;const cx=cv.getContext('2d'),out=cx.createImageData(cv.width,cv.height),od=out.data,src=im.data;
   for(let Y=0;Y<cv.height;Y++)for(let X=0;X<cv.width;X++){let[u,v]=map(X/S,Y/S);u=Math.round(u);v=Math.round(v);const o=4*(Y*cv.width+X);
@@ -6472,7 +6505,7 @@ function omrRead(im,qs,letters,opt){opt=opt||{};
   res.crops={};
   if(pno)boxes.forEach(b=>{res.crops[b.i]=crop(14,b.y,196,b.by+5);});
   else [...L.q,...L.q2].forEach((q,i)=>{if(amb[i]){const o=q.opts;res.crops[i]=crop(Math.max(0,q.x-1),q.y-4,o[o.length-1].x+5,q.y+4);}});
-  res.idCrop=pno?crop(14,29,196,34+5*7.2+4):crop(16,48,L.code[L.code.length-1].x+7,L.top+9*L.dy+8);
+  res.idCrop=pno?crop(14,29,196,34+5*7.2+4):crop(16,48,(L.vb&&hasVB?L.vb[0].x+9:L.code[L.code.length-1].x+7),L.top+9*L.dy+8);
   res.preview=cv.toDataURL('image/jpeg',.8);return res;
   }finally{SHEET_OVR=null;}
 }
@@ -6484,14 +6517,17 @@ function omrMatch(it){
 }
 /* Хуудсан дээрх анги нь сонгосон шалгалтын ангиас өөр бол — буруу шалгалт сонгогдсон байх магадлалтай */
 const gradeBad=gr=>{const g=examGrade(state);return!!(g&&+gr&&+gr!==g);};
-const omrReady=it=>it.r.ok&&it.cls&&it.name&&!gradeBad(it.r.grade)&&!it.r.idAmb&&!it.r.amb.some(Boolean)
+const omrReady=it=>it.r.ok&&it.cls&&it.name&&!gradeBad(it.r.grade)&&!it.r.idAmb&&!it.r.amb.some(Boolean)&&!it.vNeed
   &&(it.r.p3idx||[]).every(i=>it.answers[i]!=='');
+/* Хуудасны хувилбар: хуудсан дээр будсан бол түүгээр, хувилбарын баганагүй хуучин хуудас бол дээрх цэснээс (scanVar) */
+const omrVar=r=>r.vb!=null&&r.vb>=0&&r.vb<vCount()?r.vb:scanVar;
+const omrVNeed=r=>vCount()>1&&!r.p3&&r.vb!=null&&(r.vb<0||r.vbAmb||r.vb>=vCount());
 async function omrAdd(files){
   const m=$('#omrMsg'),qs=state.exam.questions,letters=sheetLetters(),auto=$('#omrAuto').checked;let k=0,autoN=0;
   for(const f of files){k++;m.style.color='';m.textContent='Уншиж байна: '+k+' / '+files.length+'...'+(autoN?' ('+autoN+' хадгалагдсан)':'');await new Promise(r=>setTimeout(r,20));
     const it={id:uid(),file:f.name,saved:false};
     try{const im=await omrLoad(f);it.r=omrRead(im,qs,letters);}catch(e){it.r={ok:false,error:e.message};}
-    if(it.r.ok){omrMatch(it);it.answers=it.r.answers.slice();it.v=scanVar;
+    if(it.r.ok){omrMatch(it);it.answers=it.r.answers.slice();it.v=omrVar(it.r);it.vNeed=omrVNeed(it.r);
       const dup=omrItems.find(x=>x.saved&&x.cls===it.cls&&x.name===it.name&&x.answers.join()===it.answers.join());
       if(dup){it.dup=true;}
       else if(auto&&omrReady(it)){omrSave(it);it.auto=true;autoN++;}}
@@ -6509,7 +6545,10 @@ function renderOmr(){
   const card=it=>{
     if(!it.r.ok)return`<div class="omr-card" data-id="${it.id}"><div class="omr-body"><b>${esc(it.file)}</b><div class="omr-st b">${esc(it.r.error)}</div>
       <div class="btns"><button class="btn danger" data-act="del">Хасах</button></div></div></div>`;
-    const r=it.r,c=db.classes.find(x=>x.name===it.cls),idTxt=`Хуудсан дээр: анги <b>${esc(r.grade||'?')}${esc(r.letter||'?')}</b>, код <b>${esc(r.code||'?')}</b>`;
+    const r=it.r,c=db.classes.find(x=>x.name===it.cls),idTxt=`Хуудсан дээр: анги <b>${esc(r.grade||'?')}${esc(grpShow(r.letter||'?'))}</b>, код <b>${esc(r.code||'?')}</b>`
+      +(vCount()>1&&!r.p3?`, хувилбар <b>${r.vb!=null&&r.vb>=0&&!r.vbAmb?esc(grpShow(VNAMES[r.vb])):r.vb==null?'— (сонгосон: '+esc(grpShow(VNAMES[it.v||0]))+')':'?'}</b>`:'');
+    const vSel=vCount()>1&&!r.p3?`<div><label>Хувилбар</label><select data-f="v">${Array.from({length:vCount()},(_,v)=>`<option value="${v}"${v===(it.v||0)?' selected':''}>${esc(grpShow(VNAMES[v]))} хувилбар</option>`).join('')}</select></div>`:'';
+    const vWarn=it.vNeed&&!it.saved?`<div class="omr-st b">Хувилбарын дугуй ${r.vb!=null&&r.vb>=0?'хоёр буюу эргэлзээтэй будсан':'будаагүй'} байна. Хуудсыг харж, хувилбарыг доороос сонгоно уу.</div>`:'';
     const amb=it.answers.filter((a,i)=>r.amb[i]&&!isP3(qs[i])).length,
       empty=it.answers.filter((a,i)=>!a&&!isP3(qs[i])).length;
     const ex=it.cls&&it.name&&state.students.find(x=>x.cls===it.cls&&x.name===it.name);
@@ -6545,9 +6584,9 @@ function renderOmr(){
     }
     const qs1=qs.map((q,i)=>i).filter(i=>!isP3(qs[i])&&!isP4(qs[i]));
     return`<div class="omr-card${it.saved?' saved':''}" data-id="${it.id}"><img src="${r.preview}" alt="Тэгшилсэн хуудас" data-act="zoom">
-      <div class="omr-body"><div class="omr-st">${idTxt}${r.idAmb?' <span class="m">(эргэлзээтэй)</span>':''}</div>${warn}
+      <div class="omr-body"><div class="omr-st">${idTxt}${r.idAmb?' <span class="m">(эргэлзээтэй)</span>':''}</div>${warn}${vWarn}
       <div class="row" style="margin-top:6px"><div><label>Анги</label><select data-f="cls"><option value="">Сонгох</option>${db.classes.map(k=>`<option${k.name===it.cls?' selected':''}>${esc(k.name)}</option>`).join('')}</select></div>
-        <div style="flex:2 1 200px"><label>Сурагч</label><select data-f="name"><option value="">Сонгох</option>${c?c.students.map(n=>`<option value="${esc(n)}"${n===it.name?' selected':''}>${pad2(c.codes[n])} ${esc(n)}</option>`).join(''):''}</select></div></div>
+        <div style="flex:2 1 200px"><label>Сурагч</label><select data-f="name"><option value="">Сонгох</option>${c?c.students.map(n=>`<option value="${esc(n)}"${n===it.name?' selected':''}>${pad2(c.codes[n])} ${esc(n)}</option>`).join(''):''}</select></div>${vSel}</div>
       ${!it.saved&&(r.amb.some(Boolean)||!it.name||r.idAmb)?`<div class="omr-crops">
         ${(!it.name||r.idAmb)&&r.idCrop?`<div class="omr-crop"><img class="id" src="${r.idCrop}" alt="Анги, бүлэг, код"><span>Хуудсан дээрх анги, бүлэг, код. Дээрх цэснээс сурагчаа сонгоно уу.</span></div>`:''}
         ${qs1.map(i=>{const q=qs[i];return r.amb[i]&&r.crops&&r.crops[i]?`<div class="omr-crop"><b>${i+1}.</b><img src="${r.crops[i]}" alt="${i+1}-р асуулт">${isP2(q)
@@ -6641,6 +6680,7 @@ $('#omrList').addEventListener('change',e=>{
   const card=e.target.closest('.omr-card');if(!card)return;const it=omrItems.find(x=>x.id===card.dataset.id);if(!it)return;
   if(e.target.dataset.f==='cls'){it.cls=e.target.value;it.name='';}
   else if(e.target.dataset.f==='name')it.name=e.target.value;
+  else if(e.target.dataset.f==='v'){it.v=+e.target.value||0;it.vNeed=false;}
   else if(e.target.dataset.q!=null){const i=+e.target.dataset.q,q=state.exam.questions[i];
     it.answers[i]=isP2(q)?keyNorm(e.target.value):isP4(q)?tfNorm(e.target.value).replace(/^-+$/,''):e.target.value;
     it.r.amb[i]=false;}
@@ -6656,7 +6696,7 @@ $('#omrList').addEventListener('click',e=>{
   if(b.dataset.act==='zoom'){const d=document.createElement('div');d.className='qr-full';d.innerHTML=`<img src="${it.r.preview}" style="max-height:92vh;max-width:96vw">`;d.onclick=()=>d.remove();document.body.appendChild(d);}
 });
 $('#omrSaveAll').addEventListener('click',()=>{
-  const ready=omrItems.filter(it=>it.r.ok&&!it.saved&&it.cls&&it.name&&!gradeBad(it.r.grade)&&!it.r.amb.some(Boolean)&&!it.r.idAmb);
+  const ready=omrItems.filter(it=>it.r.ok&&!it.saved&&it.cls&&it.name&&!gradeBad(it.r.grade)&&!it.r.amb.some(Boolean)&&!it.r.idAmb&&!it.vNeed);
   const skip=omrItems.filter(it=>it.r.ok&&!it.saved).length-ready.length;
   ready.forEach(omrSave);save();renderOmr();renderRoster();renderList();
   $('#omrMsg').style.color='';$('#omrMsg').textContent=ready.length+' хуудас хадгалагдлаа.'+(skip?' '+skip+' хуудсыг шалгаж, тус тусад нь хадгална уу (эргэлзээтэй эсвэл сурагч тодорхойгүй).':gapMsg());
@@ -6838,27 +6878,31 @@ function liveTick(){
     LS.dark=0;
     const r=omrRead(im,qs,sheetLetters(),{preview:false});
     if(!r.ok){LS.stable=0;LS.key='';liveBanner('Хуудсыг хүрээн дотор бүтэн, тэгш харуулна уу. Дөрвөн булан харагдах ёстой.','');return;}
-    const key=r.grade+r.letter+r.code+'|'+r.answers.join(',')+'|'+r.amb.join('');
+    const key=r.grade+r.letter+r.code+'|'+r.vb+'|'+r.answers.join(',')+'|'+r.amb.join('');
     LS.stable=key===LS.key?LS.stable+1:1;LS.key=key;
     if(LS.stable<2){liveBanner('Уншиж байна... хөдөлгөөнгүй барина уу.','');return;}
     const id=identify(r),idTxt=`анги ${esc((r.grade||'?')+(r.letter||'?'))}, код ${esc(r.code||'?')}`,nAmb=r.amb.filter(Boolean).length;
     const flag=(why)=>{const fk=(id.cls+id.name||idTxt)+'|'+key;if(LS.flagged[fk])return;LS.flagged[fk]=1;
       const it={id:uid(),file:'Камер '+new Date().toLocaleTimeString(),saved:false,r:omrRead(im,qs,sheetLetters())};
-      if(it.r.ok){omrMatch(it);it.answers=it.r.answers.slice();omrItems.push(it);}};
+      if(it.r.ok){omrMatch(it);it.answers=it.r.answers.slice();it.v=omrVar(it.r);it.vNeed=omrVNeed(it.r);omrItems.push(it);}};
     if(gradeBad(r.grade)){liveBanner(`<big>⚠ Өөр ангийн хуудас</big>Энэ хуудас ${+r.grade}-р ангийнх, харин сонгосон шалгалт ${examGrade(state)}-р ангийнх. Хадгалсангүй. "Дуусгах" дараад зөв шалгалтаа сонгоно уу.`,"warn");return;}
     if(!id.name||r.idAmb){liveBanner(`<big>Сурагч танигдсангүй</big>Хуудсан дээр: ${idTxt}. Шалгах жагсаалтад нэмлээ, дараа нь гараар сонгоно.`,'warn');if(LS.stable>=3)flag();return;}
     if(nAmb){liveBanner(`<big>${esc(id.name)}</big>${nAmb} асуулт эргэлзээтэй (${r.amb.map((a,i)=>a?i+1:0).filter(Boolean).join(', ')}). Гэрэлтэй газар тэгш барина уу.`+(LS.stable>=5?' Шалгах жагсаалтад нэмлээ.':''),'warn');if(LS.stable>=5)flag();return;}
+    /* Хувилбар: хуудсан дээрх дугуйгаар (будаагүй/хоёр будсан бол шалгуулна), хуучин хуудсанд цэснээс */
+    if(omrVNeed(r)){liveBanner(`<big>${esc(id.name)}</big>Хувилбарын дугуй ${r.vb>=0?'хоёр буюу эргэлзээтэй':'будаагүй'} байна. Шалгах жагсаалтад нэмлээ — дараа нь хувилбарыг сонгоно.`,'warn');if(LS.stable>=3)flag();return;}
+    const vv=omrVar(r);
     /* Нэмэлт хуудас нь ӨӨРИЙН асуултаа л авчирна — 1-р хуудсаа дарж болохгүй */
-    const raw=r.p3?r.answers:toCanon(scanVar,r.answers);   // хуудасны дарааллаас үндсэн дараалалд
+    const raw=r.p3?r.answers:toCanon(vv,r.answers);   // хуудасны дарааллаас үндсэн дараалалд
     const sk=id.cls+'|'+id.name,pk=sk+'|'+(r.p3||0);
     if(LS.saved[pk]===key){liveBanner(`<big>✓ ${pad2(+r.code)} ${esc(id.name)}</big>${(r.p3||0)+1}-р хуудас хадгалагдсан. Дараагийн хуудсаа харуулна уу.`,'ok');return;}
     const ex=state.students.find(s=>s.cls===id.cls&&s.name===id.name),again=!!LS.saved[pk]||!!ex;
     const ans=mergeAns(r,raw,ex,qs.length);
-    const earned=qs.reduce((s,q,i)=>s+qEarn(qv(q,r.p3?0:scanVar),ans[i]),0),total=qs.reduce((s,q)=>s+(+q.points||0),0),pct=total?earned/total*100:0;
+    const earned=qs.reduce((s,q,i)=>s+qEarn(qv(q,r.p3?0:vv),ans[i]),0),total=qs.reduce((s,q)=>s+(+q.points||0),0),pct=total?earned/total*100:0;
     const pgN=extraIdx().length?`<small>${(r.p3||0)+1}-р хуудас уншлаа${r.p3?'':(extraIdx().length?' — дараа нь 2-р хуудсыг харуул':'')}</small><br>`:'';
-    const info=`<big>✓ ${pad2(+r.code)} ${esc(id.name)}</big>${pgN}${r1(earned)} / ${r1(total)} оноо, ${Math.round(pct)}%, ${levelOf(pct)} түвшин`;
-    if(ex)ex.answers=ans.slice();else state.students.push({id:uid(),cls:id.cls,name:id.name,answers:ans.slice(),v:r.p3?0:scanVar});
-    if(ex&&!r.p3)ex.v=scanVar;
+    const vTxt=vCount()>1&&!r.p3?` · ${esc(grpShow(VNAMES[vv]))} хувилбар`:'';
+    const info=`<big>✓ ${pad2(+r.code)} ${esc(id.name)}</big>${pgN}${r1(earned)} / ${r1(total)} оноо, ${Math.round(pct)}%, ${levelOf(pct)} түвшин${vTxt}`;
+    if(ex)ex.answers=ans.slice();else state.students.push({id:uid(),cls:id.cls,name:id.name,answers:ans.slice(),v:r.p3?0:vv});
+    if(ex&&!r.p3)ex.v=vv;
     LS.saved[pk]=key;LS.count++;save();
     ccfg().queue.push({id:uid(),examId:state.id,cls:id.cls,name:id.name,answers:cloudAns(r,ans)});save();
     if(navigator.vibrate)navigator.vibrate(80);beep();
@@ -8794,8 +8838,9 @@ async function cloudPush(){
 /* Хэрэглэгч ямар нэг нүдэнд бичиж байх үед дэлгэцийг солихгүй */
 const typing=()=>{const a=document.activeElement;return!!a&&/^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName)&&!$('#lock').contains(a);};
 async function cloudPull(force){
-  if(!AUTH.sess||!AUTH.approved||SYNC.busy||SYNC.dirty)return;
+  if(!AUTH.sess||!AUTH.approved||SYNC.busy||SYNC.dirty||SYNC.pulling)return;
   if(!force&&(typing()||document.visibilityState!=='visible'))return;
+  SYNC.pulling=true;
   try{
     const uidq='id=eq.'+AUTH.sess.user.id;
     const a=(await sbGet('teachers?select=rev&'+uidq))[0];
@@ -8803,13 +8848,45 @@ async function cloudPull(force){
     if(!a||a.rev===SYNC.rev)return;
     const row=(await sbGet('teachers?select=rev,data&'+uidq))[0];
     if(SYNC.dirty||!row)return;   // энэ хооронд засвар хийсэн бол push нэгтгэнэ
+    const changed=scanDiff(db,row.data||{});   // өөр төхөөрөмж (утас) дээр орсон/өөрчлөгдсөн хариултууд
     SYNC.rev=row.rev;SYNC.base=baseOf(row.data||{});SYNC.err='';
     applyDoc(row.data||{});syncSave();syncUi();
-    toast('Өөр төхөөрөмжөөс шинэчлэгдлээ.');
+    if(changed.length&&autoEntryOn()&&!LS)autoEntry(changed);
+    else toast('Өөр төхөөрөмжөөс шинэчлэгдлээ.');
   }catch(e){
     if(e.status===401)return authExpired();
     SYNC.err=e.net||netErr(e)?'offline':e.message;syncUi();
-  }
+  }finally{SYNC.pulling=false;}
+}
+/* ---------- Утсаар уншуулахад компьютер дээр "Хариултын бүртгэл" өөрөө нээгдэх ----------
+   Үүлнээс ирсэн баримтыг одоогийнхтой харьцуулж, шинээр орсон/өөрчлөгдсөн сурагчийн хариултыг олно. */
+function scanDiff(oldDb,doc){
+  const sig=s=>JSON.stringify([s.answers||[],s.v||0]),K=(e,s)=>e.id+'\u0001'+(s.cls||'')+'\u0001'+(s.name||''),old=new Map();
+  (oldDb.exams||[]).forEach(e=>(e.students||[]).forEach(s=>old.set(K(e,s),sig(s))));
+  const out=[];(doc.exams||[]).forEach(e=>(e.students||[]).forEach(s=>{if(s.cls&&s.name&&old.get(K(e,s))!==sig(s))out.push({examId:e.id,cls:s.cls,name:s.name});}));
+  return out;
+}
+/* Төхөөрөмж тус бүрийн тохиргоо (үүлэнд синк хийгдэхгүй): компьютер дээр анхдагчаар асаалттай, утсан дээр унтраалттай */
+var AE_KEY='shalgalt-autoentry';   // var: эхний ачааллын renderEntry-д ч хүрэлцэнэ
+function autoEntryOn(){try{const v=localStorage.getItem('shalgalt-autoentry');if(v!=null)return v==='1';}catch(e){}
+  return!(window.matchMedia&&matchMedia('(pointer:coarse)').matches);}
+var ENTRY_FLASH=null;   // var: renderRoster эхний ачааллын үед ч ашиглаж болно
+function autoEntry(ch){
+  /* Хамгийн олон хуудас ирсэн шалгалт + анги (одоо нээлттэй шалгалтыг давуу үзнэ) */
+  const grp=new Map();ch.forEach(c=>{const k=c.examId+'\u0001'+c.cls;if(!grp.has(k))grp.set(k,{examId:c.examId,cls:c.cls,names:[]});grp.get(k).names.push(c.name);});
+  const best=[...grp.values()].sort((a,b)=>(b.examId===state.id)-(a.examId===state.id)||b.names.length-a.names.length)[0];
+  const ex=db.exams.find(e=>e.id===best.examId);if(!ex)return;
+  /* Багш энэ компьютер дээр гараар хариулт бөглөж байгаа бол (хадгалаагүй) дэлгэцийг солихгүй — зөвхөн мэдэгдэнэ */
+  if(!$('#tab-entry').hidden&&$('#name').value.trim()&&typeof draft!=='undefined'&&draft.some(Boolean)){
+    toast('📱 Утаснаас: '+best.cls+' — '+best.names.slice(0,3).join(', ')+'. Таны бөглөж буй хариултыг хадгалсны дараа харагдана.');return;}
+  const switched=ex!==state;if(switched)openExam(ex.id);
+  entryCls=best.cls;ENTRY_FLASH={cls:best.cls,names:new Set(best.names),until:Date.now()+9000};
+  if($('#tab-entry').hidden)go('entry');else renderEntry();
+  const rs=$('#roster');if(rs)rs.scrollIntoView({behavior:'smooth',block:'center'});
+  SYNC.fast=Date.now()+180000;   // дараагийн 3 минут 5 секунд тутам шалгана
+  toast('📱 Утаснаас: '+best.cls+' — '+best.names.slice(0,3).join(', ')+(best.names.length>3?' … (+'+(best.names.length-3)+')':'')
+    +(switched?'. "'+(ex.exam.title||'Шалгалт')+'" шалгалт нээгдлээ.':''));
+  setTimeout(()=>{if(ENTRY_FLASH&&Date.now()>=ENTRY_FLASH.until&&!$('#tab-entry').hidden)renderRoster();},9300);
 }
 /* Нэвтэрсний дараа анх удаа: энэ төхөөрөмж ба үүлийг тааруулна */
 async function cloudFirstLoad(){
@@ -8861,6 +8938,9 @@ async function cloudFirstLoad(){
 function startSyncLoop(){
   if(SYNC.loop)return;
   SYNC.loop=setInterval(()=>{if(SYNC.dirty)cloudPush();else cloudPull();},20000);
+  /* Хариултын бүртгэл нээлттэй үед (эсвэл утаснаас хуудас ирсний дараах 3 минут) 5 секунд тутам шалгана —
+     утсаар уншуулсан хариулт компьютер дээр бараг тэр дор харагдана */
+  setInterval(()=>{if(!SYNC.dirty&&!LS&&autoEntryOn()&&(Date.now()<(SYNC.fast||0)||!$('#tab-entry').hidden))cloudPull();},5000);
   reqCheck();setInterval(reqCheck,60000);   // эзэнд шинэ хүсэлт минут тутам
   addEventListener('online',async()=>{
     SYNC.err='';syncUi();
