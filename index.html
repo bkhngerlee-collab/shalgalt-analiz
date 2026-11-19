@@ -991,6 +991,12 @@ body.student #studentApp{display:block}
 .pi-ch button:hover{border-color:var(--leaf);color:var(--leaf)}
 .pi-card img{display:block;width:100%;height:auto;max-height:420px;object-fit:contain;object-position:top left;background:#fff;cursor:zoom-in}
 .pi-card img.big{max-height:none;cursor:zoom-out}
+.pi-tfrow{display:flex;gap:6px;align-items:center;flex-wrap:wrap;padding:6px 10px;border-bottom:1px solid var(--line);background:var(--bg)}
+.pi-tfrow small{color:var(--muted)}
+.pi-tfrow button{border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:8px;padding:4px 10px;cursor:pointer;font:inherit;font-weight:700;min-width:3.6em}
+.pi-tfrow button[data-v="Ү"]{background:#DCFCE7;border-color:#22C55E;color:#166534}
+.pi-tfrow button[data-v="Х"]{background:#FFE4E6;border-color:#F43F5E;color:#9F1239}
+.pi-tfrow button[data-v="-"]{border-color:var(--stain);color:var(--stain)}
 .pi-foot{position:sticky;bottom:0;z-index:3;display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:flex-end;padding:12px 18px;background:var(--surface);border-top:1px solid var(--line)}
 .pi-foot .msg{flex:1 1 260px;margin:0}
 .pi-ed-bar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:10px}
@@ -2858,6 +2864,9 @@ function qCardHTML(base,i,v,lk){
     ${nav}</div>
     <div class="p3bar"><small>4 зөв = ${pt(4)} оноо, 3 зөв = ${pt(3)}, 2 зөв = ${pt(2)}, 1 зөв = ${pt(1)}, 0 зөв = ${pt(0)}</small></div>
     <textarea data-i="${i}"${dv} data-f="text" placeholder="Асуултын толгой. Жишээ: Эсийн тухай дараах мэдэгдлүүдийг үнэл." aria-label="${lab}-р асуултын текст">${esc(q.text||'')}</textarea>
+    ${safeImg(q.img)?`<div class="qimg"><img src="${safeImg(q.img)}" alt="${lab}-р асуултын зураг">
+      <div class="btns" style="margin-top:6px"><label class="btn ghost" style="margin:0">Зургийг солих<input type="file" accept="image/*" data-i="${i}"${dv} data-f="img" hidden></label>
+      <button type="button" class="btn danger" data-i="${i}"${dv} data-f="imgdel">Зургийг устгах</button></div></div>`:''}
     <div class="tfgrid">${Array.from({length:TF_N},(_,j)=>`
       <span class="tfno">${j+1}</span>
       <input data-i="${i}"${dv} data-f="stmt" data-j="${j}" value="${esc((q.stmts||[])[j]||'')}" placeholder="${j+1}-р мэдэгдэл" aria-label="${lab}-р асуултын ${j+1}-р мэдэгдэл">
@@ -3208,8 +3217,35 @@ function piLetterMap(raw){
     if(mn){const i='АБВГД'.indexOf(c);return i>=0?'ABCDE'[i]:'';}
     return{'А':'A','В':'B','С':'C','Е':'E','Д':'D'}[c]||'';};
 }
+/* Үнэн/худал түлхүүр: "11. a T, b F, c T, d F", "11 а) Ү б) Х в) Ү г) Х", "11. TFTF", "11. Үнэн Худал Үнэн Үнэн".
+   Нэг мөрөнд хэд хэдэн асуулт байж болно (2 баганатай хуудас). Үр дүн: {11:'ҮХҮХ', …} */
+const PI_TFV='true|false|үнэн|худал|t|f|ү|х';
+const piTfVal=s=>/^(t|true|ү|үнэн|y|yes)$/i.test(s)?'Ү':'Х';
+function piTfScan(lines){
+  const out={},pair=new RegExp('([a-dа-г])\\s*[).:\\-]?\\s*('+PI_TFV+')(?=$|[\\s,;.])','gi');
+  const grp=new RegExp('(?:^|\\s)(?:№\\s*)?(\\d{1,3})\\s*[.):\\-]?\\s+((?:[a-dа-г]\\s*[).:\\-]?\\s*(?:'+PI_TFV+')(?:$|[\\s,;.]+)){4})','gi');
+  (lines||[]).forEach(l=>{l=piLegacy(String(l||''));let m,hit=false;grp.lastIndex=0;
+    while((m=grp.exec(l))){const ps=[...m[2].matchAll(pair)];
+      if(ps.length===4&&ps.map(p=>p[1].toLowerCase()).join('').match(/^(abcd|абвг)$/)){out[+m[1]]=ps.map(p=>piTfVal(p[2])).join('');hit=true;}}
+    if(hit)return;
+    const w=l.match(/^\s*(?:№\s*)?(\d{1,3})\s*[.):\-]?\s+(.+?)\s*$/);if(!w)return;
+    const t=w[2].split(/[\s,;]+/).filter(Boolean);
+    if(t.length===4&&t.every(x=>/^(true|false|үнэн|худал|t|f|ү|х)$/i.test(x)))out[+w[1]]=t.map(piTfVal).join('');
+    else if(/^[TFҮХ]{4}$/i.test(w[2]))out[+w[1]]=[...w[2]].map(piTfVal).join('');});
+  return out;
+}
+/* Асуулт нь a) … d) гэсэн 4 мэдэгдэлтэй, "____" зайтай эсвэл "үнэн/худал" гэж бичсэн бол Ү/Х даалгавар байх магадлалтай */
+function piTfMarks(t){const ms=[...t.matchAll(/(?:^|\s)([a-dа-г])\)\s*/gi)],ord=[];
+  ms.forEach(m=>{const L=m[1].toLowerCase(),want=('abcd'.includes(L)?'abcd':'абвг')[ord.length];if(L===want)ord.push(m);});
+  return ord.length===4?ord:null;}
+function piTfLooks(t){t=piLegacy(t);return!!piTfMarks(t)&&((t.match(/_{3,}/g)||[]).length>=2||/үнэн|худал|true|false|\bT\s*\/\s*F\b/i.test(t));}
+/* 4 мэдэгдлийн бичвэр (цахим шалгалтад сурагчид харагдана) */
+function piTfStmts(t){t=piLegacy(t);const ms=piTfMarks(t);if(!ms)return null;
+  return ms.map((m,j)=>{const a=m.index+m[0].length,b=j<3?ms[j+1].index:t.length;
+    return t.slice(a,b).replace(/_{2,}|\.{4,}/g,' ').replace(/\s+/g,' ').replace(/[\s.:;,–—-]+$/,'').trim().slice(0,600);});}
 /* Бичсэн хариулт: "1 B, 2 C …" эсвэл "BCDA…" үсгүүдийн дараалал */
 function piKeyFromText(lines,want){
+  lines=(lines||[]).filter(l=>!Object.keys(piTfScan([l])).length);   // Ү/Х мөрүүдийг A–D гэж андуурахгүй
   const key={},raw=[];
   lines.forEach(l=>{const m=l.match(/^\s*(?:Q(?:uestion)?\s*)?(\d{1,3})\s*[.):\-]?\s*([A-Ea-eА-Да-дЕеСс])(?=\s|$|[,.;)])/);
     if(m&&key[m[1]]==null){key[m[1]]=m[2];raw.push(m[2]);}});
@@ -3224,6 +3260,8 @@ function piKeyFromText(lines,want){
 const PI_KL=/^([A-Ea-eАБВГДЕСабвгдесÀÂÄÅÑàâäåñ])[.)]?$/;
 function piKeyRow(r){
   const t=r.tk,m=t.length>1&&t[0].s.match(/^(?:№\s*)?(\d{1,3})[.)]?$/);if(!m)return null;
+  /* "11. a T, b F, c T, d F" — Ү/Х мөр: a,b,c,d-г хувилбарын багана гэж андуурахгүй, хүснэгтийг тасалдуулахгүй */
+  if(piTfScan([r.txt])[+m[1]])return{n:+m[1],cells:[],tf:true,top:r.top,its:r.its};
   const cells=[];let prevL=false;
   for(let i=1;i<t.length;i++){const s=t[i].s,L=s.match(PI_KL);
     if(L){cells.push({L:L[1],x:(t[i].x+t[i].x2)/2,pts:null});prevL=true;continue;}
@@ -3410,6 +3448,7 @@ async function piRun(){
     piFurniture(pages);
     /* Асуултын PDF-ийн төгсгөлд түлхүүр байж болно — түүнийг асуулт гэж андуурахгүйн тулд эхэлж олно */
     const own=piKeyTables(pages,10);
+    me.tfKeys=piTfScan(pages.flatMap(pg=>pg.rows.map(r=>r.txt)));
     me.secs=piSections(pages);me.cache={};me.q='hi';me.keySrc='';me.tabs=[];
     me.qtxt=piLegacy(pages.slice(0,2).flatMap(pg=>pg.rows.map(r=>r.txt)).join(' ')).toLowerCase();
     me.variant=piVarOf(pages.length?pages[0].rows.slice(0,12).map(r=>r.txt).join(' '):'')||
@@ -3417,6 +3456,7 @@ async function piRun(){
     if(mf){piProg('Хариултын файлыг уншиж байна…',.32);
       const md=await piOpen(mf);
       try{const mp=await piPages(md);piFurniture(mp);me.tabs=piKeyTables(mp,3);
+        Object.assign(me.tfKeys,piTfScan(mp.flatMap(pg=>(pg.rows||piRows(pg.items)).map(r=>r.txt))));
         const ex=piKeyExplain(mp);if(ex&&!me.tabs.some(t=>t.n>=ex.n))me.tabs.unshift(ex);
         if(!me.tabs.length){const k=piKeyFromText(mp.flatMap(pg=>piRows(pg.items).map(r=>r.txt)));
           if(Object.keys(k).length)me.tabs=[{title:'',p:1,n:Object.keys(k).length,cols:[{label:'',k,pts:{}}]}];}}
@@ -3424,6 +3464,7 @@ async function piRun(){
       me.keySrc=mf.name;if(!me.tabs.length)me.keyWarn='"'+mf.name+'" файлаас хариулт олдсонгүй.';}
     else if(own.length){me.tabs=own;me.keySrc=qf.name+' (дотор нь)';}
     me.typed=kt?kt.split(/[\n,;]+/):null;if(kt)me.keySrc=me.keySrc?me.keySrc+' + бичсэн':'бичсэн хариулт';
+    if(kt)Object.assign(me.tfKeys,piTfScan(kt.split(/\n+/)));
     /* Хэд хэдэн хувилбартай бол файлын нэр / бичвэрт заасан хувилбарыг, эс бөгөөс эхнийхийг */
     me.secs.forEach((s,i)=>{s.label=piSecLabel(pages,s);});
     const vi=me.secs.findIndex(s=>s.label&&s.label===me.variant);
@@ -3440,7 +3481,8 @@ async function piLoadSec(si,onp,stop){
   const me=PI,anch=me.secs[si]||[];me.sec=si;
   if(me.regs)me.regs.forEach(r=>{r.img='';});
   me.regs=piRegions(me.pages,anch).map(r=>({...r,id:uid(),key:'',topic:'',points:null}));
-  me.regs.forEach(r=>{const t=piRegText(me.pages,r);r.tpts=piPtsOf(t);r.hasE=/(^|\s)[EЕ][.)]/.test(t);});
+  me.regs.forEach(r=>{const t=piRegText(me.pages,r);r.tpts=piPtsOf(t);r.hasE=/(^|\s)[EЕ][.)]/.test(t);
+    r.tfGuess=piTfLooks(t);r.stm=piTfStmts(t);});
   /* Шалгалтын нэр: PDF-ийн эхний хуудасны "… хичээлийн … даалгавар" гарчиг + хувилбар (багш засаагүй бол) */
   if(!me.titleEdited&&!/^\d{4}_[msw]\d{2}_qp_/i.test(me.file||'')){const pg=me.pages[(anch[0]||{p:1}).p-1]||me.pages[0];
     const hs=pg?pg.rows.slice(0,8).map(r=>piLegacy(r.txt).replace(/\s*(хувилбар\s*[-:№]?\s*[A-DАБВГСД](?![A-Za-zА-Яа-я])|(?<![A-Za-zА-Яа-я])[A-DАБВГСД]\s*[-.]?\s*хувилбар)\s*/i,' ').replace(/^[\s\-–—.,:]+|[\s\-–—.,:]+$/g,'').trim())
@@ -3468,10 +3510,15 @@ function piPtsOf(t){const m=piLegacy(t).match(/[\/\[(]\s*(\d{1,2}(?:[.,]5)?)\s*(
 function piApplyKeys(){
   const me=PI,c=me.pick&&me.tabs[me.pick.t]&&me.tabs[me.pick.t].cols[me.pick.c],keys=Object.assign({},c?c.k:{});
   if(me.typed){const k2=piKeyFromText(me.typed,me.regs.length||null);Object.assign(keys,k2);}
-  me.keys=keys;
+  me.keys=keys;const tk=me.tfKeys||{};
   me.regs.forEach((r,i)=>{const n=r.n!=null?r.n:i+1;r.key=keys[n]||'';
+    /* Ү/Х: түлхүүрт "a T, b F…" байвал, эсвэл асуулт нь a)–d) мэдэгдэлтэй бөгөөд A–D хариултгүй бол */
+    if(!r.kindSet)r.tf=tk[n]?tk[n]:r.tfGuess&&!r.key?'----':undefined;
+    if(r.tf!=null)r.key='';
     const kp=c&&c.pts[n];r.points=kp||r.tpts||me.pts||1;});
 }
+/* Асуултын хариулт бүрэн эсэх: тест бол A–E-ийн нэг, Ү/Х бол 4 мэдэгдэл бүгд */
+const piHasKey=(r,O)=>r.tf!=null?!tfNorm(r.tf).includes('-'):O.includes(r.key);
 async function piCropAll(regs,onp,stop){
   const q=PI_Q[PI.q]||PI_Q.hi,order=regs.slice().sort((a,b)=>a.segs[0].p-b.segs[0].p);
   for(let k=0;k<order.length;k++){if(stop&&stop())throw new Error('stop');
@@ -3489,7 +3536,7 @@ function piOptN(){const R=PI.regs;return R.some(r=>r.key==='E')||(R.length&&R.fi
 const piPtsSum=()=>Math.round(PI.regs.reduce((a,r)=>a+(+r.points||0),0)*10)/10;
 function piReview(){
   PI.step='review';piSort();
-  const R=PI.regs,O=OPTS.slice(0,+(PI.optN||piOptN())),miss=R.filter(r=>!O.includes(r.key)).length;
+  const R=PI.regs,O=OPTS.slice(0,+(PI.optN||piOptN())),miss=R.filter(r=>!piHasKey(r,O)).length;
   const kn=Object.keys(PI.keys||{}).length,more=kn>R.length?kn-R.length:0,kb=piKB();
   PI.title=PI.title||piTitle(PI.file||'PDF шалгалт');
   const S=PI.secs||[],tabs=PI.tabs||[],pk=PI.pick;
@@ -3499,7 +3546,7 @@ function piReview(){
   const keySel=kOpts.length>1?`<div><label for="piKeySel">Хариултын түлхүүр</label><select id="piKeySel">${kOpts.map(o=>
     `<option value="${o.ti}/${o.ci}"${pk&&pk.t===o.ti&&pk.c===o.ci?' selected':''}>${esc(o.txt)}</option>`).join('')}<option value="-"${pk?'':' selected'}>— Түлхүүр ашиглахгүй</option></select></div>`:'';
   $('#piBody').innerHTML=`
-    <div class="pi-sum"><span>✅ <b>${R.length}</b> асуулт</span><span>🔑 <b>${R.length-miss}</b> зөв хариулттай${PI.keySrc?' <small style="color:var(--muted)">('+esc(PI.keySrc)+')</small>':''}</span>
+    <div class="pi-sum"><span>✅ <b>${R.length}</b> асуулт${R.some(r=>r.tf!=null)?` <small style="color:var(--muted)">(үүнээс <b>${R.filter(r=>r.tf!=null).length}</b> нь үнэн/худал)</small>`:''}</span><span>🔑 <b>${R.length-miss}</b> зөв хариулттай${PI.keySrc?' <small style="color:var(--muted)">('+esc(PI.keySrc)+')</small>':''}</span>
       <span>🎯 Нийт <b>${piPtsSum()}</b> оноо</span><span>📦 ≈ ${kb>1024?(kb/1024).toFixed(1)+' МБ':kb+' КБ'}</span></div>
     ${PI.keyWarn?`<div class="hp-warn" style="margin:0 0 10px">${esc(PI.keyWarn)}</div>`:''}
     ${secSel||keySel?`<div class="pi-set pi-src">${secSel}${keySel}</div>
@@ -3539,12 +3586,17 @@ function piReview(){
     piMsg(t?a+'–'+b+'-р асуултад "'+t+'" агуулга оноолоо.':a+'–'+b+'-р асуултын агуулгыг арилгалаа.');});
   $('#piGrid').addEventListener('change',e=>{const c=e.target.closest('.pi-card');if(!c)return;const r=R[+c.dataset.k];
     if(e.target.dataset.f==='key'){r.key=e.target.value;c.classList.toggle('nokey',!r.key);piSumKeys();}
+    if(e.target.dataset.f==='kind'){r.kindSet=true;r.tf=e.target.value==='tf'?(r.tf||'----'):undefined;
+      c.outerHTML=piCard(r,+c.dataset.k,O);piSumKeys();}
     if(e.target.dataset.f==='topic')r.topic=e.target.value.trim().slice(0,80);
     if(e.target.dataset.f==='pts'){const v=piClamp(+e.target.value||0,0,20);if(v){r.points=v;}e.target.value=r.points;
       const s=$('#piBody .pi-sum span:nth-child(3) b');if(s)s.textContent=piPtsSum();const a=$('#piPts');if(a)a.value=new Set(R.map(r=>r.points)).size===1?R[0].points:'';}});
   $('#piGrid').addEventListener('click',e=>{const c=e.target.closest('.pi-card');if(!c)return;const k=+c.dataset.k,r=R[k];
     if(e.target.tagName==='IMG'){e.target.classList.toggle('big');return;}
     const f=e.target.dataset.f;
+    /* Ү/Х мэдэгдлийн хариулт: — → Үнэн → Худал → — */
+    if(f==='tfk'){const v=tfNorm(r.tf).split(''),j=+e.target.dataset.j;v[j]=v[j]==='-'?'Ү':v[j]==='Ү'?'Х':'-';r.tf=v.join('');
+      c.outerHTML=piCard(r,k,O);piSumKeys();return;}
     if(f==='del'){if(!confirm((k+1)+'-р асуултыг хасах уу?'))return;R.splice(k,1);piReview();return;}
     if(f==='edit'){piEditor(r.segs[0].p,'',r.id);}});
   $('#piBack').addEventListener('click',()=>{if(!confirm('Уншсан асуултууд алга болно. Өөр файл сонгох уу?'))return;const st=PI;piFree();PI={step:'pick'};piPick();});
@@ -3552,15 +3604,19 @@ function piReview(){
   $('#piMake').addEventListener('click',piMake);
 }
 function piCard(r,i,O){
-  return`<div class="pi-card${O.includes(r.key)?'':' nokey'}" data-k="${i}">
+  const tf=r.tf!=null,t=tf?tfNorm(r.tf):'',L='abcd';
+  return`<div class="pi-card${piHasKey(r,O)?'':' nokey'}" data-k="${i}">
     <div class="pi-ch"><b>${i+1}.</b>
-      <select data-f="key" aria-label="${i+1}-р асуултын зөв хариулт"><option value=""${O.includes(r.key)?'':' selected'}>—</option>${O.map(x=>`<option${r.key===x?' selected':''}>${x}</option>`).join('')}</select>
+      <select data-f="kind" aria-label="${i+1}-р асуултын төрөл" title="Асуултын төрөл"><option value="mc"${tf?'':' selected'}>Тест</option><option value="tf"${tf?' selected':''}>Ү/Х</option></select>
+      ${tf?'':`<select data-f="key" aria-label="${i+1}-р асуултын зөв хариулт"><option value=""${O.includes(r.key)?'':' selected'}>—</option>${O.map(x=>`<option${r.key===x?' selected':''}>${x}</option>`).join('')}</select>`}
       <input data-f="topic" value="${esc(r.topic||'')}" placeholder="Агуулга" aria-label="${i+1}-р асуултын агуулга" maxlength="80">
       <input data-f="pts" class="pt" type="number" min="0.5" max="20" step="0.5" value="${r.points||1}" title="Оноо" aria-label="${i+1}-р асуултын оноо">
       <button type="button" data-f="edit" title="Хүрээг засах">✎</button><button type="button" data-f="del" title="Энэ асуултыг хасах">✕</button></div>
+    ${tf?`<div class="pi-tfrow" role="group" aria-label="${i+1}-р асуултын 4 мэдэгдлийн зөв хариулт"><small>Үнэн / худал:</small>${[0,1,2,3].map(j=>
+      `<button type="button" data-f="tfk" data-j="${j}" data-v="${t[j]}" title="Дарж солино: Үнэн → Худал → хоосон">${L[j]}) ${t[j]==='Ү'?'Үнэн':t[j]==='Х'?'Худал':'?'}</button>`).join('')}</div>`:''}
     ${r.img?`<img src="${safeImg(r.img)}" alt="${i+1}-р асуулт" loading="lazy">`:'<p class="hint" style="padding:12px">Зураг алга</p>'}</div>`;
 }
-function piSumKeys(){const O=OPTS.slice(0,+(PI.optN||piOptN())),n=PI.regs.filter(r=>!O.includes(r.key)).length,m=$('#piFootMsg');
+function piSumKeys(){const O=OPTS.slice(0,+(PI.optN||piOptN())),n=PI.regs.filter(r=>!piHasKey(r,O)).length,m=$('#piFootMsg');
   if(m){m.style.color=n?'var(--stain)':'';m.textContent=n?n+' асуултын хариулт дутуу':'';}}
 /* Хуудсаар харах: хүрээг чирж засах, шинэ асуулт хүрээлж нэмэх, хасах */
 async function piEditor(p,note,selId){
@@ -3659,12 +3715,16 @@ function piMake(){
   const R=PI.regs;if(!R.length){piMsg('Асуулт алга байна.',true);return;}
   if(R.length>60){piMsg('Нэг шалгалтад 60 хүртэл асуулт оруулж болно. Илүүг ✕ дарж хасна уу ('+R.length+' байна).',true);return;}
   const n=+(PI.optN||piOptN()),O=OPTS.slice(0,n),pts=r=>Math.max(.5,Math.min(20,+r.points||PI.pts||1));
-  const miss=R.filter(r=>!O.includes(r.key)).length;
+  const miss=R.filter(r=>!piHasKey(r,O)).length;
   if(miss&&!confirm(miss+' асуултын зөв хариулт сонгоогүй байна. Дараа нь "Шалгалтын материал" хэсэгт оруулж болно. Үргэлжлүүлэх үү?'))return;
   const e=blank(0);
   e.exam.title=($('#piTitleIn').value.trim()||piTitle(PI.file||'PDF шалгалт')).slice(0,120);
   e.exam.optN=n;e.exam.src='pdf';
-  e.exam.questions=R.map(r=>({topic:r.topic||'',key:O.includes(r.key)?r.key:'',points:pts(r),text:'',opts:Array(5).fill(''),img:safeImg(r.img)}));
+  /* Ү/Х асуулт → III хэсэг (part 4). Программын дараалал: I тест → III үнэн/худал (дугаар нь өөрчлөгдөж болно) */
+  const qs=R.map(r=>r.tf!=null
+    ?{part:4,topic:r.topic||'',key:tfNorm(r.tf),points:pts(r),text:'',tfmode:'scale',stmts:r.stm&&r.stm.length===TF_N?r.stm.slice():['','','',''],img:safeImg(r.img)}
+    :{topic:r.topic||'',key:O.includes(r.key)?r.key:'',points:pts(r),text:'',opts:Array(5).fill(''),img:safeImg(r.img)});
+  e.exam.questions=[...qs.filter(q=>!isP4(q)),...qs.filter(isP4)];
   db.exams.push(e);
   if(!saveChecked()){db.exams.pop();saveChecked();
     if(PI.q!=='lo'){if(confirm('Хөтчийн санах ой хүрэлцэхгүй байна ('+Math.round(piKB()/1024*10)/10+' МБ зураг). Зургийг жижигрүүлж ('+PI_Q.lo.label+') дахин оролдох уу?'))piShrink();}
