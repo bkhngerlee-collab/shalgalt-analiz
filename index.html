@@ -2986,6 +2986,8 @@ $('#qCloseAll').addEventListener('click',()=>{
    "хуудсан дээр хэддүгээрт байсан бэ" гэдгийг хөрвүүлнэ. Ингэснээр анализ,
    агуулгын шинжилгээ, нэгдсэн дүн бүгд хэвийн хэвээр ажиллана. */
 const VNAMES=['А','Б','В','Г'];
+/* Нэрний төгсгөл дэх хувилбарын тэмдэглэгээ: "· А хувилбар", "Хувилбар Б", "(A variant)", "- Variant B" */
+const VAR_SUFFIX=/\s*[·\-–—,(]?\s*(?:[A-DАБВГ]\s*(?:хувилбар|variant)|(?:хувилбар|variant)\s*[A-DАБВГ])\s*\)?\s*$/i;
 /* Асуултын харагдах дугаар: PDF-ийн дэд асуулт бол "1a", "1b"; бусад нь 1, 2, 3…
    pos (хуудсан дээрх байрлал) өгвөл: дараалал холилдсон хувилбарт байрлалын дугаарыг л харуулна. */
 function qN(i,pos){
@@ -3866,7 +3868,7 @@ function piMakeVar(){
   const bak=JSON.stringify({alt:base.map(q=>q.alt||null),variants:state.exam.variants||null,vmode:state.exam.vmode||null});
   state.exam.vmode='own';
   /* PDF-ээс авсан "… · А хувилбар" нэр нь одоо бүх хувилбарын шалгалт болсон тул хувилбарын нэрийг хасна */
-  const t0=state.exam.title||'',t1=t0.replace(/\s*[·\-–—,]?\s*(?:[A-DАБВГ]\s*хувилбар|хувилбар\s*[A-DАБВГ])\s*$/i,'').trim();if(t1&&t1!==t0)state.exam.title=t1;
+  const t0=state.exam.title||'',t1=t0.replace(VAR_SUFFIX,'').trim();if(t1&&t1!==t0)state.exam.title=t1;
   if(vCount()<v+1){const n=base.length;state.exam.variants=Array.from({length:v+1},(_,k)=>(state.exam.variants&&state.exam.variants[k])||Array.from({length:n},(_,i)=>i));}
   base.forEach((q,i)=>{const r=qs[i];q.alt=Array.isArray(q.alt)?q.alt:[];
     q.alt[v]=r.tf!=null?{text:'',key:tfNorm(r.tf),opts:[],stmts:r.stm&&r.stm.length===TF_N?r.stm.slice():['','','',''],img:safeImg(r.img)}
@@ -8528,7 +8530,7 @@ function oePayload(o,withImg){
     if(p===1)r.k=String(q.key||'');else if(p===2)r.k=keyNorm(q.key);else if(p===4){r.k=tfNorm(q.key);r.m=b.tfmode||'scale';}
     return r;};
   /* Олон хувилбартай бол нэрэнд PDF-ээс орсон "· А хувилбар"-ыг сурагчдад харуулахгүй (хувилбар бүр өөрийнхийг харна) */
-  const title=(state.exam.title||'Шалгалт').replace(V>1?/\s*[·\-–—,]?\s*(?:[A-DАБВГ]\s*хувилбар|хувилбар\s*[A-DАБВГ])\s*$/i:/$^/,'').trim()||'Шалгалт';
+  const title=(V>1?(state.exam.title||'').replace(VAR_SUFFIX,''):state.exam.title||'').trim()||'Шалгалт';
   return{title,date:state.exam.date||'',minutes:o.minutes,login:o.login,classes,n:qs.length,
     vcount:V,own,order:!own&&V>1?Array.from({length:V},(_,v)=>vOrder(v)):null,
     vpick:V>1&&o.vpick==='student'?'student':'code',
