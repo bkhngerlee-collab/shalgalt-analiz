@@ -1004,6 +1004,8 @@ body.student #studentApp{display:block}
 .pi-ch select{width:auto;padding:4px 6px}.pi-ch input{flex:1;min-width:0;padding:4px 8px}
 .pi-ch input.pt{flex:0 0 3.6em;width:3.6em;padding:4px 2px;text-align:center}
 .pi-set.pi-src{grid-template-columns:1fr 1fr}
+.pdfvar-bar{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px;margin-top:12px;padding:10px 12px;border:1px solid var(--line);border-left:4px solid var(--leaf);border-radius:8px;background:var(--leaf-soft);font-size:.93rem}
+.pdfvar-bar .btn{margin:0;white-space:nowrap}.pdfvar-bar>span{flex:1 1 320px}.pdfvar-bar .msg:empty{display:none}
 .pi-var{display:grid;grid-template-columns:minmax(200px,1fr) 2fr;gap:12px;align-items:start;margin:0 0 12px;padding:10px 12px;border:1px solid var(--line);border-left:4px solid var(--leaf);border-radius:8px;background:var(--leaf-soft)}
 @media (max-width:760px){.pi-var{grid-template-columns:1fr}}
 .pi-ch button{border:1px solid var(--line);background:var(--bg);color:var(--ink);border-radius:8px;padding:4px 8px;cursor:pointer;font:inherit}
@@ -1133,6 +1135,11 @@ body.student #studentApp{display:block}
       <p class="hint" id="vownHint" style="margin:0 0 8px">Асуулт бүр өөрийн текст, сонголт, <b>зөв хариулттай</b>. Б хувилбарын 1-р асуулт нь А-ийн 1-р асуулттай ижил агуулга, ижил оноотой тул анализ дээр нэгтгэгдэнэ. Доорх жагсаалтад А хувилбарын асуултуудын доор Б хувилбарынх гарна.</p>
       <p class="hint" id="vordHint" style="margin:0 0 8px">Хувилбар бүр нь <b>ижил асуултуудын өөр дараалал</b>. Доорх жагсаалт нь "энэ хувилбарын 1, 2, 3-р асуулт нь үндсэн хувилбарын хэд дэх асуулт вэ" гэдгийг заана. Word дээрх хуудсаа энэ дараалалтай тааруулж бэлдэнэ (эсвэл эсрэгээр, бэлэн хуудсныхаа дарааллыг энд бичнэ).</p>
       <div id="varList"></div>
+    </div>
+    <div class="pdfvar-bar" id="pdfVarBar" hidden>
+      <span><b>Хувилбар нэмэх:</b> <span id="pdfVarTxt">Б хувилбарын асуулт, хариултын PDF-ийг энэ шалгалтад нэмнэ. Агуулга, оноо нь А хувилбарынхтай ижил болно.</span></span>
+      <button type="button" class="btn pdfVarBtn" title="Энэ шалгалтад Б (В, Г) хувилбарын асуултын PDF, хариултыг нэмнэ">➕ PDF-ээс Б хувилбар нэмэх</button>
+      <div class="msg" id="pdfVarMsg" role="status" style="flex-basis:100%;margin:0"></div>
     </div>
     <details class="collapsible" style="margin-top:18px">
       <summary class="import-btn"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/><path d="M15 13v5M12.5 15.5 15 18l2.5-2.5"/></svg>Word, Excel-ээс асуулт оруулах <small>— хуулж буулгахад бүгд нэг дор орно</small></summary>
@@ -1340,7 +1347,8 @@ body.student #studentApp{display:block}
         <button type="button" data-f="done">✓ Бөглөгдсөн</button><button type="button" data-f="abs">✕ Ирээгүй</button></div>
     </div>
     <div id="roster" class="ef-grid"></div>
-    <div id="varPick" hidden style="margin-top:10px"><label>Энэ сурагчийн хуудасны хувилбар</label><div class="roster" id="varChips"></div></div>
+    <div id="varPick" hidden style="margin-top:10px"><label>✍️ Гараар оруулах сурагчийн хувилбар</label><div class="roster" id="varChips"></div>
+      <p class="hint" style="margin:4px 0 0;font-size:.82rem">Зөвхөн доор хариултыг <b>гараар</b> дарж оруулахад хэрэглэнэ. <b>Камераар, зургаар уншуулахад сонгох шаардлагагүй</b> — хувилбарыг хуудсан дээр будсан «Хувилбар» дугуйгаар нь программ өөрөө танина.</p></div>
     <div id="sheet" style="margin-top:10px"></div>
     <div class="btns">
       <button class="btn" id="saveStudent">Хариултыг хадгалах</button>
@@ -1369,10 +1377,14 @@ body.student #studentApp{display:block}
       <label class="btn ghost" style="margin:0;color:var(--leaf)">Камераар зураг авах<input type="file" id="omrCam" accept="image/*" capture="environment" hidden></label>
       <button class="btn ghost" id="omrSaveAll" hidden>Бэлэн бүх хуудсыг хадгалах</button>
     </div>
-    <div id="scanVarWrap" hidden style="margin-top:10px;max-width:420px">
+    <div id="scanVarWrap" hidden style="margin-top:10px">
+      <div class="pdfvar-bar" style="margin:0 0 10px">🔎 <span><b>А, Б хувилбарыг камер өөрөө ялгана.</b> Сурагч хуудсан дээрх <b>«Хувилбар»</b> баганад хувилбараа будна —
+        программ тэр дугуйг уншаад тухайн хувилбарын хариултаар шууд дүгнэнэ. Ийм багана хувилбар нэмсний <b>дараа</b> хэвлэсэн хуудсанд л гарна.</span></div>
+      <div style="max-width:420px">
       <label for="scanVar">Хувилбарын дугуйгүй (хуучин) хуудсуудын хувилбар</label>
       <select id="scanVar"></select>
       <p class="hint" style="margin:4px 0 0;font-size:.82rem">Шинэ хуудсан дээр сурагч <b>хувилбараа будсан</b> бол программ өөрөө танина — энэ цэсийг сонгох шаардлагагүй. Будаагүй эсвэл хоёр будсан хуудсыг шалгах жагсаалтад гаргана. Энэ цэс зөвхөн хувилбарын дугуйгүй хуучин хуудсанд хэрэглэгдэнэ.</p>
+      </div>
     </div>
     <label style="display:flex;align-items:center;gap:8px;margin-top:10px;color:var(--ink)"><input type="checkbox" id="omrAuto" style="width:auto" checked> Итгэлтэй уншсан хуудсыг шууд хадгалах (сурагч танигдсан, эргэлзээтэй хариултгүй)</label>
     <label style="display:flex;align-items:center;gap:8px;margin-top:8px;color:var(--ink)"><input type="checkbox" id="autoEntry" style="width:auto"> 💻 Утсаар уншуулахад <b>энэ төхөөрөмж</b> дээр «Хариултын бүртгэл»-ийг автоматаар нээж, уншиж буй анги, сурагчийг харуулах</label>
@@ -3030,7 +3042,16 @@ function vSet(count){
   state.students.forEach(s=>{if(s.v>=count)s.v=0;});
   save();renderSetup();
 }
+/* "PDF-ээс Б хувилбар нэмэх" товч: PDF-ээс үүсгэсэн эсвэл "Өөр асуултууд" хувилбартай шалгалтад ил харагдана */
+function renderPdfVar(){
+  const bar=$('#pdfVarBar');if(!bar)return;const qs=state.exam.questions,v=piNextVar(),V=VNAMES[v],full=vOwn()&&vCount()===4&&v===3&&qs.some(q=>q.alt&&q.alt[3]&&(q.alt[3].img||q.alt[3].key));
+  bar.hidden=!qs.length||!(state.exam.src==='pdf'||vOwn());
+  document.querySelectorAll('.pdfVarBtn').forEach(b=>{b.textContent='➕ PDF-ээс '+V+' хувилбар нэмэх';b.disabled=full;});
+  $('#pdfVarTxt').textContent=full?'4 хувилбар (А–Г) бүгд орсон байна. Солих бол дээрх хувилбарын хайрцагт "дахин оруулах" товчийг дарна.'
+    :V+' хувилбарын асуултын PDF, хариултын PDF-ийг энэ шалгалтад нэмнэ. Агуулга, оноо нь А хувилбарынхтай ижил болно.'
+     +(vCount()>1?' Хариултын хуудсыг хувилбар бүгд орсны дараа хэвлэнэ үү — тэгвэл хуудсан дээр «Хувилбар» дугуй гарч, камер өөрөө ялгана.':'');}
 function renderVariants(){
+  renderPdfVar();
   const box=$('#varBox');if(!box)return;
   const n=vCount();box.hidden=n<2;$('#vcount').value=n;
   const own=vOwn();$('#qbulkVarRow').hidden=!own;
@@ -3852,7 +3873,8 @@ function piMakeVar(){
     state.exam.variants=b.variants;if(b.vmode)state.exam.vmode=b.vmode;else delete state.exam.vmode;saveChecked();
     piMsg('Хөтчийн санах ой хүрэлцэхгүй байна. "Нөөц" хэсгээс нөөц файлаа татаад, хэрэггүй шалгалтуудаа устгаад дахин оролдоно уу.',true);return;}
   piFree();$('#piDlg').close();renderSetup();
-  const m=$('#qbulkMsg');if(m){m.style.color='';m.textContent=V+' хувилбарын '+qs.length+' асуулт PDF-ээс орлоо'+(miss?' ('+miss+' асуултын зөв хариулт дутуу)':'')+'. Нийт өгөгдөл: '+Math.round(dbKB()/1024*10)/10+' МБ.';}
+  const done='✅ '+V+' хувилбарын '+qs.length+' асуулт PDF-ээс орлоо'+(miss?' ('+miss+' асуултын зөв хариулт дутуу)':'')+'. Нийт өгөгдөл: '+Math.round(dbKB()/1024*10)/10+' МБ.';
+  ['#qbulkMsg','#pdfVarMsg'].forEach(s=>{const m=$(s);if(m){m.style.color='';m.textContent=done;}});
   const b=document.querySelector(`#qtable .qblock[data-vb="${v}"]`)||document.getElementById('s-mat');if(b)b.scrollIntoView({behavior:'smooth',block:'start'});
 }
 function piMake(){
