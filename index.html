@@ -3919,35 +3919,54 @@ $('#restore').addEventListener('change',e=>{
 const LET='ABCDАБВГ';
 /* Word, Excel-ийн ХҮСНЭГТ: багана бүр таб-аар тусгаарлагдаж буулгагддаг.
    Толгой мөрийг нь уншаад багана бүр юу болохыг таньж авна. */
+/* Excel/Word-оос хуулсан таб-аар тусгаарласан мөрүүд. Excel олон мөртэй нүдийг "…" хашилтад хийдэг — түүнийг нэг нүд гэж уншина. */
+function tsvRows(t){
+  const rows=[];let row=[],cell='',q=false;t=String(t||'').replace(/\r/g,'');
+  for(let i=0;i<t.length;i++){const c=t[i];
+    if(q){if(c==='"'){if(t[i+1]==='"'){cell+='"';i++;}else q=false;}else cell+=c;continue;}
+    if(c==='"'&&!cell.trim())q=true;
+    else if(c==='\t'){row.push(cell);cell='';}
+    else if(c==='\n'){row.push(cell);rows.push(row);row=[];cell='';}
+    else cell+=c;}
+  row.push(cell);rows.push(row);
+  return rows.map(r=>r.map(x=>x.replace(/\s+/g,' ').trim())).filter(r=>r.some(Boolean));
+}
 function parseTable(t){
-  const rows=t.replace(/\r/g,'').split('\n').filter(l=>l.trim()).map(l=>l.split('\t').map(c=>c.trim()));
+  let rows=tsvRows(t);
+  if(!rows.some(r=>r.length>=4))rows=t.replace(/\r/g,'').split('\n').filter(l=>l.trim()).map(l=>l.split('\t').map(c=>c.trim()));
   if(!rows.some(r=>r.length>=4))return null;
+  const isOptHead=x=>/^(?:хувилбар\s*)?([a-jа-зик])[.)]?$/i.test(x);
   let h=-1;
+  /* Толгой мөр: "Асуулт" багана + хариултын хувилбарын (A, B … / А, Б …) 2-оос доошгүй багана. "Зөв хариулт" багана заавал биш */
   for(let i=0;i<rows.length;i++){const low=rows[i].map(x=>x.toLowerCase());
-    if(low.some(x=>/асуулт|question/.test(x))&&low.some(x=>/зөв|хариулт|answer|key/.test(x))){h=i;break;}}
+    if(low.some(x=>/асуулт|даалгавар|question/.test(x))&&(low.some(x=>/зөв|хариу|answer|key|түлхүүр/.test(x))||low.filter(isOptHead).length>=2)){h=i;break;}}
   let qi=-1,ki=-1,ti=-1,pi=-1,oi=[];
   if(h>=0){
     const H=rows[h].map(x=>x.toLowerCase());
-    qi=H.findIndex(x=>/асуулт|question|текст/.test(x));
-    ki=H.findIndex(x=>/зөв/.test(x));if(ki<0)ki=H.findIndex(x=>/хариулт|answer|key/.test(x));
+    qi=H.findIndex(x=>/асуулт|даалгавар|question|текст/.test(x)&&!/хариу/.test(x));
+    ki=H.findIndex(x=>/зөв/.test(x));if(ki<0)ki=H.findIndex(x=>/хариу|answer|key|түлхүүр/.test(x));
     ti=H.findIndex(x=>/агуулга|сэдэв|topic/.test(x));
-    pi=H.findIndex(x=>/оноо|points/.test(x));
-    H.forEach((x,c)=>{const m=/^(?:хувилбар\s*)?([a-jа-зик])$/i.exec(x);
+    pi=H.findIndex(x=>/оноо|points?|marks?/.test(x));
+    H.forEach((x,c)=>{const m=/^(?:хувилбар\s*)?([a-jа-зик])[.)]?$/i.exec(x);
       if(m&&c!==ki&&c!==qi)oi.push([LET10.indexOf(m[1].toUpperCase())%10,c]);});
     oi.sort((a,b)=>a[0]-b[0]);
   }else{
-    // толгойгүй хүснэгт: №, асуулт, A, B, C, D, зөв хариулт, [агуулга], [оноо]
-    if(rows.filter(r=>r.length>=7&&/^\d{1,2}[.)]?$/.test(r[0])).length<2)return null;
-    qi=1;oi=[[0,2],[1,3],[2,4],[3,5]];ki=6;ti=7;pi=8;
+    /* Толгойгүй хүснэгт: [№], асуулт, A, B, C, D, [зөв хариулт], [агуулга], [оноо].
+       "A.\tЦеллюлоз" гэх мэт хувилбарын тэмдэгтэй мөр бол хүснэгт биш — текст. */
+    const mark=r=>r.some(c=>/^[A-JА-Яa-jа-я][.)]$/.test(c));
+    if(rows.filter(r=>r.length>=6&&/^\d{1,3}[.)]?$/.test(r[0])&&!mark(r)).length>=2){qi=1;oi=[[0,2],[1,3],[2,4],[3,5]];ki=6;ti=7;pi=8;}
+    else if(rows.filter(r=>r.length>=5&&!/^\d{1,3}[.)]?$/.test(r[0])&&r[0].length>3&&!mark(r)).length>=2){qi=0;oi=[[0,1],[1,2],[2,3],[3,4]];ki=5;ti=6;pi=7;}
+    else return null;
   }
-  if(qi<0||ki<0||!oi.length)return null;
+  if(qi<0||!oi.length)return null;
   const out=[];
   rows.forEach((r,i)=>{
-    if(i===h||r.length<=Math.max(qi,ki))return;
-    const key=keyNorm(r[ki]||'');if(!key)return;
+    if(i===h||r.length<=qi||!r[qi])return;
+    if(oi.filter(([k,c])=>r[c]).length<2)return;   // хувилбаргүй мөр (гарчиг, хоосон мөр)
+    const key=ki>=0?keyNorm(r[ki]||''):'';
     const part=key.length>1||oi.length>4?2:1,q=newQ(part);
-    q.text=(r[qi]||'').replace(/^\d{1,2}\s*[.)]\s*/,'').trim();
-    q.key=part===2?key:key[0];
+    q.text=(r[qi]||'').replace(/^\d{1,3}\s*[.)]\s*/,'').trim();
+    q.key=part===2?key:key?key[0]:'';
     oi.forEach(([k,c])=>{if(k<q.opts.length&&r[c])q.opts[k]=r[c];});
     if(ti>=0&&r[ti])q.topic=r[ti];
     const p=pi>=0&&r[pi]?parseFloat(String(r[pi]).replace(',','.')):NaN;
@@ -4002,7 +4021,14 @@ function optRow(l){
     if(optCands(m[1]).indexOf(want)<0)continue;
     hit.push({at:m.index,from:re.lastIndex,k:want});}
   if(hit.length<3)return null;
-  return hit.map((h,j)=>({k:h.k,text:l.slice(h.from,j+1<hit.length?hit[j+1].at:l.length).trim()}));
+  return hit.map((h,j)=>({k:h.k,at:h.at,text:l.slice(h.from,j+1<hit.length?hit[j+1].at:l.length).trim()}));
+}
+/* "1. Эс юунаас тогтдог вэ? А. Целлюлоз Б. Хитин В. Уураг Г. Липид" — асуулт, хувилбарууд нэг мөрөнд:
+   хоёр мөр болгож салгана (асуулт / хувилбарууд) */
+function splitQLine(l){
+  const m=l.match(/^((?:№\s*|асуулт\s*)?\d{1,3}\s*[.)\-:]\s*)(.+)$/i);if(!m)return[l];
+  const r=optRow(m[2]);if(!r||r.length<3||r[0].at<3)return[l];
+  return[m[1]+m[2].slice(0,r[0].at).trim(),m[2].slice(r[0].at).trim()];
 }
 /* Ганцаараа мөрөнд бичсэн хувилбар: "A. Целлюлоз", "б) Хитин", "(C) Уураг" */
 function oneOpt(l){
@@ -4014,7 +4040,7 @@ function oneOpt(l){
 /* Асуулт бүр нэг буюу хэд хэдэн мөр, дараа нь хувилбарууд (нэг мөрөнд эсвэл мөр бүрд).
    "1. 2. 3." гэсэн дотоод жагсаалт, харгалзуулах багана бүгд асуултын биед үлдэнэ. */
 function parseBlocks(t){
-  const lines=t.replace(/\t/g,'  ').split(/\r?\n/).map(cleanLine).filter(l=>l&&!/^[-–=.·_\s]+$/.test(l));
+  const lines=t.replace(/\t/g,'  ').split(/\r?\n/).map(cleanLine).filter(l=>l&&!/^[-–=.·_\s]+$/.test(l)).flatMap(splitQLine);
   /* Асуултууд дугаартай баримт уу ("1.", "2." …)? Тийм бол дугааргүй мөр (зургийн тайлбар, "Part B" гарчиг,
      "Choose the correct answer:") хэзээ ч тусдаа асуулт болохгүй. */
   const NUMRE=/^(?:№\s*|асуулт\s*)?\d{1,3}\s*[.)\-:]\s*\S/i,numDoc=lines.filter(l=>NUMRE.test(l)).length>=3;
@@ -4043,7 +4069,7 @@ function parseBlocks(t){
       const q=newQ(4);q.text=txt;q.key=meta.tf||'----';q.stmts=list.map(o=>o.text);
       if(pts!=null&&pts>0)q.points=pts;if(meta.topic)q.topic=meta.topic;if(meta.points>0)q.points=meta.points;
       qs.push(q);lastQ=q;done();return;}
-    const q=newQ(part);
+    const q=newQ(part);q.key='';   // хариулт заагаагүй бол хоосон (A гэж таамаглахгүй)
     q.text=txt;
     if(pts!=null&&pts>0)q.points=pts;
     (list||[]).forEach(o=>{if(o.k<q.opts.length)q.opts[o.k]=o.text;});
@@ -4097,13 +4123,13 @@ function parseBlocks(t){
 function parseQuestions(t){
   const qs=[];let cur=null,m,part=1,lastK=-1;
   const put=(k,txt)=>{if(cur&&k>=0&&k<cur.opts.length)cur.opts[k]=txt;};
-  t.replace(/\t/g,'\n').split(/\r?\n/).forEach(raw=>{const l=cleanLine(raw);
+  t.replace(/\t/g,'\n').split(/\r?\n/).map(cleanLine).flatMap(splitQLine).forEach(l=>{
     if(!l||/^[-–=.·\s]+$/.test(l))return;                 // хоосон, зураасан мөр
     if(/^(II|2|хоёр(дугаар)?)\s*[-.]?\s*(р\s*)?хэсэг/i.test(l)){part=2;cur=null;return;}
     if(/^(I|1|нэг(дүгээр|дугаар)?)\s*[-.]?\s*(р\s*)?хэсэг/i.test(l)){part=1;cur=null;return;}
     // "1.", "1)", "№1", "1-", "Асуулт 1:" — асуултын эхлэл
     if((m=l.match(/^(?:№\s*|асуулт\s*)?(\d{1,2})\s*[.)\-:]\s*(.+)$/i))&&!/^(оноо|хариулт|агуулга)/i.test(m[2])){
-      cur=newQ(part);lastK=-1;
+      cur=newQ(part);cur.key='';lastK=-1;
       cur.text=m[2].replace(/\/?\s*(\d+(?:[.,]\d+)?)\s*оноо\s*\/?/i,(mm,p)=>{cur.points=parseFloat(p.replace(',','.'))||cur.points;return' ';}).replace(/\s+/g,' ').trim();
       qs.push(cur);return;}
     if(!cur)return;
@@ -4123,8 +4149,30 @@ function parseQuestions(t){
   });
   return qs;
 }
+/* Баримтын төгсгөлд бичсэн хариултын түлхүүр:
+   "Хариулт" / "Answers" гарчиг + "1. B", "2. C" мөрүүд, эсвэл "Хариулт: 1-B, 2-C, 3-A", эсвэл гарчиггүй 3+ ийм мөр.
+   Үнэн/худал: "11. a T, b F, c T, d F". Түлхүүрийн мөрүүдийг асуулт гэж уншихгүйн тулд текстээс хасна. */
+const KEY_HEAD=/^(?:зөв\s+)?(?:хариулт(?:ууд|ын\s+түлхүүр)?|түлхүүр|answers?(?:\s+key)?|key|mark\s+scheme)\s*[:\-–]?\s*/i;
+const KEY_PAIR=/(\d{1,3})\s*[.)\-:=]?\s*([A-JА-ЗИКa-jа-зик]{1,5})(?=$|[\s,;.])/g;
+function keyLine(s){
+  const tf=piTfScan([s]);if(Object.keys(tf).length)return{tf,mc:{}};
+  if(s.replace(KEY_PAIR,'').replace(/[\s,;.]/g,''))return null;
+  const mc={};for(const m of s.matchAll(KEY_PAIR))mc[+m[1]]=m[2];
+  return Object.keys(mc).length?{mc,tf:{}}:null;
+}
+function bulkKeys(t){
+  const L=String(t||'').replace(/\r/g,'').split('\n'),C=L.map(cleanLine);
+  const take=(lines,cut)=>{const mc={},tf={};for(const s of lines){if(!s)continue;const r=keyLine(s);if(!r)return null;Object.assign(mc,r.mc);Object.assign(tf,r.tf);}
+    return Object.keys(mc).length+Object.keys(tf).length>=2?{text:L.slice(0,cut).join('\n'),mc,tf}:null;};
+  for(let i=C.length-1;i>=0;i--){const h=C[i].match(KEY_HEAD);if(!h)continue;
+    const r=take([C[i].slice(h[0].length),...C.slice(i+1)],i);if(r)return r;break;}
+  /* гарчиггүй: төгсгөлийн 3+ мөр бүгд "1. B" маягийн */
+  let j=C.length;while(j>0&&(!C[j-1]||keyLine(C[j-1])))j--;
+  return C.slice(j).filter(Boolean).length>=3?take(C.slice(j),j):null;
+}
 $('#qbulkBtn').addEventListener('click',()=>{
-  const raw=$('#qbulk').value,m=$('#qbulkMsg'),mode=($('#qbulkMode')||{}).value||'auto';
+  const m=$('#qbulkMsg'),mode=($('#qbulkMode')||{}).value||'auto',KK=bulkKeys($('#qbulk').value);
+  const raw=KK?KK.text:$('#qbulk').value;
   const tbl=parseTable(raw);
   /* Автомат горимд хоёр аргаар уншаад илүү сайн таньсныг нь сонгоно.
      Хувилбаргүй үлдсэн асуулт бүр нь буруу хуваасны шинж — түүнийг хасна. */
@@ -4137,7 +4185,12 @@ $('#qbulkBtn').addEventListener('click',()=>{
     else if(mode==='rows')qs=parseQuestions(raw);
     else{const a=parseBlocks(raw),b=parseQuestions(raw);qs=good(a)>=good(b)?a:b;}
   }finally{state.exam.p2N=prevN;}
-  if(!qs.length){m.style.color='var(--stain)';m.textContent='Асуулт танигдсангүй. Асуулт бүрийг "1." гэх мэт дугаараар эхлүүлнэ үү, эсвэл хүснэгтийн толгойд "Асуулт", "Зөв хариулт" гэсэн багана байгаа эсэхийг шалгана уу.';return;}
+  if(!qs.length){m.style.color='var(--stain)';m.textContent='Асуулт танигдсангүй. Асуулт бүрийг "1." гэх мэт дугаараар эхлүүлж, хариултын хувилбаруудыг A. B. C. D. (эсвэл А. Б. В. Г.) үсгээр бичнэ үү. Хүснэгт бол толгой мөрөнд "Асуулт", "A", "B", "C", "D" (хүсвэл "Зөв хариулт") багана байх ёстой.';return;}
+  /* Төгсгөлийн түлхүүрийг асуултын дугаараар (дарааллаар) оноох */
+  if(KK)qs.forEach((q,i)=>{const n=i+1;
+    if(isP4(q)){if(KK.tf[n])q.key=KK.tf[n];else if(KK.mc[n]&&/^[ТTFФҮХ]{4}$/i.test(KK.mc[n]))q.key=tfNorm(KK.mc[n]);return;}
+    const v=KK.mc[n];if(!v)return;const k=keyNorm(v);
+    if(isP2(q))q.key=k;else if(k&&OPTS.includes(k[0]))q.key=k[0];});
   const uses10=qs.some(q=>isP2(q)&&((q.opts||[]).slice(8).some(Boolean)||/[IJ]/.test(q.key||'')));
   const tv=vOwn()?Math.min(+$('#qbulkVar').value||0,vCount()-1):0;
   if(tv>0){
@@ -4176,7 +4229,8 @@ $('#qbulkBtn').addEventListener('click',()=>{
   /* Хэдэн хувилбар орж ирснээр I хэсгийн хувилбарын тоог автоматаар тохируулна */
   const used=Math.max(...p1.map(q=>{const k=(q.opts||[]).map((o,i)=>o?i+1:0);return Math.max(0,...k);}),0);
   if(used>=2)state.exam.optN=Math.max(2,Math.min(5,used));
-  const O=opts1();p1.forEach(q=>{if(!O.includes(q.key))q.key=O[0];});
+  const O=opts1();p1.forEach(q=>{if(!O.includes(q.key))q.key='';});   // хариулт заагаагүйг A гэж таамаглахгүй — улаанаар харагдана
+  const noKey=p1.filter(q=>!q.key).length+p2.filter(q=>!q.key).length+keep4.filter(q=>new4.length&&tfNorm(q.key).includes('-')).length;
   const [o1,o2,o3,o4]=partCount(),n12=p1.length+p2.length;
   state.exam.questions=[...p1,...p2,...keep4,...keep3];const n=n12+keep4.length+keep3.length;
   state.students.forEach(s=>{
@@ -4186,8 +4240,9 @@ $('#qbulkBtn').addEventListener('click',()=>{
     s.answers=[...a,...a4,...a3];while(s.answers.length<n)s.answers.push('');s.answers.length=n;});
   draft=[];save();refreshAll();$('#qbulk').value='';
   undoBar('Асуултууд солигдлоо ('+n+' асуулт).');
-  m.style.color='';m.textContent=(tbl?'Хүснэгт танигдлаа. ':'')+'I хэсэгт '+p1.length+' асуулт'+(p2.length?', II хэсэгт '+p2.length+' асуулт':'')+(new4.length?', III хэсэгт (үнэн/худал) '+new4.length+' асуулт':'')+' орлоо.'
-    +(new4.some(q=>tfNorm(q.key).includes('-'))?' Үнэн/худал асуултын зөв хариултыг доорх жагсаалтаас сонгоно уу.':'')
+  m.style.color=noKey?'var(--iodine)':'';m.textContent=(tbl?'Хүснэгт танигдлаа. ':'')+'I хэсэгт '+p1.length+' асуулт'+(p2.length?', II хэсэгт '+p2.length+' асуулт':'')+(new4.length?', III хэсэгт (үнэн/худал) '+new4.length+' асуулт':'')+' орлоо.'
+    +(KK?' Төгсгөлийн хариултын түлхүүрийг ('+(Object.keys(KK.mc).length+Object.keys(KK.tf).length)+') дугаараар нь оноолоо.':'')
+    +(noKey?' ⚠ '+noKey+' асуултын зөв хариулт олдсонгүй — доорх жагсаалтад улаанаар харагдана, сонгоно уу.':'')
     +(used>=2?' Хариултын хувилбар '+O.join(', ')+' гэж тогтоолоо.':'')
     +(cut?' II хэсэг 4-өөс олон асуулттай байсан тул эхний 4-ийг авлаа.':'')+' Зөв хариулт, агуулгыг доорх жагсаалтаас шалгана уу.';
 });
