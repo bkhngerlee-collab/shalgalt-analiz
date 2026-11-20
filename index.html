@@ -3235,10 +3235,16 @@ function piTfScan(lines){
   return out;
 }
 /* Асуулт нь a) … d) гэсэн 4 мэдэгдэлтэй, "____" зайтай эсвэл "үнэн/худал" гэж бичсэн бол Ү/Х даалгавар байх магадлалтай */
-function piTfMarks(t){const ms=[...t.matchAll(/(?:^|\s)([a-dа-г])\)\s*/gi)],ord=[];
-  ms.forEach(m=>{const L=m[1].toLowerCase(),want=('abcd'.includes(L)?'abcd':'абвг')[ord.length];if(L===want)ord.push(m);});
+/* Зөвхөн ЖИЖИГ үсэг: a) b) c) d) / а) б) в) г). "A) B) C) D)" нь тестийн хариулт тул тооцохгүй */
+function piTfMarks(t){const ms=[...t.matchAll(/(?:^|\s)([a-dа-г])\)\s*/g)],ord=[];
+  ms.forEach(m=>{const L=m[1],want=('abcd'.includes(L)?'abcd':'абвг')[ord.length];if(L===want)ord.push(m);});
   return ord.length===4?ord:null;}
-function piTfLooks(t){t=piLegacy(t);return!!piTfMarks(t)&&((t.match(/_{3,}/g)||[]).length>=2||/үнэн|худал|true|false|\bT\s*\/\s*F\b/i.test(t));}
+/* Ү/Х: 4 мэдэгдэл бүр "____" зайтай, эсвэл "үнэн/худал" гэж бичсэн ба A–D тестийн хариулт байхгүй.
+   "Words: a) food b) …" гэх мэт нөхөх/харгалзуулах үгсийг (мэдэгдлүүд нь зайгүй, доор нь A–D) Ү/Х гэж андуурахгүй. */
+function piTfLooks(t){t=piLegacy(t);const ms=piTfMarks(t);if(!ms)return false;
+  const segs=ms.map((m,j)=>t.slice(m.index+m[0].length,j<3?ms[j+1].index:t.length));
+  if(segs.every(s=>/_{3,}|\.{5,}/.test(s)))return true;
+  return/үнэн|худал|true|false|\bT\s*\/\s*F\b/i.test(t)&&!/(?:^|\s)A[.)]\s.*\sB[.)]\s.*\sC[.)]\s/.test(t);}
 /* 4 мэдэгдлийн бичвэр (цахим шалгалтад сурагчид харагдана) */
 function piTfStmts(t){t=piLegacy(t);const ms=piTfMarks(t);if(!ms)return null;
   return ms.map((m,j)=>{const a=m.index+m[0].length,b=j<3?ms[j+1].index:t.length;
@@ -4009,42 +4015,71 @@ function oneOpt(l){
    "1. 2. 3." гэсэн дотоод жагсаалт, харгалзуулах багана бүгд асуултын биед үлдэнэ. */
 function parseBlocks(t){
   const lines=t.replace(/\t/g,'  ').split(/\r?\n/).map(cleanLine).filter(l=>l&&!/^[-–=.·_\s]+$/.test(l));
-  const qs=[];let buf=[],opts=[],raw=[],part=1,meta={},lastNum=null,listNum=null;
-  const flush=list=>{
+  /* Асуултууд дугаартай баримт уу ("1.", "2." …)? Тийм бол дугааргүй мөр (зургийн тайлбар, "Part B" гарчиг,
+     "Choose the correct answer:") хэзээ ч тусдаа асуулт болохгүй. */
+  const NUMRE=/^(?:№\s*|асуулт\s*)?\d{1,3}\s*[.)\-:]\s*\S/i,numDoc=lines.filter(l=>NUMRE.test(l)).length>=3;
+  const PRE_DROP=/^(part|section|хэсэг|[IVX]+\s*[-.]?\s*(р\s*)?хэсэг|name|нэр|class|анги|date|огноо|total|нийт|score|chapter|бүлэг|lesson)(?=[\s.:,·\-–]|$)/i;
+  const TF_HEAD=/true\s*(or|\/)\s*false|үнэн\s*(\/|,|эсвэл|ба)\s*худал/i;
+  const qs=[];let buf=[],opts=[],raw=[],part=1,meta={},lastNum=null,listNum=null,pre=[],tfMode=false,lowOpts=false,lastQ=null;
+  const isLow=c=>!!c&&c===c.toLowerCase()&&c!==c.toUpperCase();
+  const flush=(list,rl)=>{
     if(!buf.length){opts=[];raw=[];meta={};return;}
+    const done=()=>{buf=[];opts=[];raw=[];meta={};lowOpts=false;};
+    if(numDoc&&!NUMRE.test(buf[0])){
+      /* Хувилбаргүй дугааргүй мөрүүд: дараагийн асуултын эхэнд (эхний асуултын өмнөх гарчиг, нэр, огнооны мөрийг хаяна) */
+      if(!(list&&list.length>=2)){pre.push(...buf.filter(x=>!PRE_DROP.test(x)&&(qs.length||/figure|fig\.|зураг|хүснэгт|table|graph|график|диаграм/i.test(x))));done();return;}
+      /* "Choose the correct answer:" + A–D: өмнөх асуултынх. Өмнө нь хувилбар гэж авсан "Words: a) … d)" нь асуултын бие болно */
+      if(lastQ&&!isP4(lastQ)&&lastQ.opts){const q=lastQ;
+        q.text=[q.text,...(q._raw||[]),...buf].filter(Boolean).join('\n').trim();
+        q.opts=q.opts.map(()=>'');list.forEach(o=>{if(o.k<q.opts.length)q.opts[o.k]=o.text;});q._raw=(rl||[]).slice();
+        if(meta.key){const k=keyNorm(meta.key);if(part===2)q.key=k;else if(k&&OPTS.includes(k[0]))q.key=k[0];}
+        done();return;}
+    }
     let head=buf[0].replace(/^(?:№\s*|асуулт\s*)?\d{1,3}\s*[.)\-:]\s*/i,''),pts=null;
     head=head.replace(/\/?\s*(\d+(?:[.,]\d+)?)\s*оноо\s*\/?/i,(mm,p)=>{pts=parseFloat(p.replace(',','.'));return' ';});
-    const body=buf.slice(1).join('\n');
+    const body=buf.slice(1).join('\n'),txt=[...pre,(head.replace(/\s+/g,' ').trim()+(body?'\n'+body:'')).trim()].join('\n').trim();pre=[];
+    /* a) b) c) d) жижиг үсэгтэй 4 мэдэгдэл + "True or False" хэсэг (эсвэл "Хариулт: a T, b F…") → III хэсэг (Ү/Х) */
+    if(part!==2&&list&&list.length===TF_N&&lowOpts&&(tfMode||meta.tf)){
+      const q=newQ(4);q.text=txt;q.key=meta.tf||'----';q.stmts=list.map(o=>o.text);
+      if(pts!=null&&pts>0)q.points=pts;if(meta.topic)q.topic=meta.topic;if(meta.points>0)q.points=meta.points;
+      qs.push(q);lastQ=q;done();return;}
     const q=newQ(part);
-    q.text=(head.replace(/\s+/g,' ').trim()+(body?'\n'+body:'')).trim();
+    q.text=txt;
     if(pts!=null&&pts>0)q.points=pts;
     (list||[]).forEach(o=>{if(o.k<q.opts.length)q.opts[o.k]=o.text;});
     if(meta.topic)q.topic=meta.topic;
     if(meta.points>0)q.points=meta.points;
     if(meta.key){const k=keyNorm(meta.key);
       if(part===2)q.key=k;else if(k&&OPTS.includes(k[0]))q.key=k[0];}
-    qs.push(q);buf=[];opts=[];raw=[];meta={};
+    q._raw=(rl||[]).slice();
+    qs.push(q);lastQ=q;done();
   };
   /* Хоёроос цөөн хувилбар цуглуулсан бол тэр нь жинхэнэ хувилбар биш — текст рүү нь буцаана */
   const giveBack=()=>{if(opts.length&&opts.length<2){buf.push(...raw);}opts=[];raw=[];};
   lines.forEach(l=>{
-    if(/^(II|2|хоёр(дугаар)?)\s*[-.]?\s*(р\s*)?хэсэг/i.test(l)){if(opts.length>=2)flush(opts);else{giveBack();flush(null);}part=2;return;}
-    if(/^(I|1|нэг(дүгээр|дугаар)?)\s*[-.]?\s*(р\s*)?хэсэг/i.test(l)){if(opts.length>=2)flush(opts);else{giveBack();flush(null);}part=1;return;}
+    if(/^(II|2|хоёр(дугаар)?)\s*[-.]?\s*(р\s*)?хэсэг/i.test(l)){if(opts.length>=2)flush(opts,raw);else{giveBack();flush(null);}part=2;tfMode=false;return;}
+    if(/^(I|1|нэг(дүгээр|дугаар)?)\s*[-.]?\s*(р\s*)?хэсэг/i.test(l)){if(opts.length>=2)flush(opts,raw);else{giveBack();flush(null);}part=1;tfMode=false;return;}
+    /* "Part B. True or False" / "Part C. …" — өмнөх асуултыг (хуучин горимоор нь) дуусгаад дараа нь горимыг солино */
+    if(!NUMRE.test(l)){const on=TF_HEAD.test(l),off=!on&&PRE_DROP.test(l)&&/^(part|section|[IVX]+\s*[-.]?\s*(р\s*)?хэсэг|хэсэг)/i.test(l);
+      if(on||off){if(opts.length>=2)flush(opts,raw);tfMode=on;}}
     let mm;
     if(buf.length){
+      if((mm=l.match(/^(?:зөв\s+)?(?:хариулт|answer|key)\s*[:\-]\s*(.+)$/i))){const tf=piTfScan(['1 '+mm[1]])[1];if(tf){meta.tf=tf;return;}}
       if((mm=l.match(/^(?:зөв\s+)?(?:хариулт|answer|key)\s*[:\-]\s*([A-JА-ЗИК1-9][A-JА-ЗИК1-9 ,]*)/i))){meta.key=mm[1];return;}
       if((mm=l.match(/^(?:агуулга|сэдэв|topic)\s*[:\-]\s*(.+)$/i))){meta.topic=mm[1];return;}
       if((mm=l.match(/^(?:оноо|points?|score)\s*[:\-]\s*([\d.,]+)/i))){meta.points=parseFloat(mm[1].replace(',','.'))||0;return;}
     }
     const row=optRow(l);
     /* Нэг мөрөнд бүх хувилбар ирлээ — өмнө цуглуулсан "хувилбар"-ууд нь асуултын бие байсан байна */
-    if(row&&buf.length){if(raw.length)buf.push(...raw);opts=[];raw=[];flush(row);return;}
+    if(row&&buf.length){if(raw.length)buf.push(...raw);opts=[];raw=[];
+      const fl=l.match(new RegExp('(?:^|\\s)[\\(\\[]?('+OPT_LET+')[\\)\\]]?\\s*[.):\\-]'));lowOpts=isLow(fl&&fl[1]);flush(row,[l]);return;}
     const s=oneOpt(l),want=opts.length?opts[opts.length-1].k+1:0;
-    if(s&&buf.length&&want<10&&s.ks.indexOf(want)>=0){opts.push({k:want,text:s.text});raw.push(l);return;}
+    if(s&&buf.length&&want<10&&s.ks.indexOf(want)>=0){if(!opts.length)lowOpts=isLow(l.replace(/^[\(\[]/,'')[0]);opts.push({k:want,text:s.text});raw.push(l);return;}
     /* Дугаарласан мөр: асуултын доторх "1. 2. 3." жагсаалт уу, эсвэл шинэ асуулт уу?
        Жагсаалт нь 1-ээс эхэлж дараалан өснө — түүнийг асуултын биед үлдээнэ. */
     const nm=l.match(/^(\d{1,3})\s*[.)]\s*\S/),n=nm?+nm[1]:null;
-    if(opts.length>=2)flush(opts);
+    if(opts.length>=2)flush(opts,raw);
+    else if(n!=null&&buf.length&&numDoc&&!NUMRE.test(buf[0])){giveBack();flush(null);}  // гарчиг/зургийн тайлбарын дараах шинэ асуулт
     else if(n!=null&&buf.length){
       if(listNum!=null&&n===listNum+1)listNum=n;                    // жагсаалт үргэлжилж байна
       else if(n===1&&listNum==null)listNum=1;                        // жагсаалт эхэллээ
@@ -4054,8 +4089,9 @@ function parseBlocks(t){
     if(!buf.length){if(n!=null)lastNum=n;listNum=null;}
     buf.push(l);
   });
-  if(opts.length>=2)flush(opts);
+  if(opts.length>=2)flush(opts,raw);
   else{giveBack();if(buf.join(' ').length>15)flush(null);}
+  qs.forEach(q=>{delete q._raw;});
   return qs;
 }
 function parseQuestions(t){
@@ -4092,7 +4128,7 @@ $('#qbulkBtn').addEventListener('click',()=>{
   const tbl=parseTable(raw);
   /* Автомат горимд хоёр аргаар уншаад илүү сайн таньсныг нь сонгоно.
      Хувилбаргүй үлдсэн асуулт бүр нь буруу хуваасны шинж — түүнийг хасна. */
-  const good=qq=>qq.reduce((s,q)=>s+(q.opts.filter(Boolean).length>=2?3:-3),0);
+  const good=qq=>qq.reduce((s,q)=>s+(isP4(q)||(q.opts||[]).filter(Boolean).length>=2?3:-3),0);
   let qs;
   const prevN=state.exam.p2N;state.exam.p2N=10;   // II хэсгийн I, J сонголт, хариултыг ч таньж уншина
   try{
@@ -4132,9 +4168,11 @@ $('#qbulkBtn').addEventListener('click',()=>{
     +'Хариултууд байрандаа үлдэх боловч асуулт нь өөр болох тул дүн өөрчлөгдөж магадгүй.'+UNDO_NOTE+'\n\nҮргэлжлүүлэх үү?'))return;
   snap('асуултуудыг солих');
   if(uses10)state.exam.p2N=10;
-  let p1=qs.filter(q=>!isP2(q)),p2=qs.filter(isP2);const cut=p2.length>4;p2=p2.slice(0,4);
-  if(!p1.length){m.style.color='var(--stain)';m.textContent='I хэсгийн асуулт олдсонгүй.';return;}
-  const keep4=state.exam.questions.filter(isP4),keep3=state.exam.questions.filter(isP3);   // Ү/Х, задгай хэвээр үлдэнэ
+  let p1=qs.filter(q=>!isP2(q)&&!isP4(q)),p2=qs.filter(isP2);const cut=p2.length>4;p2=p2.slice(0,4);
+  const new4=qs.filter(isP4);
+  if(!p1.length&&!new4.length){m.style.color='var(--stain)';m.textContent='I хэсгийн асуулт олдсонгүй.';return;}
+  /* Ү/Х асуулт орж ирвэл түүгээр солино, эс бөгөөс хуучин Ү/Х хэвээр. Задгай даалгавар хэвээр үлдэнэ */
+  const keep4=new4.length?new4:state.exam.questions.filter(isP4),keep3=state.exam.questions.filter(isP3);
   /* Хэдэн хувилбар орж ирснээр I хэсгийн хувилбарын тоог автоматаар тохируулна */
   const used=Math.max(...p1.map(q=>{const k=(q.opts||[]).map((o,i)=>o?i+1:0);return Math.max(0,...k);}),0);
   if(used>=2)state.exam.optN=Math.max(2,Math.min(5,used));
@@ -4143,11 +4181,13 @@ $('#qbulkBtn').addEventListener('click',()=>{
   state.exam.questions=[...p1,...p2,...keep4,...keep3];const n=n12+keep4.length+keep3.length;
   state.students.forEach(s=>{
     const a4=s.answers.slice(o1+o2,o1+o2+o4),a3=s.answers.slice(o1+o2+o4,o1+o2+o4+o3);  // байрлал шилжинэ
+    while(a4.length<keep4.length)a4.push('');a4.length=keep4.length;
     const a=s.answers.slice(0,n12);while(a.length<n12)a.push('');
     s.answers=[...a,...a4,...a3];while(s.answers.length<n)s.answers.push('');s.answers.length=n;});
   draft=[];save();refreshAll();$('#qbulk').value='';
   undoBar('Асуултууд солигдлоо ('+n+' асуулт).');
-  m.style.color='';m.textContent=(tbl?'Хүснэгт танигдлаа. ':'')+'I хэсэгт '+p1.length+' асуулт'+(p2.length?', II хэсэгт '+p2.length+' асуулт':'')+' орлоо.'
+  m.style.color='';m.textContent=(tbl?'Хүснэгт танигдлаа. ':'')+'I хэсэгт '+p1.length+' асуулт'+(p2.length?', II хэсэгт '+p2.length+' асуулт':'')+(new4.length?', III хэсэгт (үнэн/худал) '+new4.length+' асуулт':'')+' орлоо.'
+    +(new4.some(q=>tfNorm(q.key).includes('-'))?' Үнэн/худал асуултын зөв хариултыг доорх жагсаалтаас сонгоно уу.':'')
     +(used>=2?' Хариултын хувилбар '+O.join(', ')+' гэж тогтоолоо.':'')
     +(cut?' II хэсэг 4-өөс олон асуулттай байсан тул эхний 4-ийг авлаа.':'')+' Зөв хариулт, агуулгыг доорх жагсаалтаас шалгана уу.';
 });
