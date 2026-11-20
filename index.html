@@ -3865,6 +3865,8 @@ function piMakeVar(){
   if(base.some(q=>q.alt&&q.alt[v]&&(q.alt[v].img||q.alt[v].key||q.alt[v].text))&&!confirm(V+' хувилбарт өмнө нь оруулсан асуултууд байна. Шинэ PDF-ээрээ солих уу?'))return;
   const bak=JSON.stringify({alt:base.map(q=>q.alt||null),variants:state.exam.variants||null,vmode:state.exam.vmode||null});
   state.exam.vmode='own';
+  /* PDF-ээс авсан "… · А хувилбар" нэр нь одоо бүх хувилбарын шалгалт болсон тул хувилбарын нэрийг хасна */
+  const t0=state.exam.title||'',t1=t0.replace(/\s*[·\-–—,]?\s*(?:[A-DАБВГ]\s*хувилбар|хувилбар\s*[A-DАБВГ])\s*$/i,'').trim();if(t1&&t1!==t0)state.exam.title=t1;
   if(vCount()<v+1){const n=base.length;state.exam.variants=Array.from({length:v+1},(_,k)=>(state.exam.variants&&state.exam.variants[k])||Array.from({length:n},(_,i)=>i));}
   base.forEach((q,i)=>{const r=qs[i];q.alt=Array.isArray(q.alt)?q.alt:[];
     q.alt[v]=r.tf!=null?{text:'',key:tfNorm(r.tf),opts:[],stmts:r.stm&&r.stm.length===TF_N?r.stm.slice():['','','',''],img:safeImg(r.img)}
@@ -8525,8 +8527,11 @@ function oePayload(o,withImg){
   const grade=(q,b)=>{const p=isP2(q)?2:isP3(q)?3:isP4(q)?4:1,r={p,pts:+b.points||0};
     if(p===1)r.k=String(q.key||'');else if(p===2)r.k=keyNorm(q.key);else if(p===4){r.k=tfNorm(q.key);r.m=b.tfmode||'scale';}
     return r;};
-  return{title:state.exam.title||'Шалгалт',date:state.exam.date||'',minutes:o.minutes,login:o.login,classes,n:qs.length,
+  /* Олон хувилбартай бол нэрэнд PDF-ээс орсон "· А хувилбар"-ыг сурагчдад харуулахгүй (хувилбар бүр өөрийнхийг харна) */
+  const title=(state.exam.title||'Шалгалт').replace(V>1?/\s*[·\-–—,]?\s*(?:[A-DАБВГ]\s*хувилбар|хувилбар\s*[A-DАБВГ])\s*$/i:/$^/,'').trim()||'Шалгалт';
+  return{title,date:state.exam.date||'',minutes:o.minutes,login:o.login,classes,n:qs.length,
     vcount:V,own,order:!own&&V>1?Array.from({length:V},(_,v)=>vOrder(v)):null,
+    vpick:V>1&&o.vpick==='student'?'student':'code',
     vq:own?Array.from({length:V},(_,v)=>qs.map(q=>view(qv(q,v)))):[qs.map(view)],
     g:{show:o.show!==false,p2:state.exam.p2mode==='partial'?'partial':'exact',
       v:own?Array.from({length:V},(_,v)=>qs.map(q=>grade(qv(q,v),q))):[qs.map(q=>grade(q,q))]}};
@@ -8534,7 +8539,7 @@ function oePayload(o,withImg){
 /* Нийтэлсэн агуулгын тэмдэг: асуулт, зураг, зөв хариулт, хувилбар. Нийтэлснээс хойш өөрчлөгдсөн эсэхийг мэдэхэд */
 function oeSig(p){
   p=p||oePayload({classes:[]},true);
-  const s=JSON.stringify([p.n,p.vcount,p.own,p.order,p.vq,p.g&&p.g.v,p.g&&p.g.p2]);
+  const s=JSON.stringify([p.n,p.vcount,p.own,p.order,p.vq,p.g&&p.g.v,p.g&&p.g.p2]);   // vpick нь тохиргоо — нийтлэх товчоор л солигдоно
   let h=0x811c9dc5;for(let i=0;i<s.length;i++){h^=s.charCodeAt(i);h=Math.imul(h,0x01000193);}
   return(h>>>0).toString(36)+'.'+s.length.toString(36);}
 /* Цахим шалгалтын хэмжээ хэтэрвэл зургийг хасахын оронд жижигрүүлж, шахаж багтаана */
@@ -8581,6 +8586,10 @@ function oeRender(){
         <option value="names"${o&&o.login==='code'?'':' selected'}>Ангиа сонгоод нэрсийн жагсаалтаас нэрээ дарна</option>
         <option value="code"${o&&o.login==='code'?' selected':''}>Ангиа сонгоод 2 оронтой кодоо оруулна (илүү найдвартай)</option></select></div>
     </div>
+    ${vCount()>1?`<div style="margin-top:10px;max-width:640px"><label for="oeVpick">Хувилбар (${VNAMES.slice(0,vCount()).join(', ')}) хэрхэн хуваарилах вэ</label><select id="oeVpick">
+        <option value="code"${o&&o.vpick==='student'?'':' selected'}>Кодоор автоматаар: 01 → А, 02 → Б${vCount()>2?', 03 → В':''}…</option>
+        <option value="student"${o&&o.vpick==='student'?' selected':''}>Сурагч өөрөө сонгоно — гартаа авсан цаасан асуултын хувилбараа</option></select>
+      <p class="hint" style="margin:4px 0 0;font-size:.82rem">Цаасан асуулт тарааж, утсаар хариулуулах бол <b>«Сурагч өөрөө сонгоно»</b>-г сонгоно. Сурагч ангийнхаа доор А / Б товч дарж хувилбараа сонгоод эхэлнэ — оноо нь тэр хувилбарын зөв хариултаар бодогдоно.</p></div>`:''}
     <label style="display:flex;gap:8px;align-items:center;margin-top:10px;font-weight:600"><input type="checkbox" id="oeShow" style="width:auto"${o&&o.show===false?'':' checked'}>
       Шалгалт дуусахад сурагчид авсан оноо, хувийг нь харуулах</label>
     <div style="margin-top:10px"><label>Оролцох ангиуд</label><div class="roster" id="oeCls">${cls.length?cls.map(c=>
@@ -8589,7 +8598,8 @@ function oeRender(){
     <ul class="oe-rules">
       <li>Хугацаа сурагч бүрийн <b>"Эхлэх" дарснаас</b> тоологдоно. Дуусахад хариулт нь өөрөө илгээгдэнэ.</li>
       <li>Шалгалтын үеэр өөр цонх, программ руу <b>5 секундээс удаан</b> гарвал: 1 дэх удаад анхааруулна, <b>2 дахь удаад шалгалт шууд дуусна</b>.</li>
-      ${V>1||vCount()>1?`<li>Хувилбарыг кодоор нь хуваарилна: <b>01 → А, 02 → Б${vCount()>2?', 03 → В':''}…</b></li>`:''}
+      ${V>1||vCount()>1?(o&&o.vpick==='student'?'<li>Сурагч <b>хувилбараа өөрөө сонгоно</b> (А, Б …). Эхэлсний дараа солих боломжгүй.</li>'
+        :`<li>Хувилбарыг кодоор нь хуваарилна: <b>01 → А, 02 → Б${vCount()>2?', 03 → В':''}…</b></li>`):''}
       <li>Хариулт ирэх бүрд энэ шалгалтын <b>анализ өөрөө шинэчлэгдэнэ</b>.</li>
       ${qs.some(isP3)?'<li>IV хэсгийн задгай даалгаврыг сурагч утсан дээр бичихгүй — оноог нь "Хариултын бүртгэл"-ээс өгнө.</li>':''}
     </ul>
@@ -8617,7 +8627,14 @@ async function oePublish(){
   if(o0&&started&&o0.n&&o0.n!==ex.exam.questions.length)
     return oeErr('Сурагчид аль хэдийн өгч эхэлсэн тул асуултын тоог өөрчилж нийтлэх боломжгүй. Асуултын тоог '+o0.n+' болгож буцаана уу.');
   if(o0&&started&&!confirm('Энэ шалгалтыг '+oeRes.attempts.length+' сурагч аль хэдийн өгсөн/өгч байна.\n\nАсуулт, зөв хариултаа зассан бол дүн нь шинэ зөв хариултаар бодогдоно. Нийтлэх үү?'))return;
-  let p=oePayload({minutes,login,classes,show},true),note='';const sig=oeSig(p),pb=$('#oePub');
+  const vpick=vCount()>1&&$('#oeVpick')&&$('#oeVpick').value==='student'?'student':'code';
+  /* "Сурагч өөрөө сонгоно" нь серверийн 10-р алхмыг шаардана: байхгүй шалгалтаар дуудаж шалгана (юу ч бичигдэхгүй) */
+  if(vpick==='student'){m.style.color='';m.textContent='Сервер шалгаж байна…';
+    try{await sbRpc('oe_start',{p_id:'__probe__',p_cls:'',p_code:'',p_v:0});}
+    catch(e){if(e.status===404||/could not find|schema cache/i.test(e.message))
+      return oeErr('Сурагч хувилбараа өөрөө сонгохын тулд Supabase дээр 10-р алхмын SQL (supabase-setup-10.sql)-ийг ажиллуулах шаардлагатай. Одоохондоо «Кодоор автоматаар»-ыг сонгож нийтлэх боломжтой.');
+      return oeErr(e.message);}}
+  let p=oePayload({minutes,login,classes,show,vpick},true),note='';const sig=oeSig(p),pb=$('#oePub');
   if(JSON.stringify(p).length>OE_MAX){
     if(pb)pb.disabled=true;m.style.color='';m.textContent='Зураг их байна — сурагчдын утсанд багтаахаар жижигрүүлж байна…';
     let f;try{f=await oeFit(p,OE_MAX,w=>{m.textContent='Зураг их байна — жижигрүүлж байна ('+w+' цэг)…';});}finally{if(pb)pb.disabled=false;}
@@ -8627,11 +8644,11 @@ async function oePublish(){
       if(!confirm('Зураг хэт их байгаа тул жижигрүүлээд ч багтсангүй.'+(only?'\n\n'+only+' асуулт зөвхөн зурагнаас бүрддэг — зураггүй бол сурагч тэдгээр асуултыг ХАРАХГҮЙ, зөвхөн A B C D товч л харагдана.':'')+
         '\n\nАсуултын тоог багасгах, эсвэл хувилбар бүрийг тусдаа шалгалт болгож нийтлэхийг зөвлөж байна.\n\nЗураггүйгээр нийтлэх үү?'))
         return oeErr('Нийтлээгүй. Зураг их байна — асуултын тоог багасгах эсвэл хувилбар бүрийг тусдаа шалгалт болгоно уу.');
-      p=oePayload({minutes,login,classes,show},false);note=' Зураг их байсан тул зурагнуудыг сурагчдад харуулсангүй.';}}
+      p=oePayload({minutes,login,classes,show,vpick},false);note=' Зураг их байсан тул зурагнуудыг сурагчдад харуулсангүй.';}}
   m.style.color='';m.textContent='Нийтэлж байна…';
   try{const r=await sbRpc('oe_publish',{p_exam_id:ex.id,p_payload:p});
     if(!r||!r.ok)throw new Error(r&&r.error||'Нийтэлж чадсангүй.');
-    ex.exam.online={id:r.id,minutes,login,classes,show,n:p.n,open:true,sig};if(matOpen===ex.id)matOpen='';save();
+    ex.exam.online={id:r.id,minutes,login,classes,show,vpick,n:p.n,open:true,sig};if(matOpen===ex.id)matOpen='';save();
     if(state===ex){oeRender();const m2=$('#oeMsg');m2.style.color='';m2.textContent='Нийтлэгдлээ. QR кодыг проектороор харуулах эсвэл холбоосыг сурагчдад илгээнэ үү.'+note;}}
   catch(e){oeErr(e.message);}
 }
@@ -8732,26 +8749,33 @@ async function startExam(){
   oxIdentity();
 }
 /* Серверийн oe_start-тай яг адил: кодоор хувилбар хуваарилна (01 → А, 02 → Б …). Дахин орсон сурагч өмнөх хувилбараа авна. */
+/* Багш "Сурагч өөрөө сонгоно" гэж нийтэлсэн эсэх */
+const oxPick=()=>!!(OX.exam&&OX.exam.vpick==='student'&&(+OX.exam.vcount||1)>1);
 function oxVarOf(code,vc){vc=Math.max(1,Math.min(4,+vc||1));let n=parseInt(String(code||'').replace(/\D/g,''),10);if(isNaN(n))n=1;return(n+vc-1)%vc;}
 function oxIdentity(){
   const digits=[...'0123456789'],S=OX.sel,q=OX.exam,byName=q.login==='names'&&q.classes.some(c=>c.students&&c.students.length);
   const row=(key,label)=>`<div class="bublab">${label}</div><div class="bubrow">${digits.map(v=>`<button type="button" class="bub" data-k="${key}" data-v="${v}" aria-pressed="${S[key]===v}">${v}</button>`).join('')}</div>`;
   const selCls=byName?q.classes.find(c=>c.name===S.cls):null,np=q.vq[0].filter(x=>x.p!==3).length;
+  const pick=oxPick(),vc=Math.max(1,Math.min(4,+q.vcount||1)),hasV=S.v!=null&&S.v!==''&&+S.v<vc;
+  const myV=pick?(hasV?+S.v:null):oxVarOf(OX.who&&OX.who.code,vc);
   sqEl().innerHTML=oxHead(np+' асуулт, '+q.minutes+' минут')+`<div class="panel">
     <h2>Өөрийгөө сонгоно уу</h2>
     <div class="bubgrp"><b>Анги</b><div class="clsbtns">${q.classes.map(c=>`<button type="button" class="clsbtn" data-cls="${esc(c.name)}" aria-pressed="${S.cls===c.name}">${esc(c.name)}</button>`).join('')}</div></div>
+    ${pick?`<div class="bubgrp"><b>Хувилбар</b> <small style="color:var(--muted)">— гартаа авсан асуултын хувилбар</small>
+      <div class="clsbtns">${Array.from({length:vc},(_,v)=>`<button type="button" class="clsbtn oxv" data-v="${v}" aria-pressed="${hasV&&+S.v===v}">${VNAMES[v]} хувилбар</button>`).join('')}</div></div>`:''}
     ${byName?(selCls?`<div class="bubgrp"><b>Нэр</b><div class="namebtns">${(selCls.students||[]).map(st=>`<button type="button" class="namebtn" data-code="${esc(st.code)}" aria-pressed="${OX.who&&OX.who.cls===selCls.name&&OX.who.code===st.code}"><small>${esc(st.code)}</small>${esc(st.name)}</button>`).join('')}</div></div>`:'')
       :`<div class="bubgrp"><b>Код</b>${row('c1','1-р орон')}${row('c2','2-р орон')}</div>`}
-    <div class="sq-who" id="oxWho">${OX.who?`Та: <b>${esc(OX.who.name)}</b> (${esc(OX.who.cls)}, код ${esc(OX.who.code)}).${q.vcount>1?` Таны хувилбар: <b class="ox-var">${VNAMES[oxVarOf(OX.who.code,q.vcount)]}</b>.`:''} Зөв бол "Эхлэх" дарна уу.`:'Ангиа сонгоод '+(byName?'нэрээ дарна уу.':'кодоо бүрэн сонгоно уу.')}</div>
+    <div class="sq-who" id="oxWho">${OX.who?`Та: <b>${esc(OX.who.name)}</b> (${esc(OX.who.cls)}, код ${esc(OX.who.code)}).${vc>1?(myV!=null?` Таны хувилбар: <b class="ox-var">${VNAMES[myV]}</b>.`:' <b>Хувилбараа сонгоно уу.</b>'):''}${myV!=null||vc<2?' Зөв бол "Эхлэх" дарна уу.':''}`:'Ангиа сонгоод '+(byName?'нэрээ дарна уу.':'кодоо бүрэн сонгоно уу.')+(pick&&!hasV?' Хувилбараа сонгоно уу.':'')}</div>
     <ul class="sq-rules">
       <li>Хугацаа <b>${q.minutes} минут</b>. "Эхлэх" дарснаас тоологдож, дуусахад хариулт тань өөрөө илгээгдэнэ.</li>
       <li>Асуулт бүрт зөв гэж үзсэн хариултаа дарна. Хариултаа дуустал хүссэн үедээ сольж болно.</li>
       <li><b>Шалгалтын үеэр өөр цонх, программ руу бүү гар.</b> 5 секундээс удаан гарвал эхний удаад анхааруулна, <b>2 дахь удаад шалгалт шууд дуусна.</b> Утасныхаа дэлгэцийг унтраахгүй байгаарай.</li>
     </ul>
-    <div class="btns"><button class="btn" id="oxStart" ${OX.who?'':'disabled'} style="width:100%;padding:14px;font-size:1.1rem">Эхлэх</button></div>
+    <div class="btns"><button class="btn" id="oxStart" ${OX.who&&(!pick||hasV)?'':'disabled'} style="width:100%;padding:14px;font-size:1.1rem">Эхлэх</button></div>
     <div class="msg" id="oxErr" style="color:var(--stain)"></div></div>`;
+  sqEl().querySelectorAll('.oxv').forEach(b=>b.onclick=()=>{S.v=b.dataset.v;oxIdentity();});
   sqEl().querySelectorAll('.bub').forEach(b=>b.onclick=()=>{S[b.dataset.k]=S[b.dataset.k]===b.dataset.v?'':b.dataset.v;OX.who=null;oxIdentity();oxLookup();});
-  sqEl().querySelectorAll('.clsbtn').forEach(b=>b.onclick=()=>{S.cls=b.dataset.cls;OX.who=null;oxIdentity();if(!byName)oxLookup();});
+  sqEl().querySelectorAll('.clsbtn:not(.oxv)').forEach(b=>b.onclick=()=>{S.cls=b.dataset.cls;OX.who=null;oxIdentity();if(!byName)oxLookup();});
   sqEl().querySelectorAll('.namebtn').forEach(b=>b.onclick=()=>{const st=selCls.students.find(x=>String(x.code)===b.dataset.code);
     OX.who={cls:selCls.name,code:String(st.code),name:st.name};oxIdentity();const s2=$('#oxStart');if(s2)s2.scrollIntoView({behavior:'smooth',block:'center'});});
   $('#oxStart').onclick=oxBegin;
@@ -8764,7 +8788,11 @@ function oxLookup(){
 }
 async function oxBegin(){
   const b=$('#oxStart');b.disabled=true;b.textContent='Эхлүүлж байна...';
-  let r;try{r=await oxCall('oe_start',{p_id:OX.id,p_cls:OX.who.cls,p_code:OX.who.code});}
+  /* Сурагч хувилбараа сонгосон бол 4 дэх параметрээр илгээнэ (серверийн 10-р алхам) */
+  const args={p_id:OX.id,p_cls:OX.who.cls,p_code:OX.who.code};if(oxPick())args.p_v=+OX.sel.v;
+  let r;try{r=await oxCall('oe_start',args);
+    if(r&&r.ok===false&&args.p_v!=null&&/could not find|schema cache|function/i.test(r.error||''))
+      r={ok:false,error:'Сервер дээр "хувилбар сонгох" шинэчлэл хийгдээгүй байна. Багшдаа хэлнэ үү (Supabase 10-р алхам).'};}
   catch(e){b.disabled=false;b.textContent='Эхлэх';$('#oxErr').textContent='Холболт тасарлаа. Дахин оролдоно уу.';return;}
   if(!r.ok){if(r.ended)return oxMsg(esc(r.error),'<p>Асуулт байвал багшдаа хандана уу.</p>','b');b.disabled=false;b.textContent='Эхлэх';$('#oxErr').textContent=r.error;return;}
   OX.att=r.attemptId;OX.v=r.v||0;OX.startMs=r.startMs;OX.offset=r.now-Date.now();OX.leaves=r.leaves||0;
