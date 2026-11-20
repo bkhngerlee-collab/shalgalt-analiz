@@ -965,6 +965,23 @@ body.student #studentApp{display:block}
 /* PDF-ээс шалгалт үүсгэх цонх */
 .pi-dlg{width:min(1180px,96vw);max-height:94vh;border:1px solid var(--line);border-radius:18px;padding:0;background:var(--bg);color:var(--ink);box-shadow:0 24px 70px rgba(0,0,0,.35)}
 .pi-dlg::backdrop{background:rgba(10,20,16,.55)}
+.qtpl-call{display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin:10px 0;padding:12px 14px;border:1px dashed var(--leaf);border-radius:14px;background:var(--surface)}
+.qtpl-call span{flex:1 1 260px;color:var(--ink)}
+.qtpl-dlg{width:min(1000px,96vw)}
+.qtpl-body{padding:14px 18px 20px}
+.qtpl-tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}
+.qtpl-tabs button{border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:999px;padding:7px 14px;font:inherit;font-weight:600;cursor:pointer}
+.qtpl-tabs button[aria-selected="true"]{background:var(--leaf);border-color:var(--leaf);color:#fff}
+.qtpl-grid{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);gap:16px;align-items:start}
+@media (max-width:760px){.qtpl-grid{grid-template-columns:1fr}}
+.qtpl-pre{margin:0;padding:14px 16px;border:1px solid var(--line);border-radius:12px;background:var(--surface);font:14px/1.55 Consolas,"Cascadia Mono",monospace;white-space:pre-wrap;max-height:56vh;overflow:auto}
+.qtpl-pre .k{color:var(--leaf);font-weight:700}.qtpl-pre .t{color:var(--gold,#B7791F);font-weight:700}.qtpl-pre .h{color:#7C3AED;font-weight:700}
+.qtpl-rules{margin:0;padding-left:20px}.qtpl-rules li{margin:6px 0}
+.qtpl-tbl{width:100%;border-collapse:collapse;font-size:.88rem;background:var(--surface)}
+.qtpl-tbl th,.qtpl-tbl td{border:1px solid var(--line);padding:5px 7px;text-align:left;vertical-align:top}
+.qtpl-tbl th{background:var(--bg)}
+.qtpl-tblwrap{overflow:auto;margin-bottom:12px}
+.qtpl-btns{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
 .pi-head{position:sticky;top:0;z-index:3;display:flex;align-items:center;gap:10px;padding:14px 18px;background:var(--surface);border-bottom:1px solid var(--line)}
 .pi-head h2{margin:0;font-size:1.15rem;flex:1}
 #piBody{padding:16px 18px 20px}
@@ -1119,6 +1136,8 @@ body.student #studentApp{display:block}
       <summary class="import-btn"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/><path d="M15 13v5M12.5 15.5 15 18l2.5-2.5"/></svg>Word, Excel-ээс асуулт оруулах <small>— хуулж буулгахад бүгд нэг дор орно</small></summary>
       <p class="hint" style="margin-top:8px"><b>Бэлэн PDF шалгалт байна уу?</b> (жишээ нь IGCSE) Схем, хүснэгттэй нь алдагдуулахгүй оруулахын тулд
         <button type="button" class="btn ghost" id="pdfImp2" style="padding:4px 12px;margin-left:4px">📄 PDF-ээс шалгалт үүсгэх</button></p>
+      <div class="qtpl-call"><span><b>Ямар хэлбэрээр бичихээ мэдэхгүй байна уу?</b> Программ таньдаг бэлэн загвар, жишээг хараад хуулж аваарай.</span>
+        <button type="button" class="btn" id="qtplBtn">🧩 Загвар, жишээ харах</button></div>
       <p class="hint" style="margin-top:8px"><b>Хүснэгтээр:</b> Word эсвэл Excel дэх хүснэгтээ толгой мөртэй нь хуулж (Ctrl + C) доорх нүдэнд буулгана. Толгой мөрөнд <b>Асуулт</b>, <b>A</b>, <b>B</b>, <b>C</b>, <b>D</b>, <b>Зөв хариулт</b> (хүсвэл <b>Агуулга</b>, <b>Оноо</b>) гэсэн багана байхад программ өөрөө таньж авна.</p>
       <p class="hint" style="margin-top:8px"><b>Жагсаалтаар:</b> асуулт бүрийг дугаартай, хувилбаруудыг A, B, C, D (эсвэл А, Б, В, Г) үсэгтэй бичнэ. Хүсвэл асуулт бүрийн доор "Хариулт:", "Агуулга:", "Оноо:" мөр нэмж болно. II хэсгийн асуултуудын өмнө "II хэсэг" гэсэн мөр бичээд, хувилбаруудыг A–H (эсвэл A–J) үсгээр, хариултыг "Хариулт: ACF" гэх мэтээр бичнэ.</p>
       <div class="row" id="qbulkVarRow" hidden style="margin:8px 0 0"><div style="max-width:420px"><label for="qbulkVar">Аль хувилбарын асуултууд вэ</label>
@@ -1922,6 +1941,18 @@ body.student #studentApp{display:block}
 </section>
 </main>
 <div id="printArea"></div>
+<dialog id="qtplDlg" class="pi-dlg qtpl-dlg" aria-labelledby="qtplTitle">
+  <div class="pi-head"><h2 id="qtplTitle">🧩 Асуулт оруулах загвар, жишээ</h2><button type="button" class="btn ghost" id="qtplX" aria-label="Цонхыг хаах">✕ Хаах</button></div>
+  <div class="qtpl-body">
+    <div class="qtpl-tabs" role="tablist">
+      <button type="button" role="tab" data-t="word" aria-selected="true">📝 Word (текст)</button>
+      <button type="button" role="tab" data-t="excel" aria-selected="false">📊 Excel (хүснэгт)</button>
+      <button type="button" role="tab" data-t="keys" aria-selected="false">✅ Хариулт, агуулгыг тусад нь</button>
+      <button type="button" role="tab" data-t="img" aria-selected="false">🖼️ Зурагтай асуулт</button>
+    </div>
+    <div id="qtplPane"></div>
+  </div>
+</dialog>
 <dialog id="piDlg" class="pi-dlg" aria-labelledby="piTitle">
   <div class="pi-head"><h2 id="piTitle">📄 PDF-ээс шалгалт үүсгэх</h2><button type="button" class="btn ghost" id="piX" aria-label="Цонхыг хаах">✕ Хаах</button></div>
   <div id="piBody"></div>
@@ -4039,6 +4070,18 @@ function oneOpt(l){
 }
 /* Асуулт бүр нэг буюу хэд хэдэн мөр, дараа нь хувилбарууд (нэг мөрөнд эсвэл мөр бүрд).
    "1. 2. 3." гэсэн дотоод жагсаалт, харгалзуулах багана бүгд асуултын биед үлдэнэ. */
+/* "Агуулга: …" мөр нь бүлгийн гарчиг уу (дараах бүх асуултад), асуултынх уу (тэр асуултад)?
+   Баримтын анхны "Агуулга:" нь анхны дугаартай асуултаас ӨМНӨ байвал гарчгийн хэв маяг —
+   тэгвэл шууд дараа нь дугаартай асуулт эхэлдэг "Агуулга:" мөр бүр бүлгийн гарчиг. Map: мөрийн индекс → агуулга */
+const TOPIC_RE=/^(?:агуулга|сэдэв|topic)\s*[:\-]\s*(\S.*)$/i;
+function topicGroups(lines){
+  const out=new Map(),NUM=/^(?:№\s*|асуулт\s*)?\d{1,3}\s*[.)\-:]\s*\S/i;
+  const fN=lines.findIndex(l=>NUM.test(l)),fT=lines.findIndex(l=>TOPIC_RE.test(l));
+  if(fT<0||fN<0||fT>fN)return out;
+  lines.forEach((l,i)=>{const m=l.match(TOPIC_RE);if(!m)return;
+    const nx=lines.slice(i+1).find(x=>x&&x.trim());if(nx&&NUM.test(nx))out.set(i,m[1].trim().slice(0,80));});
+  return out;
+}
 function parseBlocks(t){
   const lines=t.replace(/\t/g,'  ').split(/\r?\n/).map(cleanLine).filter(l=>l&&!/^[-–=.·_\s]+$/.test(l)).flatMap(splitQLine);
   /* Асуултууд дугаартай баримт уу ("1.", "2." …)? Тийм бол дугааргүй мөр (зургийн тайлбар, "Part B" гарчиг,
@@ -4053,7 +4096,7 @@ function parseBlocks(t){
     const done=()=>{buf=[];opts=[];raw=[];meta={};lowOpts=false;};
     if(numDoc&&!NUMRE.test(buf[0])){
       /* Хувилбаргүй дугааргүй мөрүүд: дараагийн асуултын эхэнд (эхний асуултын өмнөх гарчиг, нэр, огнооны мөрийг хаяна) */
-      if(!(list&&list.length>=2)){pre.push(...buf.filter(x=>!PRE_DROP.test(x)&&(qs.length||/figure|fig\.|зураг|хүснэгт|table|graph|график|диаграм/i.test(x))));done();return;}
+      if(!(list&&list.length>=2)){pre.push(...buf.filter(x=>!PRE_DROP.test(x)&&!(TF_HEAD.test(x)&&x.length<90)&&(qs.length||/figure|fig\.|зураг|хүснэгт|table|graph|график|диаграм/i.test(x))));done();return;}
       /* "Choose the correct answer:" + A–D: өмнөх асуултынх. Өмнө нь хувилбар гэж авсан "Words: a) … d)" нь асуултын бие болно */
       if(lastQ&&!isP4(lastQ)&&lastQ.opts){const q=lastQ;
         q.text=[q.text,...(q._raw||[]),...buf].filter(Boolean).join('\n').trim();
@@ -4067,13 +4110,13 @@ function parseBlocks(t){
     /* a) b) c) d) жижиг үсэгтэй 4 мэдэгдэл + "True or False" хэсэг (эсвэл "Хариулт: a T, b F…") → III хэсэг (Ү/Х) */
     if(part!==2&&list&&list.length===TF_N&&lowOpts&&(tfMode||meta.tf)){
       const q=newQ(4);q.text=txt;q.key=meta.tf||'----';q.stmts=list.map(o=>o.text);
-      if(pts!=null&&pts>0)q.points=pts;if(meta.topic)q.topic=meta.topic;if(meta.points>0)q.points=meta.points;
+      if(pts!=null&&pts>0)q.points=pts;if(meta.topic)q.topic=meta.topic;else if(grpTopic){q.topic=grpTopic;q._grp=true;}if(meta.points>0)q.points=meta.points;
       qs.push(q);lastQ=q;done();return;}
     const q=newQ(part);q.key='';   // хариулт заагаагүй бол хоосон (A гэж таамаглахгүй)
     q.text=txt;
     if(pts!=null&&pts>0)q.points=pts;
     (list||[]).forEach(o=>{if(o.k<q.opts.length)q.opts[o.k]=o.text;});
-    if(meta.topic)q.topic=meta.topic;
+    if(meta.topic)q.topic=meta.topic;else if(grpTopic){q.topic=grpTopic;q._grp=true;}
     if(meta.points>0)q.points=meta.points;
     if(meta.key){const k=keyNorm(meta.key);
       if(part===2)q.key=k;else if(k&&OPTS.includes(k[0]))q.key=k[0];}
@@ -4082,7 +4125,10 @@ function parseBlocks(t){
   };
   /* Хоёроос цөөн хувилбар цуглуулсан бол тэр нь жинхэнэ хувилбар биш — текст рүү нь буцаана */
   const giveBack=()=>{if(opts.length&&opts.length<2){buf.push(...raw);}opts=[];raw=[];};
-  lines.forEach(l=>{
+  const GRP=topicGroups(lines);let grpTopic="";
+  lines.forEach((l,li)=>{
+    /* "Агуулга: Эсийн бүтэц" бүлгийн гарчиг — дараагийн гарчиг хүртэлх бүх асуултад */
+    if(GRP.has(li)){if(opts.length>=2)flush(opts,raw);else{giveBack();flush(null);}grpTopic=GRP.get(li);return;}
     if(/^(II|2|хоёр(дугаар)?)\s*[-.]?\s*(р\s*)?хэсэг/i.test(l)){if(opts.length>=2)flush(opts,raw);else{giveBack();flush(null);}part=2;tfMode=false;return;}
     if(/^(I|1|нэг(дүгээр|дугаар)?)\s*[-.]?\s*(р\s*)?хэсэг/i.test(l)){if(opts.length>=2)flush(opts,raw);else{giveBack();flush(null);}part=1;tfMode=false;return;}
     /* "Part B. True or False" / "Part C. …" — өмнөх асуултыг (хуучин горимоор нь) дуусгаад дараа нь горимыг солино */
@@ -4123,13 +4169,15 @@ function parseBlocks(t){
 function parseQuestions(t){
   const qs=[];let cur=null,m,part=1,lastK=-1;
   const put=(k,txt)=>{if(cur&&k>=0&&k<cur.opts.length)cur.opts[k]=txt;};
-  t.replace(/\t/g,'\n').split(/\r?\n/).map(cleanLine).flatMap(splitQLine).forEach(l=>{
+  const LS=t.replace(/\t/g,'\n').split(/\r?\n/).map(cleanLine).flatMap(splitQLine),GRP=topicGroups(LS);let grp='';
+  LS.forEach((l,li)=>{
     if(!l||/^[-–=.·\s]+$/.test(l))return;                 // хоосон, зураасан мөр
+    if(GRP.has(li)){grp=GRP.get(li);cur=null;return;}      // бүлгийн "Агуулга:" гарчиг
     if(/^(II|2|хоёр(дугаар)?)\s*[-.]?\s*(р\s*)?хэсэг/i.test(l)){part=2;cur=null;return;}
     if(/^(I|1|нэг(дүгээр|дугаар)?)\s*[-.]?\s*(р\s*)?хэсэг/i.test(l)){part=1;cur=null;return;}
     // "1.", "1)", "№1", "1-", "Асуулт 1:" — асуултын эхлэл
     if((m=l.match(/^(?:№\s*|асуулт\s*)?(\d{1,2})\s*[.)\-:]\s*(.+)$/i))&&!/^(оноо|хариулт|агуулга)/i.test(m[2])){
-      cur=newQ(part);cur.key='';lastK=-1;
+      cur=newQ(part);cur.key='';lastK=-1;if(grp){cur.topic=grp;cur._grp=true;}
       cur.text=m[2].replace(/\/?\s*(\d+(?:[.,]\d+)?)\s*оноо\s*\/?/i,(mm,p)=>{cur.points=parseFloat(p.replace(',','.'))||cur.points;return' ';}).replace(/\s+/g,' ').trim();
       qs.push(cur);return;}
     if(!cur)return;
@@ -4170,9 +4218,61 @@ function bulkKeys(t){
   let j=C.length;while(j>0&&(!C[j-1]||keyLine(C[j-1])))j--;
   return C.slice(j).filter(Boolean).length>=3?take(C.slice(j),j):null;
 }
+/* Төгсгөлийн агуулгын жагсаалт: "Агуулга" гарчиг + "1-10 Эсийн бүтэц", "11, 12, 15: Генетик" мөрүүд */
+const TOP_HEAD=/^(?:агуулга(?:ууд)?|сэдэв(?:үүд)?|topics?)\s*[:\-–]?\s*$/i;
+const TOP_LINE=/^((?:\d{1,3}\s*(?:-\s*\d{1,3})?\s*,\s*)*\d{1,3}\s*(?:-\s*\d{1,3})?)\s*(?:[.):\-]|-р\s+асуулт\s*[:\-]?)?\s+(\S.{1,79})$/;
+function topicNums(s){const ns=[];s.split(',').forEach(p=>{const m=p.trim().match(/^(\d{1,3})(?:\s*-\s*(\d{1,3}))?$/);if(!m)return;
+  const a=+m[1],b=m[2]?+m[2]:a;for(let n=Math.min(a,b);n<=Math.max(a,b)&&n<=300;n++)ns.push(n);});return ns;}
+function bulkTopics(t){
+  const L=String(t||'').replace(/\r/g,'').split('\n'),C=L.map(cleanLine);
+  for(let i=C.length-1;i>=0;i--){if(!TOP_HEAD.test(C[i]))continue;
+    const rest=C.slice(i+1).filter(Boolean);if(!rest.length||!rest.every(s=>TOP_LINE.test(s)))return null;
+    const map={};rest.forEach(s=>{const m=s.match(TOP_LINE);topicNums(m[1]).forEach(n=>{map[n]=m[2].trim().slice(0,80);});});
+    return Object.keys(map).length?{text:L.slice(0,i).join('\n'),topics:map}:null;}
+  return null;
+}
+/* Төгсгөлийн хариулт ба агуулгын хэсгүүдийг (аль ч дарааллаар) салгана */
+function bulkTail(t){
+  const out={text:String(t||''),mc:{},tf:{},topics:{},found:false};
+  for(let g=0;g<4;g++){let ch=false;
+    const k=bulkKeys(out.text);if(k){out.text=k.text;Object.assign(out.mc,k.mc);Object.assign(out.tf,k.tf);ch=out.found=true;}
+    const p=bulkTopics(out.text);if(p){out.text=p.text;Object.assign(out.topics,p.topics);ch=out.found=true;}
+    if(!ch)break;}
+  /* Зөвхөн "BCDAA CBDAB" гэсэн үсгийн цуваа */
+  const s=out.text.trim();
+  if(s&&/^[A-Ja-jА-ЗИКа-зик\s,;.]+$/.test(s)){const seq=s.replace(/[\s,;.]/g,'').split('');if(seq.length>=2){out.seq=seq;out.text='';out.found=true;}}
+  return out;
+}
+/* Зөвхөн хариулт / агуулга буулгасан бол одоо байгаа асуултуудад дугаараар нь оноож өгнө (асуултыг солихгүй) */
+function applyTailToExam(K,m){
+  const QS=state.exam.questions,tv=vOwn()?Math.min(+$('#qbulkVar').value||0,vCount()-1):0;
+  if(!QS.length){m.style.color='var(--stain)';m.textContent='Энэ шалгалтад асуулт алга байна. Эхлээд асуултуудаа (хариултын хамт) оруулна уу.';return;}
+  if(!tv&&matGuard())return;
+  if(state.students.length&&!confirm('⚠ Энэ шалгалтад '+state.students.length+' сурагчийн хариулт орсон байна.\n\nЗөв хариулт өөрчлөгдвөл дүн нь дахин бодогдоно.'+UNDO_NOTE+'\n\nҮргэлжлүүлэх үү?'))return;
+  snap(tv?VNAMES[tv]+' хувилбарын хариулт':'хариулт, агуулга оноох');
+  let nk=0,nt=0;const over=[];
+  const setKey=(Q,v)=>{if(tv>0){Q.alt=Array.isArray(Q.alt)?Q.alt:[];Q.alt[tv]=Object.assign({text:'',key:'',opts:[],stmts:[]},Q.alt[tv]||{});Q.alt[tv].key=v;}else Q.key=v;nk++;};
+  QS.forEach((Q,i)=>{const n=i+1;
+    if(K.topics[n]){Q.topic=K.topics[n];nt++;}
+    if(isP3(Q))return;
+    if(isP4(Q)){const v=K.tf[n]||(K.mc[n]&&/^[ТTFФҮХ]{4}$/i.test(K.mc[n])?K.mc[n]:'');if(v)setKey(Q,tfNorm(v));return;}
+    const v=K.mc[n];if(!v)return;const k=keyNorm(v);
+    if(isP2(Q)){if(k)setKey(Q,k);}else if(k&&opts1().includes(k[0]))setKey(Q,k[0]);});
+  if(K.seq){const P1=QS.filter(isP1);K.seq.forEach((c,j)=>{const k=keyNorm(c);if(P1[j]&&k&&opts1().includes(k[0]))setKey(P1[j],k[0]);});
+    if(K.seq.length!==P1.length)over.push('үсгийн тоо '+K.seq.length+', I хэсгийн асуулт '+P1.length);}
+  const big=[...Object.keys(K.mc),...Object.keys(K.tf),...Object.keys(K.topics)].map(Number).filter(n=>n>QS.length);
+  if(big.length)over.push(Math.min(...big)+'-с хойших дугаар шалгалтад байхгүй');
+  draft=[];save();refreshAll();$('#qbulk').value='';
+  undoBar((nk?nk+' асуултын хариулт':'')+(nk&&nt?', ':'')+(nt?nt+' асуултын агуулга':'')+' орлоо.');
+  m.style.color=over.length||!nk&&!nt?'var(--iodine)':'';
+  m.textContent=(nk||nt?'✓ Асуултууд хэвээр. '+(tv?VNAMES[tv]+' хувилбарын ':'')+(nk?nk+' асуултад зөв хариулт':'')+(nk&&nt?', ':'')+(nt?nt+' асуултад агуулга':'')+' оноолоо.':'Оноох зүйл олдсонгүй.')
+    +(over.length?' ⚠ '+over.join('; ')+' — шалгана уу.':'')+' Доорх жагсаалтаас шалгана уу.';
+}
 $('#qbulkBtn').addEventListener('click',()=>{
-  const m=$('#qbulkMsg'),mode=($('#qbulkMode')||{}).value||'auto',KK=bulkKeys($('#qbulk').value);
-  const raw=KK?KK.text:$('#qbulk').value;
+  const m=$('#qbulkMsg'),mode=($('#qbulkMode')||{}).value||'auto',KK=bulkTail($('#qbulk').value);
+  /* Асуултгүй, зөвхөн хариулт/агуулга буулгасан → одоо байгаа асуултуудад оноох */
+  if(KK.found&&!KK.text.replace(/\s+/g,'')){applyTailToExam(KK,m);return;}
+  const raw=KK.text;
   const tbl=parseTable(raw);
   /* Автомат горимд хоёр аргаар уншаад илүү сайн таньсныг нь сонгоно.
      Хувилбаргүй үлдсэн асуулт бүр нь буруу хуваасны шинж — түүнийг хасна. */
@@ -4185,9 +4285,11 @@ $('#qbulkBtn').addEventListener('click',()=>{
     else if(mode==='rows')qs=parseQuestions(raw);
     else{const a=parseBlocks(raw),b=parseQuestions(raw);qs=good(a)>=good(b)?a:b;}
   }finally{state.exam.p2N=prevN;}
+  const grpUsed=(qs||[]).some(q=>q._grp);(qs||[]).forEach(q=>{delete q._grp;});
   if(!qs.length){m.style.color='var(--stain)';m.textContent='Асуулт танигдсангүй. Асуулт бүрийг "1." гэх мэт дугаараар эхлүүлж, хариултын хувилбаруудыг A. B. C. D. (эсвэл А. Б. В. Г.) үсгээр бичнэ үү. Хүснэгт бол толгой мөрөнд "Асуулт", "A", "B", "C", "D" (хүсвэл "Зөв хариулт") багана байх ёстой.';return;}
   /* Төгсгөлийн түлхүүрийг асуултын дугаараар (дарааллаар) оноох */
-  if(KK)qs.forEach((q,i)=>{const n=i+1;
+  if(KK.found)qs.forEach((q,i)=>{const n=i+1;
+    if(KK.topics[n])q.topic=KK.topics[n];
     if(isP4(q)){if(KK.tf[n])q.key=KK.tf[n];else if(KK.mc[n]&&/^[ТTFФҮХ]{4}$/i.test(KK.mc[n]))q.key=tfNorm(KK.mc[n]);return;}
     const v=KK.mc[n];if(!v)return;const k=keyNorm(v);
     if(isP2(q))q.key=k;else if(k&&OPTS.includes(k[0]))q.key=k[0];});
@@ -4241,10 +4343,118 @@ $('#qbulkBtn').addEventListener('click',()=>{
   draft=[];save();refreshAll();$('#qbulk').value='';
   undoBar('Асуултууд солигдлоо ('+n+' асуулт).');
   m.style.color=noKey?'var(--iodine)':'';m.textContent=(tbl?'Хүснэгт танигдлаа. ':'')+'I хэсэгт '+p1.length+' асуулт'+(p2.length?', II хэсэгт '+p2.length+' асуулт':'')+(new4.length?', III хэсэгт (үнэн/худал) '+new4.length+' асуулт':'')+' орлоо.'
-    +(KK?' Төгсгөлийн хариултын түлхүүрийг ('+(Object.keys(KK.mc).length+Object.keys(KK.tf).length)+') дугаараар нь оноолоо.':'')
+    +(Object.keys(KK.mc).length+Object.keys(KK.tf).length?' Төгсгөлийн хариултын түлхүүрийг ('+(Object.keys(KK.mc).length+Object.keys(KK.tf).length)+') дугаараар нь оноолоо.':'')
+    +(Object.keys(KK.topics).length?' Төгсгөлийн агуулгын жагсаалтыг ('+Object.keys(KK.topics).length+' асуулт) оноолоо.':'')
+    +(grpUsed?' Бүлгийн "Агуулга:" гарчгийг доорх асуултуудад оноолоо.':'')
     +(noKey?' ⚠ '+noKey+' асуултын зөв хариулт олдсонгүй — доорх жагсаалтад улаанаар харагдана, сонгоно уу.':'')
     +(used>=2?' Хариултын хувилбар '+O.join(', ')+' гэж тогтоолоо.':'')
     +(cut?' II хэсэг 4-өөс олон асуулттай байсан тул эхний 4-ийг авлаа.':'')+' Зөв хариулт, агуулгыг доорх жагсаалтаас шалгана уу.';
+});
+/* ---------- Загвар, жишээ цонх: программ таньдаг бичих хэлбэрүүд ---------- */
+const QTPL={
+  word:`Агуулга: Эсийн бүтэц
+1. Ургамлын эсийн хана юунаас тогтдог вэ?
+A. Целлюлоз
+B. Хитин
+C. Уураг
+D. Липид
+2. Фотосинтез эсийн аль органоидод явагддаг вэ?
+A. Митохондри
+B. Рибосом
+C. Хлоропласт
+D. Цөм
+Агуулга: Антибиотик
+3. Пенициллиныг аль организм ялгаруулдаг вэ?
+A. Бактери
+B. Penicillium мөөгөнцөр
+C. Вирус
+D. Хөвд
+Үнэн/худал
+4. Антибиотикийн тухай:
+a) Антибиотик бактерийг устгадаг. ______
+b) Антибиотик ханиадыг эмчилдэг. ______
+c) Пенициллин бол анхны антибиотик. ______
+d) Вирус эсийн ханатай. ______
+
+Хариулт
+1. A
+2. C
+3. B
+4. a T, b F, c T, d F`,
+  excel:[['№','Асуулт','A','B','C','D','Зөв хариулт','Агуулга','Оноо'],
+    ['1','Ургамлын эсийн хана юунаас тогтдог вэ?','Целлюлоз','Хитин','Уураг','Липид','A','Эсийн бүтэц','1'],
+    ['2','Фотосинтез эсийн аль органоидод явагддаг вэ?','Митохондри','Рибосом','Хлоропласт','Цөм','C','Эсийн бүтэц','1'],
+    ['3','Пенициллиныг аль организм ялгаруулдаг вэ?','Бактери','Penicillium мөөгөнцөр','Вирус','Хөвд','B','Антибиотик','2']],
+  keys:`Хариулт
+1. A
+2. C
+3. B
+4. a T, b F, c T, d F
+
+Агуулга
+1-2 Эсийн бүтэц
+3-4 Антибиотик`
+};
+function qtplHL(t){return esc(t).split('\n').map(l=>/^(Агуулга|Сэдэв)/i.test(l)?`<span class="h">${l}</span>`
+  :/^(Хариулт|Answers?)\b/i.test(l)||/^\d{1,3}\. ([A-DА-Г]$|a [TF],)/.test(l)||/^\d{1,3}-\d{1,3} /.test(l)?`<span class="k">${l}</span>`
+  :/^Үнэн\/худал/i.test(l)?`<span class="t">${l}</span>`:l).join('\n');}
+let qtplTab='word';
+function qtplRender(){
+  document.querySelectorAll('#qtplDlg .qtpl-tabs button').forEach(b=>b.setAttribute('aria-selected',String(b.dataset.t===qtplTab)));
+  const P=$('#qtplPane'),put='<button type="button" class="btn" data-q="put">⬇ Оруулах нүдэнд тавих</button>';
+  if(qtplTab==='word')P.innerHTML=`<div class="qtpl-grid"><pre class="qtpl-pre">${qtplHL(QTPL.word)}</pre><div>
+    <ul class="qtpl-rules">
+      <li>Асуулт бүрийг <b>дугаараар</b> эхлүүлнэ: <code>1.</code> эсвэл <code>1)</code></li>
+      <li>Хариултын хувилбарууд <b>A. B. C. D.</b> (эсвэл <b>А. Б. В. Г.</b>). Мөр бүрд эсвэл нэг мөрөнд дараалан.</li>
+      <li><span style="color:#7C3AED;font-weight:700">Агуулга: …</span> — бүлгийн <b>өмнө</b> нэг удаа бичвэл доорх бүх асуултад оноогдоно. Асуулт бүрийн доор бичсэн ч болно.</li>
+      <li><b style="color:var(--gold,#B7791F)">Үнэн/худал</b> гарчгийн доорх <b>a) b) c) d)</b> 4 мэдэгдэлтэй асуулт III хэсэг болно.</li>
+      <li><b style="color:var(--leaf)">Хариулт</b> — хамгийн <b>доор</b> нэг дор: <code>1. A</code>… эсвэл <code>Хариулт: 1-A, 2-C</code>. Асуулт бүрийн доор <code>Хариулт: A</code> гэж бичсэн ч болно.</li>
+      <li>Хариулт бичээгүй асуулт улаанаар харагдана — дараа нь сонгоно.</li>
+    </ul>
+    <div class="qtpl-btns"><button type="button" class="btn ghost" data-q="copy">📋 Хуулах (Word-д буулгана)</button>${put}</div></div></div>`;
+  else if(qtplTab==='excel'){const R=QTPL.excel;
+    P.innerHTML=`<div class="qtpl-tblwrap"><table class="qtpl-tbl"><thead><tr>${R[0].map(h=>`<th>${esc(h)}</th>`).join('')}</tr></thead>
+      <tbody>${R.slice(1).map(r=>`<tr>${r.map(c=>`<td>${esc(c)}</td>`).join('')}</tr>`).join('')}</tbody></table></div>
+    <ul class="qtpl-rules">
+      <li>Эхний мөр нь <b>толгой мөр</b>: <b>Асуулт</b>, <b>A</b>, <b>B</b>, <b>C</b>, <b>D</b> заавал; <b>Зөв хариулт</b>, <b>Агуулга</b>, <b>Оноо</b>, <b>№</b> хүсвэл.</li>
+      <li>Хүснэгтээ <b>толгой мөртэй нь</b> сонгож хуулаад (Ctrl + C) оруулах нүдэнд буулгана.</li>
+      <li>«Зөв хариулт» нүд хоосон байсан ч асуулт орно — хариултыг нь дараа сонгоно.</li>
+      <li>Нэг нүдэнд хэд хэдэн мөр бичсэн асуулт ч бүтнээрээ орно.</li>
+    </ul>
+    <div class="qtpl-btns"><button type="button" class="btn ghost" data-q="copy">📋 Excel-д хуулах (шууд багана болно)</button>${put}</div>`;}
+  else if(qtplTab==='keys')P.innerHTML=`<div class="qtpl-grid"><pre class="qtpl-pre">${qtplHL(QTPL.keys)}</pre><div>
+    <p style="margin-top:0"><b>Асуултаа аль хэдийн оруулсан бол</b> зөвхөн хариулт, агуулгаа буулгахад одоо байгаа асуултуудад <b>дугаараар нь</b> оноогдоно. <b>Асуултууд солигдохгүй.</b></p>
+    <ul class="qtpl-rules">
+      <li><span style="color:var(--leaf);font-weight:700">Хариулт</span> гарчиг + <code>1. A</code>, <code>2. C</code>… эсвэл нэг мөрөнд <code>1-A, 2-C, 3-B</code></li>
+      <li>Зөвхөн үсгийн цуваа: <code>ACBD ABDC</code> — I хэсгийн асуултуудад дарааллаар нь.</li>
+      <li>Үнэн/худал: <code>4. a T, b F, c T, d F</code> (Т = үнэн, F = худал; Ү/Х ч болно)</li>
+      <li><span style="color:#7C3AED;font-weight:700">Агуулга</span> гарчиг + <code>1-2 Эсийн бүтэц</code>, <code>3, 5, 7: Генетик</code></li>
+      <li>Олон хувилбартай шалгалтад дээрх «Аль хувилбарын асуултууд вэ» сонголтоор Б, В хувилбарын хариултыг тусад нь оруулна.</li>
+    </ul>
+    <div class="qtpl-btns"><button type="button" class="btn ghost" data-q="copy">📋 Хуулах</button>${put}</div></div></div>`;
+  else P.innerHTML=`<p style="margin-top:0">Word, Excel-ээс <b>текстээр хуулахад зураг ордоггүй</b>. Зурагтай асуултыг 2 аргаар оруулна:</p>
+    <ol class="qtpl-rules">
+      <li><b>Зурагтай нь бүгдийг (зөвлөж байна):</b> Word файлаа <b>File → Save As → PDF</b> гэж хадгалаад <b>«📄 PDF-ээс шалгалт үүсгэх»</b>-ээр оруулна. Асуулт бүр зураг, график, хүснэгттэйгээ хамт тайрагдана. Хариултаа тэр цонхны хариулт бичих нүдэнд <code>A C B …</code> гэж бичнэ (10-аас олон асуулттай бол Word-ийн төгсгөлд бичсэн <code>1. A</code>… жагсаалтыг өөрөө уншина).</li>
+      <li><b>Текстээр:</b> асуултаа энд оруулаад, зурагтай асуултынхаа <b>«Зураг оруулах»</b> товчоор зургаа нэмнэ (эсвэл Word-оос зургаа хуулаад асуултын нүдэнд <b>Ctrl + V</b>).</li>
+    </ol>
+    <div class="qtpl-btns"><button type="button" class="btn" data-q="pdf">📄 PDF-ээс шалгалт үүсгэх</button></div>`;
+}
+function qtplText(){return qtplTab==='excel'?QTPL.excel.map(r=>r.join('\t')).join('\n'):QTPL[qtplTab]||'';}
+$('#qtplBtn').addEventListener('click',()=>{qtplRender();$('#qtplDlg').showModal();});
+$('#qtplX').addEventListener('click',()=>$('#qtplDlg').close());
+$('#qtplDlg').addEventListener('click',async e=>{
+  if(e.target===$('#qtplDlg')){$('#qtplDlg').close();return;}
+  const tb=e.target.closest('.qtpl-tabs button');if(tb){qtplTab=tb.dataset.t;qtplRender();return;}
+  const b=e.target.closest('button[data-q]');if(!b)return;const q=b.dataset.q;
+  if(q==='copy'){const t=qtplText();let ok=false;try{await navigator.clipboard.writeText(t);ok=true;}catch(x){}
+    if(!ok){const ta=document.createElement('textarea');ta.value=t;document.body.appendChild(ta);ta.select();try{ok=document.execCommand('copy');}catch(x){}ta.remove();}
+    b.textContent=ok?'✓ Хуулагдлаа':'Хуулж чадсангүй — гараар сонгоно уу';setTimeout(()=>qtplRender(),1800);}
+  if(q==='put'){$('#qbulk').value=qtplText();$('#qtplDlg').close();const d=$('#qbulk').closest('details');if(d)d.open=true;
+    $('#qbulk').scrollIntoView({behavior:'smooth',block:'center'});$('#qbulk').focus();
+    const m=$('#qbulkMsg');m.style.color='var(--iodine)';m.textContent=qtplTab==='keys'
+      ?'Жишээ хариулт, агуулга нүдэнд орлоо. «Асуултуудыг оруулах» дарвал ОДОО БАЙГАА асуултуудад оноогдоно.'
+      :'Жишээ нүдэнд орлоо. Өөрийнхөөрөө засаад «Асуултуудыг оруулах» дарна уу. Анхаар: энэ шалгалтын одоогийн I–II хэсгийн асуултуудыг солино.';}
+  if(q==='pdf'){$('#qtplDlg').close();$('#pdfImp2').click();}
 });
 /* ---------- Ангийн нэрсийн хүснэгт: № (хуудсан дээрх 2 оронтой дугаар) | сургуулийн код | нэр ---------- */
 let rGrid=[],rDirty=false;
