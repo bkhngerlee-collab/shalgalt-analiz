@@ -1946,6 +1946,7 @@ body.student #studentApp{display:block}
   <div class="qtpl-body">
     <div class="qtpl-tabs" role="tablist">
       <button type="button" role="tab" data-t="word" aria-selected="true">📝 Word (текст)</button>
+      <button type="button" role="tab" data-t="fill" aria-selected="false">🔗 Нөхөх, харгалзуулах</button>
       <button type="button" role="tab" data-t="excel" aria-selected="false">📊 Excel (хүснэгт)</button>
       <button type="button" role="tab" data-t="keys" aria-selected="false">✅ Хариулт, агуулгыг тусад нь</button>
       <button type="button" role="tab" data-t="img" aria-selected="false">🖼️ Зурагтай асуулт</button>
@@ -4013,7 +4014,8 @@ function cleanLine(s){
     .replace(/[    ]/g,' ')      // таслагдашгүй зай
     .replace(/[‐-―−]/g,'-')           // – — ‒ гэх мэт
     .replace(/^[•▪◦·‣*]\s*/,'')                      // сумны тэмдэг
-    .replace(/[_]{2,}/g,' ').replace(/\.{3,}/g,' ')  // ____ ба ....
+    /* Мөрийн төгсгөлийн "____" (хариулт бичих зай) хасна; өгүүлбэр доторх нөхөх зайг "_____" болгож үлдээнэ */
+    .replace(/\s*[_]{2,}[\s_.]*$/,'').replace(/[_]{2,}/g,'_____').replace(/\.{3,}/g,' ')  // ____ ба ....
     .replace(/\s+/g,' ').trim();
 }
 const OPT_LET='[A-Ja-jА-За-зИиКкСсНн]';
@@ -4381,10 +4383,38 @@ d) Вирус эсийн ханатай. ______
 2. C
 3. B
 4. a T, b F, c T, d F`,
+  fill:`Агуулга: Антибиотик
+1. Өгүүлбэрүүдийг a–d үгсээр нөхөөрэй.
+1. Пенициллиныг ________ мөөгөнцөр ялгаруулдаг.
+2. Антибиотик ________-ийг устгадаг.
+3. Ферментерт ________ хий өгдөг.
+4. Пенициллиныг ________ болгож капсулд хийдэг.
+Үгс: a) бактери   b) Penicillium   c) талст   d) хүчилтөрөгч
+Зөв хувилбарыг сонго:
+A. 1a, 2b, 3c, 4d
+B. 1b, 2a, 3d, 4c
+C. 1c, 2d, 3a, 4b
+D. 1d, 2c, 3b, 4a
+Агуулга: Халдвараас сэргийлэх
+2. Тодорхойлолт 1–4-ийг нэр томьёо a–d-тэй харгалзуул.
+1. Биеийн доторх бактерийн халдварыг эмчилнэ — a) антисептик
+2. Арьсанд түрхэж халдвараас сэргийлнэ — b) антибиотик
+3. Жорлон, ширээ угаахад хэрэглэнэ — c) эсрэг бие
+4. Цагаан эсийн ялгаруулдаг уураг — d) ариутгагч бодис
+Зөв хувилбарыг сонго:
+A. 1b, 2a, 3d, 4c
+B. 1a, 2b, 3c, 4d
+C. 1b, 2d, 3a, 4c
+D. 1c, 2a, 3d, 4b
+
+Хариулт
+1. B
+2. A`,
   excel:[['№','Асуулт','A','B','C','D','Зөв хариулт','Агуулга','Оноо'],
     ['1','Ургамлын эсийн хана юунаас тогтдог вэ?','Целлюлоз','Хитин','Уураг','Липид','A','Эсийн бүтэц','1'],
     ['2','Фотосинтез эсийн аль органоидод явагддаг вэ?','Митохондри','Рибосом','Хлоропласт','Цөм','C','Эсийн бүтэц','1'],
-    ['3','Пенициллиныг аль организм ялгаруулдаг вэ?','Бактери','Penicillium мөөгөнцөр','Вирус','Хөвд','B','Антибиотик','2']],
+    ['3','Пенициллиныг аль организм ялгаруулдаг вэ?','Бактери','Penicillium мөөгөнцөр','Вирус','Хөвд','B','Антибиотик','2'],
+    ['4','Тодорхойлолтыг нэр томьёотой харгалзуул.\n1. Биеийн доторх халдварыг эмчилнэ — a) антисептик\n2. Арьсанд түрхэж сэргийлнэ — b) антибиотик','1a, 2b','1b, 2a','1a, 2a','1b, 2b','B','Халдвараас сэргийлэх','1']],
   keys:`Хариулт
 1. A
 2. C
@@ -4412,9 +4442,21 @@ function qtplRender(){
       <li>Хариулт бичээгүй асуулт улаанаар харагдана — дараа нь сонгоно.</li>
     </ul>
     <div class="qtpl-btns"><button type="button" class="btn ghost" data-q="copy">📋 Хуулах (Word-д буулгана)</button>${put}</div></div></div>`;
+  else if(qtplTab==='fill')P.innerHTML=`<div class="qtpl-grid"><pre class="qtpl-pre">${qtplHL(QTPL.fill)}</pre><div>
+    <p style="margin-top:0"><b>Нөхөх</b> ба <b>харгалзуулах</b> даалгавар нь программд <b>нэг зөв хариулттай тест</b> (A–D) болж орно: сурагч зөв хослолын үсгийг сонгоно.</p>
+    <ul class="qtpl-rules">
+      <li>Асуултын дугаар (<code>1.</code>) → даалгаврын заавар.</li>
+      <li>Доор нь <b>1–4 дугаартай</b> өгүүлбэр / тодорхойлолтууд — асуултын <b>бие</b> болж үлдэнэ (тусдаа асуулт болохгүй).</li>
+      <li>Нөхөх зайг <code>________</code> гэж бичнэ — сурагчид тэр хэвээр харагдана.</li>
+      <li>Үгс / нэр томьёо: <b>a) b) c) d)</b> жижиг үсгээр (нэг мөрөнд эсвэл тодорхойлолт бүрийн ард).</li>
+      <li>Дараа нь <b>«Зөв хувилбарыг сонго:»</b> ба <b>A. B. C. D.</b> том үсгээр хослолууд: <code>A. 1b, 2a, 3d, 4c</code></li>
+      <li><span style="color:var(--leaf);font-weight:700">Хариулт</span> — хослолын <b>үсэг</b> (A, B, C, D): төгсгөлд <code>1. B</code> эсвэл асуултын доор <code>Хариулт: B</code>.</li>
+      <li>Excel-д бол бүх заавар, өгүүлбэрийг <b>Асуулт</b> нүдэнд (Alt + Enter-ээр мөр шилжүүлж), хослолуудыг <b>A–D</b> баганад бичнэ.</li>
+    </ul>
+    <div class="qtpl-btns"><button type="button" class="btn ghost" data-q="copy">📋 Хуулах (Word-д буулгана)</button>${put}</div></div></div>`;
   else if(qtplTab==='excel'){const R=QTPL.excel;
     P.innerHTML=`<div class="qtpl-tblwrap"><table class="qtpl-tbl"><thead><tr>${R[0].map(h=>`<th>${esc(h)}</th>`).join('')}</tr></thead>
-      <tbody>${R.slice(1).map(r=>`<tr>${r.map(c=>`<td>${esc(c)}</td>`).join('')}</tr>`).join('')}</tbody></table></div>
+      <tbody>${R.slice(1).map(r=>`<tr>${r.map(c=>`<td>${esc(c).replace(/\n/g,"<br>")}</td>`).join('')}</tr>`).join('')}</tbody></table></div>
     <ul class="qtpl-rules">
       <li>Эхний мөр нь <b>толгой мөр</b>: <b>Асуулт</b>, <b>A</b>, <b>B</b>, <b>C</b>, <b>D</b> заавал; <b>Зөв хариулт</b>, <b>Агуулга</b>, <b>Оноо</b>, <b>№</b> хүсвэл.</li>
       <li>Хүснэгтээ <b>толгой мөртэй нь</b> сонгож хуулаад (Ctrl + C) оруулах нүдэнд буулгана.</li>
@@ -4439,7 +4481,7 @@ function qtplRender(){
     </ol>
     <div class="qtpl-btns"><button type="button" class="btn" data-q="pdf">📄 PDF-ээс шалгалт үүсгэх</button></div>`;
 }
-function qtplText(){return qtplTab==='excel'?QTPL.excel.map(r=>r.join('\t')).join('\n'):QTPL[qtplTab]||'';}
+function qtplText(){return qtplTab==='excel'?QTPL.excel.map(r=>r.map(c=>/[\n\t"]/.test(c)?'"'+c.replace(/"/g,'""')+'"':c).join('\t')).join('\n'):QTPL[qtplTab]||'';}
 $('#qtplBtn').addEventListener('click',()=>{qtplRender();$('#qtplDlg').showModal();});
 $('#qtplX').addEventListener('click',()=>$('#qtplDlg').close());
 $('#qtplDlg').addEventListener('click',async e=>{
