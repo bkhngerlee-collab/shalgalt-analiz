@@ -3873,7 +3873,9 @@ function piMakeVar(){
     state.exam.variants=b.variants;if(b.vmode)state.exam.vmode=b.vmode;else delete state.exam.vmode;saveChecked();
     piMsg('Хөтчийн санах ой хүрэлцэхгүй байна. "Нөөц" хэсгээс нөөц файлаа татаад, хэрэггүй шалгалтуудаа устгаад дахин оролдоно уу.',true);return;}
   piFree();$('#piDlg').close();renderSetup();
-  const done='✅ '+V+' хувилбарын '+qs.length+' асуулт PDF-ээс орлоо'+(miss?' ('+miss+' асуултын зөв хариулт дутуу)':'')+'. Нийт өгөгдөл: '+Math.round(dbKB()/1024*10)/10+' МБ.';
+  const done='✅ '+V+' хувилбарын '+qs.length+' асуулт PDF-ээс орлоо'+(miss?' ('+miss+' асуултын зөв хариулт дутуу)':'')+'. Нийт өгөгдөл: '+Math.round(dbKB()/1024*10)/10+' МБ.'
+    +(state.exam.online?' ⚠️ Энэ шалгалтыг QR-ээр нийтэлсэн байна — «Цахим шалгалт» табд «Өөрчлөлтийг нийтлэх» дарж '+V+' хувилбарыг сурагчдад хүргэнэ үү.':'')
+    +' Хариултын хуудсыг одоо хэвлэвэл «Хувилбар» дугуйтай гарна.';
   ['#qbulkMsg','#pdfVarMsg'].forEach(s=>{const m=$(s);if(m){m.style.color='';m.textContent=done;}});
   const b=document.querySelector(`#qtable .qblock[data-vb="${v}"]`)||document.getElementById('s-mat');if(b)b.scrollIntoView({behavior:'smooth',block:'start'});
 }
@@ -8529,6 +8531,30 @@ function oePayload(o,withImg){
     g:{show:o.show!==false,p2:state.exam.p2mode==='partial'?'partial':'exact',
       v:own?Array.from({length:V},(_,v)=>qs.map(q=>grade(qv(q,v),q))):[qs.map(q=>grade(q,q))]}};
 }
+/* Нийтэлсэн агуулгын тэмдэг: асуулт, зураг, зөв хариулт, хувилбар. Нийтэлснээс хойш өөрчлөгдсөн эсэхийг мэдэхэд */
+function oeSig(p){
+  p=p||oePayload({classes:[]},true);
+  const s=JSON.stringify([p.n,p.vcount,p.own,p.order,p.vq,p.g&&p.g.v,p.g&&p.g.p2]);
+  let h=0x811c9dc5;for(let i=0;i<s.length;i++){h^=s.charCodeAt(i);h=Math.imul(h,0x01000193);}
+  return(h>>>0).toString(36)+'.'+s.length.toString(36);}
+/* Цахим шалгалтын хэмжээ хэтэрвэл зургийг хасахын оронд жижигрүүлж, шахаж багтаана */
+async function oeImgSmall(src,maxW,q){
+  const im=new Image();await new Promise((res,rej)=>{im.onload=res;im.onerror=rej;im.src=src;});
+  const s=Math.min(1,maxW/im.naturalWidth),c=document.createElement('canvas');
+  c.width=Math.max(1,Math.round(im.naturalWidth*s));c.height=Math.max(1,Math.round(im.naturalHeight*s));
+  const x=c.getContext('2d');x.fillStyle='#fff';x.fillRect(0,0,c.width,c.height);x.imageSmoothingQuality='high';x.drawImage(im,0,0,c.width,c.height);
+  const outs=[c.toDataURL('image/jpeg',q)];const wp=c.toDataURL('image/webp',q);if(wp.startsWith('data:image/webp'))outs.push(wp);
+  c.width=c.height=0;
+  const best=outs.filter(d=>safeImg(d)).sort((a,b)=>a.length-b.length)[0];
+  return best&&best.length<src.length?best:src;}
+async function oeFit(p,max,onp){
+  const qs=p.vq.flat().filter(q=>q.img);if(!qs.length||JSON.stringify(p).length<=max)return{p,shrunk:false};
+  const orig=new Map(qs.map(q=>[q,q.img]));
+  for(const[w,ql]of[[760,.72],[640,.62],[540,.52],[440,.45],[360,.4]]){
+    if(onp)onp(w);
+    for(const q of qs){try{q.img=await oeImgSmall(orig.get(q),w,ql);}catch(e){}}
+    if(JSON.stringify(p).length<=max)return{p,shrunk:true};}
+  return{p,shrunk:true,tooBig:true};}
 /* Багшийн хүснэгтэд: нэг оролдлогын оноо (IV задгай хэсгийг тооцохгүй) */
 function oeScoreOf(a){
   const qs=state.exam.questions,src=a.answers||[];let got=0,max=0;
@@ -8547,6 +8573,8 @@ function oeRender(){
   const cls=db.classes.filter(c=>c.students.length),sel=new Set(o?o.classes:cls.map(c=>c.name));
   box.innerHTML=`
     ${o?`<p style="margin:0 0 10px">Төлөв: <span class="oe-pill${o.open?'':' off'}">${o.open?'● Нээлттэй — сурагчид орж болно':'Хаалттай'}</span></p>`:''}
+    ${oeStale()?`<div class="hp-warn" style="margin:0 0 10px;border-color:var(--stain)"><b>⚠️ Шалгалтын материал нийтэлснээс хойш өөрчлөгдсөн байна</b> (жишээ нь Б хувилбар нэмсэн, асуулт эсвэл зөв хариулт зассан).
+      Сурагчдын утсанд <b>хуучин хувилбар</b> нь очиж байна — доорх <b>«Өөрчлөлтийг нийтлэх»</b> товчийг дарна уу.</div>`:''}
     <div class="row">
       <div style="max-width:220px"><label for="oeMin">Хугацаа (минут)</label><input id="oeMin" type="number" min="1" max="300" value="${o?o.minutes:45}"></div>
       <div style="flex:2 1 320px"><label for="oeLogin">Сурагч нэвтрэх арга</label><select id="oeLogin">
@@ -8575,6 +8603,10 @@ function oeRender(){
   $('#oePub').onclick=oePublish;
   if(o){$('#oeToggle').onclick=oeToggle;$('#oeDel').onclick=oeDelete;oeShare();oeRenderRes();if(!oeRes||Date.now()-oeLoadedAt>5000)oeLoad();}
 }
+const OE_MAX=1500000;
+/* Нийтэлсэн цахим шалгалт одоогийн материалаас хоцорсон эсэх (энэ шинэчлэлээс өмнөх нийтлэлд тэмдэг байхгүй тул шалгахгүй) */
+function oeStale(){const o=state&&state.exam.online;if(!o)return false;
+  try{return o.sig?o.sig!==oeSig():false;}catch(e){return false;}}
 const oeErr=t=>{const m=$('#oeMsg');if(m){m.style.color='var(--stain)';m.textContent=t;}};
 async function oePublish(){
   const m=$('#oeMsg'),ex=state;
@@ -8585,12 +8617,21 @@ async function oePublish(){
   if(o0&&started&&o0.n&&o0.n!==ex.exam.questions.length)
     return oeErr('Сурагчид аль хэдийн өгч эхэлсэн тул асуултын тоог өөрчилж нийтлэх боломжгүй. Асуултын тоог '+o0.n+' болгож буцаана уу.');
   if(o0&&started&&!confirm('Энэ шалгалтыг '+oeRes.attempts.length+' сурагч аль хэдийн өгсөн/өгч байна.\n\nАсуулт, зөв хариултаа зассан бол дүн нь шинэ зөв хариултаар бодогдоно. Нийтлэх үү?'))return;
-  let p=oePayload({minutes,login,classes,show},true),note='';
-  if(JSON.stringify(p).length>1500000){p=oePayload({minutes,login,classes,show},false);note=' Зураг их байсан тул зурагнуудыг сурагчдад харуулсангүй.';}
+  let p=oePayload({minutes,login,classes,show},true),note='';const sig=oeSig(p),pb=$('#oePub');
+  if(JSON.stringify(p).length>OE_MAX){
+    if(pb)pb.disabled=true;m.style.color='';m.textContent='Зураг их байна — сурагчдын утсанд багтаахаар жижигрүүлж байна…';
+    let f;try{f=await oeFit(p,OE_MAX,w=>{m.textContent='Зураг их байна — жижигрүүлж байна ('+w+' цэг)…';});}finally{if(pb)pb.disabled=false;}
+    if(state!==ex)return;
+    if(!f.tooBig)note=' Зураг их байсан тул сурагчдын утсанд жижигрүүлж илгээлээ — нэг асуултыг утсан дээрээ нээж уншигдаж байгаа эсэхийг шалгаарай.';
+    else{const only=p.vq[0].filter(q=>q.img&&!q.text&&!q.ot&&!q.st).length;
+      if(!confirm('Зураг хэт их байгаа тул жижигрүүлээд ч багтсангүй.'+(only?'\n\n'+only+' асуулт зөвхөн зурагнаас бүрддэг — зураггүй бол сурагч тэдгээр асуултыг ХАРАХГҮЙ, зөвхөн A B C D товч л харагдана.':'')+
+        '\n\nАсуултын тоог багасгах, эсвэл хувилбар бүрийг тусдаа шалгалт болгож нийтлэхийг зөвлөж байна.\n\nЗураггүйгээр нийтлэх үү?'))
+        return oeErr('Нийтлээгүй. Зураг их байна — асуултын тоог багасгах эсвэл хувилбар бүрийг тусдаа шалгалт болгоно уу.');
+      p=oePayload({minutes,login,classes,show},false);note=' Зураг их байсан тул зурагнуудыг сурагчдад харуулсангүй.';}}
   m.style.color='';m.textContent='Нийтэлж байна…';
   try{const r=await sbRpc('oe_publish',{p_exam_id:ex.id,p_payload:p});
     if(!r||!r.ok)throw new Error(r&&r.error||'Нийтэлж чадсангүй.');
-    ex.exam.online={id:r.id,minutes,login,classes,show,n:p.n,open:true};if(matOpen===ex.id)matOpen='';save();
+    ex.exam.online={id:r.id,minutes,login,classes,show,n:p.n,open:true,sig};if(matOpen===ex.id)matOpen='';save();
     if(state===ex){oeRender();const m2=$('#oeMsg');m2.style.color='';m2.textContent='Нийтлэгдлээ. QR кодыг проектороор харуулах эсвэл холбоосыг сурагчдад илгээнэ үү.'+note;}}
   catch(e){oeErr(e.message);}
 }
@@ -8690,6 +8731,8 @@ async function startExam(){
   if(pend){try{const r=await oxCall('oe_submit',pend);if(r&&(r.ok||r.already))oxDel('pending');else return oxResend(pend);}catch(e){return oxResend(pend);}}
   oxIdentity();
 }
+/* Серверийн oe_start-тай яг адил: кодоор хувилбар хуваарилна (01 → А, 02 → Б …). Дахин орсон сурагч өмнөх хувилбараа авна. */
+function oxVarOf(code,vc){vc=Math.max(1,Math.min(4,+vc||1));let n=parseInt(String(code||'').replace(/\D/g,''),10);if(isNaN(n))n=1;return(n+vc-1)%vc;}
 function oxIdentity(){
   const digits=[...'0123456789'],S=OX.sel,q=OX.exam,byName=q.login==='names'&&q.classes.some(c=>c.students&&c.students.length);
   const row=(key,label)=>`<div class="bublab">${label}</div><div class="bubrow">${digits.map(v=>`<button type="button" class="bub" data-k="${key}" data-v="${v}" aria-pressed="${S[key]===v}">${v}</button>`).join('')}</div>`;
@@ -8699,7 +8742,7 @@ function oxIdentity(){
     <div class="bubgrp"><b>Анги</b><div class="clsbtns">${q.classes.map(c=>`<button type="button" class="clsbtn" data-cls="${esc(c.name)}" aria-pressed="${S.cls===c.name}">${esc(c.name)}</button>`).join('')}</div></div>
     ${byName?(selCls?`<div class="bubgrp"><b>Нэр</b><div class="namebtns">${(selCls.students||[]).map(st=>`<button type="button" class="namebtn" data-code="${esc(st.code)}" aria-pressed="${OX.who&&OX.who.cls===selCls.name&&OX.who.code===st.code}"><small>${esc(st.code)}</small>${esc(st.name)}</button>`).join('')}</div></div>`:'')
       :`<div class="bubgrp"><b>Код</b>${row('c1','1-р орон')}${row('c2','2-р орон')}</div>`}
-    <div class="sq-who" id="oxWho">${OX.who?`Та: <b>${esc(OX.who.name)}</b> (${esc(OX.who.cls)}, код ${esc(OX.who.code)}). Зөв бол "Эхлэх" дарна уу.`:'Ангиа сонгоод '+(byName?'нэрээ дарна уу.':'кодоо бүрэн сонгоно уу.')}</div>
+    <div class="sq-who" id="oxWho">${OX.who?`Та: <b>${esc(OX.who.name)}</b> (${esc(OX.who.cls)}, код ${esc(OX.who.code)}).${q.vcount>1?` Таны хувилбар: <b class="ox-var">${VNAMES[oxVarOf(OX.who.code,q.vcount)]}</b>.`:''} Зөв бол "Эхлэх" дарна уу.`:'Ангиа сонгоод '+(byName?'нэрээ дарна уу.':'кодоо бүрэн сонгоно уу.')}</div>
     <ul class="sq-rules">
       <li>Хугацаа <b>${q.minutes} минут</b>. "Эхлэх" дарснаас тоологдож, дуусахад хариулт тань өөрөө илгээгдэнэ.</li>
       <li>Асуулт бүрт зөв гэж үзсэн хариултаа дарна. Хариултаа дуустал хүссэн үедээ сольж болно.</li>
