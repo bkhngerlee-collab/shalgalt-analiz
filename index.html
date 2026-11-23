@@ -3137,6 +3137,26 @@ async function piOpen(file){
   try{return await lib.getDocument({data,isEvalSupported:false,enableXfa:false,useSystemFonts:true}).promise;}
   catch(e){throw new Error('"'+file.name+'"'+(e&&e.name==='PasswordException'?' нууц үгтэй PDF байна. Нууц үггүй хувилбарыг нь сонгоно уу.':' PDF файлыг нээж чадсангүй.'));}
 }
+/* Хуудсан дээрх зураг (скан, screenshot) ба зурсан дүрсний (схем, хүснэгт) хүрээ — асуулт бичвэр биш зураг
+   хэлбэртэй байхад баруун захыг зөвхөн бичвэрээр тооцвол тасардаг. pdf.js-ийн үйлдлийн жагсаалтаас (getOperatorList) уншина. */
+async function piGfx(pg,vp){
+  const lib=await loadPdfJs(),O=lib.OPS,ol=await pg.getOperatorList(),out=[];
+  const mul=(m,n)=>[m[0]*n[0]+m[2]*n[1],m[1]*n[0]+m[3]*n[1],m[0]*n[2]+m[2]*n[3],m[1]*n[2]+m[3]*n[3],m[0]*n[4]+m[2]*n[5]+m[4],m[1]*n[4]+m[3]*n[5]+m[5]];
+  let ctm=[1,0,0,1,0,0];const st=[];
+  const box=(x0,y0,x1,y1)=>{const ps=[[x0,y0],[x1,y0],[x0,y1],[x1,y1]].map(([x,y])=>vp.convertToViewportPoint(ctm[0]*x+ctm[2]*y+ctm[4],ctm[1]*x+ctm[3]*y+ctm[5]));
+    const xs=ps.map(p=>p[0]),ys=ps.map(p=>p[1]),b={x:Math.min(...xs),x2:Math.max(...xs),top:Math.min(...ys),bot:Math.max(...ys)};
+    /* хуудас бүхэлд нь хамарсан тэгш өнцөгт (clip, дэвсгэр, хүрээ) — тооцохгүй */
+    if(isFinite(b.x)&&isFinite(b.x2)&&b.x2-b.x>2&&b.x2-b.x<vp.width*.95&&(b.x2-b.x)*(b.bot-b.top)<vp.width*vp.height*.4)out.push(b);};
+  const IMG=new Set([O.paintImageXObject,O.paintInlineImageXObject,O.paintImageMaskXObject,O.paintImageXObjectRepeat,O.paintSolidColorImageMask].filter(v=>v!=null));
+  for(let i=0;i<ol.fnArray.length&&out.length<4000;i++){const fn=ol.fnArray[i],a=ol.argsArray[i];
+    if(fn===O.save)st.push(ctm);else if(fn===O.restore)ctm=st.pop()||ctm;
+    else if(fn===O.transform)ctm=mul(ctm,a);
+    else if(fn===O.paintFormXObjectBegin){st.push(ctm);if(a&&Array.isArray(a[0])&&a[0].length===6)ctm=mul(ctm,a[0]);}
+    else if(fn===O.paintFormXObjectEnd)ctm=st.pop()||ctm;
+    else if(IMG.has(fn))box(0,0,1,1);
+    else if(fn===O.constructPath){const mm=a&&a[a.length-1];if(mm&&mm.length===4&&isFinite(mm[0]))box(mm[0],mm[1],mm[2],mm[3]);}}
+  return out;
+}
 /* Хуудас бүрийн бичвэрийн хэсгүүд: s, x, x2, top, bot (pt, дээрээс) */
 async function piPages(doc,onp,stop){
   const out=[];
@@ -3154,7 +3174,8 @@ async function piPages(doc,onp,stop){
     for(let k=items.length-1;k>0;k--){const a=items[k-1],b=items[k];
       if(Math.abs(a.top-b.top)<a.h*.2&&b.x>=a.x2-.5&&b.x-a.x2<a.h*.15&&/^\d+$/.test(a.s)&&/^\d/.test(b.s)){
         a.s+=b.s;a.x2=b.x2;items.splice(k,1);}}
-    out.push({p,W:vp.width,H:vp.height,items,pg});
+    let gfx=[];try{gfx=await piGfx(pg,vp);}catch(e){}
+    out.push({p,W:vp.width,H:vp.height,items,pg,gfx});
     if(onp)onp(p,doc.numPages);
   }
   return out;
@@ -3263,6 +3284,8 @@ function piRegions(pages,anch){
   const stopAt=(pg,from)=>{const s=pg.stops.find(y=>y>from+2);return Math.min(pg.cBot,s==null?pg.H:s-3);};
   const xs=[],xe=[];
   pages.forEach(pg=>pg.items.forEach(it=>{if(!it.furn){xs.push(it.x);xe.push(it.x2);}}));
+  /* Зураг, схемийн баруун зах (толгой, хөлийн бүс болон хуудасны захын чимэглэлийг тооцохгүй) */
+  pages.forEach(pg=>(pg.gfx||[]).forEach(b=>{if(b.bot>pg.cTop&&b.top<pg.cBot&&b.x<pg.W*.9&&b.x2<=pg.W-6)xe.push(b.x2);}));
   xs.sort((a,b)=>a-b);xe.sort((a,b)=>a-b);
   const left=anch.filter(a=>!a.col),right=anch.filter(a=>a.col);
   const X0=Math.max(0,(left.length?Math.min(...left.map(a=>a.x)):xs[Math.floor(xs.length*.02)]||0)-10);
