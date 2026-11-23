@@ -430,6 +430,14 @@ td input,td select{min-width:70px}
 .ex-del:hover{background:var(--stain-soft);opacity:1}
 .del-dlg{width:min(560px,calc(100vw - 32px));border:1px solid var(--line);border-radius:18px;padding:20px 22px;background:var(--card);color:var(--ink);box-shadow:0 24px 60px rgba(0,0,0,.3)}
 .del-dlg::backdrop{background:rgba(16,26,22,.45)}
+.fix-dlg{width:min(860px,calc(100vw - 24px));max-height:calc(100vh - 32px);padding:16px 18px}
+.fix-dlg table{width:100%;border-collapse:collapse;font-size:.92rem}
+.fix-dlg th,.fix-dlg td{padding:6px 8px;border-bottom:1px solid var(--line);text-align:left;vertical-align:middle}
+.fix-dlg tr.fx-on{background:var(--leaf-soft)}
+.fix-dlg select,.fix-dlg input{width:auto;min-width:64px;padding:4px 6px;margin:0}
+.fix-dlg .fx-btn{padding:3px 10px;font-size:.85rem;margin:0}
+.fix-dlg .fx-sum{display:flex;flex-wrap:wrap;gap:8px 18px;align-items:baseline;margin:0 0 10px}
+.fix-dlg .fx-sum b.big{font-size:1.4rem}
 .del-opt{display:block;width:100%;text-align:left;font:inherit;color:inherit;cursor:pointer;margin:0 0 10px;padding:12px 14px;border-radius:12px;border:2px solid var(--line);background:var(--bg)}
 .del-opt b{display:block;font-size:1.02rem;margin-bottom:3px}
 .del-opt span{display:block;font-size:.88rem;color:var(--muted);line-height:1.45}
@@ -1979,6 +1987,7 @@ body.student #studentApp{display:block}
   </div>
 </dialog>
 <dialog id="delDlg" class="del-dlg" aria-labelledby="delTitle"><div id="delBody"></div></dialog>
+<dialog id="fixDlg" class="del-dlg fix-dlg" aria-labelledby="fixTitle"><div id="fixBody"></div></dialog>
 <dialog id="piDlg" class="pi-dlg" aria-labelledby="piTitle">
   <div class="pi-head"><h2 id="piTitle">📄 PDF-ээс шалгалт үүсгэх</h2><button type="button" class="btn ghost" id="piX" aria-label="Цонхыг хаах">✕ Хаах</button></div>
   <div id="piBody"></div>
@@ -2637,6 +2646,16 @@ function qEarn(q,a){
 const qOk=(q,a)=>!!a&&(isP3(q)?parseInt(a,10)===p3Steps(q).length-1
   :isP4(q)?tfRight(q,a)===TF_N
   :isP2(q)?keyNorm(a)===keyNorm(q.key)&&!!keyNorm(q.key):a===q.key);
+/* Багшийн засвар (сурагч бүрт):
+   s.fix[i] — засварласан хариулт (цахим шалгалтын сурагчид: серверээс дахин ирэх хариулт үүнийг дарахгүй);
+   s.ovr[i] — 1 = зөв гэж тооцох (бүтэн оноо), 0 = буруу гэж тооцох. Дүн, анализ, тайлан бүгд эдгээрээр бодогдоно. */
+const sAns=(s,i)=>s.fix&&s.fix[i]!=null?s.fix[i]:(s.answers||[])[i];
+const qFull=q=>isP3(q)?p3Max(q):+q.points||0;
+function sEarn(s,i,q){q=q||state.exam.questions[i];const o=s.ovr&&s.ovr[i];
+  if(o===1)return qFull(q);if(o===0)return 0;return qEarn(qv(q,s.v),sAns(s,i));}
+function sOk(s,i,q){q=q||state.exam.questions[i];const o=s.ovr&&s.ovr[i];
+  if(o===1)return true;if(o===0)return false;return qOk(qv(q,s.v),sAns(s,i));}
+const sFixed=s=>!!((s.fix&&Object.keys(s.fix).length)||(s.ovr&&Object.keys(s.ovr).length));
 function resizeParts(n1,n2,n3,n4){
   const qs=state.exam.questions,[o1,o2,o3,o4]=partCount();
   if(n3==null)n3=o3;if(n4==null)n4=o4;
@@ -5163,10 +5182,62 @@ function renderList(){
     db2.textContent=entryCls?entryCls+' ангийн '+list.length+' хариултыг устгах':'';}
   $('#slist').innerHTML=list.length?list.slice().sort((a,b)=>a.name.localeCompare(b.name,'mn')).map(s=>`<tr>
     <td>${esc(s.cls)}</td><td><b>${esc(s.name)}</b></td>
-    <td style="font-family:ui-monospace,Consolas,monospace">${s.answers.map(a=>a||'–').join(' ')}</td>
-    <td class="num"><button class="btn danger" style="padding:4px 10px" data-del="${s.id}">Устгах</button></td></tr>`).join('')
+    <td style="font-family:ui-monospace,Consolas,monospace">${s.answers.map((a,i)=>sAns(s,i)||'–').join(' ')}${sFixed(s)?' <span title="Багш зассан" style="font-family:inherit">✏️</span>':''}</td>
+    <td class="num" style="white-space:nowrap"><button class="btn ghost" style="padding:4px 10px" data-fixs="${s.id}" title="Хариулт, дүнг гараар засах">✏️ Засах</button> <button class="btn danger" style="padding:4px 10px" data-del="${s.id}">Устгах</button></td></tr>`).join('')
     :'<tr><td class="empty">Одоогоор хариулт оруулаагүй байна.</td></tr>';
 }
+/* ---------- Багш сурагчийн хариулт, дүнг гараар засах (цаасан ба цахим шалгалт) ---------- */
+let fixSid=null;
+function openFix(sid){fixSid=sid;renderFix();const d=$('#fixDlg');if(!d.open)d.showModal();}
+function fixRefresh(){save();
+  if(!$('#tab-entry').hidden)renderList();if(!$('#tab-analysis').hidden)renderAnalysis();
+  const so=$('#s-online');if(!$('#tab-setup').hidden&&so&&!so.classList.contains('sec-off')&&typeof oeRenderRes==='function')oeRenderRes();}
+function renderFix(){
+  const s=state.students.find(x=>x.id===fixSid),box=$('#fixBody');if(!s){$('#fixDlg').close();return;}
+  const qs=state.exam.questions,online=s.src==='online',V=vCount();
+  const tot=qs.reduce((a,q)=>a+qFull(q),0),got=qs.reduce((a,q,i)=>a+sEarn(s,i,q),0),pct=tot?got/tot*100:0;
+  const lab=(q,a)=>isP3(q)?(()=>{const st=p3Steps(q),k=parseInt(a,10);return st[k]?st[k].label:'–';})():a||'–';
+  const ansCell=(q,i)=>{const a=sAns(s,i)||'';
+    if(isP1(q))return`<select data-fa="${i}" aria-label="${esc(qN(i))}-р асуултын хариулт"><option value=""${a?'':' selected'}>–</option>${opts1().map(x=>`<option${x===a?' selected':''}>${x}</option>`).join('')}</select>`;
+    if(isP3(q))return`<select data-fa="${i}" aria-label="${esc(qN(i))}-р даалгаврын оноо"><option value=""${a===''?' selected':''}>–</option>${p3Steps(q).map((st,k)=>`<option value="${k}"${String(k)===String(a)?' selected':''}>${esc(st.label)} (${st.pts})</option>`).join('')}</select>`;
+    return`<input data-fa="${i}" value="${esc(a)}" style="width:90px;text-transform:uppercase" placeholder="${isP4(q)?'ҮХҮХ':'ACF'}" aria-label="${esc(qN(i))}-р асуултын хариулт">`;};
+  box.innerHTML=`<div style="display:flex;justify-content:space-between;gap:10px;align-items:start">
+      <h2 id="fixTitle" style="margin:0">✏️ ${esc(s.name)} <small style="color:var(--muted);font-weight:600">${esc(s.cls||'')}${V>1?' · '+VNAMES[s.v||0]+' хувилбар':''}${online?' · 📱 цахим':''}</small></h2>
+      <button type="button" class="btn ghost" data-fx="close" style="margin:0">✕ Хаах</button></div>
+    <div class="fx-sum"><span>Оноо: <b class="big">${r1(got)}</b> / ${r1(tot)}</span><span><b>${Math.round(pct)}%</b> · ${levelOf(pct)} түвшин</span>
+      ${sFixed(s)?`<span class="m">✏️ ${Object.keys(s.ovr||{}).length+Object.keys(s.fix||{}).length} засвартай</span><button type="button" class="btn ghost fx-btn" data-fx="clear">Бүх засварыг буцаах</button>`:''}</div>
+    <p class="hint" style="margin:0 0 8px;font-size:.86rem">Буруу уншигдсан хариултыг <b>«Сурагчийн хариулт»</b>-аас сольж засна. Хариулт нь зөв боловч түлхүүрээс өөр (эсвэл багш өөрөөр шийдсэн) бол <b>«Зөв болгох / Буруу болгох»</b>.
+      Дүн, анализ, тайлан бүгд засвараар бодогдоно.${online?' Цахим шалгалтаас дахин ирэх хариулт таны засварыг дарахгүй. Сурагчид аль хэдийн харуулсан оноо өөрчлөгдөхгүй.':''}</p>
+    <div class="scroll" style="max-height:calc(100vh - 300px);overflow:auto"><table><thead><tr><th>№</th><th>Агуулга</th><th>Сурагчийн хариулт</th><th>Зөв</th><th class="num">Оноо</th><th>Багшийн шийдвэр</th></tr></thead><tbody>
+    ${qs.map((q,i)=>{const v=qv(q,s.v),o=s.ovr&&s.ovr[i],fx=s.fix&&s.fix[i]!=null,e=sEarn(s,i,q),full=qFull(q),ok=sOk(s,i,q);
+      const key=isP3(q)?'—':isP4(q)?tfNorm(v.key):(v.key||'?');
+      const st=o===1?'<span class="g">✓ Багш зөв гэсэн</span>':o===0?'<span class="b">✗ Багш буруу гэсэн</span>':ok?'<span class="g">✓</span>':e>0?'<span class="m">◐ хэсэгчлэн</span>':'<span class="b">✗</span>';
+      const orig=(s.answers||[])[i]||'';
+      return`<tr class="${o!=null||fx?'fx-on':''}"><td><b>${esc(qN(i))}</b></td><td><small>${esc(topicOf(i))}</small></td>
+        <td>${ansCell(q,i)}${fx?`<br><small style="color:var(--muted)">уншсан: ${esc(lab(q,orig))}</small>`:''}</td>
+        <td><b>${esc(key)}</b></td><td class="num">${r1(e)} / ${r1(full)} ${st}</td>
+        <td>${o!=null?`<button type="button" class="btn ghost fx-btn" data-fo="${i}" data-v="">Буцаах</button>`
+          :ok?`<button type="button" class="btn ghost fx-btn" data-fo="${i}" data-v="0">Буруу болгох</button>`
+          :`<button type="button" class="btn fx-btn" data-fo="${i}" data-v="1">Зөв болгох</button>`}${fx?` <button type="button" class="btn ghost fx-btn" data-ff="${i}" title="Уншсан хариулт руу буцаах">↺</button>`:''}</td></tr>`;}).join('')}
+    </tbody></table></div>`;
+}
+$('#fixDlg').addEventListener('click',e=>{
+  const s=state.students.find(x=>x.id===fixSid);if(e.target===$('#fixDlg')){$('#fixDlg').close();return;}if(!s)return;
+  const b=e.target.closest('[data-fx],[data-fo],[data-ff]');if(!b)return;
+  if(b.dataset.fx==='close'){$('#fixDlg').close();return;}
+  if(b.dataset.fx==='clear'){if(!confirm(s.name+'-ийн бүх засварыг буцаах уу?'))return;delete s.ovr;delete s.fix;}
+  if(b.dataset.fo!=null){const i=+b.dataset.fo;s.ovr=s.ovr||{};if(b.dataset.v==='')delete s.ovr[i];else s.ovr[i]=+b.dataset.v;if(!Object.keys(s.ovr).length)delete s.ovr;}
+  if(b.dataset.ff!=null){if(s.fix){delete s.fix[+b.dataset.ff];if(!Object.keys(s.fix).length)delete s.fix;}}
+  renderFix();fixRefresh();});
+$('#fixDlg').addEventListener('change',e=>{
+  const s=state.students.find(x=>x.id===fixSid),el=e.target;if(!s||el.dataset.fa==null)return;
+  const i=+el.dataset.fa,q=state.exam.questions[i];let v=el.value.trim();
+  if(isP2(q))v=keyNorm(v);else if(isP4(q)){v=tfNorm(v);if(/^-+$/.test(v))v='';}
+  if(s.src==='online'){const orig=(s.answers||[])[i]||'';s.fix=s.fix||{};if(v===orig)delete s.fix[i];else s.fix[i]=v;if(!Object.keys(s.fix).length)delete s.fix;}
+  else{while(s.answers.length<=i)s.answers.push('');s.answers[i]=v;queueStudent(s.cls,s.name,s.answers);}   // цаасан / гараар: хариултыг шууд засна
+  if(s.ovr&&s.ovr[i]!=null){delete s.ovr[i];if(!Object.keys(s.ovr).length)delete s.ovr;}
+  renderFix();fixRefresh();});
+document.addEventListener('click',e=>{const b=e.target.closest('[data-fixs]');if(!b)return;e.preventDefault();openFix(b.dataset.fixs);});
 $('#slist').addEventListener('click',e=>{
   const b=e.target.closest('[data-del]');if(!b)return;
   const s=state.students.find(x=>x.id===b.dataset.del);
@@ -5289,7 +5360,7 @@ const f2=n=>n==null?'–':n.toFixed(2);
 function compute(list){
   const qs=state.exam.questions,total=qs.reduce((s,q)=>s+(+q.points||0),0)||1;
   const rows=list.map(s=>{
-    const ok=qs.map((q,i)=>qOk(qv(q,s.v),s.answers[i])),earn=qs.map((q,i)=>qEarn(qv(q,s.v),s.answers[i]));
+    const ok=qs.map((q,i)=>sOk(s,i,q)),earn=qs.map((q,i)=>sEarn(s,i,q));
     const part=earn.map((e,i)=>!ok[i]&&e>0);
     const score=earn.reduce((t,e)=>t+e,0);
     return{s,ok,earn,part,score,pct:score/total*100};
@@ -5470,8 +5541,9 @@ function renderAnalysis(){
     const wt=[...new Set(wrong.map(topicOf))];
     detail=`<div class="detail"><h3>${esc(dName(sel.s.cls,sel.s.name))}${sel.s.cls?' ('+esc(sel.s.cls)+')':''}:${r1(sel.score)} / ${r1(d.total)} оноо, ${Math.round(sel.pct)}%, ${sel.lv} түвшин, ангидаа ${sel.rank}-р байр</h3>
       <div style="margin:6px 0 10px">${adviceHtml(sel.pct,wt)}</div>
+      <div class="btns noprint" style="margin:0 0 8px"><button type="button" class="btn ghost" data-fixs="${esc(sel.s.id)}">✏️ Хариулт засах${sFixed(sel.s)?" <small>(засвартай)</small>":""}</button></div>
       ${wrong.length?`<ul>${wrong.map(i=>
-        `<li>${esc(qN(i))}-р асуулт (${esc(topicOf(i))}): ${sel.s.answers[i]?'хариулсан '+esc(sel.s.answers[i]):'хариулаагүй'}, зөв нь ${esc(qv(qs[i],sel.s.v).key)}</li>`).join('')}</ul>`
+        `<li>${esc(qN(i))}-р асуулт (${esc(topicOf(i))}): ${sAns(sel.s,i)?'хариулсан '+esc(sAns(sel.s,i)):'хариулаагүй'}, зөв нь ${esc(qv(qs[i],sel.s.v).key)}</li>`).join('')}</ul>`
       :''}</div>`;
   }
 
@@ -5568,7 +5640,7 @@ function renderAnalysis(){
         const wt=[...new Set(qs.map((q,i)=>i).filter(i=>!r.ok[i]).map(topicOf))];
         return avgRowAt(VR,x=>x.pct,d.avg,viewSort,viewShow,k,11)+`<tr class="pick${r.s.id===selId?' sel':''}" data-id="${r.s.id}" tabindex="0">
           <td>${k+1}</td><td>${esc(r.s.cls)}</td><td>${codeOf(r.s.cls,r.s.name)||'–'}</td><td><b>${esc(dName(r.s.cls,r.s.name))}</b></td>
-          <td style="white-space:nowrap">${r.ok.map((o,i)=>`<span class="well ${o?'ok':r.part[i]?'pt':r.s.answers[i]?'no':'na'}" title="${esc(qN(i))}-р асуулт">${esc(qN(i))}</span>`).join('')}</td>
+          <td style="white-space:nowrap">${r.ok.map((o,i)=>`<span class="well ${o?'ok':r.part[i]?'pt':sAns(r.s,i)?'no':'na'}" title="${esc(qN(i))}-р асуулт">${esc(qN(i))}</span>`).join('')}</td>
           <td class="num">${r1(r.score)}/${r1(d.total)}</td><td class="num"><b>${Math.round(r.pct)}%</b></td><td class="num">${diffHtml(r.pct,d.avg)}</td>
           <td class="num">${r.lv}</td><td class="num"><b>${r.rank}</b> / ${r.of}</td>
           <td style="min-width:230px">${adviceHtml(r.pct,wt)}</td></tr>`;}).join('')}</tbody>
@@ -6366,7 +6438,7 @@ const todayStr=()=>new Date().toISOString().slice(0,10);
 function examExportData(){
   const list=anaPick(filterCls?state.students.filter(s=>s.cls===filterCls):state.students),d=compute(list),qs=state.exam.questions;
   const LT=qs.some(isP2)?opts2():opts1();
-  const dist=qs.map((q,i)=>{const c={'':0};LT.forEach(x=>c[x]=0);d.rows.forEach(r=>{const a=r.s.answers[i]||'';if(!a)c['']++;else[...a].forEach(x=>{if(x in c)c[x]++;});});return c;});
+  const dist=qs.map((q,i)=>{const c={'':0};LT.forEach(x=>c[x]=0);d.rows.forEach(r=>{const a=sAns(r.s,i)||'';if(!a)c['']++;else[...a].forEach(x=>{if(x in c)c[x]++;});});return c;});
   const levels=LEVELS.map(l=>({g:l[0],range:l[1]+'–'+l[2]+'%',who:d.rows.filter(r=>r.lv===l[0])}));
   const share=m=>d.n?d.rows.filter(r=>r.pct>=m).length/d.n*100:0;
   const V=viewRows(d.rows,{pct:r=>r.pct,name:r=>r.s.name,cls:r=>r.s.cls,show:viewShow,sort:viewSort,avg:d.avg});
@@ -8626,9 +8698,13 @@ async function oeFit(p,max,onp){
     for(const q of qs){try{q.img=await oeImgSmall(orig.get(q),w,ql);}catch(e){}}
     if(JSON.stringify(p).length<=max)return{p,shrunk:true};}
   return{p,shrunk:true,tooBig:true};}
+const oeStudentOf=a=>state.students.find(s=>s.cls===a.cls&&s.name===a.name)||null;
 /* Багшийн хүснэгтэд: нэг оролдлогын оноо (IV задгай хэсгийг тооцохгүй) */
 function oeScoreOf(a){
   const qs=state.exam.questions,src=a.answers||[];let got=0,max=0;
+  /* Багш засвар хийсэн бол бүртгэлийн сурагчаар (засвартай нь) бодно */
+  const st=a.status!=='started'?oeStudentOf(a):null;if(st&&st.src==='online'&&sFixed(st)){qs.forEach((q,i)=>{if(isP3(q))return;max+=+q.points||0;got+=sEarn(st,i,q);});
+    return{got:Math.round(got*100)/100,max:Math.round(max*100)/100,fixed:true};}
   qs.forEach((q,i)=>{if(isP3(q))return;max+=+q.points||0;let x=String(src[i]==null?'':src[i]);
     if(isP2(q))x=keyNorm(x);else if(isP4(q)){x=tfNorm(x);if(/^-+$/.test(x))x='';}
     got+=qEarn(qv(q,a.v||0),x);});
@@ -8772,9 +8848,9 @@ function oeRenderRes(){
   const nAns=a=>(a.answers||[]).filter(x=>String(x||'').replace(/-/g,'')).length;
   const row=a=>`<tr><td>${esc(a.cls)}</td><td>${esc(pad2(a.code))}</td><td><b>${esc(a.name)}</b></td>${V>1?`<td>${VNAMES[a.v||0]}</td>`:''}
     <td>${a.status==='started'?`<span class="m">${OE_ST.started}</span>`:a.status==='left'?`<span class="b">${OE_ST.left}</span>`:OE_ST[a.status]||esc(a.status)}</td>
-    <td class="num">${nAns(a)} / ${o.n}</td><td class="num">${(()=>{const s=oeScoreOf(a);return s.max?`<b>${s.got}</b> / ${s.max} <small>(${Math.round(s.got/s.max*100)}%)</small>`:'–';})()}</td><td class="num">${a.leaves?`<span class="b">${a.leaves}</span>`:'0'}</td>
+    <td class="num">${nAns(a)} / ${o.n}</td><td class="num">${(()=>{const s=oeScoreOf(a);return s.max?`${s.fixed?"<span title=\"Багш зассан\">✏️</span> ":""}<b>${s.got}</b> / ${s.max} <small>(${Math.round(s.got/s.max*100)}%)</small>`:'–';})()}</td><td class="num">${a.leaves?`<span class="b">${a.leaves}</span>`:'0'}</td>
     <td class="num">${a.status==='started'?'үлдсэн '+mmss(Math.max(0,(a.startMs+lim-now)/1000)):mmss(((a.endMs||now)-a.startMs)/1000)}</td>
-    <td><button class="btn danger" style="padding:3px 10px" data-oereset="${esc(a.attemptId)}">Дахин өгүүлэх</button></td></tr>`;
+    <td style="white-space:nowrap">${a.status!=='started'&&oeStudentOf(a)?`<button class="btn ghost" style="padding:3px 10px" data-fixs="${esc(oeStudentOf(a).id)}" title="Хариулт, дүнг гараар засах">✏️ Засах</button> `:''}<button class="btn danger" style="padding:3px 10px" data-oereset="${esc(a.attemptId)}">Дахин өгүүлэх</button></td></tr>`;
   box.innerHTML=`<div class="stats" style="margin-top:6px">
       <div class="stat"><b>${fin.length}</b><span>Дуусгасан</span></div>
       <div class="stat"><b>${live.length}</b><span>Одоо өгч байгаа</span></div>
