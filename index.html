@@ -428,6 +428,15 @@ td input,td select{min-width:70px}
 .ex-del{border:0;background:transparent;font:inherit;font-size:1rem;width:34px;height:34px;border-radius:8px;cursor:pointer;opacity:.6;padding:0}
 .ex-row:hover .ex-del,.ex-del:focus-visible{opacity:1}
 .ex-del:hover{background:var(--stain-soft);opacity:1}
+.del-dlg{width:min(560px,calc(100vw - 32px));border:1px solid var(--line);border-radius:18px;padding:20px 22px;background:var(--card);color:var(--ink);box-shadow:0 24px 60px rgba(0,0,0,.3)}
+.del-dlg::backdrop{background:rgba(16,26,22,.45)}
+.del-opt{display:block;width:100%;text-align:left;font:inherit;color:inherit;cursor:pointer;margin:0 0 10px;padding:12px 14px;border-radius:12px;border:2px solid var(--line);background:var(--bg)}
+.del-opt b{display:block;font-size:1.02rem;margin-bottom:3px}
+.del-opt span{display:block;font-size:.88rem;color:var(--muted);line-height:1.45}
+.del-opt span b{display:inline;font-size:inherit;color:var(--ink)}
+.del-opt.keep{border-color:var(--leaf);background:var(--leaf-soft)}
+.del-opt.keep:hover,.del-opt.keep:focus-visible{box-shadow:0 0 0 3px rgba(4,120,87,.25)}
+.del-opt.all:hover,.del-opt.all:focus-visible{border-color:var(--stain);background:var(--stain-soft)}
 .ex-warn{color:var(--iodine)}
 .ex-row{display:grid;grid-template-columns:92px minmax(0,1fr) 128px 112px 34px;gap:14px;align-items:center;width:100%;text-align:left;
   border:0;border-bottom:1px solid var(--line);background:transparent;padding:10px 16px;font:inherit;color:var(--ink);cursor:pointer;border-radius:0}
@@ -1969,6 +1978,7 @@ body.student #studentApp{display:block}
     <div id="qtplPane"></div>
   </div>
 </dialog>
+<dialog id="delDlg" class="del-dlg" aria-labelledby="delTitle"><div id="delBody"></div></dialog>
 <dialog id="piDlg" class="pi-dlg" aria-labelledby="piTitle">
   <div class="pi-head"><h2 id="piTitle">📄 PDF-ээс шалгалт үүсгэх</h2><button type="button" class="btn ghost" id="piX" aria-label="Цонхыг хаах">✕ Хаах</button></div>
   <div id="piBody"></div>
@@ -2803,7 +2813,7 @@ function renderExams(){
   box.innerHTML=list.length?list.map(e=>{const g=examGrade(e),n=e.students.length,cur=e.id===state.id;
     const cls=[...new Set(e.students.map(s=>s.cls).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'mn',{numeric:true}));
     const sub=[cur?'<b class="ex-cur">● Нээлттэй</b>':'',dupOf[e.id]?'<b class="ex-warn">⚠ Давхардсан</b>':'',!n?'<span class="ex-warn">Хариултгүй</span>':'',
-      e.exam.online?'📱 Цахим':'',cls.length?esc(cls.slice(0,6).join(', ')+(cls.length>6?'…':'')):'',
+      e.exam.online?'📱 Цахим':'',e.exam.matGone&&!hasMaterial(e)?'📊 Зөвхөн дүн':'',cls.length?esc(cls.slice(0,6).join(', ')+(cls.length>6?'…':'')):'',
       e.exam.questions?e.exam.questions.length+' асуулт':''].filter(Boolean).join(' · ');
     return`<div class="ex-row${cur?' on':''}${n?'':' ex-empty'}" role="option" tabindex="0" aria-selected="${cur}" data-id="${e.id}">
       <span class="ex-g${g?' g'+Math.min(12,Math.max(9,g)):''}">${g?g+'-р анги':'—'}</span>
@@ -2861,7 +2871,7 @@ function renderSetup(){
   ['#qcount','#qcount2','#qcount3','#qcount4','#optn','#p2n','#vcount','#vmode','#addQ1','#addQ5','#qbulkBtn'].forEach(s=>{const el=$(s);if(el)el.disabled=lk;});
   if(vOwn())$('#qbulkBtn').disabled=false;   // Б хувилбарын асуултыг түгжээтэй үед ч оруулж болно (А-д matGuard хамгаална)
   const multi=n2||n3||n4;
-  $('#qtable').innerHTML=qTableHTML(lk);
+  $('#qtable').innerHTML=(state.exam.matGone&&!hasMaterial(state)?`<div class="hp-warn" style="margin:0 0 10px">📊 Энэ шалгалтын асуултын материал (текст, сонголт, зураг) ${esc(state.exam.matGone)}-нд устгагдсан. <b>Зөв хариулт, агуулга, оноо, сурагчдын дүн, анализ хадгалагдаж байна.</b> Хариултын хуудас хэвлэх, хуудас уншуулах, хариулт засах зэрэг нь хэвийн ажиллана.</div>`:'')+qTableHTML(lk);
 }
 /* Асуултын жагсаалт: хувилбар бүр тусдаа хайрцаг ("Өөр асуултууд" горимд А-гийн доор Б, В, Г).
    Хайрцгийг хураахад зөвхөн зөв хариултуудын товч жагсаалт үлдэнэ. Энэ нь зөвхөн дэлгэцийн
@@ -4864,14 +4874,45 @@ $('#qtable').addEventListener('input',e=>{
     if(b)b.innerHTML='Хуудсан дээр: '+p3Steps(q).map(s=>`<span>${esc(s.label)}</span>`).join('')+'<small>Та авсан оноог нь шууд будна</small>';}
   save();
 });
-/* Шалгалт устгах — нээлттэйг ч, жагсаалтаас өөр шалгалтыг ч */
+/* Асуултын материал (текст, сонголт, мэдэгдэл, зураг — Б, В, Г хувилбарынх ч) — дүн бодоход хэрэггүй хэсэг.
+   Зөв хариулт, агуулга, оноо, хэсэг, дугаар (1a), оноо тооцох журам үлдэнэ → анализ, дүн, тайлан хэвээр. */
+function matKB(e){try{return Math.round(JSON.stringify(e.exam.questions.map(q=>[q.text,q.opts,q.stmts,q.img,(q.alt||[]).map(a=>a&&[a.text,a.opts,a.stmts,a.img])])).length/1024);}catch(x){return 0;}}
+function stripMaterial(e){
+  const clean=o=>{if(!o)return o;delete o.img;if('text'in o)o.text='';if(Array.isArray(o.opts))o.opts=o.opts.map(()=>'');if(Array.isArray(o.stmts))o.stmts=o.stmts.map(()=>'');return o;};
+  e.exam.questions.forEach(q=>{clean(q);if(Array.isArray(q.alt))q.alt.forEach(clean);});
+  e.exam.matGone=today();
+}
+function hasMaterial(e){return e.exam.questions.some(q=>[q,...(q.alt||[])].some(o=>o&&(o.img||String(o.text||'').trim()||(o.opts||[]).some(Boolean)||(o.stmts||[]).some(Boolean))));}
+/* Шалгалт устгах — нээлттэйг ч, жагсаалтаас өөр шалгалтыг ч. Сурагчийн дүнтэй бол "материалыг л устгах" сонголт гарна. */
 function deleteExam(id){
   const e=db.exams.find(x=>x.id===id);if(!e)return;
-  const nm=e.exam.title||'Нэргүй шалгалт',on=e.exam.online;
-  if(!confirm('⚠ "'+nm+'"'+(e.exam.date?' ('+e.exam.date+')':'')+' шалгалтыг бүхэлд нь устгах гэж байна.\n\n'
-    +'  • '+e.exam.questions.length+' асуулт\n  • '+e.students.length+' сурагчийн хариулт, дүн\n'
-    +(on?'  • Цахим шалгалтын QR, холбоос ажиллахаа болино\n':'')
-    +'\nБусад шалгалт хэвээр үлдэнэ.'+UNDO_NOTE+'\n\nҮргэлжлүүлэх үү?'))return;
+  const nm=e.exam.title||'Нэргүй шалгалт',on=e.exam.online,n=e.students.length,mat=hasMaterial(e),kb=matKB(e);
+  const d=$('#delDlg');
+  $('#delBody').innerHTML=`<h2 id="delTitle" style="margin:0 0 6px">🗑 «${esc(nm)}»${e.exam.date?' <small style="color:var(--muted);font-weight:600">('+esc(e.exam.date)+')</small>':''}</h2>
+    <p class="hint" style="margin:0 0 12px">${e.exam.questions.length} асуулт · <b>${n}</b> сурагчийн хариулт, дүн${on?' · 📱 цахим шалгалт':''}</p>
+    ${n&&mat?`<button type="button" class="del-opt keep" data-act="mat">
+      <b>📊 Материалыг устгаж, дүн анализыг хадгалах</b>
+      <span>Асуултын текст, сонголт, зураг${vCount()>1&&e===state?', бүх хувилбарынх':''} устна${kb>=50?' (≈'+(kb>=1024?(kb/1024).toFixed(1)+' МБ':kb+' КБ')+' сул зай гарна)':''}.
+        <b>Сурагчдын дүн, анализ, тайлан, зөв хариулт, агуулга, оноо</b> бүгд хэвээр үлдэнэ.${on?' Цахим шалгалт (QR) хэвээр — хэрэггүй бол «Цахим шалгалт» табаас устгана.':''}</span></button>`
+     :n&&!mat?`<p class="hint" style="margin:0 0 10px">Энэ шалгалтын материал аль хэдийн устгагдсан — зөвхөн дүн, анализ нь үлдсэн байна.</p>`:''}
+    <button type="button" class="del-opt all" data-act="all">
+      <b>🗑 Бүгдийг устгах${n?' — дүн, анализтай нь':''}</b>
+      <span>Асуулт${n?', '+n+' сурагчийн хариулт, дүн, анализ':''} бүгд устна.${on?' Цахим шалгалтын QR, холбоос ажиллахаа болино.':''} Бусад шалгалт хэвээр.</span></button>
+    <p class="hint" style="margin:10px 0 0;font-size:.85rem">Устгасны дараа 30 секундийн турш «Буцаах» товч гарна. Хуудсаа хаавал сэргээх боломжгүй.</p>
+    <div class="btns" style="margin:12px 0 0;justify-content:flex-end"><button type="button" class="btn ghost" data-act="no">Болих</button></div>`;
+  d.onclick=ev=>{const b=ev.target.closest('[data-act]');if(ev.target===d){d.close();return;}if(!b)return;const act=b.dataset.act;d.close();
+    if(act==='mat')deleteMaterial(e);else if(act==='all')deleteExamAll(e);};
+  d.showModal();const f=d.querySelector('.del-opt');if(f)f.focus();
+}
+function deleteMaterial(e){
+  const nm=e.exam.title||'Нэргүй шалгалт',kb=matKB(e);
+  snap('"'+nm+'" шалгалтын материалыг устгах');
+  stripMaterial(e);
+  if(e===state){qDet=null;save();renderSetup();}else save();
+  setTimeout(()=>undoBar('"'+nm+'" шалгалтын материал устлаа — дүн, анализ хадгалагдсан'+(kb>=50?' (≈'+(kb>=1024?(kb/1024).toFixed(1)+' МБ':kb+' КБ')+' чөлөөлөгдлөө)':'')+'.'),50);
+}
+function deleteExamAll(e){
+  const id=e.id,nm=e.exam.title||'Нэргүй шалгалт',on=e.exam.online;
   snap('"'+nm+'" шалгалтыг устгах');
   setTimeout(()=>undoBar('"'+nm+'" шалгалт устлаа.'),50);
   if(on&&on.id&&vSb())sbRpc('oe_delete',{p_id:on.id}).catch(()=>{});
