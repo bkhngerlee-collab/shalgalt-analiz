@@ -592,6 +592,17 @@ td input,td select{min-width:70px}
 .lp-stat span{font-size:.81rem;color:var(--muted)}
 .lp-note{color:var(--muted);font-size:.9rem;margin:18px auto 0;max-width:56ch}
 .lp-sec{padding:44px 0 0}
+/* Нууц үг харах/нуух 👁 */
+.pw-wrap{position:relative;display:block}
+.pw-wrap>input{padding-right:46px!important;width:100%}
+.pw-eye{position:absolute;right:4px;top:50%;transform:translateY(-50%);width:38px;height:34px;border:0;border-radius:8px;background:transparent;cursor:pointer;
+  display:grid;place-items:center;color:var(--leaf);padding:0;margin:0}
+.pw-eye:hover,.pw-eye:focus-visible{background:var(--leaf-soft)}
+.pw-eye svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+/* Нүүр хуудас: шинэ боломжууд */
+.lp-new .lp-card{position:relative;border:1.5px solid #A7F3D0;background:linear-gradient(180deg,#F0FDF7,var(--surface))}
+.lp-new .lp-card::after{content:'ШИНЭ';position:absolute;top:10px;right:10px;background:#047857;color:#fff;font-size:.66rem;font-weight:800;letter-spacing:.06em;padding:2px 7px;border-radius:999px}
+.lp-new .lp-card h3{padding-right:46px}
 .lp-sec h2{font-size:1.85rem;margin:0 0 6px;letter-spacing:-.02em}
 .lp-sec>p{color:var(--muted);margin:0 0 22px;max-width:64ch}
 .lp-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
@@ -2037,6 +2048,7 @@ body.student #studentApp{display:block}
 <header class="lp-top"><div class="lp-top-in">
   <div class="lp-logo"><span class="lp-mark"><svg viewBox="0 0 24 24"><path d="M4 19V9M9.5 19V5M15 19v-7M20.5 19v-4"/></svg></span>Шалгалтын анализ</div>
   <nav class="lp-nav">
+    <a href="#lp-new">🆕 Шинэ</a>
     <a href="#lp-feat">Боломжууд</a>
     <a href="#lp-how">Хэрхэн ажиллах</a>
     <a href="#lp-sheet">Хариултын хуудас</a>
@@ -2067,6 +2079,25 @@ body.student #studentApp{display:block}
     </div>
     <p class="lp-note">Суулгац татах шаардлагагүй — хөтчөөр ажиллана. Хүсвэл нэг товшилтоор
       <b>нүүр дэлгэцэндээ дүрс гаргаж</b>, аппликейшн шиг нээж болно.</p>
+  </section>
+
+  <section class="lp-sec lp-new" id="lp-new">
+    <h2>🆕 Шинэ боломжууд</h2>
+    <p>Хиймэл оюун ухааны аргуудад суурилсан шинэ хэрэгслүүд — бэлэн материалаа оруулаад шууд шалгалт аваарай.</p>
+    <div class="lp-grid">
+      <div class="lp-card"><div class="lp-ico"><svg viewBox="0 0 24 24"><path d="M6 3h9l4 4v14H6z"/><path d="M15 3v4h4"/><path d="M9 13h6M9 17h3"/></svg></div>
+        <div><h3>PDF-ээс шалгалт</h3><p>ЭЕШ, олимпиад, IGCSE зэрэг бэлэн PDF-ийг оруулахад асуулт бүрийг <b>зураг, хүснэгттэй нь</b> таслаж, хариултын PDF-ээс зөв хариулт, оноог уншина. Хоёр баганатай хуудас, 1a/1b дэд асуулт, үнэн/худлыг ч танина.</p></div></div>
+      <div class="lp-card"><div class="lp-ico"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><path d="M14 14h3v3h-3zM18 18h3v3h-3zM14 20h2M20 14v2"/></svg></div>
+        <div><h3>QR цахим шалгалт</h3><p>Сурагчид QR уншуулаад утаснаасаа шалгалт өгнө. Оноо <b>шууд</b> бодогдож, таны анализд өөрөө орно. Зөв хариулт сурагчийн утсанд очихгүй.</p></div></div>
+      <div class="lp-card"><div class="lp-ico"><svg viewBox="0 0 24 24"><path d="M12 3l8 4v5c0 5-3.4 8.3-8 9-4.6-.7-8-4-8-9V7z"/><path d="M9 12l2 2 4-4"/></svg></div>
+        <div><h3>Хуулахаас сэргийлэх</h3><p>Шалгалтын үеэр цонхноос 5 секундээс удаан гарвал анхааруулж, <b>2 дахь удаад</b> шалгалт өөрөө дуусна.</p></div></div>
+      <div class="lp-card"><div class="lp-ico"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="8" height="16" rx="1.5"/><rect x="13" y="4" width="8" height="16" rx="1.5"/><path d="M6 9h2M16 9h2M6 13h2M16 13h2"/></svg></div>
+        <div><h3>А, Б хувилбар</h3><p>Хувилбар бүрийг PDF-ээс нэмнэ. Камер хуудсан дээрх <b>хувилбарын дугуйг өөрөө ялгаж</b>, цахим шалгалтад сурагч хувилбараа сонгоно.</p></div></div>
+      <div class="lp-card"><div class="lp-ico"><svg viewBox="0 0 24 24"><path d="M4 20h4L19 9l-4-4L4 16z"/><path d="M13.5 6.5l4 4"/></svg></div>
+        <div><h3>Гараар засах</h3><p>Буруу уншигдсан хариултыг засах, эсвэл «<b>Зөв болгох / Буруу болгох</b>» гэж шийдэхэд дүн, анализ шууд шинэчлэгдэнэ.</p></div></div>
+      <div class="lp-card"><div class="lp-ico"><svg viewBox="0 0 24 24"><rect x="7" y="2" width="10" height="20" rx="2"/><path d="M11 18h2"/><path d="M12 6v6M9.5 9.5L12 12l2.5-2.5"/></svg></div>
+        <div><h3>Утсанд апп болгон суулгах</h3><p>«<b>📲 Суулгах</b>» товчоор нүүр дэлгэцэндээ дүрс гаргаж, апп шиг нээнэ. Интернэтгүй үед ч нээгдэнэ.</p></div></div>
+    </div>
   </section>
 
   <section class="lp-sec" id="lp-how">
@@ -2161,6 +2192,10 @@ body.student #studentApp{display:block}
       <button type="button" class="chip" data-v="Бага">Бага</button>
       <button type="button" class="chip" data-v="Дунд">Дунд</button>
       <button type="button" class="chip" data-v="Ахлах">Ахлах</button></div>
+    <div class="row">
+      <div><label for="upRegion">Аймаг, дүүрэг</label><select id="upRegion" autocomplete="address-level1"><option value="">— Сонгоно уу —</option></select></div>
+      <div><label for="upPhone">Утасны дугаар</label><input id="upPhone" type="tel" inputmode="tel" autocomplete="tel" maxlength="16" placeholder="Жишээ: 99112233"></div>
+    </div>
     <label for="upEmail">И-мэйл</label>
     <input id="upEmail" type="email" autocomplete="email" placeholder="jishee@gmail.com">
     <div class="row">
@@ -10191,6 +10226,22 @@ async function authBoot(){
   authEnter();
 }
 const upPick=id=>[...document.querySelectorAll('#'+id+' .chip.done')].map(b=>b.dataset.v);
+/* Аймаг, дүүргийн жагсаалт (бүртгүүлэх маягт) */
+const MN_REGIONS=[['Улаанбаатар',['Багануур','Багахангай','Баянгол','Баянзүрх','Налайх','Сонгинохайрхан','Сүхбаатар','Хан-Уул','Чингэлтэй'].map(d=>'Улаанбаатар · '+d+' дүүрэг')],
+  ['Аймаг',['Архангай','Баян-Өлгий','Баянхонгор','Булган','Говь-Алтай','Говьсүмбэр','Дархан-Уул','Дорноговь','Дорнод','Дундговь','Завхан','Орхон','Өвөрхангай','Өмнөговь','Сүхбаатар','Сэлэнгэ','Төв','Увс','Ховд','Хөвсгөл','Хэнтий'].map(a=>a+' аймаг')],
+  ['Бусад',['Гадаад улс']]];
+$('#upRegion').insertAdjacentHTML('beforeend',MN_REGIONS.map(([g,L])=>`<optgroup label="${g}">${L.map(x=>`<option>${x}</option>`).join('')}</optgroup>`).join(''));
+/* Нууц үгийн талбар бүрт 👁 харах/нуух товч (дараа нь гарч ирэх талбарт ч) */
+const PW_EYE='<svg viewBox="0 0 24 24"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>',
+  PW_OFF='<svg viewBox="0 0 24 24"><path d="M3 3l18 18"/><path d="M10.6 5.1A10.8 10.8 0 0112 5c6.4 0 10 7 10 7a17.6 17.6 0 01-3.2 4.2M6.6 6.6C3.9 8.4 2 12 2 12s3.6 7 10 7a9.7 9.7 0 005.4-1.6"/><path d="M9.9 9.9a3 3 0 004.2 4.2"/></svg>';
+function pwEyes(root){(root||document).querySelectorAll('input[type=password]:not([data-eye])').forEach(inp=>{
+  inp.dataset.eye='1';const w=document.createElement('span');w.className='pw-wrap';inp.parentNode.insertBefore(w,inp);w.appendChild(inp);
+  const b=document.createElement('button');b.type='button';b.className='pw-eye';b.innerHTML=PW_EYE;b.title='Нууц үгийг харах';b.setAttribute('aria-label',b.title);
+  b.addEventListener('click',()=>{const show=inp.type==='password';inp.type=show?'text':'password';b.innerHTML=show?PW_OFF:PW_EYE;
+    b.title=show?'Нууц үгийг нуух':'Нууц үгийг харах';b.setAttribute('aria-label',b.title);inp.focus();});
+  w.appendChild(b);});}
+pwEyes();
+new MutationObserver(ms=>{if(ms.some(m=>m.addedNodes.length))pwEyes();}).observe(document.body,{childList:true,subtree:true});
 ['upGender','upLevel'].forEach(id=>document.getElementById(id).addEventListener('click',e=>{
   const b=e.target.closest('.chip');if(!b)return;
   if(id==='upGender')document.querySelectorAll('#upGender .chip').forEach(x=>{if(x!==b)x.classList.remove('done');});
@@ -10210,13 +10261,16 @@ $('#authUp').addEventListener('submit',async e=>{
   const name=$('#upName').value.trim(),em=$('#upEmail').value.trim(),pw=$('#upPass').value,pw2=$('#upPass2').value,btn=$('#upGo');
   if(!name){$('#upName').focus();return authMsg('Нэрээ бичнэ үү.');}
   if(!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(em)){$('#upEmail').focus();return authMsg('И-мэйл хаягаа зөв бичнэ үү.');}
+  const region=$('#upRegion').value,phone=$('#upPhone').value.replace(/[^\d+]/g,'');
+  if(!region){$('#upRegion').focus();return authMsg('Аймаг, дүүргээ сонгоно уу.');}
+  if(!/^(\+?976)?\d{8}$/.test(phone)){$('#upPhone').focus();return authMsg('Утасны дугаараа 8 оронтойгоор бичнэ үү (жишээ нь 99112233).');}
   if(pw.length<6){$('#upPass').focus();return authMsg('Нууц үг 6-аас доошгүй тэмдэгттэй байна.');}
   if(pw!==pw2){$('#upPass2').focus();return authMsg('Хоёр нууц үг таарахгүй байна.');}
   btn.disabled=true;authMsg('Бүртгэж байна…',false);
   try{
     const lic=lsGet(LIC_KEY).replace(/\s+/g,'').slice(0,600);   // хуучин идэвхжүүлэх код — эзэн шалгана
     const j=await sbAuth('signup',{email:em,password:pw,data:Object.assign({name,subject:$('#upSubject').value.trim(),
-      gender:upPick('upGender')[0]||'',level:upPick('upLevel').join(', ')},lic?{lic}:{})});
+      gender:upPick('upGender')[0]||'',level:upPick('upLevel').join(', '),region:region.slice(0,60),phone:phone.slice(0,16)},lic?{lic}:{})});
     $('#upPass').value=$('#upPass2').value='';authMsg('');
     await authAfterLogin(j);
   }catch(x){authMsg(x.message);}
@@ -10246,6 +10300,8 @@ async function tFetch(){
   /* Идэвхийн статистик (11-р алхмын SQL). Байхгүй бол зөвхөн шалгалтын тоогоор */
   try{const s=await sbRpc('admin_teacher_stats')||[];tStats={};s.forEach(x=>{tStats[x.id]=x;});tStatsErr='';}
   catch(e){tStats=null;tStatsErr=e.status===404||/could not find|schema cache/i.test(e.message)?'need':e.message;}
+  /* Аймаг/дүүрэг, утас (12-р алхмын SQL) — байхгүй бол зүгээр алгасна */
+  try{const c=await sbRpc('admin_teacher_contacts')||[];const m={};c.forEach(x=>{m[x.id]=x;});tRows.forEach(t=>{const x=m[t.id];if(x){t.region=x.region||'';t.phone=x.phone||'';}});}catch(e){}
 }
 /* ---------- Эзэнд: имэйлийн нэгдсэн жагсаалт ба идэвхийн эрэмбэ ---------- */
 let tStats=null,tStatsErr='',tSort={k:'students',d:-1};
@@ -10274,7 +10330,7 @@ function tRankRender(){
       ${has?`<div class="stat"><b>${sum('students')}</b><span>Хамрагдсан сурагч</span></div><div class="stat"><b>${sum('oattempts')}</b><span>Цахимаар өгсөн</span></div>`:''}</div>
     <div class="scroll"><table><thead><tr><th class="num">#</th>${th('name','Багш')}${th('exams','Шалгалт',1)}${has?th('students','Хамрагдсан сурагч',1)+th('roster','Бүртгэсэн сурагч (анги)',1)+th('oexams','Цахим шалгалт (оролцсон)',1):''}${th('last','Сүүлд идэвхтэй')}</tr></thead>
     <tbody>${R.map((r,i)=>`<tr${r.t.id===me?' style="background:var(--leaf-soft)"':''}><td class="num">${i+1}</td>
-      <td><b>${esc(r.t.name||'(нэргүй)')}</b>${r.t.id===me?' <small>👑</small>':''}<br><small style="color:var(--muted)">${esc(r.t.email||'')}${r.t.subject?' · '+esc(r.t.subject):''}</small></td>
+      <td><b>${esc(r.t.name||'(нэргүй)')}</b>${r.t.id===me?' <small>👑</small>':''}<br><small style="color:var(--muted)">${esc(r.t.email||'')}${r.t.subject?' · '+esc(r.t.subject):''}${r.t.region?' · 📍 '+esc(r.t.region):''}</small></td>
       <td class="num"><b>${r.s.exams}</b></td>
       ${has?`<td class="num">${r.s.students}</td><td class="num">${r.s.roster} <small style="color:var(--muted)">(${r.s.classes})</small></td><td class="num">${r.s.oexams} <small style="color:var(--muted)">(${r.s.oattempts})</small></td>`:''}
       <td title="${esc(String(r.s.last).slice(0,16).replace('T',' '))}">${tAgo(r.s.last)}</td></tr>`).join('')}</tbody></table></div>`;
@@ -10286,8 +10342,8 @@ $('#tMailCopy').addEventListener('click',async()=>{const ta=$('#tMails'),m=$('#t
   m.style.color='';m.textContent='✓ '+tMailList().length+' имэйл хуулагдлаа';});
 $('#tMailCsv').addEventListener('click',()=>{const q=v=>'"'+String(v==null?'':v).replace(/"/g,'""')+'"';
   const ST={ok:'Эрхтэй',new:'Шинэ хүсэлт',off:'Хаагдсан/дууссан'};
-  const rows=[['Нэр','Имэйл','Мэргэжил','Түвшин','Төлөв','Эрхийн хугацаа','Бүртгүүлсэн','Шалгалт','Хамрагдсан сурагч','Анги','Бүртгэсэн сурагч','Цахим шалгалт','Цахимаар оролцсон','Сүүлд идэвхтэй']]
-    .concat(tRows.map(t=>{const s=tStat(t);return[t.name,t.email,t.subject,t.level,ST[tState(t)],t.expires||'',String(t.created_at||'').slice(0,10),s.exams,s.students,s.classes,s.roster,s.oexams,s.oattempts,String(s.last||'').slice(0,10)];}));
+  const rows=[['Нэр','Имэйл','Утас','Аймаг, дүүрэг','Мэргэжил','Түвшин','Төлөв','Эрхийн хугацаа','Бүртгүүлсэн','Шалгалт','Хамрагдсан сурагч','Анги','Бүртгэсэн сурагч','Цахим шалгалт','Цахимаар оролцсон','Сүүлд идэвхтэй']]
+    .concat(tRows.map(t=>{const s=tStat(t);return[t.name,t.email,t.phone||'',t.region||'',t.subject,t.level,ST[tState(t)],t.expires||'',String(t.created_at||'').slice(0,10),s.exams,s.students,s.classes,s.roster,s.oexams,s.oattempts,String(s.last||'').slice(0,10)];}));
   saveBlob(new Blob(['﻿'+rows.map(r=>r.map(q).join(',')).join('\r\n')],{type:'text/csv;charset=utf-8'}),'bagsh-nar-'+localDay()+'.csv');});
 $('#tRank').addEventListener('click',e=>{const b=e.target.closest('.t-sort');if(!b)return;const k=b.dataset.k;
   tSort=tSort.k===k?{k,d:-tSort.d}:{k,d:k==='name'?1:-1};tRankRender();});
@@ -10323,7 +10379,8 @@ function teachersRender(){
       const licBtn=old&&(fresh||t.expires!==old)?`<button class="btn" data-t="ok" data-u="${esc(old)}">Хуучин эрхээр (${esc(old)} хүртэл)</button>`:'';
       return`<div class="t-row" data-id="${esc(t.id)}">
         <div class="t-who"><b>${esc(t.name||'(нэргүй)')}</b>${info?`<small>${info}</small>`:''}
-          <small>${esc(t.email||'')} · бүртгүүлсэн ${esc(String(t.created_at||'').slice(0,10))}${t.exams?` · ${t.exams} шалгалттай`:''}</small>${lic}</div>
+          <small>${esc(t.email||'')} · бүртгүүлсэн ${esc(String(t.created_at||'').slice(0,10))}${t.exams?` · ${t.exams} шалгалттай`:''}</small>
+          ${t.region||t.phone?`<small>${t.region?'📍 '+esc(t.region):''}${t.region&&t.phone?' · ':''}${t.phone?`📞 <a href="tel:${esc(t.phone)}">${esc(t.phone)}</a>`:''}</small>`:''}${lic}</div>
         <div class="t-st">${st}</div>
         ${self?'':`<div class="t-act">
           <span style="align-self:center;font-size:.84rem;color:var(--muted)">${verb}</span>
