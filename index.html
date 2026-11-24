@@ -1061,6 +1061,11 @@ body.student #studentApp{display:block}
 .pi-file:hover,.pi-file:focus-within{border-color:var(--leaf)}
 .pi-file span{font-weight:700}.pi-file small{color:var(--muted);font-weight:500}
 .pi-file input{font:inherit;font-size:.9rem}
+.pi-file[hidden],.pi-chosen[hidden]{display:none}
+.pi-chosen{display:flex;flex-wrap:wrap;gap:8px;align-items:center;padding:12px 14px;border:2px solid var(--leaf);border-radius:14px;background:var(--leaf-soft);min-height:100%}
+.pi-chosen .nm{flex:1 1 100%;min-width:0;overflow-wrap:anywhere;font-weight:700}
+.pi-chosen .nm small{font-weight:500;color:var(--muted)}
+.pi-chosen .btn{margin:0;padding:6px 12px}
 .pi-bar{height:10px;border-radius:6px;background:var(--line);overflow:hidden;margin:10px 0 4px}
 .pi-bar i{display:block;height:100%;width:0;background:var(--leaf);transition:width .2s}
 .pi-sum{display:flex;flex-wrap:wrap;gap:8px 18px;align-items:center;padding:12px 14px;border-radius:12px;background:var(--leaf-soft);font-size:1rem;margin-bottom:10px}
@@ -3777,8 +3782,10 @@ function piPick(){
     <p class="hint" style="margin-top:0">Бэлэн шалгалтын PDF-ийг (жишээ нь IGCSE-ийн <b>question paper</b>) сонгоход асуулт бүрийг <b>схем, хүснэгт, A–D хувилбартай нь</b>
       яг эх хувиар нь зураг болгон тайрч, тусдаа асуулт болгоно. Хариултын PDF-ийг (<b>mark scheme</b>) сонговол зөв хариулт өөрөө орно.</p>
     <div class="pi-pick">
-      <label class="pi-file"><span>1. Асуултын PDF <b style="color:var(--stain)">*</b></span><small>Жишээ: bio_a 2013.pdf, 0654_m22_qp_12.pdf. Хоёр файлаа хамт сонгож болно.</small><input type="file" id="piQ" accept="application/pdf,.pdf" multiple></label>
-      <label class="pi-file"><span>2. Хариултын PDF <small>(заавал биш)</small></span><small>Жишээ: tulhuur 2013.pdf (олон хичээл, 4 хувилбартай байж болно), 0654_m22_ms_12.pdf</small><input type="file" id="piM" accept="application/pdf,.pdf"></label>
+      <div><label class="pi-file" id="piQBox"><span>1. Асуултын PDF <b style="color:var(--stain)">*</b></span><small>Жишээ: bio_a 2013.pdf, 0654_m22_qp_12.pdf. Хоёр файлаа хамт сонгож болно.</small><input type="file" id="piQ" accept="application/pdf,.pdf" multiple></label>
+        <div class="pi-chosen" id="piQOk" hidden></div></div>
+      <div><label class="pi-file" id="piMBox"><span>2. Хариултын PDF <small>(заавал биш)</small></span><small>Жишээ: tulhuur 2013.pdf (олон хичээл, 4 хувилбартай байж болно), 0654_m22_ms_12.pdf</small><input type="file" id="piM" accept="application/pdf,.pdf"></label>
+        <div class="pi-chosen" id="piMOk" hidden></div></div>
     </div>
     <label for="piKeyTxt">Эсвэл хариултаа бичих <small style="color:var(--muted)">(заавал биш — хариултын PDF байхгүй бол)</small></label>
     <textarea id="piKeyTxt" rows="4" autocomplete="off" spellcheck="false" style="min-height:96px;font-family:ui-monospace,Consolas,monospace" placeholder="Олон мөрөөр хуулж буулгаж болно. Жишээ:&#10;1. (D) 2. (A) 3. (A) 4. (C) …&#10;1 B, 2 C, 3 D …&#10;BCDAA CBDAB …"></textarea>
@@ -3786,23 +3793,49 @@ function piPick(){
     <p class="hint" style="font-size:.85rem;margin-top:10px">🔒 PDF файл таны компьютерээс гарахгүй — бүх боловсруулалт энэ хөтөч дотор хийгдэнэ. PDF уншигчийг анх удаа интернетээс татаж, бүрэн бүтэн эсэхийг шалгана.</p>
     <div class="pi-bar" hidden><i id="piBar"></i></div>
     <div class="msg" id="piMsg" role="status"></div>`;
-  piFootSet(`<button class="btn" id="piGo" type="button">Унших →</button>`);
-  $('#piQ').addEventListener('change',e=>{const fs=[...e.target.files];PI.pre=null;piMsg('');if(fs.length<2)return;
-    const ms=fs.find(f=>/((^|[_\-\s.])(ms|mark|answer)|key|tulhuur|tulkhuur|t[uü]lh[uü][uü]r|түлхүүр|хариу)/i.test(f.name)&&!/(^|[_\-\s.])qp([_\-\s.]|$)/i.test(f.name));
-    if(ms){PI.pre={q:fs.find(f=>f!==ms),m:ms};piMsg('Асуулт: '+PI.pre.q.name+' · Хариулт: '+ms.name);}
-    else piMsg('Хоёр файлын аль нь хариулт болохыг танисангүй. Хариултын PDF-ийг 2-р нүдэнд сонгоно уу.',true);});
-  $('#piGo').addEventListener('click',piRun);
+  piPickFoot();
+  /* Сонгосон файлууд PI.fq / PI.fm-д хадгалагдана — «← Буцах» дарахад алга болохгүй, нэгийг нь л сольж болно */
+  $('#piQ').addEventListener('change',e=>{const fs=[...e.target.files];e.target.value='';if(!fs.length)return;piMsg('');
+    if(fs.length>1){
+      const ms=fs.find(f=>/((^|[_\-\s.])(ms|mark|answer)|key|tulhuur|tulkhuur|t[uü]lh[uü][uü]r|түлхүүр|хариу)/i.test(f.name)&&!/(^|[_\-\s.])qp([_\-\s.]|$)/i.test(f.name));
+      if(ms){PI.fq=fs.find(f=>f!==ms);PI.fm=ms;piMsg('Асуулт: '+PI.fq.name+' · Хариулт: '+ms.name);}
+      else{PI.fq=fs[0];piMsg('Хоёр файлын аль нь хариулт болохыг танисангүй. Хариултын PDF-ийг 2-р нүдэнд сонгоно уу.',true);}}
+    else PI.fq=fs[0];
+    piFileUi();});
+  $('#piM').addEventListener('change',e=>{const f=e.target.files[0];e.target.value='';if(!f)return;PI.fm=f;piMsg('');piFileUi();});
+  $('#piBody .pi-pick').addEventListener('click',e=>{const b=e.target.closest('[data-pich],[data-pirm]');if(!b)return;
+    const w=b.dataset.pich||b.dataset.pirm;
+    if(b.dataset.pich){$(w==='q'?'#piQ':'#piM').click();return;}
+    if(w==='q')PI.fq=null;else PI.fm=null;piMsg('');piFileUi();});
+  if(PI.kt)$('#piKeyTxt').value=PI.kt;
+  piFileUi();
   if($('#piTv'))$('#piTv').addEventListener('change',e=>{PI.tv=+e.target.value;});
 }
+function piPickFoot(){piFootSet(`<button class="btn" id="piGo" type="button">Унших →</button>`);$('#piGo').addEventListener('click',piRun);}
+const piSize=n=>n>=1048576?(n/1048576).toFixed(1)+' MB':Math.max(1,Math.round(n/1024))+' KB';
+function piFileUi(){
+  [['q',PI.fq,'#piQBox','#piQOk'],['m',PI.fm,'#piMBox','#piMOk']].forEach(([w,f,box,ok])=>{
+    const B=$(box),O=$(ok);if(!B||!O)return;B.hidden=!!f;O.hidden=!f;
+    O.innerHTML=f?`<span class="nm">📄 ${esc(f.name)} <small>${piSize(f.size)}</small></span>
+      <button type="button" class="btn ghost" data-pich="${w}">🔄 Солих</button>
+      <button type="button" class="btn ghost" data-pirm="${w}" aria-label="${w==='q'?'Асуултын':'Хариултын'} файлыг хасах">✕</button>`:'';});
+}
+/* Уншиж байх үед ч, уншсаны дараа ч файл сонгох алхам руу буцна. Сонгосон файл, бичсэн хариулт хадгалагдана */
+function piBackToPick(msg){
+  const st=PI;piFree();PI={step:'pick',tv:st.tv,eid:st.eid,fq:st.fq||null,fm:st.fm||null,kt:st.kt||''};
+  piPick();if(msg)piMsg(msg);
+}
 async function piRun(){
-  const qf=PI.pre&&PI.pre.q||$('#piQ').files[0],mf=$('#piM').files[0]||PI.pre&&PI.pre.m,kt=$('#piKeyTxt').value.trim();
+  const qf=PI.fq,mf=PI.fm,kt=$('#piKeyTxt').value.trim();PI.kt=kt;
   if(!qf){piMsg('Асуултын PDF файлаа сонгоно уу.',true);return;}
   if(!/\.pdf$/i.test(qf.name)&&qf.type!=='application/pdf'){piMsg('"'+qf.name+'" PDF файл биш байна.',true);return;}
-  const go=$('#piGo');go.disabled=true;const me=PI,stop=()=>me.stop;
+  const me=PI,stop=()=>me.stop,P=(t,f)=>{if(!me.stop)piProg(t,f);};
+  piFootSet(`<button class="btn ghost" id="piStop" type="button">← Буцах</button><button class="btn" type="button" disabled>Уншиж байна…</button>`);
+  $('#piStop').addEventListener('click',()=>piBackToPick('Уншихыг зогсоолоо. Файлаа сольж эсвэл дахин «Унших» дарна уу.'));
   try{
-    piProg('PDF уншигчийг ачаалж байна…',.02);await loadPdfJs();
-    piProg('Файлыг нээж байна…',.05);const doc=await piOpen(qf);if(stop())return doc.destroy();me.doc=doc;me.file=qf.name;
-    const pages=await piPages(doc,(p,n)=>piProg('Хуудас уншиж байна: '+p+' / '+n,.05+.25*p/n),stop);me.pages=pages;
+    P('PDF уншигчийг ачаалж байна…',.02);await loadPdfJs();
+    P('Файлыг нээж байна…',.05);const doc=await piOpen(qf);if(stop())return doc.destroy();me.doc=doc;me.file=qf.name;
+    const pages=await piPages(doc,(p,n)=>P('Хуудас уншиж байна: '+p+' / '+n,.05+.25*p/n),stop);me.pages=pages;
     piFurniture(pages);
     /* Асуултын PDF-ийн төгсгөлд түлхүүр байж болно — түүнийг асуулт гэж андуурахгүйн тулд эхэлж олно */
     const own=piKeyTables(pages,10),inl=own.length?null:piInlineKey(pages);
@@ -3812,7 +3845,7 @@ async function piRun(){
     me.qtxt=piLegacy(pages.slice(0,2).flatMap(pg=>pg.rows.map(r=>r.txt)).join(' ')).toLowerCase();
     me.variant=me.tv?'ABCD'[me.tv]:piVarOf(pages.length?pages[0].rows.slice(0,12).map(r=>r.txt).join(' '):'')||
       ((qf.name.replace(/\.pdf$/i,'').match(/(?:^|[_\-\s.])([a-dA-D])(?=$|[_\-\s.(\d])/)||[])[1]||'').toUpperCase();
-    if(mf){piProg('Хариултын файлыг уншиж байна…',.32);
+    if(mf){P('Хариултын файлыг уншиж байна…',.32);
       const md=await piOpen(mf);
       try{const mp=await piPages(md);piFurniture(mp);me.tabs=piKeyTables(mp,3);
         Object.assign(me.tfKeys,piTfScan(mp.flatMap(pg=>(pg.rows||piRows(pg.items)).map(r=>r.txt))));
@@ -3827,8 +3860,9 @@ async function piRun(){
     /* Хэд хэдэн хувилбартай бол файлын нэр / бичвэрт заасан хувилбарыг, эс бөгөөс эхнийхийг */
     me.secs.forEach((s,i)=>{s.label=piSecLabel(pages,s);});
     const vi=me.secs.findIndex(s=>s.label&&s.label===me.variant);
-    await piLoadSec(vi>=0?vi:0,(k,n)=>piProg('Асуулт тайрч байна: '+k+' / '+n,.35+.63*k/n),stop);
-  }catch(e){if(e.message==='stop')return;piProg('',null);piMsg(e.message||String(e),true);if(go.isConnected)go.disabled=false;}
+    if(stop())return;
+    await piLoadSec(vi>=0?vi:0,(k,n)=>P('Асуулт тайрч байна: '+k+' / '+n,.35+.63*k/n),stop);
+  }catch(e){if(e.message==='stop'||stop())return;P('',null);piMsg(e.message||String(e),true);piPickFoot();}
 }
 /* Хэсгийн (хувилбарын) нэр: эхний асуултын дээрх "ХУВИЛБАР B" гэх мэт бичвэрээс */
 function piSecLabel(pages,ch){
@@ -3935,7 +3969,7 @@ function piReview(){
     <div class="pi-grid" id="piGrid">${R.map((r,i)=>piCard(r,i,O)).join('')}</div>
     <div class="msg" id="piMsg" role="status"></div>`;
   piFootSet(`<span class="msg" id="piFootMsg" role="status"></span>
-    <button class="btn ghost" id="piBack" type="button">← Өөр файл</button>
+    <button class="btn ghost" id="piBack" type="button" title="Файлаа солих, хариултаа засах">← Буцах (файл солих)</button>
     <button class="btn ghost" id="piPagesBtn" type="button">🖼️ Хуудсаар харах / нэмэх</button>
     <button class="btn" id="piMake" type="button">${PI.tv?'✓ '+VNAMES[PI.tv]+' хувилбар болгон нэмэх':'✓ Шалгалт үүсгэх'} (${R.length} асуулт)</button>`);
   $('#piTitleIn').addEventListener('input',e=>{PI.title=e.target.value;PI.titleEdited=true;});
@@ -3966,7 +4000,8 @@ function piReview(){
       c.outerHTML=piCard(r,k,O);piSumKeys();return;}
     if(f==='del'){if(!confirm((k+1)+'-р асуултыг хасах уу?'))return;R.splice(k,1);piReview();return;}
     if(f==='edit'){piEditor(r.segs[0].p,'',r.id);}});
-  $('#piBack').addEventListener('click',()=>{if(!confirm('Уншсан асуултууд алга болно. Өөр файл сонгох уу?'))return;const st=PI;piFree();PI={step:'pick',tv:st.tv,eid:st.eid};piPick();});
+  $('#piBack').addEventListener('click',()=>{if(!confirm('Файл сонгох алхам руу буцах уу?\nСонгосон файлууд хадгалагдана — нэгийг нь сольж дахин уншуулж болно. Энд хийсэн засвар (хариулт, оноо) алга болно.'))return;
+    piBackToPick('Файлаа «🔄 Солих» товчоор сольж, дахин «Унших →» дарна уу.');});
   $('#piPagesBtn').addEventListener('click',()=>piEditor(R.length?R[0].segs[0].p:1,''));
   $('#piMake').addEventListener('click',piMake);
 }
@@ -4000,7 +4035,7 @@ async function piEditor(p,note,selId){
     <div class="pi-page" id="piPage"><p class="hint" style="padding:30px;text-align:center">Хуудсыг зурж байна…</p></div>
     <div class="msg" id="piMsg" role="status"></div>`;
   piFootSet(`<span class="msg" id="piFootMsg" role="status"></span>
-    <button class="btn ghost" id="piEdCancel" type="button">Болих</button>
+    <button class="btn ghost" id="piEdCancel" type="button" title="Энд хийсэн өөрчлөлтийг хадгалахгүйгээр буцах">← Буцах</button>
     <button class="btn" id="piEdDone" type="button">✓ Болсон</button>`);
   $('#piPrev').addEventListener('click',()=>piEdGo(PI.edP-1));
   $('#piNext').addEventListener('click',()=>piEdGo(PI.edP+1));
@@ -10543,13 +10578,16 @@ $('#tList').addEventListener('click',async e=>{
   const ipad=/ipad/i.test(ua)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
   const ios26=sfv>=26||osv>=26;
   /* iOS 16.4-өөс Chrome дээрээс ч «Add to Home Screen» хийж болдог */
-  const kind=inapp?(ios?'inapp-ios':'inapp-android'):ios?(/CriOS/.test(ua)&&osv>=16.4?'ios-chrome':/CriOS|FxiOS|EdgiOS|OPiOS/.test(ua)?'ios-other':'ios'):/SamsungBrowser/i.test(ua)?'samsung':/Android/i.test(ua)?'android':'desktop';
+  /* Android: жинхэнэ Chrome уу, эсвэл Xiaomi (Mi Browser), Opera, Firefox г.м. өөр хөтөч үү */
+  const andOther=/MiuiBrowser|XiaoMi|OPR\/|Opera|EdgA|Firefox|UCBrowser|YaBrowser|HuaweiBrowser|HeyTapBrowser|VivoBrowser|; wv\)/i.test(ua)||!/Chrome\/\d/.test(ua);
+  const kind=inapp?(ios?'inapp-ios':'inapp-android'):ios?(/CriOS/.test(ua)&&osv>=16.4?'ios-chrome':/CriOS|FxiOS|EdgiOS|OPiOS/.test(ua)?'ios-other':'ios'):/SamsungBrowser/i.test(ua)?'samsung':/Android/i.test(ua)?(andOther?'android-other':'android'):'desktop';
   const here=location.origin+location.pathname;
   let ev=null;
   const show=on=>document.querySelectorAll('.pwaBtn').forEach(b=>b.hidden=!on);
   if(!/^https?:$/.test(location.protocol)||standalone())return;
   show(true);   // товч үргэлж харагдана — дарахад тухайн төхөөрөмжийн заавар (боломжтой бол шууд суулгах)
-  addEventListener('beforeinstallprompt',e=>{e.preventDefault();ev=e;const d=document.getElementById('pwaDlg');if(d&&d.open)guide();});
+  addEventListener('beforeinstallprompt',e=>{e.preventDefault();ev=e;const d=document.getElementById('pwaDlg');if(d&&d.open)guide();
+    const c=document.getElementById('pwaCoach');if(c&&!c.hidden)coach();});
   addEventListener('appinstalled',()=>{ev=null;show(false);const d=document.getElementById('pwaDlg');if(d)d.close();});
   const K=s=>`<span class="pwa-key">${s}</span>`;
   const STEPS={
@@ -10575,7 +10613,7 @@ $('#tList').addEventListener('click',async e=>{
       d.addEventListener('click',async e=>{if(e.target===d||e.target.closest('[data-pwa-x]')){d.close();return;}
         if(e.target.closest('[data-pwa-go]')&&ev){ev.prompt();try{const c=await ev.userChoice;if(c&&c.outcome==='accepted'){show(false);d.close();}}catch(x){}ev=null;guide();return;}
         if(e.target.closest('[data-pwa-copy]')){try{await navigator.clipboard.writeText(location.origin+location.pathname);e.target.textContent='✓ Хуулагдлаа';}catch(x){}}});}
-    const main=kind.includes('ios')?'ios':kind==='inapp-android'?'android':kind;
+    const main=kind.includes('ios')?'ios':kind.includes('android')?'android':kind;
     /* Facebook / Messenger-ээс нэг товчоор жинхэнэ хөтөч рүү гаргана (?install=1 → тэнд заавар өөрөө нээгдэнэ) */
     const toSafari=`<a class="pwaBtn" href="x-safari-${esc(here)}?install=1" style="font-size:1.1rem;padding:11px 22px;text-decoration:none">🧭 Safari-д нээх</a>`;
     const toChrome=`<a class="pwaBtn" href="intent://${esc(location.host+location.pathname)}?install=1#Intent;scheme=${location.protocol.slice(0,-1)};package=com.android.chrome;S.browser_fallback_url=${encodeURIComponent(here+'?install=1')};end" style="font-size:1.1rem;padding:11px 22px;text-decoration:none">🌐 Chrome-д нээх</a>`;
@@ -10584,7 +10622,9 @@ $('#tList').addEventListener('click',async e=>{
         <div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap;align-items:center">${kind==='inapp-ios'?toSafari:toChrome}${copyB}</div>
         <small style="display:block;margin-top:6px">Нээгдэхгүй бол: ${kind==='inapp-ios'?`${K('•••')} → ${K('Open in Safari')}`:`${K('⋮')} → ${K('Open in Chrome')}`}, эсвэл холбоосыг хуулж хөтчид буулгана.</small></div>`
       :kind==='ios-other'?`<div class="pwa-warn"><b>⚠ Энэ хөтчөөс суулгахад төвөгтэй.</b> Safari-д нээвэл амархан суулгана.
-        <div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap;align-items:center">${toSafari}${copyB}</div></div>`:'';
+        <div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap;align-items:center">${toSafari}${copyB}</div></div>`
+      :kind==='android-other'&&!ev?`<div class="pwa-warn"><b>⚠ Энэ хөтчөөс (Mi Browser, Opera г.м.) суулгахад төвөгтэй.</b> Chrome-д нээвэл нэг товчоор суулгана.
+        <div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap;align-items:center">${toChrome}${copyB}</div></div>`:'';
     /* Компьютер: утсаараа QR уншуулахад сайт утсан дээр нээгдэж, суулгах заавар өөрөө гарна */
     const qr=kind==='desktop'?`<div class="pwa-now" style="display:flex;gap:14px;align-items:center;flex-wrap:wrap">
         <div id="pwaQR" style="width:150px;height:150px;flex:none;background:#fff;border-radius:8px"></div>
@@ -10609,7 +10649,12 @@ $('#tList').addEventListener('click',async e=>{
     share:'<svg viewBox="0 0 24 24"><path d="M8.5 9.5h-2v11h11v-11h-2"/><path d="M12 15V3.5M8.5 7 12 3.5 15.5 7"/></svg>',
     more:'<svg viewBox="0 0 24 24"><circle cx="5" cy="12" r="1.7" fill="currentColor" stroke="none"/><circle cx="12" cy="12" r="1.7" fill="currentColor" stroke="none"/><circle cx="19" cy="12" r="1.7" fill="currentColor" stroke="none"/></svg>',
     add:'<svg viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="4"/><path d="M12 8.5v7M8.5 12h7"/></svg>',
-    ok:'Add'};
+    ok:'Add',
+    kebab:'<svg viewBox="0 0 24 24"><circle cx="12" cy="5" r="1.8" fill="currentColor" stroke="none"/><circle cx="12" cy="12" r="1.8" fill="currentColor" stroke="none"/><circle cx="12" cy="19" r="1.8" fill="currentColor" stroke="none"/></svg>',
+    menu:'<svg viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16"/></svg>',
+    phone:'<svg viewBox="0 0 24 24"><rect x="6" y="2.5" width="12" height="19" rx="2.5"/><path d="M12 8v6M9 11l3 3 3-3"/></svg>',
+    home:'<svg viewBox="0 0 24 24"><path d="M4 11 12 4l8 7"/><path d="M6.5 9.5V20h11V9.5"/></svg>',
+    inst:'<span style="font-size:.68rem">Install</span>'};
   function coachPlan(){
     const more='Харагдахгүй бол жагсаалтыг доош гүйлгэх эсвэл <b>View More</b> / <b>More</b> дарна';
     const add=[IC.ok,'Баруун дээд <b>Add</b> дарна — болчихлоо! 🎉','Нүүр дэлгэцэд ногоон «Шалгалт» дүрс гарна'];
@@ -10617,6 +10662,14 @@ $('#tList').addEventListener('click',async e=>{
     if(kind==='ios'&&ios26)return{pos:'dn r',label:'••• дар',steps:[[IC.more,'Доод баруун талын <b>•••</b> товчийг дарна','Шар сум яг тэр товчийг заана'],[IC.share,'<b>Share</b> (Хуваалцах) дарна'],[IC.add,'<b>Add to Home Screen</b> дарна',more],
       [IC.ok,'Баруун дээд <b>Add</b> дарна — болчихлоо! 🎉','«Open as Web App» асаалттай байг']]};
     if(kind==='ios')return{pos:'dn c',label:'Энийг дар',steps:[[IC.share,'Доод голын <b>Share</b> (Хуваалцах) товчийг дарна','Шар сум яг тэр товчийг заана'],[IC.add,'<b>Add to Home Screen</b> дарна',more],add]};
+    /* Android — Chrome: ⋮ цэс баруун дээд (хаягийн мөрийг доош шилжүүлсэн бол доод) буланд */
+    if(kind==='android')return{pos:'up r',label:'⋮ дар',steps:[[IC.kebab,'Баруун дээд талын <b>⋮</b> (3 цэг) товчийг дарна','Хаягийн мөр доор байвал ⋮ доод баруун талд байна'],
+      [IC.phone,'<b>Add to Home screen</b> эсвэл <b>Install app</b> дарна','Монгол/орос хэлтэй утсанд: «Нүүр дэлгэцэд нэмэх» / «Установить приложение»'],
+      [IC.inst,'<b>Install</b> (Суулгах) дарна — болчихлоо! 🎉','Нүүр дэлгэцэд ногоон «Шалгалт» дүрс гарна']]};
+    /* Samsung Internet: ≡ цэс доод баруун буланд */
+    if(kind==='samsung')return{pos:'dn r',label:'≡ дар',steps:[[IC.menu,'Доод баруун талын <b>≡</b> товчийг дарна'],
+      [IC.add,'<b>Add page to</b> (Хуудас нэмэх) дарна'],[IC.home,'<b>Home screen</b> (Нүүр дэлгэц) сонгоно'],
+      [IC.ok,'<b>Add</b> дарна — болчихлоо! 🎉','Нүүр дэлгэцэд ногоон «Шалгалт» дүрс гарна']]};
     if(kind==='ios-chrome')return{pos:'up r',label:'Энийг дар',steps:[[IC.share,'Хаягийн мөрний <b>Share</b> (Хуваалцах) товчийг дарна','Хаягийн мөр доор байвал товч доод талд байна'],[IC.add,'<b>Add to Home Screen</b> дарна',more],add]};
     return null;
   }
@@ -10627,25 +10680,36 @@ $('#tList').addEventListener('click',async e=>{
     let c=document.getElementById('pwaCoach');
     if(!c){c=document.createElement('div');c.id='pwaCoach';c.className='pwa-coach';c.setAttribute('role','dialog');c.setAttribute('aria-modal','true');c.setAttribute('aria-labelledby','pwaCoachT');document.body.appendChild(c);
       c.addEventListener('click',e=>{if(e.target===c||e.target.closest('[data-pwa-x]')){c.hidden=true;return;}
-        if(e.target.closest('[data-pwa-more]')){c.hidden=true;guide();}});
+        if(e.target.closest('[data-pwa-more]')){c.hidden=true;guide();return;}
+        if(e.target.closest('[data-pwa-go]')){c.hidden=true;quick().then(ok=>{if(!ok)coach();});}});
       document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!c.hidden)c.hidden=true;});}
     c.innerHTML=`<div class="pwa-cc"><div style="display:flex;justify-content:space-between;gap:8px;align-items:start">
-        <h3 id="pwaCoachT">📲 ${p.steps.length} алхмаар суулгана</h3><button type="button" class="btn ghost" data-pwa-x style="margin:0;padding:4px 10px">✕</button></div>
+        <h3 id="pwaCoachT">📲 ${ev?'Нэг товчоор суулгана':p.steps.length+' алхмаар суулгана'}</h3><button type="button" class="btn ghost" data-pwa-x style="margin:0;padding:4px 10px">✕</button></div>
+      ${ev?`<div style="text-align:center;margin:8px 0 10px"><button type="button" class="pwaBtn" data-pwa-go style="font-size:1.15rem;padding:12px 28px">📲 Суулгах</button>
+        <p class="hint" style="margin:8px 0 0">Гарч ирэх цонхонд <b>Install / Суулгах</b> дарахад л болно.</p></div>
+        <p class="hint" style="margin:0 0 2px;font-weight:700">Эсвэл гараар:</p>`:''}
       <ol class="pwa-cs">${p.steps.map((s,i)=>`<li><span class="n">${i+1}</span><span class="pwa-ic">${s[0]}</span><span>${s[1]}${s[2]?`<small>${s[2]}</small>`:''}</span></li>`).join('')}</ol>
       <div style="display:flex;justify-content:space-between;gap:8px;margin-top:8px;flex-wrap:wrap"><button type="button" class="btn ghost" data-pwa-more style="margin:0">Дэлгэрэнгүй заавар</button>
         <button type="button" class="btn" data-pwa-x style="margin:0">Ойлголоо</button></div></div>
-      <div class="pwa-arr ${p.pos}">${ARR}<b>${p.label}</b></div>`;
+      ${ev?'':`<div class="pwa-arr ${p.pos}">${ARR}<b>${p.label}</b></div>`}`;
     c.hidden=false;
   }
-  const open=()=>coachPlan()?coach():guide();
-  document.addEventListener('click',e=>{const b=e.target.closest('.pwaBtn');if(!b)return;
+  /* Android Chrome / Samsung: хөтөч суулгахад бэлэн бол «Суулгах» дармагц шууд суулгах цонх (нэг товч).
+     Энэ нь хэрэглэгчийн дарсан үйлдэл дотор л ажилладаг. true = цонх нээгдсэн */
+  async function quick(){
+    if(!ev)return false;const e=ev;ev=null;
+    try{e.prompt();const c=await e.userChoice;if(c&&c.outcome==='accepted')show(false);}catch(x){return false;}
+    return true;
+  }
+  const open=(auto)=>{if(!auto&&ev&&kind!=='desktop'){quick().then(ok=>{if(!ok)coach();});return;}coachPlan()?coach():guide();};
+  document.addEventListener('click',e=>{const b=e.target.closest('.pwaBtn');if(!b||b.closest('#pwaCoach'))return;
     if(b.closest('#pwaDlg')){if(b.matches('[data-pwa-coach]'))coach();return;}open();});
   /* QR, Facebook-ээс ирсэн бол (?install=1) заавар өөрөө нээгдэнэ. Параметрийг хаягаас арилгана —
      «Add to Home Screen» цэвэр хаягийг хадгална. */
   {const sp=new URLSearchParams(location.search);
     if(sp.has('install')){sp.delete('install');const q=sp.toString();
       try{history.replaceState(history.state,'',location.pathname+(q?'?'+q:'')+location.hash);}catch(e){}
-      setTimeout(open,700);}}
+      setTimeout(()=>open(true),700);}}
 })();
 /* Танилцуулга хуудасны товчнууд.
    #lock нь position:fixed тул scrollIntoView ажиллахгүй — өөрсдөө гүйлгэнэ. */
