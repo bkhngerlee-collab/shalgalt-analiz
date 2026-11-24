@@ -10,6 +10,8 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="Шалгалт">
 <meta name="application-name" content="Шалгалтын анализ">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
 <meta name="description" content="Багшийн шалгалтын анализ: хариултын хуудсыг камераар уншиж, ангийн дундаж, асуулт бүрийн гүйцэтгэл, агуулгын шинжилгээ, сурагч бүрийн дүгнэлтийг өөрөө гаргана.">
 <!-- Messenger, Facebook зэрэгт холбоос нь карт болж харагдах мэдээлэл -->
 <meta property="og:type" content="website">
@@ -60,6 +62,10 @@ body.sc header p{display:none}
 .wrap{max-width:1000px;margin:0 auto}
 h1{margin:0;font-size:1.6rem;font-weight:700;letter-spacing:-.01em}
 .hdr-top h1{font-size:1.35rem;white-space:nowrap;color:var(--leaf)}
+.pwaBtn[hidden]{display:none!important}
+.hdr-top .pwaBtn{margin:0 0 0 auto;padding:6px 12px;font-size:.88rem;white-space:nowrap}
+.pwa-steps{margin:8px 0 0;padding-left:22px;line-height:1.7}
+.pwa-steps b{white-space:nowrap}
 header p{margin:4px 0 16px;opacity:.85;font-size:.95rem}
 nav{display:flex;gap:4px;overflow-x:auto}
 /* Үндсэн цэс: цагаан "капсул", хоёр үзүүр нь навчит ногоон, таб бүр дүрс + нэртэй */
@@ -1063,6 +1069,7 @@ body.student #studentApp{display:block}
     <div class="hdr-top">
       <h1>Шалгалтын анализ</h1>
       <p id="curTitle" class="hdr-cur"></p>
+      <button type="button" class="btn ghost pwaBtn" hidden title="Утас, компьютерийн нүүр дэлгэцэд апп болгон суулгах">📲 Утсанд суулгах</button>
     </div>
     <div class="navbar">
       <span class="nav-leaf" aria-hidden="true">🌿</span>
@@ -2003,6 +2010,7 @@ body.student #studentApp{display:block}
     <a href="#lp-sheet">Хариултын хуудас</a>
   </nav>
   <div class="lp-cta">
+    <button type="button" class="lp-btn ghost pwaBtn" hidden title="Нүүр дэлгэцэд апп болгон суулгах">📲 Суулгах</button>
     <button class="lp-btn ghost" data-lp="in">Нэвтрэх</button>
     <button class="lp-btn" data-lp="up">Бүртгүүлэх</button>
   </div>
@@ -8710,14 +8718,14 @@ function oeScoreOf(a){
     got+=qEarn(qv(q,a.v||0),x);});
   return{got:Math.round(got*100)/100,max:Math.round(max*100)/100};
 }
-let oeLoadedAt=0;
+let oeLoadedAt=0,oeClsDraft={};   // нийтлээгүй шалгалтын сонгосон ангиуд (шалгалт бүрээр)
 function oeRender(){
   const box=$('#oeBody');if(!box)return;
   if(oeRes&&oeRes._ex!==state.id)oeRes=null;
   if(!vSb()){box.innerHTML='<p class="hint">Цахим шалгалт авахын тулд дансаараа нэвтэрсэн байх шаардлагатай.</p>';return;}
   const o=oeCfg(),qs=state.exam.questions,V=vOwn()?vCount():1;
   const noKey=qs.filter(q=>[...Array(V).keys()].some(v=>!keyDone(qv(q,v)))).length;
-  const cls=db.classes.filter(c=>c.students.length),sel=new Set(o?o.classes:cls.map(c=>c.name));
+  const cls=db.classes.filter(c=>c.students.length),sel=new Set(o?o.classes:(oeClsDraft[state.id]||[]));
   box.innerHTML=`
     ${o?`<p style="margin:0 0 10px">Төлөв: <span class="oe-pill${o.open?'':' off'}">${o.open?'● Нээлттэй — сурагчид орж болно':'Хаалттай'}</span></p>`:''}
     ${oeStale()?`<div class="hp-warn" style="margin:0 0 10px;border-color:var(--stain)"><b>⚠️ Шалгалтын материал нийтэлснээс хойш өөрчлөгдсөн байна</b> (жишээ нь Б хувилбар нэмсэн, асуулт эсвэл зөв хариулт зассан).
@@ -8734,7 +8742,7 @@ function oeRender(){
       <p class="hint" style="margin:4px 0 0;font-size:.82rem">Цаасан асуулт тарааж, утсаар хариулуулах бол <b>«Сурагч өөрөө сонгоно»</b>-г сонгоно. Сурагч ангийнхаа доор А / Б товч дарж хувилбараа сонгоод эхэлнэ — оноо нь тэр хувилбарын зөв хариултаар бодогдоно.</p></div>`:''}
     <label style="display:flex;gap:8px;align-items:center;margin-top:10px;font-weight:600"><input type="checkbox" id="oeShow" style="width:auto"${o&&o.show===false?'':' checked'}>
       Шалгалт дуусахад сурагчид авсан оноо, хувийг нь харуулах</label>
-    <div style="margin-top:10px"><label>Оролцох ангиуд</label><div class="roster" id="oeCls">${cls.length?cls.map(c=>
+    <div style="margin-top:10px"><label>Оролцох ангиуд <small style="color:var(--muted);font-weight:400">— шалгалт өгөх ангиа сонгоно уу</small>${cls.length>1?` <button type="button" class="btn ghost" id="oeClsAll" style="padding:2px 10px;margin-left:6px">${cls.every(c=>sel.has(c.name))?"Бүгдийг цуцлах":"Бүгдийг сонгох"}</button>`:""}</label><div class="roster" id="oeCls">${cls.length?cls.map(c=>
       `<label class="chip" style="display:inline-flex;gap:6px;align-items:center;margin:0"><input type="checkbox" value="${esc(c.name)}" style="width:auto"${sel.has(c.name)?' checked':''}> ${esc(c.name)} (${c.students.length})</label>`).join('')
       :'<span class="progress">"Ангиуд, нэрс" табаас анги, сурагчдын нэрс оруулна уу.</span>'}</div></div>
     <ul class="oe-rules">
@@ -8753,6 +8761,10 @@ function oeRender(){
     <div class="msg" id="oeMsg" role="status"></div>
     ${o?'<div id="oeShare"></div><div id="oeRes"></div>':''}`;
   $('#oePub').onclick=oePublish;
+  /* Анги сонголтыг (нийтлэхээс өмнө) дахин зурахад алдахгүй */
+  const keepCls=()=>{if(!o)oeClsDraft[state.id]=[...document.querySelectorAll('#oeCls input:checked')].map(x=>x.value);};
+  $('#oeCls').addEventListener('change',keepCls);
+  if($('#oeClsAll'))$('#oeClsAll').onclick=()=>{const bx=[...document.querySelectorAll('#oeCls input')],on=!bx.every(x=>x.checked);bx.forEach(x=>x.checked=on);keepCls();$('#oeClsAll').textContent=on?'Бүгдийг цуцлах':'Бүгдийг сонгох';};
   if(o){$('#oeToggle').onclick=oeToggle;$('#oeDel').onclick=oeDelete;oeShare();oeRenderRes();if(!oeRes||Date.now()-oeLoadedAt>5000)oeLoad();}
 }
 const OE_MAX=1500000;
@@ -10262,6 +10274,9 @@ $('#tList').addEventListener('click',async e=>{
 (function(){
   try{
     if(!/^https?:$/.test(location.protocol))return;   // файлаар нээсэн үед хэрэггүй
+    /* Сайт дээр manifest.webmanifest, sw.js файл байгаа — service worker-ийг бүртгэвэл утас "суулгах"-ыг санал болгоно */
+    if('serviceWorker'in navigator)navigator.serviceWorker.register('sw.js').catch(()=>{});
+    if(document.querySelector('link[rel="manifest"][href$=".webmanifest"]'))return;
     const ic=id=>{const l=document.getElementById(id);return l?l.href:'';};
     const i192=ic('ico192'),i512=ic('ico512');if(!i192||!i512)return;
     const start=location.origin+location.pathname;
@@ -10277,6 +10292,35 @@ $('#tList').addEventListener('click',async e=>{
     l.href=URL.createObjectURL(new Blob([JSON.stringify(mf)],{type:'application/manifest+json'}));
     document.head.appendChild(l);
   }catch(e){}
+})();
+/* «📲 Утсанд суулгах» товч: Android, компьютер (Chrome, Edge) — хөтчийн суулгах цонхыг шууд нээнэ;
+   iPhone, iPad (Safari) — суулгах цонх байхгүй тул алхамыг зааж өгнө. Аль хэдийн апп-аар нээсэн бол товч нуугдана. */
+(function(){
+  const standalone=()=>matchMedia('(display-mode: standalone)').matches||navigator.standalone===true;
+  const ios=/iphone|ipad|ipod/i.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
+  let ev=null;
+  const show=on=>document.querySelectorAll('.pwaBtn').forEach(b=>b.hidden=!on);
+  if(!/^https?:$/.test(location.protocol)||standalone())return;
+  if(ios)show(true);
+  addEventListener('beforeinstallprompt',e=>{e.preventDefault();ev=e;show(true);});
+  addEventListener('appinstalled',()=>{ev=null;show(false);});
+  function guide(){
+    let d=document.getElementById('pwaDlg');
+    if(!d){d=document.createElement('dialog');d.id='pwaDlg';d.className='del-dlg';d.setAttribute('aria-labelledby','pwaTitle');document.body.appendChild(d);
+      d.addEventListener('click',e=>{if(e.target===d||e.target.closest('[data-pwa-x]'))d.close();});}
+    d.innerHTML=`<h2 id="pwaTitle" style="margin:0 0 6px">📲 Нүүр дэлгэцэд суулгах</h2>
+      ${ios?`<ol class="pwa-steps"><li><b>Safari</b> хөтчөөр энэ хуудсыг нээнэ.</li>
+        <li>Доод (iPad дээр дээд) хэсгийн <b>Хуваалцах ⬆️</b> товчийг дарна.</li>
+        <li>Жагсаалтаас <b>«Add to Home Screen» / «Нүүр дэлгэцэд нэмэх»</b>-ийг сонгоно.</li>
+        <li>Баруун дээд буланд <b>«Add / Нэмэх»</b> дарна.</li></ol>`
+      :`<ol class="pwa-steps"><li>Хөтчийн цэсийг (<b>⋮</b>) нээнэ.</li><li><b>«Install app» / «Add to Home screen» / «Апп суулгах»</b>-ыг сонгоно.</li></ol>`}
+      <p class="hint" style="margin:10px 0 0">Нүүр дэлгэц дээр <b>«Шалгалт»</b> нэртэй ногоон дүрс гарна. Дарахад хөтчийн хаягийн мөргүй, апп шиг бүтэн дэлгэцээр нээгдэнэ. Таны өгөгдөл, нэвтрэлт хэвээр.</p>
+      <div class="btns" style="margin:12px 0 0;justify-content:flex-end"><button type="button" class="btn" data-pwa-x>Ойлголоо</button></div>`;
+    d.showModal();
+  }
+  document.addEventListener('click',async e=>{const b=e.target.closest('.pwaBtn');if(!b)return;
+    if(ev){ev.prompt();try{const c=await ev.userChoice;if(c&&c.outcome==='accepted')show(false);}catch(x){}ev=null;return;}
+    guide();});
 })();
 /* Танилцуулга хуудасны товчнууд.
    #lock нь position:fixed тул scrollIntoView ажиллахгүй — өөрсдөө гүйлгэнэ. */
