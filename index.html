@@ -81,6 +81,28 @@ h1{margin:0;font-size:1.6rem;font-weight:700;letter-spacing:-.01em}
 .pwa-warn{border:2px solid #DC2626;background:#FEF2F2;color:#7F1D1D;border-radius:12px;padding:10px 12px;margin:8px 0;font-size:1rem}
 .pwa-dlg details{margin-top:10px}.pwa-dlg details summary{cursor:pointer;font-weight:700;color:#065F46}
 .pwa-dlg details h4{margin:12px 0 2px;font-size:1rem}
+/* iPhone: сумтай заавар (Safari-д суулгах цонх байдаггүй тул дарах товчийг шууд заана) */
+.pwa-coach{position:fixed;inset:0;z-index:9999;background:rgba(8,20,14,.66);display:flex;align-items:center;justify-content:center;padding:70px 14px;color:#14211B}
+.pwa-coach[hidden]{display:none}
+.pwa-cc{background:#fff;border-radius:18px;padding:14px 16px 12px;width:min(420px,100%);max-height:100%;overflow:auto;box-shadow:0 12px 40px rgba(0,0,0,.35)}
+.pwa-cc h3{margin:0 0 4px;font-size:1.15rem;color:#065F46}
+.pwa-cs{list-style:none;margin:0;padding:0}
+.pwa-cs li{display:flex;gap:10px;align-items:center;padding:9px 0;border-top:1px solid #E5EDE8;font-size:1.03rem;line-height:1.4}
+.pwa-cs li:first-child{border-top:0}
+.pwa-cs .n{flex:none;width:26px;height:26px;border-radius:50%;background:#047857;color:#fff;font-weight:800;display:grid;place-items:center;font-size:.9rem}
+.pwa-ic{flex:none;width:42px;height:42px;border-radius:11px;background:#F2F2F7;border:1px solid #D9DDE3;display:grid;place-items:center;color:#007AFF;font-weight:700;font-size:.9rem}
+.pwa-ic svg{width:24px;height:24px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.pwa-cs small{display:block;color:#4B5B54;font-size:.86rem}
+.pwa-arr{position:fixed;z-index:10000;display:flex;flex-direction:column-reverse;align-items:center;gap:2px;pointer-events:none;animation:pwaDn 1s ease-in-out infinite}
+.pwa-arr svg{width:54px;height:54px;filter:drop-shadow(0 2px 6px rgba(0,0,0,.45))}
+.pwa-arr b{background:#FDE047;color:#14211B;border-radius:999px;padding:3px 10px;font-size:.95rem;white-space:nowrap;box-shadow:0 2px 6px rgba(0,0,0,.3)}
+.pwa-arr.dn{bottom:calc(2px + env(safe-area-inset-bottom))}.pwa-arr.up{top:2px;flex-direction:column;animation-name:pwaUp}
+.pwa-arr.up svg{transform:rotate(180deg)}
+.pwa-arr.r{right:4px}.pwa-arr.c{left:50%;transform:translateX(-50%)}
+@keyframes pwaDn{0%,100%{translate:0 0}50%{translate:0 10px}}
+@keyframes pwaUp{0%,100%{translate:0 0}50%{translate:0 -10px}}
+@media (prefers-reduced-motion:reduce){.pwa-arr{animation:none}}
+#pwaQR svg{width:100%;height:100%;display:block}
 header p{margin:4px 0 16px;opacity:.85;font-size:.95rem}
 nav{display:flex;gap:4px;overflow-x:auto}
 /* Үндсэн цэс: цагаан "капсул", хоёр үзүүр нь навчит ногоон, таб бүр дүрс + нэртэй */
@@ -10515,7 +10537,14 @@ $('#tList').addEventListener('click',async e=>{
   const ios=/iphone|ipad|ipod/i.test(ua)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
   /* Facebook, Messenger, Instagram г.м. апп доторх хөтөч — тэнд суулгах боломжгүй */
   const inapp=/FBAN|FBAV|FB_IAB|FBIOS|Instagram|Messenger|Line\/|KAKAOTALK|Snapchat|musical_ly|BytedanceWebview|TikTok/i.test(ua);
-  const kind=inapp?(ios?'inapp-ios':'inapp-android'):ios?(/CriOS|FxiOS|EdgiOS|OPiOS/.test(ua)?'ios-other':'ios'):/SamsungBrowser/i.test(ua)?'samsung':/Android/i.test(ua)?'android':'desktop';
+  /* iOS хувилбар: iOS 26-аас UA дахь «OS 18_6» царцсан тул Safari-гийн Version/26-аар таньна */
+  const osv=(m=>m?+m[1]+(+m[2]||0)/100:0)(ua.match(/OS (\d+)[_.](\d+)/));
+  const sfv=(m=>m?+m[1]:0)(ua.match(/Version\/(\d+)/));
+  const ipad=/ipad/i.test(ua)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
+  const ios26=sfv>=26||osv>=26;
+  /* iOS 16.4-өөс Chrome дээрээс ч «Add to Home Screen» хийж болдог */
+  const kind=inapp?(ios?'inapp-ios':'inapp-android'):ios?(/CriOS/.test(ua)&&osv>=16.4?'ios-chrome':/CriOS|FxiOS|EdgiOS|OPiOS/.test(ua)?'ios-other':'ios'):/SamsungBrowser/i.test(ua)?'samsung':/Android/i.test(ua)?'android':'desktop';
+  const here=location.origin+location.pathname;
   let ev=null;
   const show=on=>document.querySelectorAll('.pwaBtn').forEach(b=>b.hidden=!on);
   if(!/^https?:$/.test(location.protocol)||standalone())return;
@@ -10531,11 +10560,11 @@ $('#tList').addEventListener('click',async e=>{
       'Нүүр дэлгэцэд ногоон <b>«Шалгалт»</b> дүрс гарна.']},
     samsung:{t:'📱 Samsung Internet хөтөч',s:[
       `Доод цэсийн ${K('≡')} товчийг дарна.`,`${K('Хуудас нэмэх')} → ${K('Нүүр дэлгэц')} гэж сонгоно.`,'Нүүр дэлгэцэд ногоон <b>«Шалгалт»</b> дүрс гарна.']},
-    ios:{t:'🍎 iPhone, iPad — Safari',s:[
-      `Сайтыг ${K('Safari')}-аар нээнэ.<small>Chrome эсвэл Facebook дотроос суулгах боломжгүй.</small>`,
-      `Доод хэсгийн ${K('Хуваалцах ⬆️')} товч дарна.<small>iPad дээр энэ товч дээд талд байрлана.</small>`,
-      `Жагсаалтыг доош гүйлгээд ${K('Add to Home Screen')} / ${K('Нүүр дэлгэцэд нэмэх')} сонгоно.`,
-      `Баруун дээд ${K('Add / Нэмэх')} дарна. Нүүр дэлгэцэд ногоон <b>«Шалгалт»</b> дүрс гарна.`]},
+    ios:{t:'🍎 iPhone, iPad — Safari эсвэл Chrome',s:[
+      `Сайтыг ${K('Safari')} эсвэл ${K('Chrome')}-оор нээнэ.<small>Facebook, Messenger дотроос суулгах боломжгүй.</small>`,
+      `${K('Share ⬆️')} (Хуваалцах) товч дарна.<small>Safari: доод хэсэгт. Шинэ iPhone (iOS 26): эхлээд доод баруун ${K('•••')}, дараа нь ${K('Share')}. iPad, Chrome: дээд хэсэгт.</small>`,
+      `Жагсаалтыг доош гүйлгээд ${K('Add to Home Screen')} сонгоно.<small>Харагдахгүй бол ${K('View More')} / ${K('More')} дарна.</small>`,
+      `Баруун дээд ${K('Add')} дарна. Нүүр дэлгэцэд ногоон <b>«Шалгалт»</b> дүрс гарна.`]},
     desktop:{t:'💻 Компьютер — Chrome, Edge',s:[
       `Хаягийн мөрний баруун талд гарах ${K('⊕')} (суулгах) дүрс, эсвэл ${K('📲 Суулгах')} товчийг дарна.`,
       `${K('Суулгах / Install')} дарна.`,'Программ апп шиг тусдаа цонхоор нээгдэж, ширээ (desktop)-нд дүрс нь гарна.']}};
@@ -10546,24 +10575,77 @@ $('#tList').addEventListener('click',async e=>{
       d.addEventListener('click',async e=>{if(e.target===d||e.target.closest('[data-pwa-x]')){d.close();return;}
         if(e.target.closest('[data-pwa-go]')&&ev){ev.prompt();try{const c=await ev.userChoice;if(c&&c.outcome==='accepted'){show(false);d.close();}}catch(x){}ev=null;guide();return;}
         if(e.target.closest('[data-pwa-copy]')){try{await navigator.clipboard.writeText(location.origin+location.pathname);e.target.textContent='✓ Хуулагдлаа';}catch(x){}}});}
-    const main=kind==='inapp-ios'||kind==='ios-other'?'ios':kind==='inapp-android'?'android':kind;
-    const warn=kind.startsWith('inapp')?`<div class="pwa-warn"><b>⚠ Та Facebook / Messenger доторх хөтчөөр нээсэн байна.</b> Тэнд суулгах боломжгүй.
-        ${kind==='inapp-ios'?`Баруун доод/дээд ${K('⋯')} → ${K('Safari-аар нээх')} дарна уу.`:`Баруун дээд ${K('⋮')} → ${K('Open in Chrome')} дарна уу.`}
-        <div style="margin-top:8px"><button type="button" class="btn ghost" data-pwa-copy style="margin:0">🔗 Холбоосыг хуулах</button></div></div>`
-      :kind==='ios-other'?`<div class="pwa-warn"><b>⚠ iPhone, iPad дээр зөвхөн Safari хөтчөөр суулгана.</b> Хаягийг хуулж Safari-д нээнэ үү.
-        <div style="margin-top:8px"><button type="button" class="btn ghost" data-pwa-copy style="margin:0">🔗 Холбоосыг хуулах</button></div></div>`:'';
+    const main=kind.includes('ios')?'ios':kind==='inapp-android'?'android':kind;
+    /* Facebook / Messenger-ээс нэг товчоор жинхэнэ хөтөч рүү гаргана (?install=1 → тэнд заавар өөрөө нээгдэнэ) */
+    const toSafari=`<a class="pwaBtn" href="x-safari-${esc(here)}?install=1" style="font-size:1.1rem;padding:11px 22px;text-decoration:none">🧭 Safari-д нээх</a>`;
+    const toChrome=`<a class="pwaBtn" href="intent://${esc(location.host+location.pathname)}?install=1#Intent;scheme=${location.protocol.slice(0,-1)};package=com.android.chrome;S.browser_fallback_url=${encodeURIComponent(here+'?install=1')};end" style="font-size:1.1rem;padding:11px 22px;text-decoration:none">🌐 Chrome-д нээх</a>`;
+    const copyB=`<button type="button" class="btn ghost" data-pwa-copy style="margin:0">🔗 Холбоосыг хуулах</button>`;
+    const warn=kind.startsWith('inapp')?`<div class="pwa-warn"><b>⚠ Та Facebook / Messenger доторх хөтчөөр нээсэн байна.</b> Тэнд суулгах боломжгүй — доорх товчийг дарахад сайт ${kind==='inapp-ios'?'Safari':'Chrome'}-д нээгдэж, заавар өөрөө гарна.
+        <div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap;align-items:center">${kind==='inapp-ios'?toSafari:toChrome}${copyB}</div>
+        <small style="display:block;margin-top:6px">Нээгдэхгүй бол: ${kind==='inapp-ios'?`${K('•••')} → ${K('Open in Safari')}`:`${K('⋮')} → ${K('Open in Chrome')}`}, эсвэл холбоосыг хуулж хөтчид буулгана.</small></div>`
+      :kind==='ios-other'?`<div class="pwa-warn"><b>⚠ Энэ хөтчөөс суулгахад төвөгтэй.</b> Safari-д нээвэл амархан суулгана.
+        <div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap;align-items:center">${toSafari}${copyB}</div></div>`:'';
+    /* Компьютер: утсаараа QR уншуулахад сайт утсан дээр нээгдэж, суулгах заавар өөрөө гарна */
+    const qr=kind==='desktop'?`<div class="pwa-now" style="display:flex;gap:14px;align-items:center;flex-wrap:wrap">
+        <div id="pwaQR" style="width:150px;height:150px;flex:none;background:#fff;border-radius:8px"></div>
+        <div style="flex:1;min-width:190px"><h3>📱 Утсандаа суулгах</h3><p style="margin:0">Утасныхаа <b>камераар</b> энэ QR-ыг уншуулна. Сайт утсан дээр нээгдээд суулгах заавар <b>өөрөө</b> гарна — хаяг бичих шаардлагагүй.</p></div></div>`:'';
     d.innerHTML=`<div style="display:flex;justify-content:space-between;gap:10px;align-items:start"><h2 id="pwaTitle" style="margin:0">📲 Апп болгон суулгах</h2>
         <button type="button" class="btn ghost" data-pwa-x style="margin:0">✕</button></div>
       ${ev?`<div class="pwa-now" style="text-align:center"><p style="margin:0 0 8px;font-size:1.05rem">Таны хөтөч шууд суулгахад бэлэн байна.</p>
         <button type="button" class="pwaBtn" data-pwa-go style="font-size:1.15rem;padding:12px 28px">📲 Суулгах</button></div>`:''}
-      ${warn}
+      ${warn}${qr}
+      ${coachPlan()?`<div style="text-align:center;margin:4px 0 2px"><button type="button" class="pwaBtn" data-pwa-coach style="font-size:1.1rem;padding:11px 24px">👇 Хаана дарахыг зааж өгөх</button></div>`:''}
       <div class="pwa-now">${sec(main,true)}</div>
       <p class="hint" style="margin:6px 0 0">Суулгасны дараа дүрс дээр дарахад хаягийн мөргүй, апп шиг бүтэн дэлгэцээр нээгдэнэ. Нэг удаа нэвтэрмэгц таны шалгалт, дүн үүлнээс өөрөө татагдана.</p>
       <details><summary>Бусад төхөөрөмжийн заавар</summary>${['android','samsung','ios','desktop'].filter(k=>k!==main).map(k=>sec(k,false)).join('')}</details>
       <div class="btns" style="margin:12px 0 0;justify-content:flex-end"><button type="button" class="btn" data-pwa-x>Ойлголоо</button></div>`;
     if(!d.open)d.showModal();
+    const qb=d.querySelector('#pwaQR');
+    if(qb)qrSvg(here+'?install=1').then(s=>{qb.innerHTML=s;}).catch(()=>{qb.style.cssText+=';display:grid;place-items:center;font-size:.8rem;word-break:break-all;padding:6px;height:auto';qb.textContent=here;});
   }
-  document.addEventListener('click',e=>{const b=e.target.closest('.pwaBtn');if(!b||b.closest('#pwaDlg'))return;guide();});
+  /* ---- iPhone, iPad: сумтай заавар. Safari-гийн товч хуудаснаас гадна (доод/дээд самбарт) байдаг тул
+     сум дэлгэцийн ирмэг рүү, яг тэр товч руу заана. Дэлгэрэнгүй текст заавар #pwaDlg-д хэвээр. */
+  const IC={
+    share:'<svg viewBox="0 0 24 24"><path d="M8.5 9.5h-2v11h11v-11h-2"/><path d="M12 15V3.5M8.5 7 12 3.5 15.5 7"/></svg>',
+    more:'<svg viewBox="0 0 24 24"><circle cx="5" cy="12" r="1.7" fill="currentColor" stroke="none"/><circle cx="12" cy="12" r="1.7" fill="currentColor" stroke="none"/><circle cx="19" cy="12" r="1.7" fill="currentColor" stroke="none"/></svg>',
+    add:'<svg viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="4"/><path d="M12 8.5v7M8.5 12h7"/></svg>',
+    ok:'Add'};
+  function coachPlan(){
+    const more='Харагдахгүй бол жагсаалтыг доош гүйлгэх эсвэл <b>View More</b> / <b>More</b> дарна';
+    const add=[IC.ok,'Баруун дээд <b>Add</b> дарна — болчихлоо! 🎉','Нүүр дэлгэцэд ногоон «Шалгалт» дүрс гарна'];
+    if(kind==='ios'&&ipad)return{pos:'up r',label:'Энийг дар',steps:[[IC.share,'Дээд баруун талын <b>Share</b> (Хуваалцах) товчийг дарна'],[IC.add,'<b>Add to Home Screen</b> дарна',more],add]};
+    if(kind==='ios'&&ios26)return{pos:'dn r',label:'••• дар',steps:[[IC.more,'Доод баруун талын <b>•••</b> товчийг дарна','Шар сум яг тэр товчийг заана'],[IC.share,'<b>Share</b> (Хуваалцах) дарна'],[IC.add,'<b>Add to Home Screen</b> дарна',more],
+      [IC.ok,'Баруун дээд <b>Add</b> дарна — болчихлоо! 🎉','«Open as Web App» асаалттай байг']]};
+    if(kind==='ios')return{pos:'dn c',label:'Энийг дар',steps:[[IC.share,'Доод голын <b>Share</b> (Хуваалцах) товчийг дарна','Шар сум яг тэр товчийг заана'],[IC.add,'<b>Add to Home Screen</b> дарна',more],add]};
+    if(kind==='ios-chrome')return{pos:'up r',label:'Энийг дар',steps:[[IC.share,'Хаягийн мөрний <b>Share</b> (Хуваалцах) товчийг дарна','Хаягийн мөр доор байвал товч доод талд байна'],[IC.add,'<b>Add to Home Screen</b> дарна',more],add]};
+    return null;
+  }
+  const ARR='<svg viewBox="0 0 48 48"><path d="M24 44 8 26h10V4h12v22h10z" fill="#FDE047" stroke="#14211B" stroke-width="2.5" stroke-linejoin="round"/></svg>';
+  function coach(){
+    const p=coachPlan();if(!p)return guide();
+    const dl=document.getElementById('pwaDlg');if(dl&&dl.open)dl.close();
+    let c=document.getElementById('pwaCoach');
+    if(!c){c=document.createElement('div');c.id='pwaCoach';c.className='pwa-coach';c.setAttribute('role','dialog');c.setAttribute('aria-modal','true');c.setAttribute('aria-labelledby','pwaCoachT');document.body.appendChild(c);
+      c.addEventListener('click',e=>{if(e.target===c||e.target.closest('[data-pwa-x]')){c.hidden=true;return;}
+        if(e.target.closest('[data-pwa-more]')){c.hidden=true;guide();}});
+      document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!c.hidden)c.hidden=true;});}
+    c.innerHTML=`<div class="pwa-cc"><div style="display:flex;justify-content:space-between;gap:8px;align-items:start">
+        <h3 id="pwaCoachT">📲 ${p.steps.length} алхмаар суулгана</h3><button type="button" class="btn ghost" data-pwa-x style="margin:0;padding:4px 10px">✕</button></div>
+      <ol class="pwa-cs">${p.steps.map((s,i)=>`<li><span class="n">${i+1}</span><span class="pwa-ic">${s[0]}</span><span>${s[1]}${s[2]?`<small>${s[2]}</small>`:''}</span></li>`).join('')}</ol>
+      <div style="display:flex;justify-content:space-between;gap:8px;margin-top:8px;flex-wrap:wrap"><button type="button" class="btn ghost" data-pwa-more style="margin:0">Дэлгэрэнгүй заавар</button>
+        <button type="button" class="btn" data-pwa-x style="margin:0">Ойлголоо</button></div></div>
+      <div class="pwa-arr ${p.pos}">${ARR}<b>${p.label}</b></div>`;
+    c.hidden=false;
+  }
+  const open=()=>coachPlan()?coach():guide();
+  document.addEventListener('click',e=>{const b=e.target.closest('.pwaBtn');if(!b)return;
+    if(b.closest('#pwaDlg')){if(b.matches('[data-pwa-coach]'))coach();return;}open();});
+  /* QR, Facebook-ээс ирсэн бол (?install=1) заавар өөрөө нээгдэнэ. Параметрийг хаягаас арилгана —
+     «Add to Home Screen» цэвэр хаягийг хадгална. */
+  {const sp=new URLSearchParams(location.search);
+    if(sp.has('install')){sp.delete('install');const q=sp.toString();
+      try{history.replaceState(history.state,'',location.pathname+(q?'?'+q:'')+location.hash);}catch(e){}
+      setTimeout(open,700);}}
 })();
 /* Танилцуулга хуудасны товчнууд.
    #lock нь position:fixed тул scrollIntoView ажиллахгүй — өөрсдөө гүйлгэнэ. */
