@@ -3232,7 +3232,9 @@ function piFurniture(pages){
   /* Хуудасны дугаар булан дээр (зүүн/баруун ээлжилж) байж болно: олон хуудсанд яг ижил өндөрт байгаа ганц тоо */
   const numY={};pages.forEach(pg=>{const seen=new Set();pg.items.forEach(it=>{if(!/^\d{1,3}$/.test(it.s))return;const k=Math.round(it.top/4);if(!seen.has(k)){seen.add(k);numY[k]=(numY[k]||0)+1;}});});
   pages.forEach(pg=>{const band=pg.H*.11;
-    pg.items.forEach(it=>{const edge=it.bot<band||it.top>pg.H-band,num=/^\d{1,3}$/.test(it.s);
+    pg.items.forEach(it=>{const edge=it.bot<band||it.top>pg.H-band,
+        /* "C.  21", "D.  12" — хуудасны доод талын сонголтын тоог хуудасны дугаар гэж андуурахгүй */
+        num=/^\d{1,3}$/.test(it.s)&&!pg.items.some(o=>o!==it&&Math.abs(o.top-it.top)<it.h*.6&&/^\(?[A-EАБВГД][.)]$/.test(o.s));
       it.rep=edge&&cnt[key(it)]>=many;
       it.furn=PI_FURN.test(it.s)||(edge&&((num&&Math.abs((it.x+it.x2)/2-pg.W/2)<pg.W*.12)||(num&&pages.length>=4&&it.top>pg.H-band&&numY[Math.round(it.top/4)]>=many)));});
     /* Давтагддаг бичвэр (жишээ нь "(2 оноо)") асуултын мөрөнд байвал толгой биш — мөр бүхэлдээ давтагдаж байж толгой */
@@ -3242,8 +3244,27 @@ function piFurniture(pages){
     pg.cBot=ft.length?Math.min(...ft.map(i=>i.top))-2:pg.H;
     pg.rows=piRows(pg.items);
     pg.stops=pg.rows.filter(r=>(!r.its[0].furn&&PI_STOP.test(piLegacy(r.txt)))||r.its.some(it=>!it.furn&&PI_STOP.test(it.s))).map(r=>r.top).sort((a,b)=>a-b);
+    /* Хоёр баганатай хуудас: баганын завсар (gutter) ба хоёр баганыг хөндлөн огтолсон мөрүүд (хэсгийн гарчиг гэх мэт) */
+    pg.gut=piGutter(pg);pg.seps=[];
+    if(pg.gut!=null)pg.rows.forEach(r=>{if(r.top<pg.cTop||r.top>pg.cBot)return;
+      const cr=r.its.filter(it=>!it.furn&&it.x<pg.gut-2&&it.x2>pg.gut+2);if(!cr.length)return;
+      const y0=Math.min(...r.its.map(i=>i.top)),y1=Math.max(...r.its.map(i=>i.bot)),L=pg.seps[pg.seps.length-1];
+      if(L&&y0-L.y1<4)L.y1=Math.max(L.y1,y1);else pg.seps.push({y0,y1});});
   });
 }
+/* Баганын завсар: хуудасны дунд (38–62%) бичвэр огтлохгүй байгаа босоо зурвас, хоёр талд нь хангалттай бичвэртэй */
+function piGutter(pg){
+  const its=pg.items.filter(it=>!it.furn&&it.top>=pg.cTop&&it.bot<=pg.cBot),n=its.length,W=pg.W;if(n<20)return null;
+  const need=Math.max(8,n*.15);let best=null,minC=1e9;const xs=[];
+  for(let x=Math.round(W*.38);x<=W*.62;x++){let c=0,l=0,r=0;
+    its.forEach(it=>{if(it.x<x-1&&it.x2>x+1)c++;else if(it.x2<=x)l++;else if(it.x>=x)r++;});
+    xs.push({x,c,ok:l>=need&&r>=need});if(l>=need&&r>=need&&c<minC)minC=c;}
+  if(minC>Math.max(2,n*.03))return null;
+  /* хамгийн бага огтлолтой хамгийн өргөн тасралтгүй зурвасын дунд */
+  let run=null;xs.forEach(o=>{if(o.ok&&o.c===minC){if(run&&o.x===run.b+1)run.b=o.x;else{run={a:o.x,b:o.x};}if(!best||run.b-run.a>best.b-best.a)best={...run};}else run=null;});
+  return best&&best.b-best.a>=4?(best.a+best.b)/2:null;
+}
+const piBand=(pg,y)=>(pg.seps||[]).filter(s=>s.y1<y).length;
 /* Асуултын дугаар: мөрийнхөө хамгийн зүүн талд, нэг баганад, 1, 2, 3… гэж дараалсан тоо */
 /* "12." эсвэл "12. Текст…", "50. 1990 онд…" (дугаарын ард зай аваад тоо) — гэхдээ "2.1." гэх мэт дэд дугаарыг биш */
 const PI_NUM=/^(?:№\s*)?(\d{1,3})\s*[.)]?$/, PI_NUMTXT=/^(?:№\s*)?(\d{1,3})\s*[.)](?:\s+\S|[^\d\s.,)])/;
@@ -3251,24 +3272,25 @@ function piCands(pages){
   const cand=[];
   pages.forEach(pg=>pg.items.forEach(it=>{if(it.furn||it.kt)return;
     const m=it.s.match(PI_NUM)||it.s.match(PI_NUMTXT);if(!m)return;const v=+m[1];if(v<1||v>200)return;
-    if(pg.items.some(o=>o!==it&&!o.furn&&o.x2<it.x-1&&Math.abs(o.top-it.top)<it.h*.6))return;
+    /* мөрийнхөө (баганынхаа) хамгийн зүүн бичвэр байх ёстой — хоёр баганатай хуудсанд зүүн баганын бичвэрийг тооцохгүй */
+    const G=pg.gut,rc=G!=null&&it.x>G;
+    if(pg.items.some(o=>o!==it&&!o.furn&&o.x2<it.x-1&&(!rc||o.x>G)&&Math.abs(o.top-it.top)<it.h*.6))return;
     /* "1. Write…" нэг бичвэр бол дугаарын өргөн: цифр ≈ 0.56em, цэг/хаалт ≈ 0.3em (эхний үсгийг цайруулахгүй) */
     const x2=PI_NUM.test(it.s)?it.x2:it.x+it.h*(.57*m[1].length+.3);
-    cand.push({v,p:pg.p,x:it.x,x2,top:it.top,bot:it.bot,h:it.h});}));
+    cand.push({v,p:pg.p,x:it.x,x2,top:it.top,bot:it.bot,h:it.h,col:G!=null?(rc?1:0):(it.x>pg.W*.45?1:0),band:G!=null?piBand(pg,it.top):0});}));
   /* Дугаарын багана: зүүн захаараа (1, 2 …) эсвэл баруун захаараа (9, 10 …) тэгшилсэн байж болно.
-     Хоёр баганатай хуудсанд зүүн баганыг уншаад дараа нь баруун баганыг уншина. */
-  const W=pages.length?pages[0].W:600;
-  cand.forEach(c=>{c.col=c.x>W*.45?1:0;});
-  cand.sort((a,b)=>a.p-b.p||a.col-b.col||a.top-b.top||a.x-b.x);
+     Хоёр баганатай хуудсанд: хэсэг (хөндлөн гарчгаар тусгаарласан) бүрт зүүн баганыг уншаад дараа нь баруун баганыг. */
+  cand.sort(piOrd);
   return cand;
 }
+const piOrd=(a,b)=>a.p-b.p||(a.band||0)-(b.band||0)||a.col-b.col||a.top-b.top||a.x-b.x;
 function piAnchors(pages){return piChain(piCands(pages));}
 /* Нэг PDF-д хэд хэдэн хувилбар (A, B, C, D) эсвэл хэсэг 1-ээс дахин дугаарлагдсан бол тус бүрийг тусад нь олно */
 function piSections(pages){
   const out=[],all=piCands(pages);let rest=all;
   for(let g=0;g<12&&rest.length;g++){
     const ch=piChain(rest,all);if(ch.length<(out.length?Math.max(8,out[0].length*.5):2))break;out.push(ch);
-    const L=ch[ch.length-1];rest=rest.filter(c=>c.p>L.p||(c.p===L.p&&(c.col>L.col||(c.col===L.col&&c.top>L.bot))));}
+    const L=ch[ch.length-1];rest=rest.filter(c=>c.p>L.p||(c.p===L.p&&((c.band||0)>(L.band||0)||((c.band||0)===(L.band||0)&&(c.col>L.col||(c.col===L.col&&c.top>L.bot))))));}
   return out;
 }
 function piChain(cand,all){
@@ -3323,18 +3345,59 @@ function piRegions(pages,anch){
     pg.items.forEach(it=>{if(it.furn||it.bot>a.top+1.5||it.top>a.top-a.h*.3)return;
       if(XR!=null&&(it.x>=XR)!==!!a.col)return;if(it.bot>pb)pb=it.bot;});
     return Math.min(a.top-.5,Math.max(a.top-4,pb+.6));};
-  return anch.map((a,k)=>{
-    const b=anch[k+1],pg=byP(a.p),segs=[];
-    const W=pg.W,XE=Math.min(W,Math.max(W*.6,(xe.length?xe[xe.length-1]:W)+12));
-    const x0=a.col?XR:X0,x1=XR!=null&&!a.col?XR-2:XE;
-    const same=b&&b.p===a.p&&!!b.col===!!a.col;
-    segs.push({p:a.p,x0,x1,y0:Math.max(pg.cTop,cut(a)),y1:same?Math.min(cut(b),stopAt(pg,a.top)):stopAt(pg,a.top)});
-    if(b&&b.p>a.p&&XR==null)for(let q=a.p+1;q<=b.p;q++){const g=byP(q),y0=g.cTop+1;
-      if(g.stops.length&&g.stops[0]<y0+40&&q!==b.p)continue;  // "BLANK PAGE"
-      const y1=q===b.p?cut(b):stopAt(g,y0);if(y1-y0>14)segs.push({p:q,x0,x1,y0,y1,maybe:true});}
-    return{n:a.v,segs,num:{p:a.p,x0:a.x-1.5,x1:a.x2+1.5,y0:a.top-1.5,y1:a.bot+1}};
+  /* Унших дараалал: хуудас → хэсэг (хөндлөн гарчгаар тусгаарлагдсан) → багана (зүүн, баруун) → дээрээс доош.
+     "Нүх" (slot) бүр нэг баганын нэг хэсэг. Асуулт дараагийн асуулт хүртэл нүхнүүдээр үргэлжилнэ —
+     ж.нь баруун баганын дээд хэсэгт, эсвэл дараагийн хуудас руу үргэлжилсэн хэсэг. */
+  const W0=pages.length?pages[0].W:600,XE=Math.min(W0,Math.max(W0*.6,(xe.length?xe[xe.length-1]:W0)+12));
+  const two=XR!=null,slots=[];
+  pages.forEach(pg=>{
+    /* тусгаарлагч: хоёр баганатай бол хөндлөн мөрүүд; бүх төрөлд "BLANK PAGE", "II хэсэг" г.м. зогсоох мөр */
+    const sp=[...(two&&pg.gut!=null?pg.seps:[]).map(s=>({...s,stop:false})),...pg.stops.map(y=>({y0:y-1,y1:y+12,stop:true}))].sort((a,b)=>a.y0-b.y0);
+    let y=pg.cTop,after=false;const bands=[];
+    sp.forEach(s=>{if(s.y0>y)bands.push({y0:y,y1:s.y0-1,after});y=Math.max(y,s.y1+1);if(s.stop)after=true;});
+    if(pg.cBot>y)bands.push({y0:y,y1:pg.cBot,after});
+    bands.forEach(b=>{if(b.y1-b.y0<10)return;const band=piBand(pg,b.y0+1);
+      (two?[[0,X0,XR-2],[1,XR,XE]]:[[0,X0,XE]]).forEach(([col,x0,x1])=>slots.push({p:pg.p,band,col,x0,x1,y0:b.y0,y1:b.y1,after:b.after}));});
   });
+  const slotOf=a=>{let i=slots.findIndex(s=>s.p===a.p&&(!two||s.col===(a.col?1:0))&&a.top>=s.y0-4&&a.top<=s.y1);
+    if(i<0)i=slots.findIndex(s=>s.p===a.p&&(!two||s.col===(a.col?1:0))&&a.top<s.y0);  // дугаар тусгаарлагчийн мөрөнд таарвал — дараагийн нүх
+    return i;};
+  const hasInk=s=>{const pg=byP(s.p);return pg.items.some(it=>!it.furn&&it.top>=s.y0&&it.top<s.y1&&it.x>=s.x0-2&&it.x<s.x1)
+    ||(pg.gfx||[]).some(g=>g.bot>s.y0&&g.top<s.y1&&g.x2>s.x0&&g.x<s.x1);};
+  const pos=anch.map(a=>({a,si:slotOf(a)}));
+  const flow=pos.slice().sort((u,v)=>(u.si-v.si)||u.a.top-v.a.top);
+  const inkTop=s=>piInkTop(pages,s);
+  const regs=anch.map((a,k)=>{
+    const me=pos[k],fi=flow.indexOf(me),nx=flow[fi+1]||null,segs=[],num={p:a.p,x0:a.x-1.5,x1:a.x2+1.5,y0:a.top-1.5,y1:a.bot+1};
+    if(me.si<0){const pg=byP(a.p);segs.push({p:a.p,x0:a.col?XR:X0,x1:two&&!a.col?XR-2:XE,y0:Math.max(pg.cTop,cut(a)),y1:stopAt(pg,a.top)});return{n:a.v,segs,num};}
+    const S=slots[me.si];
+    segs.push({p:a.p,x0:S.x0,x1:S.x1,y0:Math.max(S.y0,cut(a)),y1:nx&&nx.si===me.si?cut(nx.a):S.y1});
+    /* үргэлжлэл: дараагийн асуулт хүртэлх нүхнүүд — нэг хэсэг доторх дараагийн багана, эсвэл дараагийн хуудас.
+       Зогсоох мөрийн (BLANK PAGE, "II хэсэг") дараах, эсвэл өөр хэсгийн (гарчгийн доорх) нүх рүү үргэлжлэхгүй. */
+    if(nx&&nx.si>me.si){for(let i=me.si+1;i<=nx.si;i++){const s=slots[i];
+      if(s.after||(s.p===S.p&&s.band!==S.band))break;
+      const y1=i===nx.si?cut(nx.a):s.y1;if(y1-s.y0>14&&hasInk({...s,y1}))segs.push({p:s.p,x0:s.x0,x1:s.x1,y0:inkTop({...s,y1}),y1,maybe:true});}}
+    return{n:a.v,segs,num};
+  });
+  /* "Direction (21–22) : The given graph…" — хэд хэдэн асуултын нийтлэг өгөгдөл. Өмнөх асуултаас салгаж,
+     21, 22-р асуулт бүрийн зургийн эхэнд нэмнэ. */
+  const DIR=/^(?:Directions?|Instructions?|Questions?|Заавар|Даалгавар|Асуулт)\b[^0-9]{0,20}(\d{1,3})\s*(?:[-–—]|to|аас|-аас)\s*(\d{1,3})/i;
+  regs.forEach(r=>{for(let j=0;j<r.segs.length;j++){const s=r.segs[j],pg=byP(s.p);
+    const row=(pg.rows||[]).find(w=>w.top>s.y0+6&&w.top<s.y1-6&&!w.its[0].furn&&(()=>{const f=w.its.find(i=>i.x>=s.x0-2&&i.x<s.x1);return f&&f.x<s.x0+40&&DIR.test(piLegacy(w.its.filter(i=>i.x>=s.x0-2&&i.x<s.x1).map(i=>i.s).join(' ')));})());
+    if(!row)continue;
+    const m=piLegacy(row.its.filter(i=>i.x>=s.x0-2&&i.x<s.x1).map(i=>i.s).join(' ')).match(DIR),n1=+m[1],n2=+m[2];
+    if(!(n2>=n1&&n2-n1<=8&&n1>r.n))continue;
+    const cutY=row.top-3,blk=[{...s,y0:cutY},...r.segs.slice(j+1)];
+    r.segs=[...r.segs.slice(0,j),{...s,y1:cutY}].filter(x=>x.y1-x.y0>4);
+    regs.filter(o=>o.n>=n1&&o.n<=n2).forEach(o=>{o.segs=[...blk.map(b=>({...b,stem:true,maybe:undefined})),...o.segs];});
+    break;}});
+  return regs;
 }
+/* Үргэлжлэлийн нүхний эхний бичвэр/зургаас — дээд талын гарчгийн өнгөт зураас, хоосон зайг оруулахгүй */
+function piInkTop(pages,s){const pg=pages[s.p-1];let t=1e9;
+  pg.items.forEach(it=>{if(!it.furn&&it.top>=s.y0&&it.top<s.y1&&it.x>=s.x0-2&&it.x<s.x1)t=Math.min(t,it.top);});
+  (pg.gfx||[]).forEach(g=>{if(g.bot>s.y0&&g.top<s.y1&&g.x2>s.x0&&g.x<s.x1&&!(g.bot-g.top<8&&g.x2-g.x>(s.x1-s.x0)*.6))t=Math.min(t,Math.max(s.y0,g.top));});
+  return t<1e9?Math.max(s.y0+1,t-5):s.y0+1;}
 /* Дэд асуулт: "1. Гарчиг [2 marks]  a) … A) B) C) D)  b) … A) B) C) D)" — a), b) бүр өөрийн A–D сонголттой бол
    тус бүрийг тусдаа асуулт (1a, 1b) болгоно. Зураг бүрт даалгаврын гарчиг + тухайн дэд асуулт орно.
    Ү/Х мэдэгдэл (a)–d) зайтай, сонголтгүй), "Words: a) … d)" (A–D нь хамгийн доор нэг л удаа) хуваагдахгүй. */
@@ -3404,6 +3467,14 @@ function piTfLooks(t){t=piLegacy(t);const ms=piTfMarks(t);if(!ms)return false;
 function piTfStmts(t){t=piLegacy(t);const ms=piTfMarks(t);if(!ms)return null;
   return ms.map((m,j)=>{const a=m.index+m[0].length,b=j<3?ms[j+1].index:t.length;
     return t.slice(a,b).replace(/_{2,}|\.{4,}/g,' ').replace(/\s+/g,' ').replace(/[\s.:;,–—-]+$/,'').trim().slice(0,600);});}
+/* Асуултын PDF дотор (ихэвчлэн төгсгөлд) "1. (D)  2. (A)  3. (A) …" хэлбэрийн хариултын хүснэгт байвал:
+   мөр бүрд 3-аас олон "дугаар (үсэг)" хос — тэдгээр мөрийн дугаарыг асуулт гэж андуурахгүйн тулд тэмдэглэнэ. */
+function piInlineKey(pages){
+  const re=/(?<![^\s,;|)])(\d{1,3})\s*[.):\-–]?\s*\(\s*([A-Ea-eА-Да-дЕеСс])\s*\)/g,lines=[];let p0=null;
+  pages.forEach(pg=>(pg.rows||[]).forEach(r=>{const t=piLegacy(r.txt);re.lastIndex=0;let c=0;while(re.exec(t))c++;
+    if(c>=3){r.its.forEach(it=>it.kt=true);lines.push(t);if(p0==null)p0=pg.p;}}));
+  if(!lines.length)return null;const k=piKeyFromText(lines);return Object.keys(k).length>=10?{k,p:p0}:null;
+}
 /* Бичсэн хариулт: "1 B, 2 C …" эсвэл "BCDA…" үсгүүдийн дараалал */
 function piKeyFromText(lines,want){
   lines=(lines||[]).filter(l=>!Object.keys(piTfScan([l])).length);   // Ү/Х мөрүүдийг A–D гэж андуурахгүй
@@ -3412,6 +3483,10 @@ function piKeyFromText(lines,want){
   lines.forEach(l=>{const m=l.match(/^\s*(?:Q(?:uestion)?\s*)?(\d{1,3})(?:\(?([a-hа-е])\)?(?=[\s.):\-]))?\s*[.):\-]?\s*([A-Ea-eА-Да-дЕеСс])(?=\s|$|[,.;)])/);
     if(!m)return;const sk=m[2]?piSubIdx(m[2]):-1,n=sk>=0?m[1]+PI_SUBL[sk]:m[1];
     if(key[n]==null){key[n]=m[3];raw.push(m[3]);}});
+  /* Нэг мөрөнд олон хариулт: "1. (D)  2. (A)  3. (A) …", "1-D 2-A", "1)B 2)C" — бүх мөрөөс хослолоор хайна */
+  {const g={},gr=[],re=/(?<![^\s,;|)])(?:Q\s*)?(\d{1,3})\s*[.):\-–]?\s*\(\s*([A-Ea-eА-Да-дЕеСс])\s*\)|(?:^|[\s,;|])(?:Q\s*)?(\d{1,3})\s*[.):\-–]\s*([A-EА-ДЕС])(?=$|[\s,;|.)])/g;
+    lines.forEach(l=>{let m;re.lastIndex=0;while((m=re.exec(l))){const n=m[1]||m[3],L=m[2]||m[4];if(g[n]==null){g[n]=L;gr.push(L);}}});
+    if(Object.keys(g).length>Object.keys(key).length&&Object.keys(g).length>=3){Object.keys(key).forEach(k=>delete key[k]);raw.length=0;Object.assign(key,g);raw.push(...gr);}}
   if(Object.keys(key).length<2){Object.keys(key).forEach(k=>delete key[k]);raw.length=0;
     const s=[...lines.join(' ').replace(/[^A-Ea-eА-Да-дЕеСс]/g,'')];
     if(s.length>=2&&(!want||s.length===want))s.forEach((L,i)=>{key[i+1]=L;raw.push(L);});}
@@ -3640,7 +3715,8 @@ async function piRun(){
     const pages=await piPages(doc,(p,n)=>piProg('Хуудас уншиж байна: '+p+' / '+n,.05+.25*p/n),stop);me.pages=pages;
     piFurniture(pages);
     /* Асуултын PDF-ийн төгсгөлд түлхүүр байж болно — түүнийг асуулт гэж андуурахгүйн тулд эхэлж олно */
-    const own=piKeyTables(pages,10);
+    const own=piKeyTables(pages,10),inl=own.length?null:piInlineKey(pages);
+    if(inl)own.push({title:'Хариулт (PDF дотор)',p:inl.p,n:Object.keys(inl.k).length,cols:[{label:'',k:inl.k,pts:{}}]});
     me.tfKeys=piTfScan(pages.flatMap(pg=>pg.rows.map(r=>r.txt)));
     me.secs=piSections(pages);me.cache={};me.q='hi';me.keySrc='';me.tabs=[];
     me.qtxt=piLegacy(pages.slice(0,2).flatMap(pg=>pg.rows.map(r=>r.txt)).join(' ')).toLowerCase();
