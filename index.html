@@ -1330,6 +1330,23 @@ body.student #studentApp{display:block}
     <div id="inviteBox"></div>
     <div class="msg" id="inviteMsg" role="status"></div>
     <div id="tList" style="margin-top:12px"></div>
+    <div id="tExtra" hidden style="margin-top:18px;border-top:1px solid var(--line);padding-top:14px">
+      <h3 style="margin:0 0 4px;font-size:1.02rem">📧 Багш нарын имэйл — нэгдсэн жагсаалт</h3>
+      <p class="hint" style="margin:0 0 8px">Gmail-ээр бүгдэд нэг дор захидал илгээхдээ <b>BCC</b> (Нууц хуулбар) талбарт буулгана — багш нар бие биеийнхээ хаягийг харахгүй.
+        <b>Google Groups</b>-д гишүүн нэмэхдээ «Мөр мөрөөр»-ийг сонгоод «Гишүүн нэмэх» талбарт буулгана.</p>
+      <div class="row" style="margin:0 0 6px">
+        <div style="max-width:240px"><label for="tMailF">Аль багш</label><select id="tMailF">
+          <option value="all">Бүгд</option><option value="ok">Эрхтэй</option><option value="new">Шинэ хүсэлттэй</option><option value="off">Хугацаа дууссан / хаагдсан</option></select></div>
+        <div style="max-width:260px"><label for="tMailSep">Хэлбэр</label><select id="tMailSep">
+          <option value="comma">Таслалаар (Gmail, BCC)</option><option value="line">Мөр мөрөөр (Google Groups)</option></select></div>
+      </div>
+      <textarea id="tMails" readonly rows="4" style="min-height:90px;font-family:ui-monospace,Consolas,monospace;font-size:.9rem" aria-label="Багш нарын имэйл"></textarea>
+      <div class="btns" style="margin:6px 0 0"><button type="button" class="btn" id="tMailCopy">📋 Хуулах</button>
+        <button type="button" class="btn ghost" id="tMailCsv">⬇ Excel (CSV) татах</button><span class="msg" id="tMailMsg" role="status" style="margin:0;align-self:center"></span></div>
+      <h3 style="margin:18px 0 4px;font-size:1.02rem">🏆 Багш нарын идэвхийн эрэмбэ</h3>
+      <p class="hint" style="margin:0 0 8px">Зөвхөн <b>тоо</b> харагдана — сурагчийн нэр, дүн харагдахгүй. Дансаараа нэвтэрч үүлэнд хадгалдаг багшийн өгөгдлөөр тооцно. Баганын гарчиг дээр дарж эрэмбэлнэ.</p>
+      <div id="tRank"></div>
+    </div>
     <div id="legBox" style="margin-top:18px;border-top:1px solid var(--line);padding-top:14px">
       <h3 style="margin:0 0 4px;font-size:1.02rem">Хуучин системийн багш нар</h3>
       <p class="hint" style="margin:0 0 8px">Өмнө нь кодоор эрх авсан багш нар шинэ программд <b>өөрсдөө нэг удаа бүртгүүлнэ</b>.
@@ -10211,7 +10228,54 @@ async function tFetch(){
   /* хуучин идэвхжүүлэх кодыг энд (эзний төхөөрөмж дээр) гарын үсгээр нь шалгана — хуурамч кодыг ялгана */
   for(const t of rows)if(t.lic)t.licv=await licVerify(t.lic);
   tRows=rows;
+  /* Идэвхийн статистик (11-р алхмын SQL). Байхгүй бол зөвхөн шалгалтын тоогоор */
+  try{const s=await sbRpc('admin_teacher_stats')||[];tStats={};s.forEach(x=>{tStats[x.id]=x;});tStatsErr='';}
+  catch(e){tStats=null;tStatsErr=e.status===404||/could not find|schema cache/i.test(e.message)?'need':e.message;}
 }
+/* ---------- Эзэнд: имэйлийн нэгдсэн жагсаалт ба идэвхийн эрэмбэ ---------- */
+let tStats=null,tStatsErr='',tSort={k:'students',d:-1};
+function tState(t){const today=localDay();if(!t.approved&&!t.expires)return'new';if(!t.approved||(t.expires&&t.expires<today))return'off';return'ok';}
+function tMailList(){const f=$('#tMailF').value,me=AUTH.sess&&AUTH.sess.user.id;
+  return tRows.filter(t=>t.id!==me&&t.email&&(f==='all'||tState(t)===f)).map(t=>String(t.email).trim()).filter((e,i,a)=>e&&a.indexOf(e)===i);}
+function tMailRender(){const L=tMailList();$('#tMails').value=L.join($('#tMailSep').value==='line'?'\n':', ');
+  const m=$('#tMailMsg');m.style.color='';m.textContent=L.length+' имэйл';}
+const tStat=t=>{const s=tStats&&tStats[t.id];return{exams:s?s.exams:(t.exams||0),students:s?s.students:null,classes:s?s.classes:null,roster:s?s.roster:null,
+  oexams:s?s.oexams:null,oattempts:s?s.oattempts:null,last:(s&&s.last_active)||t.updated_at||t.created_at||''};};
+function tAgo(iso){if(!iso)return'–';const d=Math.floor((Date.now()-new Date(iso).getTime())/864e5);
+  return d<=0?'өнөөдөр':d===1?'өчигдөр':d<31?d+' өдрийн өмнө':d<365?Math.floor(d/30)+' сарын өмнө':Math.floor(d/365)+' жилийн өмнө';}
+function tRankRender(){
+  const box=$('#tRank');if(!box)return;const me=AUTH.sess&&AUTH.sess.user.id;
+  const R=tRows.map(t=>({t,s:tStat(t)}));const k=tSort.k,dir=tSort.d;
+  const val=r=>k==='name'?String(r.t.name||r.t.email||'').toLowerCase():k==='last'?r.s.last||'':(r.s[k]==null?-1:r.s[k]);
+  R.sort((a,b)=>{const x=val(a),y=val(b);return(x<y?-1:x>y?1:0)*dir||(b.s.exams-a.s.exams);});
+  const sum=f=>R.reduce((a,r)=>a+(r.s[f]||0),0),has=!!tStats;
+  const active=R.filter(r=>r.s.exams>0).length;
+  const th=(key,label,num)=>`<th${num?' class="num"':''}><button type="button" class="t-sort" data-k="${key}" style="all:unset;cursor:pointer;font-weight:700">${label}${tSort.k===key?(tSort.d<0?' ▼':' ▲'):''}</button></th>`;
+  box.innerHTML=`${tStatsErr==='need'?'<div class="hp-warn" style="margin:0 0 8px">Хамрагдсан сурагч, цахим шалгалт, сүүлийн идэвхийг харахын тулд Supabase-ийн SQL Editor дээр <b>supabase-setup-11.sql</b>-ийг ажиллуулна уу. Одоохондоо зөвхөн шалгалтын тоо харагдаж байна.</div>'
+      :tStatsErr?`<div class="hp-warn" style="margin:0 0 8px">${esc(tStatsErr)}</div>`:''}
+    <div class="stats" style="margin:0 0 8px"><div class="stat"><b>${R.length}</b><span>Бүртгүүлсэн багш</span></div>
+      <div class="stat"><b>${active}</b><span>Шалгалт үүсгэсэн</span></div>
+      <div class="stat"><b>${sum('exams')}</b><span>Нийт шалгалт</span></div>
+      ${has?`<div class="stat"><b>${sum('students')}</b><span>Хамрагдсан сурагч</span></div><div class="stat"><b>${sum('oattempts')}</b><span>Цахимаар өгсөн</span></div>`:''}</div>
+    <div class="scroll"><table><thead><tr><th class="num">#</th>${th('name','Багш')}${th('exams','Шалгалт',1)}${has?th('students','Хамрагдсан сурагч',1)+th('roster','Бүртгэсэн сурагч (анги)',1)+th('oexams','Цахим шалгалт (оролцсон)',1):''}${th('last','Сүүлд идэвхтэй')}</tr></thead>
+    <tbody>${R.map((r,i)=>`<tr${r.t.id===me?' style="background:var(--leaf-soft)"':''}><td class="num">${i+1}</td>
+      <td><b>${esc(r.t.name||'(нэргүй)')}</b>${r.t.id===me?' <small>👑</small>':''}<br><small style="color:var(--muted)">${esc(r.t.email||'')}${r.t.subject?' · '+esc(r.t.subject):''}</small></td>
+      <td class="num"><b>${r.s.exams}</b></td>
+      ${has?`<td class="num">${r.s.students}</td><td class="num">${r.s.roster} <small style="color:var(--muted)">(${r.s.classes})</small></td><td class="num">${r.s.oexams} <small style="color:var(--muted)">(${r.s.oattempts})</small></td>`:''}
+      <td title="${esc(String(r.s.last).slice(0,16).replace('T',' '))}">${tAgo(r.s.last)}</td></tr>`).join('')}</tbody></table></div>`;
+}
+function tExtraRender(){const x=$('#tExtra');if(!x)return;x.hidden=!tRows.length;if(!tRows.length)return;tMailRender();tRankRender();}
+$('#tMailF').addEventListener('change',tMailRender);$('#tMailSep').addEventListener('change',tMailRender);
+$('#tMailCopy').addEventListener('click',async()=>{const ta=$('#tMails'),m=$('#tMailMsg');
+  try{await navigator.clipboard.writeText(ta.value);}catch(e){ta.select();document.execCommand('copy');}
+  m.style.color='';m.textContent='✓ '+tMailList().length+' имэйл хуулагдлаа';});
+$('#tMailCsv').addEventListener('click',()=>{const q=v=>'"'+String(v==null?'':v).replace(/"/g,'""')+'"';
+  const ST={ok:'Эрхтэй',new:'Шинэ хүсэлт',off:'Хаагдсан/дууссан'};
+  const rows=[['Нэр','Имэйл','Мэргэжил','Түвшин','Төлөв','Эрхийн хугацаа','Бүртгүүлсэн','Шалгалт','Хамрагдсан сурагч','Анги','Бүртгэсэн сурагч','Цахим шалгалт','Цахимаар оролцсон','Сүүлд идэвхтэй']]
+    .concat(tRows.map(t=>{const s=tStat(t);return[t.name,t.email,t.subject,t.level,ST[tState(t)],t.expires||'',String(t.created_at||'').slice(0,10),s.exams,s.students,s.classes,s.roster,s.oexams,s.oattempts,String(s.last||'').slice(0,10)];}));
+  saveBlob(new Blob(['﻿'+rows.map(r=>r.map(q).join(',')).join('\r\n')],{type:'text/csv;charset=utf-8'}),'bagsh-nar-'+localDay()+'.csv');});
+$('#tRank').addEventListener('click',e=>{const b=e.target.closest('.t-sort');if(!b)return;const k=b.dataset.k;
+  tSort=tSort.k===k?{k,d:-tSort.d}:{k,d:k==='name'?1:-1};tRankRender();});
 async function teachersLoad(){
   if(!ownerMode())return;
   const box=$('#tList');if(!box)return;
@@ -10222,7 +10286,7 @@ async function teachersLoad(){
 function teachersRender(){
   reqBadge();
   const box=$('#tList'),me=AUTH.sess&&AUTH.sess.user.id,today=localDay();
-  legRender();
+  legRender();tExtraRender();
   if(!tRows.length){box.innerHTML='<p class="hint">Одоогоор бүртгүүлсэн багш алга. Программын холбоосыг багш нартаа илгээхэд тэд энд гарч ирнэ.</p>';return;}
   const wait=tRows.filter(t=>!t.approved&&!t.expires&&t.id!==me).length;
   const row=t=>{
