@@ -936,6 +936,48 @@ body.student #studentApp{display:block}
 .oe-add-row input{flex:1 1 200px;min-width:0}
 .oe-add-row .btn{flex:0 0 auto}
 .oe-add .msg{margin:6px 0 0}
+/* 📥 Материал оруулах төв */
+.imp-hub{margin:12px 0 18px;padding:16px 18px;border:2px solid var(--leaf,#047857);border-radius:18px;background:linear-gradient(180deg,rgba(4,120,87,.07),rgba(4,120,87,.02))}
+.imp-top{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.imp-h{margin:0;font-size:1.15rem;color:var(--leaf,#047857)}
+.imp-guide-btn{margin-left:auto;padding:4px 12px}
+.imp-cards{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-top:12px}
+.imp-card{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;text-align:center;padding:16px 10px;min-height:118px;
+  border:2px solid var(--line,#D7E3DC);border-radius:16px;background:var(--card,#fff);color:var(--ink,#14211B);cursor:pointer;font:inherit;transition:transform .12s,border-color .12s,box-shadow .12s}
+.imp-card:hover,.imp-card:focus-visible{border-color:var(--leaf,#047857);box-shadow:0 6px 18px rgba(4,120,87,.16);transform:translateY(-2px)}
+.imp-card b{font-size:1.02rem}
+.imp-card small{color:var(--muted);font-size:.8rem;line-height:1.3}
+.imp-ic{font-size:2rem;line-height:1}
+.imp-card.main{border-color:var(--leaf,#047857);background:#ECFDF5;color:#064E3B}
+.imp-card.main small{color:#047857;font-weight:600}
+.imp-card[aria-expanded="true"]{border-color:var(--leaf,#047857);background:rgba(4,120,87,.08)}
+.imp-guide{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(0,1fr);gap:14px;margin-top:14px}
+.imp-rules,.imp-key{border:1px dashed var(--line,#CFE0D6);border-radius:14px;padding:10px 14px;background:var(--card,#fff)}
+.imp-rules ol{margin:6px 0 8px;padding-left:20px;font-size:.9rem}
+.imp-rules li{margin:2px 0}
+.imp-btns{display:flex;flex-wrap:wrap;gap:6px}
+.imp-btns .btn{padding:5px 12px;font-size:.88rem}
+.imp-key-h{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.imp-key-h .btn{padding:3px 10px;font-size:.85rem}
+.imp-key-pre{margin:6px 0;padding:8px 10px;border-radius:10px;background:#F8FAF9;color:#14211B;font:13px/1.45 ui-monospace,Consolas,monospace;white-space:pre;overflow:auto;max-height:230px}
+.imp-key-pre .h{color:#047857;font-weight:700}.imp-key-pre .t{color:#B45309;font-weight:700}.imp-key-pre .g{color:#7C3AED;font-weight:700}
+.imp-key small{color:var(--muted);font-size:.8rem}
+.imp-paste{margin-top:14px}
+.imp-more summary{cursor:pointer;color:var(--leaf,#047857);font-weight:600;font-size:.9rem}
+#qbulkVarRow[hidden]{display:none!important}
+.imp-hub.compact{padding:10px 14px}
+.imp-hub.compact .imp-h{font-size:1rem}
+.imp-hub.compact .imp-cards{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
+.imp-hub.compact .imp-card{flex-direction:row;min-height:0;padding:7px 14px;gap:8px;border-radius:999px;transform:none}
+.imp-hub.compact .imp-card small{display:none}
+.imp-hub.compact .imp-ic{font-size:1.15rem}
+.imp-hub.compact .imp-card b{font-size:.92rem}
+.imp-hub.compact:not(.guide) .imp-guide{display:none}
+.imp-rep{margin-top:8px;padding:8px 12px;border-radius:12px;background:#F0FDF4;border:1px solid #BBF7D0;font-size:.9rem}
+.imp-rep.warn{background:#FFFBEB;border-color:#FDE68A}
+.imp-rep ul{margin:4px 0 0;padding-left:18px}
+@media (max-width:760px){.imp-cards{grid-template-columns:repeat(2,minmax(0,1fr))}.imp-guide{grid-template-columns:minmax(0,1fr)}}
+@media (prefers-color-scheme:dark){.imp-card.main{background:rgba(4,120,87,.22);color:#D1FAE5}.imp-card.main small{color:#6EE7B7}.imp-key-pre{background:rgba(255,255,255,.06);color:inherit}.imp-rep{background:rgba(16,185,129,.12);border-color:rgba(16,185,129,.35)}.imp-rep.warn{background:rgba(245,158,11,.12);border-color:rgba(245,158,11,.35)}}
 .oe-pill{display:inline-block;font-size:.8rem;font-weight:700;border-radius:999px;padding:2px 10px;background:var(--leaf-soft);color:var(--leaf)}
 .oe-pill.off{background:var(--stain-soft);color:var(--stain)}
 /* цахим шалгалт: сурагч */
@@ -1192,6 +1234,46 @@ body.student #studentApp{display:block}
     <h2>Шалгалтын материал</h2>
     <p class="hint">Асуулт бүрийн агуулга (сэдэв), зөв хариулт, оноог оруулна. Асуултын текст, хариултын хувилбаруудыг оруулбал сурагч хариулт бөглөхдөө асуултаа харж бөглөнө. Ижил агуулгатай асуултууд анализ дээр нэгтгэгдэнэ.</p>
     <div id="matLock"></div>
+    <div class="imp-hub" id="impHub">
+      <div class="imp-top"><h3 class="imp-h" id="impH">📥 Шалгалтын материалаа оруулна уу</h3>
+        <button type="button" class="btn ghost imp-guide-btn" id="impGuideBtn" hidden aria-expanded="false">📌 Заавар, загвар ▾</button></div>
+      <div class="imp-cards">
+        <label class="imp-card main" tabindex="0"><span class="imp-ic" aria-hidden="true">📁</span><b>Word / Excel файл</b><small>⭐ Зөвлөж байна — зураг, хариулттай нь</small>
+          <input type="file" id="impFile" multiple hidden accept=".docx,.xlsx,.csv,.txt,.pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/pdf,text/plain,text/csv"></label>
+        <button type="button" class="imp-card" id="pdfImp2"><span class="imp-ic" aria-hidden="true">📄</span><b>PDF файл</b><small>Схем, хүснэгттэй бэлэн тест</small></button>
+        <button type="button" class="imp-card" id="impPasteBtn" aria-expanded="false"><span class="imp-ic" aria-hidden="true">📋</span><b>Хуулж буулгах</b><small>Текстээр</small></button>
+        <button type="button" class="imp-card" id="impHandBtn"><span class="imp-ic" aria-hidden="true">✍️</span><b>Гараар бичих</b><small>Асуулт бүрийг нэг нэгээр</small></button>
+      </div>
+      <div class="imp-guide" id="impGuide">
+        <div class="imp-rules"><b>📌 Материал бэлтгэх заавар</b>
+          <ol><li>Асуулт бүр <b>дугаартай</b>: 1. 2. 3.</li>
+            <li>Сонголт <b>A. B. C. D.</b> · үнэн/худал: <b>«Үнэн/худал»</b> гарчиг + <b>a) b) c) d)</b> мэдэгдэл</li>
+            <li>Зураг асуултынхаа доор. Схем, диаграм <b>зураг</b> хэлбэртэй (эсвэл Word-ын <b>PDF</b>-ийг хамт сонгоно)</li>
+            <li>Хамгийн төгсгөлд <b>Хариулт</b>, хүсвэл <b>Агуулга</b> — «Хариулт ийм байна» жишээ шиг</li></ol>
+          <div class="imp-btns"><button type="button" class="btn ghost" id="tplWord">⬇ Word загвар</button><button type="button" class="btn ghost" id="tplXlsx">⬇ Excel загвар</button><button type="button" class="btn ghost" id="qtplBtn">🧩 Бусад жишээ</button></div></div>
+        <div class="imp-key"><div class="imp-key-h"><b>📋 Хариулт ийм байна</b><button type="button" class="btn ghost" id="impKeyCopy">📋 Хуулах</button></div>
+          <pre class="imp-key-pre" id="impKeyPre"></pre>
+          <small>Мөр бүрт нэг асуулт. <code>1-B, 2-C</code> эсвэл <code>1. (B)</code> гэж бичсэн ч танина.</small></div>
+      </div>
+      <div class="imp-paste" id="impPaste" hidden>
+        <details class="imp-more"><summary>Дэлгэрэнгүй: хүснэгт, жагсаалтаар бичих ▾</summary>
+      <p class="hint" style="margin-top:8px"><b>Хүснэгтээр:</b> Word эсвэл Excel дэх хүснэгтээ толгой мөртэй нь хуулж (Ctrl + C) доорх нүдэнд буулгана. Толгой мөрөнд <b>Асуулт</b>, <b>A</b>, <b>B</b>, <b>C</b>, <b>D</b>, <b>Зөв хариулт</b> (хүсвэл <b>Агуулга</b>, <b>Оноо</b>) гэсэн багана байхад программ өөрөө таньж авна.</p>
+      <p class="hint" style="margin-top:8px"><b>Жагсаалтаар:</b> асуулт бүрийг дугаартай, хувилбаруудыг A, B, C, D (эсвэл А, Б, В, Г) үсэгтэй бичнэ. Хүсвэл асуулт бүрийн доор "Хариулт:", "Агуулга:", "Оноо:" мөр нэмж болно. II хэсгийн асуултуудын өмнө "II хэсэг" гэсэн мөр бичээд, хувилбаруудыг A–H (эсвэл A–J) үсгээр, хариултыг "Хариулт: ACF" гэх мэтээр бичнэ.</p>
+        </details>
+      <div class="row" id="qbulkVarRow" hidden style="margin:8px 0 0"><div style="max-width:420px"><label for="qbulkVar">Аль хувилбарын асуултууд вэ</label>
+        <select id="qbulkVar"></select>
+        <p class="hint" style="margin:6px 0 0;font-size:.82rem">Эхлээд А хувилбарын асуултуудаа оруулна. Дараа нь Б-г сонгоод Б хувилбарын асуултуудаа буулгана — асуултын тоо, агуулга, оноо нь А-тайгаа ижил үлдэж, текст, сонголт, зөв хариулт нь Б-д орно.</p></div></div>
+      <div class="row" style="margin:8px 0"><div style="max-width:420px"><label for="qbulkMode">Хариултын хувилбарууд хэрхэн бичигдсэн бэ</label>
+        <select id="qbulkMode">
+          <option value="auto">Автоматаар таних (зөвлөж байна)</option>
+          <option value="line">Асуултын дотор "1. 2. 3." жагсаалттай</option>
+          <option value="rows">Энгийн: асуулт бүр дугаартай</option></select>
+        <p class="hint" style="margin:6px 0 0;font-size:.82rem">Хувилбарууд нэг мөрөнд дараалсан ("A. … B. … C. …") эсвэл мөр бүрд тусад нь байсан ч таних. Асуулт доторх <b>"1. 2. 3." жагсаалт, харгалзуулах багана</b> тусдаа асуулт болохгүй, асуултын бие болж үлдэнэ. Хувилбарын тоо (3, 4, 5) автоматаар тохируулагдана.</p></div></div>
+      <textarea id="qbulk" style="min-height:180px" placeholder="1. Ургамлын эсийн хана юунаас тогтдог вэ?&#10;A. Целлюлоз&#10;B. Хитин&#10;C. Уураг&#10;D. Липид&#10;Хариулт: A&#10;Агуулга: Эсийн бүтэц&#10;&#10;2. Фотосинтез эсийн аль органоидод явагддаг вэ?&#10;A. Митохондри&#10;B. Рибосом&#10;C. Хлоропласт&#10;D. Цөм&#10;Хариулт: C&#10;Агуулга: Фотосинтез"></textarea>
+      <div class="btns"><button class="btn" id="qbulkBtn">Асуултуудыг оруулах</button></div>
+      </div>
+      <div class="msg" id="qbulkMsg" role="status"></div>
+    </div>
     <section class="xi" aria-label="Шалгалтын мэдээлэл">
       <div class="xi-head">
         <span class="xi-logo" aria-hidden="true">🧬</span>
@@ -1239,28 +1321,6 @@ body.student #studentApp{display:block}
       <button type="button" class="btn pdfVarBtn" title="Энэ шалгалтад Б (В, Г) хувилбарын асуултын PDF, хариултыг нэмнэ">➕ PDF-ээс Б хувилбар нэмэх</button>
       <div class="msg" id="pdfVarMsg" role="status" style="flex-basis:100%;margin:0"></div>
     </div>
-    <details class="collapsible" style="margin-top:18px">
-      <summary class="import-btn"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/><path d="M15 13v5M12.5 15.5 15 18l2.5-2.5"/></svg>Word, Excel-ээс асуулт оруулах <small>— хуулж буулгахад бүгд нэг дор орно</small></summary>
-      <p class="hint" style="margin-top:8px"><b>Бэлэн PDF шалгалт байна уу?</b> (жишээ нь IGCSE) Схем, хүснэгттэй нь алдагдуулахгүй оруулахын тулд
-        <button type="button" class="btn ghost" id="pdfImp2" style="padding:4px 12px;margin-left:4px">📄 PDF-ээс шалгалт үүсгэх</button>
-        <button type="button" class="btn ghost pdfVarBtn" style="padding:4px 12px;margin-left:4px" title="Энэ шалгалтад Б (В, Г) хувилбарын асуултын PDF, хариултыг нэмнэ">➕ PDF-ээс Б хувилбар нэмэх</button></p>
-      <div class="qtpl-call"><span><b>Ямар хэлбэрээр бичихээ мэдэхгүй байна уу?</b> Программ таньдаг бэлэн загвар, жишээг хараад хуулж аваарай.</span>
-        <button type="button" class="btn" id="qtplBtn">🧩 Загвар, жишээ харах</button></div>
-      <p class="hint" style="margin-top:8px"><b>Хүснэгтээр:</b> Word эсвэл Excel дэх хүснэгтээ толгой мөртэй нь хуулж (Ctrl + C) доорх нүдэнд буулгана. Толгой мөрөнд <b>Асуулт</b>, <b>A</b>, <b>B</b>, <b>C</b>, <b>D</b>, <b>Зөв хариулт</b> (хүсвэл <b>Агуулга</b>, <b>Оноо</b>) гэсэн багана байхад программ өөрөө таньж авна.</p>
-      <p class="hint" style="margin-top:8px"><b>Жагсаалтаар:</b> асуулт бүрийг дугаартай, хувилбаруудыг A, B, C, D (эсвэл А, Б, В, Г) үсэгтэй бичнэ. Хүсвэл асуулт бүрийн доор "Хариулт:", "Агуулга:", "Оноо:" мөр нэмж болно. II хэсгийн асуултуудын өмнө "II хэсэг" гэсэн мөр бичээд, хувилбаруудыг A–H (эсвэл A–J) үсгээр, хариултыг "Хариулт: ACF" гэх мэтээр бичнэ.</p>
-      <div class="row" id="qbulkVarRow" hidden style="margin:8px 0 0"><div style="max-width:420px"><label for="qbulkVar">Аль хувилбарын асуултууд вэ</label>
-        <select id="qbulkVar"></select>
-        <p class="hint" style="margin:6px 0 0;font-size:.82rem">Эхлээд А хувилбарын асуултуудаа оруулна. Дараа нь Б-г сонгоод Б хувилбарын асуултуудаа буулгана — асуултын тоо, агуулга, оноо нь А-тайгаа ижил үлдэж, текст, сонголт, зөв хариулт нь Б-д орно.</p></div></div>
-      <div class="row" style="margin:8px 0"><div style="max-width:420px"><label for="qbulkMode">Хариултын хувилбарууд хэрхэн бичигдсэн бэ</label>
-        <select id="qbulkMode">
-          <option value="auto">Автоматаар таних (зөвлөж байна)</option>
-          <option value="line">Асуултын дотор "1. 2. 3." жагсаалттай</option>
-          <option value="rows">Энгийн: асуулт бүр дугаартай</option></select>
-        <p class="hint" style="margin:6px 0 0;font-size:.82rem">Хувилбарууд нэг мөрөнд дараалсан ("A. … B. … C. …") эсвэл мөр бүрд тусад нь байсан ч таних. Асуулт доторх <b>"1. 2. 3." жагсаалт, харгалзуулах багана</b> тусдаа асуулт болохгүй, асуултын бие болж үлдэнэ. Хувилбарын тоо (3, 4, 5) автоматаар тохируулагдана.</p></div></div>
-      <textarea id="qbulk" style="min-height:180px" placeholder="1. Ургамлын эсийн хана юунаас тогтдог вэ?&#10;A. Целлюлоз&#10;B. Хитин&#10;C. Уураг&#10;D. Липид&#10;Хариулт: A&#10;Агуулга: Эсийн бүтэц&#10;&#10;2. Фотосинтез эсийн аль органоидод явагддаг вэ?&#10;A. Митохондри&#10;B. Рибосом&#10;C. Хлоропласт&#10;D. Цөм&#10;Хариулт: C&#10;Агуулга: Фотосинтез"></textarea>
-      <div class="btns"><button class="btn" id="qbulkBtn">Асуултуудыг оруулах</button></div>
-      <div class="msg" id="qbulkMsg" role="status"></div>
-    </details>
     <div style="margin-top:14px">
       <div class="qtools"><button type="button" class="btn ghost" id="qOpenAll">▾ Бүх асуултын текстийг дэлгэх</button>
         <button type="button" class="btn ghost" id="qCloseAll">▴ Бүгдийг хураах</button></div>
@@ -2997,7 +3057,7 @@ document.addEventListener('click',e=>{
 function renderSetup(){
   $('#title').value=state.exam.title;
   $('#edate').value=state.exam.date||'';
-  renderExams();renderRosterSetup();renderSheetPanel();renderVariants();if(typeof renderCloud==='function'&&$('#cApi'))renderCloud();
+  renderExams();renderRosterSetup();renderSheetPanel();renderVariants();impRender();if(typeof renderCloud==='function'&&$('#cApi'))renderCloud();
   {const so=$('#s-online');if(so&&!so.classList.contains('sec-off')&&window.oeRender)oeRender();}
   const [n1,n2,n3,n4]=partCount();
   $('#qcount').value=n1;$('#qcount2').value=n2;$('#qcount3').value=n3;$('#qcount4').value=n4;$('#optn').value=optN();
@@ -4415,6 +4475,12 @@ function parseTable(t){
   rows.forEach((r,i)=>{
     if(i===h||r.length<=qi||!r[qi])return;
     if(oi.filter(([k,c])=>r[c]).length<2)return;   // хувилбаргүй мөр (гарчиг, хоосон мөр)
+    /* Үнэн/худал мөр: A–D баганад 4 мэдэгдэл, «Зөв хариулт» нь ҮХҮХ / TFTF */
+    const tfk=ki>=0?String(r[ki]||'').replace(/[\s,;.\-]/g,''):'';
+    if(/^[TFТФҮХ]{4}$/i.test(tfk)){const q=newQ(4);q.text=(r[qi]||'').replace(/^\d{1,3}\s*[.)]\s*/,'').trim();
+      q.stmts=[0,1,2,3].map(k=>{const o=oi.find(x=>x[0]===k);return o?String(r[o[1]]||''):'';});q.key=tfNorm(tfk);
+      if(ti>=0&&r[ti])q.topic=r[ti];const p=pi>=0&&r[pi]?parseFloat(String(r[pi]).replace(',','.')):NaN;if(!isNaN(p))q.points=p;
+      out.push(q);return;}
     const key=ki>=0?keyNorm(r[ki]||''):'';
     const part=key.length>1||oi.length>4?2:1,q=newQ(part);
     q.text=(r[qi]||'').replace(/^\d{1,3}\s*[.)]\s*/,'').trim();
@@ -4434,8 +4500,9 @@ function cleanLine(s){
     .replace(/[    ]/g,' ')      // таслагдашгүй зай
     .replace(/[‐-―−]/g,'-')           // – — ‒ гэх мэт
     .replace(/^[•▪◦·‣*]\s*/,'')                      // сумны тэмдэг
-    /* Мөрийн төгсгөлийн "____" (хариулт бичих зай) хасна; өгүүлбэр доторх нөхөх зайг "_____" болгож үлдээнэ */
-    .replace(/\s*[_]{2,}[\s_.]*$/,'').replace(/[_]{2,}/g,'_____').replace(/\.{3,}/g,' ')  // ____ ба ....
+    /* Мөрийн төгсгөлийн "____" (үнэн/худлын хариулт бичих зай) хасна. Харин "… biological ________." —
+       цэгээр төгссөн бол нөхөх өгүүлбэрийн зай тул үлдээнэ. Өгүүлбэр доторх зайг "_____" болгоно */
+    .replace(/\s*[_]{2,}\s*$/,'').replace(/[_]{2,}/g,'_____').replace(/\.{3,}/g,' ')  // ____ ба ....
     .replace(/\s+/g,' ').trim();
 }
 const OPT_LET='[A-Ja-jА-За-зИиКкСсНн]';
@@ -4530,7 +4597,8 @@ function parseBlocks(t){
     head=head.replace(/\/?\s*(\d+(?:[.,]\d+)?)\s*оноо\s*\/?/i,(mm,p)=>{pts=parseFloat(p.replace(',','.'));return' ';});
     const body=buf.slice(1).join('\n'),txt=[...pre,(head.replace(/\s+/g,' ').trim()+(body?'\n'+body:'')).trim()].join('\n').trim();pre=[];
     /* a) b) c) d) жижиг үсэгтэй 4 мэдэгдэл + "True or False" хэсэг (эсвэл "Хариулт: a T, b F…") → III хэсэг (Ү/Х) */
-    if(part!==2&&list&&list.length===TF_N&&lowOpts&&(tfMode||meta.tf)){
+    /* Мэдэгдэл бүр тусдаа мөрөнд байх ёстой — нэг мөрөнд "Үгс: a) … b) … c) … d) …" нь нөхөх даалгаврын үгс */
+    if(part!==2&&list&&list.length===TF_N&&lowOpts&&(meta.tf||(tfMode&&(rl||[]).length>=TF_N))){
       const q=newQ(4);q.text=txt;q.key=meta.tf||'----';q.stmts=list.map(o=>o.text);
       if(pts!=null&&pts>0)q.points=pts;if(meta.topic)q.topic=meta.topic;else if(grpTopic){q.topic=grpTopic;q._grp=true;}if(meta.points>0)q.points=meta.points;
       qs.push(q);lastQ=q;done();return;}
@@ -4675,7 +4743,9 @@ function applyTailToExam(K,m){
   snap(tv?VNAMES[tv]+' хувилбарын хариулт':'хариулт, агуулга оноох');
   let nk=0,nt=0;const over=[];
   const setKey=(Q,v)=>{if(tv>0){Q.alt=Array.isArray(Q.alt)?Q.alt:[];Q.alt[tv]=Object.assign({text:'',key:'',opts:[],stmts:[]},Q.alt[tv]||{});Q.alt[tv].key=v;}else Q.key=v;nk++;};
-  QS.forEach((Q,i)=>{const n=i+1;
+  /* Асуулт эх файлын дугаараа (lbl "11") хадгалсан бол түлхүүрийн "11." нь тэр асуултад очно */
+  const byLbl=QS.some(q=>/^\d+$/.test(String(q.lbl||'')));
+  QS.forEach((Q,i)=>{const n=byLbl&&/^\d+$/.test(String(Q.lbl||''))?+Q.lbl:i+1;
     if(K.topics[n]){Q.topic=K.topics[n];nt++;}
     if(isP3(Q))return;
     if(isP4(Q)){const v=K.tf[n]||(K.mc[n]&&/^[ТTFФҮХ]{4}$/i.test(K.mc[n])?K.mc[n]:'');if(v)setKey(Q,tfNorm(v));return;}
@@ -4691,10 +4761,13 @@ function applyTailToExam(K,m){
   m.textContent=(nk||nt?'✓ Асуултууд хэвээр. '+(tv?VNAMES[tv]+' хувилбарын ':'')+(nk?nk+' асуултад зөв хариулт':'')+(nk&&nt?', ':'')+(nt?nt+' асуултад агуулга':'')+' оноолоо.':'Оноох зүйл олдсонгүй.')
     +(over.length?' ⚠ '+over.join('; ')+' — шалгана уу.':'')+' Доорх жагсаалтаас шалгана уу.';
 }
-$('#qbulkBtn').addEventListener('click',()=>{
-  const m=$('#qbulkMsg'),mode=($('#qbulkMode')||{}).value||'auto',KK=bulkTail($('#qbulk').value);
+$('#qbulkBtn').addEventListener('click',()=>bulkImport($('#qbulk').value));
+/* Хуулж буулгасан эсвэл файлаас (Word, Excel, txt) уншсан текстийг асуулт болгоно.
+   X.onParsed(qs) — асуулт танигдсаны дараа (зураг оноох), X.done(m) — мессеж бичсэний дараа, X.tv — хувилбар */
+function bulkImport(SRC,X){X=X||{};
+  const m=$('#qbulkMsg'),mode=X.mode||($('#qbulkMode')||{}).value||'auto',KK=bulkTail(SRC);
   /* Асуултгүй, зөвхөн хариулт/агуулга буулгасан → одоо байгаа асуултуудад оноох */
-  if(KK.found&&!KK.text.replace(/\s+/g,'')){applyTailToExam(KK,m);return;}
+  if(KK.found&&!KK.text.replace(/\s+/g,'')){applyTailToExam(KK,m);if(X.done)X.done(m,true);return;}
   const raw=KK.text;
   const tbl=parseTable(raw);
   /* Автомат горимд хоёр аргаар уншаад илүү сайн таньсныг нь сонгоно.
@@ -4716,8 +4789,10 @@ $('#qbulkBtn').addEventListener('click',()=>{
     if(isP4(q)){if(KK.tf[n])q.key=KK.tf[n];else if(KK.mc[n]&&/^[ТTFФҮХ]{4}$/i.test(KK.mc[n]))q.key=tfNorm(KK.mc[n]);return;}
     const v=KK.mc[n];if(!v)return;const k=keyNorm(v);
     if(isP2(q))q.key=k;else if(k&&OPTS.includes(k[0]))q.key=k[0];});
+  if(X.onParsed)X.onParsed(qs);
+  qs.forEach((q,i)=>{q._n=i+1;});   // эх файлын дугаар (I, III хэсгээр эрэмбэлэхэд хадгална)
   const uses10=qs.some(q=>isP2(q)&&((q.opts||[]).slice(8).some(Boolean)||/[IJ]/.test(q.key||'')));
-  const tv=vOwn()?Math.min(+$('#qbulkVar').value||0,vCount()-1):0;
+  const tv=X.tv!=null?Math.min(X.tv,vCount()-1):vOwn()?Math.min(+$('#qbulkVar').value||0,vCount()-1):0;
   if(tv>0){
     /* Б, В, Г хувилбар: бүтэц (тоо, агуулга, оноо) нь А-гийнх хэвээр, текст, сонголт, зөв хариулт нь энэ хувилбарт */
     const QS=state.exam.questions,A1=QS.map((q,i)=>i).filter(i=>isP1(QS[i])),A2=QS.map((q,i)=>i).filter(i=>isP2(QS[i]));
@@ -4728,7 +4803,8 @@ $('#qbulkBtn').addEventListener('click',()=>{
     if(uses10)state.exam.p2N=10;
     const put=(idx,src)=>idx.forEach((qi,k)=>{const s=src[k],Q=QS[qi];if(!s)return;
       Q.alt=Array.isArray(Q.alt)?Q.alt:[];
-      Q.alt[tv]={text:s.text||'',opts:(s.opts||[]).slice(),stmts:[],key:isP2(Q)?keyNorm(s.key):opts1().includes(s.key)?s.key:''};});
+      Q.alt[tv]={text:s.text||'',opts:(s.opts||[]).slice(),stmts:[],key:isP2(Q)?keyNorm(s.key):opts1().includes(s.key)?s.key:''};
+      if(s.img)Q.alt[tv].img=s.img;});
     put(A1,b1);put(A2,b2);
     draft=[];save();refreshAll();$('#qbulk').value='';
     undoBar(nm+' хувилбарын асуултууд орлоо.');
@@ -4738,6 +4814,7 @@ $('#qbulkBtn').addEventListener('click',()=>{
       +(diff?' Анхаар: '+VNAMES[0]+' хувилбар I хэсэгт '+A1.length+(A2.length?', II хэсэгт '+A2.length:'')+' асуулттай, харин буулгасан нь '
         +b1.length+(b2.length||A2.length?' ба '+b2.length:'')+' асуулттай байна. Дугаараар нь тааруулсан тул доорх жагсаалтаас шалгана уу.'
         :' Зөв хариултыг доорх жагсаалтаас шалгана уу.');
+    if(X.done)X.done(m);
     return;
   }
   if(matGuard())return;
@@ -4758,6 +4835,10 @@ $('#qbulkBtn').addEventListener('click',()=>{
   const noKey=p1.filter(q=>!q.key).length+p2.filter(q=>!q.key).length+keep4.filter(q=>new4.length&&tfNorm(q.key).includes('-')).length;
   const [o1,o2,o3,o4]=partCount(),n12=p1.length+p2.length;
   state.exam.questions=[...p1,...p2,...keep4,...keep3];const n=n12+keep4.length+keep3.length;
+  /* Ү/Х асуулт файлын дунд байсан бол (жишээ нь 11–15) хэсгээр эрэмбэлэхэд дугаар шилжинэ —
+     хуудас, анализ, хариултын түлхүүр дээр эх файлын дугаар харагдахаар хадгална */
+  const moved=state.exam.questions.some((q,i)=>q._n&&q._n!==i+1);
+  state.exam.questions.forEach(q=>{if(q._n){if(moved&&!q.lbl)q.lbl=String(q._n);delete q._n;}});
   state.students.forEach(s=>{
     const a4=s.answers.slice(o1+o2,o1+o2+o4),a3=s.answers.slice(o1+o2+o4,o1+o2+o4+o3);  // байрлал шилжинэ
     while(a4.length<keep4.length)a4.push('');a4.length=keep4.length;
@@ -4772,7 +4853,237 @@ $('#qbulkBtn').addEventListener('click',()=>{
     +(noKey?' ⚠ '+noKey+' асуултын зөв хариулт олдсонгүй — доорх жагсаалтад улаанаар харагдана, сонгоно уу.':'')
     +(used>=2?' Хариултын хувилбар '+O.join(', ')+' гэж тогтоолоо.':'')
     +(cut?' II хэсэг 4-өөс олон асуулттай байсан тул эхний 4-ийг авлаа.':'')+' Зөв хариулт, агуулгыг доорх жагсаалтаас шалгана уу.';
-});
+  if(X.done)X.done(m);
+}
+
+/* =================== 📥 Материал оруулах төв: Word / Excel / txt файл =================== */
+/* ZIP (.docx, .xlsx) — гадны сангүй. Шахсан хэсгийг хөтчийн DecompressionStream-ээр задална */
+async function zipOpen(file){
+  const buf=await file.arrayBuffer(),u8=new Uint8Array(buf),dv=new DataView(buf),dec=new TextDecoder();
+  let e=u8.length-22;while(e>=0&&dv.getUint32(e,true)!==0x06054b50)e--;
+  if(e<0)throw new Error('"'+file.name+'" файлыг нээж чадсангүй (Word .docx / Excel .xlsx биш байна).');
+  const cnt=dv.getUint16(e+10,true),files={};let p=dv.getUint32(e+16,true);
+  for(let i=0;i<cnt;i++){
+    const method=dv.getUint16(p+10,true),csize=dv.getUint32(p+20,true),nl=dv.getUint16(p+28,true),xl=dv.getUint16(p+30,true),cl=dv.getUint16(p+32,true),lho=dv.getUint32(p+42,true);
+    const name=dec.decode(u8.subarray(p+46,p+46+nl));p+=46+nl+xl+cl;
+    const start=lho+30+dv.getUint16(lho+26,true)+dv.getUint16(lho+28,true);
+    files[name]={method,data:u8.subarray(start,start+csize)};}
+  const bytes=async n=>{const f=files[n];if(!f)return null;if(f.method===0)return f.data;
+    if(f.method!==8)throw new Error('Файлын шахалтын төрөл танигдсангүй.');
+    if(typeof DecompressionStream==='undefined')throw new Error('Энэ хөтөч Word/Excel файл уншиж чадахгүй. Chrome, Edge эсвэл Safari-ийн шинэ хувилбар ашиглана уу.');
+    return new Uint8Array(await new Response(new Blob([f.data]).stream().pipeThrough(new DecompressionStream('deflate-raw'))).arrayBuffer());};
+  return{names:Object.keys(files),bytes,text:async n=>{const b=await bytes(n);return b?dec.decode(b):null;}};
+}
+/* Word (.docx) → мөрүүд (асуултын текст) + зураг. Зураг, схемийн байрлалд ⟦зураг#k⟧ / ⟦диаграм#k⟧ тэмдэг үлдээнэ
+   (тэмдэг дотор "зураг" гэсэн үг байгаа нь задлагч эхний асуултын өмнөх мөрийг хаяхгүйн тулд) */
+const DOCX_MK=/\s*⟦(?:зураг|диаграм)#\d+⟧\s*/g;
+async function readDocx(file){
+  const z=await zipOpen(file),X=t=>new DOMParser().parseFromString(t||'<x/>','application/xml');
+  const docXml=await z.text('word/document.xml');if(!docXml)throw new Error('"'+file.name+'" дотор Word-ын баримт олдсонгүй.');
+  const W='http://schemas.openxmlformats.org/wordprocessingml/2006/main';
+  const kids=n=>[...n.childNodes].filter(c=>c.nodeType===1),ln=n=>n.localName,at=(n,a)=>n.getAttributeNS(W,a)||n.getAttribute('w:'+a)||n.getAttribute(a);
+  const relId=n=>n.getAttribute('r:embed')||n.getAttribute('r:id')||n.getAttribute('r:link')||[...n.attributes].find(a=>/^(embed|id)$/.test(a.localName)&&/relationships/.test(a.namespaceURI||''))?.value;
+  const rels={};[...X(await z.text('word/_rels/document.xml.rels')).getElementsByTagName('Relationship')].forEach(r=>{rels[r.getAttribute('Id')]=r.getAttribute('Target');});
+  /* Автомат дугаарлалт: numbering.xml-ээс "1." "A." "a)" гэх мэт тэмдгийг сэргээнэ (хуулахад алга болдог) */
+  const nx=X(await z.text('word/numbering.xml')),abs={},nums={};
+  [...nx.getElementsByTagNameNS(W,'abstractNum')].forEach(a=>{const L={};kids(a).filter(c=>ln(c)==='lvl').forEach(l=>{const g=t=>{const e=kids(l).find(c=>ln(c)===t);return e?at(e,'val'):null;};
+    L[at(l,'ilvl')]={fmt:g('numFmt')||'decimal',txt:g('lvlText')||'%1.',start:+(g('start')||1)};});abs[at(a,'abstractNumId')]=L;});
+  [...nx.getElementsByTagNameNS(W,'num')].forEach(n=>{const a=kids(n).find(c=>ln(c)==='abstractNumId');nums[at(n,'numId')]=a?at(a,'val'):null;});
+  const cnt={},roman=k=>{const R=[[1000,'M'],[900,'CM'],[500,'D'],[400,'CD'],[100,'C'],[90,'XC'],[50,'L'],[40,'XL'],[10,'X'],[9,'IX'],[5,'V'],[4,'IV'],[1,'I']];let s='';R.forEach(([v,c])=>{while(k>=v){s+=c;k-=v;}});return s;};
+  const fmtN=(f,k)=>f==='upperLetter'?String.fromCharCode(64+((k-1)%26)+1):f==='lowerLetter'?String.fromCharCode(96+((k-1)%26)+1)
+    :f==='upperRoman'?roman(k):f==='lowerRoman'?roman(k).toLowerCase():f==='russianUpper'?'АБВГДЕЖЗИКЛМНОПРСТУФХЦЧШЩЭЮЯ'[(k-1)%28]:f==='russianLower'?'абвгдежзиклмнопрстуфхцчшщэюя'[(k-1)%28]:String(k);
+  const numLabel=p=>{const pPr=kids(p).find(c=>ln(c)==='pPr'),np=pPr&&kids(pPr).find(c=>ln(c)==='numPr');if(!np)return'';
+    const id=(kids(np).find(c=>ln(c)==='numId')||{getAttribute:()=>null}),il=kids(np).find(c=>ln(c)==='ilvl');
+    const numId=id.getAttribute?at(id,'val'):null,lv=il?+at(il,'val'):0;if(!numId||numId==='0')return'';
+    const A=abs[nums[numId]];if(!A)return'';const key=nums[numId],c=cnt[key]=cnt[key]||{};
+    const L=A[lv]||{fmt:'decimal',txt:'%1.',start:1};c[lv]=(c[lv]==null?L.start:c[lv]+1);Object.keys(c).forEach(k=>{if(+k>lv)delete c[k];});
+    if(L.fmt==='bullet'||L.fmt==='none')return'';
+    return L.txt.replace(/%(\d)/g,(m,d)=>{const l2=+d-1,LL=A[l2]||L;return fmtN(LL.fmt,c[l2]!=null?c[l2]:LL.start);})+' ';};
+  const SUP={'0':'⁰','1':'¹','2':'²','3':'³','4':'⁴','5':'⁵','6':'⁶','7':'⁷','8':'⁸','9':'⁹','+':'⁺','-':'⁻'},SUB={'0':'₀','1':'₁','2':'₂','3':'₃','4':'₄','5':'₅','6':'₆','7':'₇','8':'₈','9':'₉','+':'₊','-':'₋'};
+  const imgs=[],drw=[],warn={math:0,emf:0};const lines=[];
+  /* Нэг догол мөрийн текст + түүн доторх зураг/схем (дотор нь текст хайрцагтай бол түүний мөрүүд) */
+  const para=(p,out)=>{let s=numLabel(p);const after=[];
+    const walk=(n,va)=>{for(const c of kids(n)){const t=ln(c);
+      if(t==='del'||t==='instrText'||t==='delText'||t==='footnoteReference'||t==='endnoteReference'||t==='rPr'||t==='pPr')continue;
+      if(t==='r'){const rp=kids(c).find(x=>ln(x)==='rPr'),v=rp&&kids(rp).find(x=>ln(x)==='vertAlign');walk(c,v?at(v,'val'):'');continue;}
+      if(t==='t'){let x=c.textContent;if(va==='superscript'&&/^[\d+\-]+$/.test(x))x=[...x].map(ch=>SUP[ch]||ch).join('');else if(va==='subscript'&&/^[\d+\-]+$/.test(x))x=[...x].map(ch=>SUB[ch]||ch).join('');s+=x;continue;}
+      if(t==='tab'){s+='\t';continue;}
+      if(t==='br'||t==='cr'){if(at(c,'type')!=='page')s+='\n';continue;}
+      if(t==='AlternateContent'){const ch=kids(c).find(x=>ln(x)==='Choice')||kids(c).find(x=>ln(x)==='Fallback');if(ch)walk(ch,va);continue;}
+      if(t==='oMath'||t==='oMathPara'){warn.math++;s+=' '+[...c.getElementsByTagNameNS('*','t')].map(x=>x.textContent).join('')+' ';continue;}
+      if(t==='drawing'||t==='pict'||t==='object'){
+        const blip=[...c.getElementsByTagNameNS('*','blip'),...c.getElementsByTagNameNS('*','imagedata')].map(relId).find(Boolean);
+        const tb=[...c.getElementsByTagNameNS('*','txbxContent')];
+        const chart=c.getElementsByTagNameNS('*','chart').length,smart=c.getElementsByTagNameNS('*','relIds').length;
+        const cnt=t2=>c.getElementsByTagNameNS('*',t2).length,wsp=cnt('wsp'),vsh=cnt('shape')+cnt('oval')+cnt('rect')+cnt('line')+cnt('roundrect');
+        /* Ганц текст хайрцаг → бичвэр. Зурах талбар (canvas), бүлэг, олон дүрс, Chart, SmartArt → схем (зураг биш) */
+        const diagram=chart||smart||cnt('wpc')||cnt('wgp')||cnt('group')||wsp>1||(wsp===1&&!tb.length)||(!wsp&&!blip&&vsh>(tb.length?1:0));
+        if(blip&&!chart&&!smart&&!diagram){const tg=rels[blip]||'';
+          if(/\.(emf|wmf)$/i.test(tg)){warn.emf++;drw.push({kind:'EMF'});after.push('⟦диаграм#'+(drw.length-1)+'⟧');}
+          else{imgs.push({target:tg});after.push('⟦зураг#'+(imgs.length-1)+'⟧');}}
+        else if(diagram){drw.push({kind:chart?'Chart':smart?'SmartArt':'Shapes'});after.push('⟦диаграм#'+(drw.length-1)+'⟧');}
+        else if(tb.length){tb.forEach(b=>kids(b).forEach(x=>{if(ln(x)==='p')para(x,after);else if(ln(x)==='tbl')table(x,after);}));}
+        continue;}
+      walk(c,va);}};
+    walk(p,'');
+    s.split('\n').forEach(x=>out.push(x.replace(/\t+/g,'  ')));after.forEach(x=>out.push(x));};
+  /* Хүснэгт: "📌 ЗААВАР" хүснэгтийг алгасна; асуултын хүснэгт (Асуулт | A | B …) → табаар; бусад (харгалзуулах) → "1. … — a) …" */
+  const table=(tb,out)=>{
+    /* "📌 ЗААВАР" хүснэгтийг (дотор нь байгаа зураг, схемтэй нь) огт уншихгүй */
+    const tc0=tb.getElementsByTagNameNS(W,'tc')[0],t0=tc0?[...tc0.getElementsByTagNameNS(W,'t')].map(x=>x.textContent).join('').trim():'';
+    if(/^📌|^заавар/i.test(t0))return;
+    const rows=kids(tb).filter(r=>ln(r)==='tr').map(tr=>kids(tr).filter(c=>ln(c)==='tc').map(tc=>{const o=[];kids(tc).forEach(x=>{if(ln(x)==='p')para(x,o);else if(ln(x)==='tbl')table(x,o);});return o;}));
+    const cellTxt=c=>c.filter(x=>!/^⟦/.test(x)).join(' ').replace(/\s+/g,' ').trim(),cellMk=c=>c.filter(x=>/^⟦/.test(x));
+    const first=rows[0]&&rows[0][0]?cellTxt(rows[0][0]):'';
+    if(/^📌|^заавар/i.test(first))return;
+    const isHead=r=>{const low=r.map(c=>cellTxt(c).toLowerCase());return low.some(x=>/асуулт|даалгавар|question/.test(x))&&(low.filter(x=>/^(?:хувилбар\s*)?[a-jа-зик][.)]?$/i.test(x)).length>=2||low.some(x=>/зөв|answer|key/.test(x)));};
+    if(rows.slice(0,3).some(isHead)){rows.forEach(r=>{out.push(r.map(c=>cellTxt(c).replace(/\t/g,' ')).join('\t'));r.forEach(c=>out.push(...cellMk(c)));});return;}
+    const mark=x=>/^(\d{1,2}|[a-zа-я])\s*[.)]/i.test(x);
+    rows.forEach((r,ri)=>{const cs=r.map(cellTxt).filter(Boolean);
+      if(ri===0&&rows.length>2&&cs.length>=2&&!cs.some(mark)&&rows.slice(1).some(rr=>rr.map(cellTxt).some(mark)))return;   // "Description | Term" толгой
+      if(cs.length)out.push(cs.join(' — '));r.forEach(c=>out.push(...cellMk(c)));});};
+  const body=X(docXml).getElementsByTagNameNS(W,'body')[0];
+  const block=n=>{for(const c of kids(n)){const t=ln(c);if(t==='p')para(c,lines);else if(t==='tbl')table(c,lines);else if(t==='sdt'){const sc=kids(c).find(x=>ln(x)==='sdtContent');if(sc)block(sc);}}};
+  if(body)block(body);
+  /* "11. About enzymes:" дараа нь "Part B. True or False (Questions 11–15)" гарчиг ирсэн бол гарчгийг асуултын өмнө шилжүүлнэ */
+  for(let i=1;i<lines.length;i++){const h=lines[i],mm=h.match(/(?:part|section|хэсэг|true\s*(?:or|\/)\s*false|үнэн\s*\/?\s*худал).*?(\d{1,3})\s*[–—\-]\s*\d{1,3}/i);if(!mm)continue;
+    let j=i-1;while(j>=0&&!lines[j].trim())j--;if(j<0)continue;const q=lines[j].match(/^\s*(\d{1,3})\s*[.)]/);
+    if(q&&q[1]===mm[1]){lines.splice(i,1);lines.splice(j,0,h);}}
+  /* Зургийн тайлбар: тэмдгийн ойролцоох "Figure 1", "Зураг 2", "Fig. 3" — асуултад "Figure 1"-ийг дурдсан бол тэнд очно */
+  const FIG=/^(?:figure|fig\.?|зураг|диаграм|схем|график|graph|chart|picture)\s*(\d{1,3})\b/i;
+  lines.forEach((l,i)=>{const mm=l.match(/⟦(зураг|диаграм)#(\d+)⟧/);if(!mm)return;const o=mm[1]==='зураг'?imgs[+mm[2]]:drw[+mm[2]];
+    for(const d of [1,-1,2,-2,3]){const x=(lines[i+d]||'').trim(),f=x.match(FIG);if(f&&!/⟦/.test(x)){o.fig=+f[1];break;}}});
+  for(const im of imgs){const path='word/'+im.target.replace(/^\.?\//,'').replace(/^word\//,'');const b=await z.bytes(path);
+    const ext=(im.target.split('.').pop()||'png').toLowerCase();im.blob=b?new Blob([b],{type:ext==='jpg'||ext==='jpeg'?'image/jpeg':ext==='gif'?'image/gif':ext==='bmp'?'image/bmp':ext==='webp'?'image/webp':'image/png'}):null;}
+  return{text:lines.join('\n'),imgs,drw,warn};
+}
+/* Word + түүний PDF: схем, диаграмтай асуултыг PDF-ээс (асуултын дугаараар) тайрч авна */
+async function pdfCropsFor(file,nums){
+  const out={};if(!nums.length)return out;
+  await loadPdfJs();const doc=await piOpen(file);
+  try{const pages=await piPages(doc);piFurniture(pages);const secs=piSections(pages);
+    const regs=piSplitSubs(pages,piRegions(pages,secs[0]||piAnchors(pages))),cache={};
+    for(const n of nums){const r=regs.find(x=>x.n===n&&x.sub==null)||regs.find(x=>x.n===n);if(!r)continue;
+      const cv=await piCrop(pages,r,cache);if(cv){out[n]=piEncode(cv,880,90);cv.width=cv.height=0;}}}
+  finally{try{doc.destroy();}catch(e){}}
+  return out;
+}
+/* Файл(ууд) сонгоход: Word, Excel, txt/csv; PDF ганцаараа бол PDF цонх руу */
+async function impFiles(list){
+  const files=[...list],m=$('#qbulkMsg'),say=(t,bad)=>{m.style.color=bad?'var(--stain)':'';m.textContent=t;};
+  const by=re=>files.find(f=>re.test(f.name));
+  const docx=by(/\.docx$/i),xlsx=by(/\.xlsx$/i),txt=by(/\.(txt|csv|tsv)$/i),pdf=by(/\.pdf$/i);
+  if(!docx&&!xlsx&&!txt){
+    if(by(/\.doc$/i))return say('Хуучин Word (.doc) файл байна. Word дээр нээгээд File → Save As → «Word Document (.docx)» болгож хадгалаад дахин сонгоно уу.',true);
+    if(by(/\.xls$/i))return say('Хуучин Excel (.xls) файл байна. Excel дээр File → Save As → «Excel Workbook (.xlsx)» болгож хадгалаад дахин сонгоно уу.',true);
+    if(pdf){piOpenDlg();say('PDF файлаа «Асуултын PDF» хэсэгт сонгоно уу.');return;}
+    return say('Word (.docx), Excel (.xlsx) эсвэл текст (.txt) файл сонгоно уу.',true);}
+  try{
+    if(docx){say('📁 "'+docx.name+'" файлыг уншиж байна…');
+      const D=await readDocx(docx);
+      /* Зургуудыг урьдчилан ачаална — асуулт танигдмагц (синхрон) асуулт бүрт оноож, хувилбарт ч зөв очно */
+      D.els=await Promise.all(D.imgs.map(im=>im.blob?new Promise(res=>{const u=URL.createObjectURL(im.blob),el=new Image();
+        el.onload=()=>{URL.revokeObjectURL(u);res(el);};el.onerror=()=>{URL.revokeObjectURL(u);res(null);};el.src=u;}):null));
+      let rep=null;
+      bulkImport(D.text,{onParsed:qs=>{rep=docxAttach(qs,D);},done:(mm,keyOnly)=>{if(keyOnly||!rep)return;docxFinish(rep,D,pdf,mm,docx.name);}});
+      return;}
+    if(xlsx){say('📊 "'+xlsx.name+'" файлыг уншиж байна…');
+      const sheets=(await readXlsx(xlsx)).filter(s=>s.rows.some(r=>r&&r.some(Boolean)));
+      if(!sheets.length)return say('Excel файл хоосон байна.',true);
+      const tsv=s=>s.rows.map(r=>(r||[]).map(c=>String(c||'').replace(/[\t\n\r]+/g,' ')).join('\t')).join('\n');
+      const multi=sheets.length>1&&vOwn();
+      if(multi){sheets.slice(0,vCount()).forEach((s,v)=>bulkImport(tsv(s),{tv:v,mode:'auto'}));return;}
+      bulkImport(tsv(sheets[0]),{done:(mm,keyOnly)=>{if(!keyOnly)impTitle(xlsx.name);if(sheets.length>1)mm.textContent+=' (Excel-ийн эхний «'+sheets[0].name+'» хуудсыг уншлаа. Бусад хуудсыг Б, В хувилбар болгох бол дээрх «Хувилбарын тоо»-г тохируулаад дахин сонгоно уу.)';}});return;}
+    if(txt){let t=await txt.text();if(/\.csv$/i.test(txt.name)&&!t.includes('\t'))t=t.split(/\r?\n/).map(l=>{const o=[];let c='',q=false;for(const ch of l){if(ch==='"'){q=!q;continue;}if((ch===','||ch===';')&&!q){o.push(c);c='';}else c+=ch;}o.push(c);return o.join('\t');}).join('\n');
+      bulkImport(t);}
+  }catch(e){say(e.message||String(e),true);}
+}
+/* Таних үр дүн: зураг аль асуултад очсон, схем хаана байна */
+function docxAttach(qs,D){
+  const at={},dr={},MK=/⟦(зураг|диаграм)#(\d+)⟧/g;
+  const strip=s=>String(s||'').replace(DOCX_MK,'\n').replace(/\n{2,}/g,'\n').replace(/^\n|\n$/g,'').trim();
+  qs.forEach((q,i)=>{const all=[q.text,...(q.opts||[]),...(q.stmts||[])].join('\n');
+    for(const mm of all.matchAll(MK))(mm[1]==='зураг'?at:dr)[+mm[2]]??=i;
+    q.text=strip(q.text);if(q.opts)q.opts=q.opts.map(o=>strip(o).replace(/\n/g,' '));if(q.stmts)q.stmts=q.stmts.map(o=>strip(o).replace(/\n/g,' '));});
+  /* "Figure 2"-ыг дурдсан асуулт байвал зураг тэнд (тайлбар нь асуултын өмнө байх тохиолдол) */
+  const figQ=f=>qs.findIndex(q=>new RegExp('(?:figure|fig\\.?|зураг|диаграм|схем|график|graph|chart|picture)\\s*'+f+'(?!\\d)','i').test(q.text));
+  D.imgs.forEach((im,k)=>{if(im.fig){const j=figQ(im.fig);if(j>=0)at[k]=j;}});
+  D.drw.forEach((d,k)=>{if(d.fig){const j=figQ(d.fig);if(j>=0)dr[k]=j;}});
+  /* Асуулт бүрийн зургийг (хэд хэд байвал доош нь нийлүүлж) нэг зураг болгоно */
+  const byQ={};Object.entries(at).forEach(([k,i])=>{const el=D.els&&D.els[k];if(el)(byQ[i]=byQ[i]||[]).push(el);});
+  let put=0;
+  Object.entries(byQ).forEach(([i,els])=>{try{
+    const w=Math.min(1400,Math.max(...els.map(e=>e.naturalWidth))),gap=els.length>1?16:0,hs=els.map(e=>Math.max(1,Math.round(e.naturalHeight*Math.min(1,w/e.naturalWidth))));
+    const cv=document.createElement('canvas');cv.width=w;cv.height=hs.reduce((a,h)=>a+h,0)+gap*(els.length-1);const x=cv.getContext('2d');x.fillStyle='#fff';x.fillRect(0,0,cv.width,cv.height);
+    let y=0;els.forEach((e,k)=>{const ww=Math.round(e.naturalWidth*Math.min(1,w/e.naturalWidth));x.drawImage(e,(w-ww)/2,y,ww,hs[k]);y+=hs[k]+gap;});
+    const d=piEncode(cv,860,IMG_MAX_KB);cv.width=cv.height=0;if(d){qs[i].img=d;put++;}}catch(e){}});
+  return{qs,at,dr,put};
+}
+/* Шалгалтын нэр хоосон бол файлын нэрээр ("Enzymes_Test.docx" → "Enzymes Test") */
+function impTitle(fname){if(String(state.exam.title||'').trim())return;
+  const t=String(fname||'').replace(/\.[^.]+$/,'').replace(/[_]+/g,' ').replace(/\s+/g,' ').trim().slice(0,120);
+  if(t){state.exam.title=t;save();if($('#title'))$('#title').value=t;}}
+async function docxFinish(rep,D,pdf,m,fname){
+  const {qs,at,dr,put}=rep;impTitle(fname);
+  const lost=D.imgs.map((im,k)=>at[k]==null?k+1:0).filter(Boolean);
+  /* qs нь шалгалтад орсон асуултын объектууд — PDF-ээс тайрсан зураг шууд орно */
+  const drwQ=[...new Set(Object.values(dr))].map(i=>({i,q:qs[i]}));
+  let fromPdf=0;
+  if(pdf&&drwQ.length){m.textContent+=' 📄 Схемийг PDF-ээс тайрч байна…';
+    try{const nums=drwQ.map(o=>o.i+1),cr=await pdfCropsFor(pdf,nums);drwQ.forEach(o=>{const c=cr[o.i+1];if(c){o.q.img=c;o.ok=1;fromPdf++;}});}
+    catch(e){m.textContent+=' (PDF: '+e.message+')';}
+    m.textContent=m.textContent.replace(' 📄 Схемийг PDF-ээс тайрч байна…','');
+    if(fromPdf){save();refreshAll();}}
+  const lbl=o=>(o.q.lbl||o.i+1),miss=drwQ.filter(o=>!o.ok);
+  const box=document.createElement('div');box.className='imp-rep'+(miss.length||lost.length?' warn':'');
+  box.innerHTML='<b>📁 '+esc(fname)+'</b><ul>'
+    +'<li>🖼 Зураг: <b>'+put+'</b> асуултад орлоо'+(D.imgs.length?' ('+D.imgs.length+' зурагнаас)':'')+'.</li>'
+    +(fromPdf?'<li>📄 Схем, диаграм: <b>'+fromPdf+'</b> асуултад PDF-ээс тайрч орууллаа.</li>':'')
+    +(miss.length?'<li>⚠ Схем, диаграм (Shapes / Chart / SmartArt) зураг биш тул орсонгүй: <b>'+miss.map(lbl).join(', ')+'</b>-р асуулт. Word дээр схемийг Copy → Paste Special → Picture болгох, эсвэл Word-оо PDF болгож <b>Word + PDF хоёуланг хамт</b> сонгоно уу.</li>':'')
+    +(lost.length?'<li>⚠ '+lost.length+' зургийг аль асуултынх болохыг тодорхойлж чадсангүй — асуултын «Зураг оруулах» товчоор нэмнэ үү.</li>':'')
+    +(D.warn.math?'<li>⚠ Томьёо (Equation) '+D.warn.math+' ширхэг энгийн бичвэр болж орлоо — шалгана уу.</li>':'')+'</ul>';
+  document.querySelectorAll('.imp-rep').forEach(b=>b.remove());m.after(box);
+}
+/* ---------- Төвийн товчнууд, заавар ---------- */
+const IMP_KEY=`Хариулт
+1. B
+2. C
+3. a T, b F, c T, d F
+4. B
+5. A
+
+Агуулга
+1-2 Эсийн бүтэц
+3 Фермент
+4-5 Антибиотик`;
+let impGuideOpen=false;
+function impRender(){
+  const hub=$('#impHub');if(!hub)return;const has=hasMaterial(state);
+  hub.classList.toggle('compact',has);hub.classList.toggle('guide',impGuideOpen);
+  $('#impH').textContent=has?'📥 Материал дахин оруулах':'📥 Шалгалтын материалаа оруулна уу';
+  const gb=$('#impGuideBtn');gb.hidden=!has;gb.textContent=impGuideOpen?'📌 Заавар хураах ▴':'📌 Заавар, загвар ▾';gb.setAttribute('aria-expanded',String(impGuideOpen));
+  const pre=$('#impKeyPre');if(pre&&!pre.dataset.done){pre.dataset.done=1;pre.innerHTML=esc(IMP_KEY).split('\n').map(l=>/^(Хариулт|Агуулга)$/.test(l)?`<span class="${l==='Хариулт'?'h':'g'}">${l}</span>`:/ a [TF],/.test(l)?`<span class="t">${l}</span>`:l).join('\n');}
+}
+$('#impFile').addEventListener('change',e=>{const f=e.target.files;if(f&&f.length)impFiles(f).finally(()=>{e.target.value='';});});
+$('#impHub .imp-card.main').addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();$('#impFile').click();}});
+$('#impPasteBtn').addEventListener('click',()=>{const p=$('#impPaste'),on=p.hidden;p.hidden=!on;$('#impPasteBtn').setAttribute('aria-expanded',String(on));if(on)setTimeout(()=>$('#qbulk').focus(),50);});
+$('#impHandBtn').addEventListener('click',()=>{const t=$('#qtable');t.scrollIntoView({behavior:'smooth',block:'start'});setTimeout(()=>{const f=t.querySelector('textarea,input');if(f)f.focus({preventScroll:true});},400);});
+$('#impGuideBtn').addEventListener('click',()=>{impGuideOpen=!impGuideOpen;impRender();});
+$('#impKeyCopy').addEventListener('click',async()=>{let ok=false;try{await navigator.clipboard.writeText(IMP_KEY);ok=true;}catch(e){}
+  if(!ok){const ta=document.createElement('textarea');ta.value=IMP_KEY;document.body.appendChild(ta);ta.select();try{ok=document.execCommand('copy');}catch(e){}ta.remove();}
+  $('#impKeyCopy').textContent=ok?'✓ Хуулагдлаа':'Хуулж чадсангүй';setTimeout(()=>{$('#impKeyCopy').textContent='📋 Хуулах';},1800);});
+$('#tplWord').addEventListener('click',()=>{const a=document.createElement('a');a.href='shalgalt-zagvar.docx';a.download='shalgalt-zagvar.docx';document.body.appendChild(a);a.click();a.remove();});
+$('#tplXlsx').addEventListener('click',()=>{
+  const H=['№','Асуулт','A','B','C','D','Зөв хариулт','Агуулга','Оноо'].map(v=>({v,s:'h'}));
+  const R=[[1,'Фотосинтез эсийн аль органоидод явагддаг вэ?','Митохондри','Хлоропласт','Цөм','Рибосом','B','Эсийн бүтэц',1],
+    [2,'Ферментийн идэвхтэй төв нь субстраттайгаа ямар харьцаатай вэ?','Ижил хэлбэртэй','Нөхөх (тохирох) хэлбэртэй','Ямар ч хамаагүй','Ковалент холбоогоор','B','Фермент',1],
+    [3,'Ферментийн тухай (a–d мэдэгдэл тус бүр Үнэн/Худал)','Фермент бол биологийн катализатор','Фермент урвалын дараа зарцуулагдана','Ихэнх ферментийн нэр -аза-гаар төгсдөг','Өндөр температур ферментийг идэвхжүүлдэг','ҮХҮХ','Фермент',1.5],
+    [4,'Өгүүлбэрийг нөхөөрэй: 1. Пенициллиныг ___ мөөгөнцөр ялгаруулдаг. 2. Антибиотик ___-ийг устгадаг. 3. Ферментерт ___ хий өгдөг. 4. Пенициллиныг ___ болгож капсулд хийдэг. Үгс: a) бактери b) Penicillium c) талст d) хүчилтөрөгч','1a, 2b, 3c, 4d','1b, 2a, 3d, 4c','1c, 2d, 3a, 4b','1d, 2c, 3b, 4a','B','Антибиотик',1]];
+  const rows=[[{v:'Шалгалтын материалын загвар — мөр бүр нэг асуулт',s:'t'}],[{v:'«Зөв хариулт»: A, B, C, D. Үнэн/худал бол 4 мэдэгдлийг A–D-д бичээд хариултыг ҮХҮХ (эсвэл TFTF) гэж бичнэ. Агуулга, Оноо заавал биш. Бөглөөд «📁 Word / Excel файл»-аар оруулна.',s:'n'}],[],H,
+    ...R.map(r=>r.map((v,i)=>({v,s:i===1||(i>=2&&i<=5)?'c':'cc'})))];
+  for(let k=0;k<40;k++)rows.push([{v:R.length+k+1,s:'cc'},...Array(8).fill(0).map((_,i)=>({v:'',s:i===0||(i>=1&&i<=4)?'c':'cc'}))]);
+  saveBlob(buildXlsx([{name:'Асуултууд',rows,freeze:4,widths:[5,48,20,20,20,20,12,18,7]}]),'shalgalt-zagvar.xlsx');
+  const m=$('#qbulkMsg');m.style.color='';m.textContent='Excel загвар татагдлаа (shalgalt-zagvar.xlsx). Бөглөөд «📁 Word / Excel файл»-аар оруулна.';});
 /* ---------- Загвар, жишээ цонх: программ таньдаг бичих хэлбэрүүд ---------- */
 const QTPL={
   word:`Агуулга: Эсийн бүтэц
