@@ -941,6 +941,8 @@ body.student #studentApp{display:block}
 .imp-top{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
 .imp-h{margin:0;font-size:1.15rem;color:var(--leaf,#047857)}
 .imp-guide-btn{margin-left:auto;padding:4px 12px}
+.imp-var{margin-left:auto;width:auto;padding:4px 8px;font-size:.88rem;border-radius:999px}
+.imp-var:not([hidden])+.imp-guide-btn{margin-left:6px}
 .imp-cards{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-top:12px}
 .imp-card{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;text-align:center;padding:16px 10px;min-height:118px;
   border:2px solid var(--line,#D7E3DC);border-radius:16px;background:var(--card,#fff);color:var(--ink,#14211B);cursor:pointer;font:inherit;transition:transform .12s,border-color .12s,box-shadow .12s}
@@ -1250,7 +1252,7 @@ body.student #studentApp{display:block}
             <li>Сонголт <b>A. B. C. D.</b> · үнэн/худал: <b>«Үнэн/худал»</b> гарчиг + <b>a) b) c) d)</b> мэдэгдэл</li>
             <li>Зураг асуултынхаа доор. Схем, диаграм <b>зураг</b> хэлбэртэй (эсвэл Word-ын <b>PDF</b>-ийг хамт сонгоно)</li>
             <li>Хамгийн төгсгөлд <b>Хариулт</b>, хүсвэл <b>Агуулга</b> — «Хариулт ийм байна» жишээ шиг</li></ol>
-          <div class="imp-btns"><button type="button" class="btn ghost" id="tplWord">⬇ Word загвар</button><button type="button" class="btn ghost" id="tplXlsx">⬇ Excel загвар</button><button type="button" class="btn ghost" id="qtplBtn">🧩 Бусад жишээ</button></div></div>
+          <div class="imp-btns"><button type="button" class="btn ghost" id="tplWord">⬇ Word загвар</button><button type="button" class="btn ghost" id="tplWord2">⬇ 2 хувилбартай загвар</button><button type="button" class="btn ghost" id="tplXlsx">⬇ Excel загвар</button><button type="button" class="btn ghost" id="qtplBtn">🧩 Бусад жишээ</button></div></div>
         <div class="imp-key"><div class="imp-key-h"><b>📋 Хариулт ийм байна</b><button type="button" class="btn ghost" id="impKeyCopy">📋 Хуулах</button></div>
           <pre class="imp-key-pre" id="impKeyPre"></pre>
           <small>Мөр бүрт нэг асуулт. <code>1-B, 2-C</code> эсвэл <code>1. (B)</code> гэж бичсэн ч танина.</small></div>
@@ -4795,8 +4797,9 @@ function bulkImport(SRC,X){X=X||{};
   const tv=X.tv!=null?Math.min(X.tv,vCount()-1):vOwn()?Math.min(+$('#qbulkVar').value||0,vCount()-1):0;
   if(tv>0){
     /* Б, В, Г хувилбар: бүтэц (тоо, агуулга, оноо) нь А-гийнх хэвээр, текст, сонголт, зөв хариулт нь энэ хувилбарт */
-    const QS=state.exam.questions,A1=QS.map((q,i)=>i).filter(i=>isP1(QS[i])),A2=QS.map((q,i)=>i).filter(i=>isP2(QS[i]));
-    const b1=qs.filter(q=>!isP2(q)),b2=qs.filter(isP2),nm=VNAMES[tv];
+    const QS=state.exam.questions,A1=QS.map((q,i)=>i).filter(i=>isP1(QS[i])),A2=QS.map((q,i)=>i).filter(i=>isP2(QS[i])),A4=QS.map((q,i)=>i).filter(i=>isP4(QS[i]));
+    /* Б хувилбарын Ү/Х асуулт Б-гийн Ү/Х асуултад (А-гийн III хэсэгт) очно; тест нь тестэд */
+    const b1=qs.filter(q=>!isP2(q)&&!(isP4(q)&&A4.length)),b2=qs.filter(isP2),b4=A4.length?qs.filter(isP4):[],nm=VNAMES[tv];
     if(state.students.some(s=>s.v===tv)&&!confirm('⚠ '+nm+' хувилбартай сурагчдын хариулт орсон байна.\n\n'
       +nm+' хувилбарын асуулт, зөв хариултыг шинээр орж ирснээр солих тул тэдний дүн өөрчлөгдөж магадгүй.'+UNDO_NOTE+'\n\nҮргэлжлүүлэх үү?'))return;
     snap(nm+' хувилбарын асуултууд');
@@ -4806,11 +4809,13 @@ function bulkImport(SRC,X){X=X||{};
       Q.alt[tv]={text:s.text||'',opts:(s.opts||[]).slice(),stmts:[],key:isP2(Q)?keyNorm(s.key):opts1().includes(s.key)?s.key:''};
       if(s.img)Q.alt[tv].img=s.img;});
     put(A1,b1);put(A2,b2);
+    A4.forEach((qi,k)=>{const s=b4[k],Q=QS[qi];if(!s)return;Q.alt=Array.isArray(Q.alt)?Q.alt:[];
+      Q.alt[tv]={text:s.text||'',opts:[],stmts:(s.stmts||[]).slice(),key:isP4(s)?tfNorm(s.key):''};if(s.img)Q.alt[tv].img=s.img;});
     draft=[];save();refreshAll();$('#qbulk').value='';
     undoBar(nm+' хувилбарын асуултууд орлоо.');
-    const diff=b1.length!==A1.length||b2.length!==A2.length;
+    const diff=b1.length!==A1.length||b2.length!==A2.length||b4.length!==A4.length;
     m.style.color=diff?'var(--iodine)':'';
-    m.textContent=nm+' хувилбарт I хэсгийн '+Math.min(A1.length,b1.length)+' асуулт'+(A2.length?', II хэсгийн '+Math.min(A2.length,b2.length)+' асуулт':'')+' орлоо.'
+    m.textContent=nm+' хувилбарт I хэсгийн '+Math.min(A1.length,b1.length)+' асуулт'+(A2.length?', II хэсгийн '+Math.min(A2.length,b2.length)+' асуулт':'')+(A4.length?', үнэн/худлын '+Math.min(A4.length,b4.length)+' асуулт':'')+' орлоо.'
       +(diff?' Анхаар: '+VNAMES[0]+' хувилбар I хэсэгт '+A1.length+(A2.length?', II хэсэгт '+A2.length:'')+' асуулттай, харин буулгасан нь '
         +b1.length+(b2.length||A2.length?' ба '+b2.length:'')+' асуулттай байна. Дугаараар нь тааруулсан тул доорх жагсаалтаас шалгана уу.'
         :' Зөв хариултыг доорх жагсаалтаас шалгана уу.');
@@ -4979,13 +4984,32 @@ async function impFiles(list){
     if(pdf){piOpenDlg();say('PDF файлаа «Асуултын PDF» хэсэгт сонгоно уу.');return;}
     return say('Word (.docx), Excel (.xlsx) эсвэл текст (.txt) файл сонгоно уу.',true);}
   try{
-    if(docx){say('📁 "'+docx.name+'" файлыг уншиж байна…');
-      const D=await readDocx(docx);
-      /* Зургуудыг урьдчилан ачаална — асуулт танигдмагц (синхрон) асуулт бүрт оноож, хувилбарт ч зөв очно */
-      D.els=await Promise.all(D.imgs.map(im=>im.blob?new Promise(res=>{const u=URL.createObjectURL(im.blob),el=new Image();
-        el.onload=()=>{URL.revokeObjectURL(u);res(el);};el.onerror=()=>{URL.revokeObjectURL(u);res(null);};el.src=u;}):null));
-      let rep=null;
-      bulkImport(D.text,{onParsed:qs=>{rep=docxAttach(qs,D);},done:(mm,keyOnly)=>{if(keyOnly||!rep)return;docxFinish(rep,D,pdf,mm,docx.name);}});
+    if(docx){
+      document.querySelectorAll('.imp-rep').forEach(b=>b.remove());
+      /* Нэг файлд «А хувилбар», «Б хувилбар» гарчигтай хэсгүүд, эсвэл хувилбар бүр тусдаа файл (нэр нь …_Б.docx) */
+      const parts=[];
+      for(const f of files.filter(x=>/\.docx$/i.test(x.name))){say('📁 "'+f.name+'" файлыг уншиж байна…');
+        const D=await readDocx(f);
+        /* Зургуудыг урьдчилан ачаална — асуулт танигдмагц (синхрон) асуулт бүрт оноож, хувилбарт ч зөв очно */
+        D.els=await Promise.all(D.imgs.map(im=>im.blob?new Promise(res=>{const u=URL.createObjectURL(im.blob),el=new Image();
+          el.onload=()=>{URL.revokeObjectURL(u);res(el);};el.onerror=()=>{URL.revokeObjectURL(u);res(null);};el.src=u;}):null));
+        const secs=impSplitVariants(D.text);
+        if(secs.length>1)secs.forEach(s=>parts.push({v:s.v,text:s.text,D,name:f.name}));
+        else parts.push({v:secs[0].v!=null?secs[0].v:impVarFromName(f.name),text:D.text,D,name:f.name});}
+      /* Хувилбар тодорхойгүй ганц файл → дээрх «Аль хувилбар» сонголт (эсвэл А) */
+      if(parts.length===1&&parts[0].v==null){const sv=$('#impVar');parts[0].v=sv&&!sv.hidden&&sv.value!==''?+sv.value:0;}
+      parts.forEach((p,k)=>{if(p.v==null)p.v=k;});parts.sort((a,b)=>a.v-b.v);
+      const maxV=Math.max(...parts.map(p=>p.v));
+      const run=k=>{if(k>=parts.length)return;const p=parts[k];
+        /* Б, В … хувилбар руу оруулахын өмнө хувилбарын тоо, «Өөр асуултууд» горимыг тохируулна */
+        if(p.v>0){if(vCount()<maxV+1)vSet(maxV+1);if(state.exam.vmode!=='own'){state.exam.vmode='own';save();renderSetup();}}
+        let rep=null;
+        bulkImport(p.text,{tv:p.v,onParsed:qs=>{rep=docxAttach(qs,p.D,p.text);rep.src=p.text;},done:async(mm,keyOnly)=>{
+          if(!keyOnly&&rep)await docxFinish(rep,p.D,parts.length===1?pdf:null,mm,p.name+(parts.length>1||p.v>0?' · '+VNAMES[p.v]+' хувилбар':''));
+          msgs.push((parts.length>1?VNAMES[p.v]+': ':'')+mm.textContent);
+          if(k+1<parts.length)run(k+1);
+          else if(parts.length>1){mm.style.color='';mm.textContent='✓ '+parts.length+' хувилбар ('+parts.map(x=>VNAMES[x.v]).join(', ')+') орлоо. Хариултын хуудсыг одоо хэвлэвэл «Хувилбар» мөр гарч, камер хувилбарыг өөрөө ялгана. '+msgs.join(' · ');}}});};
+      const msgs=[];run(0);
       return;}
     if(xlsx){say('📊 "'+xlsx.name+'" файлыг уншиж байна…');
       const sheets=(await readXlsx(xlsx)).filter(s=>s.rows.some(r=>r&&r.some(Boolean)));
@@ -4998,8 +5022,25 @@ async function impFiles(list){
       bulkImport(t);}
   }catch(e){say(e.message||String(e),true);}
 }
+/* «А хувилбар» / «Б хувилбар» / «Variant B» гэсэн тусдаа мөрөөр файлыг хувилбарын хэсгүүдэд хуваана.
+   Латин B = Б, кирилл В = В (3 дахь) гэдгийг анхаарна */
+const VLET={'А':0,'A':0,'Б':1,'B':1,'В':2,'C':2,'Г':3,'D':3};
+const VHEAD=/^\s*(?:([АБВГABCD])\s*[-–.]?\s*хувилбар(?:ын\s+(?:асуулт|даалгавар)\w*)?|хувилбар\s*[-–:№]?\s*([АБВГABCD])|variant\s*[-–:]?\s*([A-D]))\s*[:.]?\s*$/i;
+function impSplitVariants(text){
+  const L=String(text||'').split('\n'),out=[];let cur={v:null,lines:[]};
+  L.forEach(l=>{const m=l.match(VHEAD);if(m){const ch=(m[1]||m[2]||m[3]).toUpperCase();
+      if(cur.v!=null||cur.lines.some(x=>/^\s*\d{1,3}\s*[.)]/.test(x)))out.push(cur);
+      cur={v:VLET[ch]!=null?VLET[ch]:null,lines:cur.v==null&&!out.length?cur.lines.slice():[]};return;}
+    cur.lines.push(l);});
+  out.push(cur);
+  return out.filter(s=>s.lines.some(x=>x.trim())).map(s=>({v:s.v,text:s.lines.join('\n')}));
+}
+function impVarFromName(n){const m=String(n||'').replace(/\.[^.]+$/,'').match(/(?:^|[_\-\s.(])([АБВГABCD])(?:\s*хувилбар)?(?=$|[_\-\s.)])/i);
+  return m&&VLET[m[1].toUpperCase()]!=null?VLET[m[1].toUpperCase()]:null;}
 /* Таних үр дүн: зураг аль асуултад очсон, схем хаана байна */
-function docxAttach(qs,D){
+function docxAttach(qs,D,src){
+  /* Олон хувилбартай файлд зөвхөн энэ хэсгийн (src) зургийг авна */
+  const own=(t,k)=>src==null||String(src).includes("⟦"+t+"#"+k+"⟧");
   const at={},dr={},MK=/⟦(зураг|диаграм)#(\d+)⟧/g;
   const strip=s=>String(s||'').replace(DOCX_MK,'\n').replace(/\n{2,}/g,'\n').replace(/^\n|\n$/g,'').trim();
   qs.forEach((q,i)=>{const all=[q.text,...(q.opts||[]),...(q.stmts||[])].join('\n');
@@ -5007,8 +5048,8 @@ function docxAttach(qs,D){
     q.text=strip(q.text);if(q.opts)q.opts=q.opts.map(o=>strip(o).replace(/\n/g,' '));if(q.stmts)q.stmts=q.stmts.map(o=>strip(o).replace(/\n/g,' '));});
   /* "Figure 2"-ыг дурдсан асуулт байвал зураг тэнд (тайлбар нь асуултын өмнө байх тохиолдол) */
   const figQ=f=>qs.findIndex(q=>new RegExp('(?:figure|fig\\.?|зураг|диаграм|схем|график|graph|chart|picture)\\s*'+f+'(?!\\d)','i').test(q.text));
-  D.imgs.forEach((im,k)=>{if(im.fig){const j=figQ(im.fig);if(j>=0)at[k]=j;}});
-  D.drw.forEach((d,k)=>{if(d.fig){const j=figQ(d.fig);if(j>=0)dr[k]=j;}});
+  D.imgs.forEach((im,k)=>{if(im.fig&&own("зураг",k)){const j=figQ(im.fig);if(j>=0)at[k]=j;}});
+  D.drw.forEach((d,k)=>{if(d.fig&&own("диаграм",k)){const j=figQ(d.fig);if(j>=0)dr[k]=j;}});
   /* Асуулт бүрийн зургийг (хэд хэд байвал доош нь нийлүүлж) нэг зураг болгоно */
   const byQ={};Object.entries(at).forEach(([k,i])=>{const el=D.els&&D.els[k];if(el)(byQ[i]=byQ[i]||[]).push(el);});
   let put=0;
@@ -5025,7 +5066,7 @@ function impTitle(fname){if(String(state.exam.title||'').trim())return;
   if(t){state.exam.title=t;save();if($('#title'))$('#title').value=t;}}
 async function docxFinish(rep,D,pdf,m,fname){
   const {qs,at,dr,put}=rep;impTitle(fname);
-  const lost=D.imgs.map((im,k)=>at[k]==null?k+1:0).filter(Boolean);
+  const lost=D.imgs.map((im,k)=>at[k]==null&&(rep.src==null||rep.src.includes("⟦зураг#"+k+"⟧"))?k+1:0).filter(Boolean),nImg=D.imgs.filter((im,k)=>rep.src==null||rep.src.includes("⟦зураг#"+k+"⟧")).length;
   /* qs нь шалгалтад орсон асуултын объектууд — PDF-ээс тайрсан зураг шууд орно */
   const drwQ=[...new Set(Object.values(dr))].map(i=>({i,q:qs[i]}));
   let fromPdf=0;
@@ -5037,12 +5078,12 @@ async function docxFinish(rep,D,pdf,m,fname){
   const lbl=o=>(o.q.lbl||o.i+1),miss=drwQ.filter(o=>!o.ok);
   const box=document.createElement('div');box.className='imp-rep'+(miss.length||lost.length?' warn':'');
   box.innerHTML='<b>📁 '+esc(fname)+'</b><ul>'
-    +'<li>🖼 Зураг: <b>'+put+'</b> асуултад орлоо'+(D.imgs.length?' ('+D.imgs.length+' зурагнаас)':'')+'.</li>'
+    +'<li>🖼 Зураг: <b>'+put+'</b> асуултад орлоо'+(nImg?' ('+nImg+' зурагнаас)':'')+'.</li>'
     +(fromPdf?'<li>📄 Схем, диаграм: <b>'+fromPdf+'</b> асуултад PDF-ээс тайрч орууллаа.</li>':'')
     +(miss.length?'<li>⚠ Схем, диаграм (Shapes / Chart / SmartArt) зураг биш тул орсонгүй: <b>'+miss.map(lbl).join(', ')+'</b>-р асуулт. Word дээр схемийг Copy → Paste Special → Picture болгох, эсвэл Word-оо PDF болгож <b>Word + PDF хоёуланг хамт</b> сонгоно уу.</li>':'')
     +(lost.length?'<li>⚠ '+lost.length+' зургийг аль асуултынх болохыг тодорхойлж чадсангүй — асуултын «Зураг оруулах» товчоор нэмнэ үү.</li>':'')
     +(D.warn.math?'<li>⚠ Томьёо (Equation) '+D.warn.math+' ширхэг энгийн бичвэр болж орлоо — шалгана уу.</li>':'')+'</ul>';
-  document.querySelectorAll('.imp-rep').forEach(b=>b.remove());m.after(box);
+  const prevRep=[...document.querySelectorAll('.imp-rep')].pop();(prevRep||m).after(box);
 }
 /* ---------- Төвийн товчнууд, заавар ---------- */
 const IMP_KEY=`Хариулт
@@ -5062,6 +5103,10 @@ function impRender(){
   hub.classList.toggle('compact',has);hub.classList.toggle('guide',impGuideOpen);
   $('#impH').textContent=has?'📥 Материал дахин оруулах':'📥 Шалгалтын материалаа оруулна уу';
   const gb=$('#impGuideBtn');gb.hidden=!has;gb.textContent=impGuideOpen?'📌 Заавар хураах ▴':'📌 Заавар, загвар ▾';gb.setAttribute('aria-expanded',String(impGuideOpen));
+  /* Хувилбартай («Өөр асуултууд») шалгалтад: гарчиггүй файл аль хувилбар руу орохыг сонгоно */
+  let sv=$('#impVar');if(!sv){sv=document.createElement('select');sv.id='impVar';sv.className='imp-var';sv.setAttribute('aria-label','Аль хувилбарын файл');$('#impGuideBtn').before(sv);}
+  const nv=vCount();sv.hidden=!(vOwn()&&nv>1);
+  if(!sv.hidden){const cur=sv.value;sv.innerHTML='<option value="">Хувилбар: файлаас таних</option>'+Array.from({length:nv},(_,v)=>`<option value="${v}">${VNAMES[v]} хувилбарын файл</option>`).join('');sv.value=cur&&+cur<nv?cur:'';}
   const pre=$('#impKeyPre');if(pre&&!pre.dataset.done){pre.dataset.done=1;pre.innerHTML=esc(IMP_KEY).split('\n').map(l=>/^(Хариулт|Агуулга)$/.test(l)?`<span class="${l==='Хариулт'?'h':'g'}">${l}</span>`:/ a [TF],/.test(l)?`<span class="t">${l}</span>`:l).join('\n');}
 }
 $('#impFile').addEventListener('change',e=>{const f=e.target.files;if(f&&f.length)impFiles(f).finally(()=>{e.target.value='';});});
@@ -5072,7 +5117,9 @@ $('#impGuideBtn').addEventListener('click',()=>{impGuideOpen=!impGuideOpen;impRe
 $('#impKeyCopy').addEventListener('click',async()=>{let ok=false;try{await navigator.clipboard.writeText(IMP_KEY);ok=true;}catch(e){}
   if(!ok){const ta=document.createElement('textarea');ta.value=IMP_KEY;document.body.appendChild(ta);ta.select();try{ok=document.execCommand('copy');}catch(e){}ta.remove();}
   $('#impKeyCopy').textContent=ok?'✓ Хуулагдлаа':'Хуулж чадсангүй';setTimeout(()=>{$('#impKeyCopy').textContent='📋 Хуулах';},1800);});
-$('#tplWord').addEventListener('click',()=>{const a=document.createElement('a');a.href='shalgalt-zagvar.docx';a.download='shalgalt-zagvar.docx';document.body.appendChild(a);a.click();a.remove();});
+const dlTpl=f=>{const a=document.createElement('a');a.href=f;a.download=f;document.body.appendChild(a);a.click();a.remove();};
+$('#tplWord').addEventListener('click',()=>dlTpl('shalgalt-zagvar.docx'));
+$('#tplWord2').addEventListener('click',()=>dlTpl('shalgalt-zagvar-2huvilbar.docx'));
 $('#tplXlsx').addEventListener('click',()=>{
   const H=['№','Асуулт','A','B','C','D','Зөв хариулт','Агуулга','Оноо'].map(v=>({v,s:'h'}));
   const R=[[1,'Фотосинтез эсийн аль органоидод явагддаг вэ?','Митохондри','Хлоропласт','Цөм','Рибосом','B','Эсийн бүтэц',1],
