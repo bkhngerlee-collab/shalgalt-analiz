@@ -1486,6 +1486,11 @@ body.student #studentApp{display:block}
     <div id="inviteBox"></div>
     <div class="msg" id="inviteMsg" role="status"></div>
     <div id="tList" style="margin-top:12px"></div>
+    <details id="tgBox" style="margin-top:16px;border-top:1px solid var(--line);padding-top:12px">
+      <summary style="cursor:pointer;font-weight:700;font-size:1.02rem">📲 Шинэ бүртгэлийг утсанд мэдэгдэх (Telegram) <span id="tgSum" style="font-weight:400;font-size:.9rem;color:var(--muted)"></span></summary>
+      <div id="tgBody" style="margin-top:8px"></div>
+      <div class="msg" id="tgMsg" role="status"></div>
+    </details>
     <div id="tExtra" hidden style="margin-top:18px;border-top:1px solid var(--line);padding-top:14px">
       <h3 style="margin:0 0 4px;font-size:1.02rem">📧 Багш нарын имэйл — нэгдсэн жагсаалт</h3>
       <p class="hint" style="margin:0 0 8px">Gmail-ээр бүгдэд нэг дор захидал илгээхдээ <b>BCC</b> (Нууц хуулбар) талбарт буулгана — багш нар бие биеийнхээ хаягийг харахгүй.
@@ -10851,6 +10856,11 @@ function reqBadge(){
   const n=AUTH.owner?tRows.filter(t=>!t.approved&&!t.expires&&!(AUTH.sess&&t.id===AUTH.sess.user.id)).length:0;
   b.hidden=!AUTH.owner;b.innerHTML='🔔'+(n?'<b class="bdg">'+(+n)+'</b>':'');
   b.title=n?n+' багш таны баталгааг хүлээж байна':'Шинэ хүсэлт алга';b.setAttribute('aria-label',b.title);
+  /* Хажуугийн цэс ба хөтчийн табын гарчигт ч тоог харуулна */
+  const so=$('#secOwn');if(so){let x=so.querySelector('.sn-bdg');
+    if(n&&!x){x=document.createElement('b');x.className='sn-bdg';x.style.cssText='margin-left:6px;min-width:20px;height:20px;padding:0 6px;border-radius:999px;background:#E53935;color:#fff;font-size:.72rem;display:inline-grid;place-items:center';so.appendChild(x);}
+    if(x){if(n)x.textContent=n;else x.remove();}}
+  const bt=document.title.replace(/^\(\d+\)\s*/,'');document.title=(n?'('+n+') ':'')+bt;
 }
 async function reqCheck(){
   if(!AUTH.owner||!AUTH.sess||document.visibilityState!=='visible')return;
@@ -11162,7 +11172,109 @@ async function teachersLoad(){
   box.innerHTML='<p class="hint">Ачаалж байна…</p>';
   try{await tFetch();teachersRender();}
   catch(e){box.innerHTML=`<p class="hint" style="color:var(--stain)">${esc(e.message)}</p>`;}
+  tgLoad();
 }
+/* ---------- Эзэнд: шинэ бүртгэлийг Telegram-аар мэдэгдэх (14-р алхмын SQL) ----------
+   Ботын түлхүүрийг эзэн өөрөө буулгана; хөтөч зөвхөн Telegram-аас ботын нэр, чатын дугаарыг асууна.
+   Түлхүүр серверт (notify_cfg) хадгалагдаж, буцааж уншигдахгүй — энд ч, localStorage-д ч үлдэхгүй. */
+let TG={cfg:null,need:false,err:'',poll:0,form:false};
+const tgMsg=(t,bad)=>{const m=$('#tgMsg');if(!m)return;m.style.color=bad?'var(--stain)':'';m.textContent=t||'';};
+const TG_RE=/^\d{5,15}:[A-Za-z0-9_-]{20,80}$/;
+async function tgApi(tok,method,q){
+  let r;try{r=await fetch('https://api.telegram.org/bot'+tok+'/'+method+(q?'?'+q:''));}catch(e){throw new Error('Telegram-д холбогдож чадсангүй. Интернэтээ шалгана уу.');}
+  let j=null;try{j=await r.json();}catch(e){}
+  if(!j||!j.ok)throw Object.assign(new Error(r.status===401||r.status===404?'Ботын түлхүүр буруу байна. @BotFather-ийн өгсөн бүтэн мөрийг хуулна уу.':(j&&j.description)||('Telegram алдаа ('+r.status+')')),{status:r.status});
+  return j.result;
+}
+async function tgLoad(){
+  if(!ownerMode()||!$('#tgBox'))return;
+  try{const r=await sbRpc('admin_notify_get');TG.cfg=(r&&r[0]&&r[0].has_token&&r[0].chat)?r[0]:null;TG.need=false;TG.err='';}
+  catch(e){TG.cfg=null;TG.need=e.status===404||/could not find|schema cache/i.test(e.message);TG.err=TG.need?'':e.message;}
+  tgRender();
+}
+function tgRender(){
+  const b=$('#tgBody'),s=$('#tgSum');if(!b)return;
+  if(TG.need){s.textContent='— SQL хэрэгтэй';
+    b.innerHTML='<div class="hp-warn" style="margin:0">Эхлээд Supabase-ийн SQL Editor дээр <b>supabase-setup-14.sql</b>-ийг ажиллуулна уу. Дараа нь энэ хэсэг нээгдэнэ.</div>';return;}
+  if(TG.err){s.textContent='';b.innerHTML=`<p class="hint" style="color:var(--stain);margin:0">${esc(TG.err)}</p>`;return;}
+  const c=TG.cfg;
+  s.textContent=c?'— ✓ асаалттай':'— унтраалттай';
+  if(c&&!TG.form){
+    b.innerHTML=`<p class="hint" style="margin:0 0 8px">✓ Шинэ багш бүртгүүлэх бүрт Telegram-д тань мессеж ирнэ (чат ${esc(c.chat)}).
+      Програм хаалттай байсан ч ирнэ. Хүсэлтийг батлахдаа энэ хуудсыг нээнэ.</p>
+      <label style="display:flex;gap:8px;align-items:center;font-weight:400"><input type="checkbox" id="tgName" ${c.send_name?'checked':''} style="width:auto"> Мессежэнд багшийн нэр, мэргэжлийг бичих</label>
+      <div class="btns" style="margin-top:8px"><button type="button" class="btn" id="tgTest">Туршилтын мессеж илгээх</button>
+        <button type="button" class="btn ghost" id="tgRe">Өөр бот / утас холбох</button>
+        <button type="button" class="btn danger" id="tgOff">Унтраах</button></div>`;
+    return;}
+  b.innerHTML=`<ol class="hint" style="margin:0 0 8px;padding-left:20px;line-height:1.6">
+      <li>Утсан дээрээ Telegram-аа нээгээд <a href="https://t.me/BotFather" target="_blank" rel="noopener"><b>@BotFather</b></a>-ийг хайж ороод <b>Start</b> дарна.</li>
+      <li><code>/newbot</code> гэж бичнэ. Ботын нэр (жишээ нь <i>Шалгалт мэдэгдэл</i>), дараа нь <b>bot</b>-оор төгссөн хаяг (жишээ нь <i>shalgalt_minii_bot</i>) асууна.</li>
+      <li>BotFather <code>123456789:AAH…</code> маягийн <b>түлхүүр (token)</b> өгнө. Түүнийг хуулж доор буулгаад <b>«Холбох»</b> дарна.</li>
+      <li>Дараа нь гарч ирэх холбоосоор ботоо нээгээд <b>Start</b> дарна — программ таны чатыг өөрөө олно.</li></ol>
+    <p class="hint" style="margin:0 0 8px">🔒 Түлхүүрийг хэнд ч бүү үзүүл. Энд буулгасны дараа зөвхөн серверт хадгалагдаж, программ түүнийг дахин харуулахгүй.</p>
+    <label for="tgTok">Ботын түлхүүр (token)</label>
+    <input id="tgTok" type="password" autocomplete="off" spellcheck="false" placeholder="123456789:AAH…" style="font-family:ui-monospace,Consolas,monospace">
+    <label style="display:flex;gap:8px;align-items:center;font-weight:400;margin-top:8px"><input type="checkbox" id="tgName" checked style="width:auto"> Мессежэнд багшийн нэр, мэргэжлийг бичих</label>
+    <div class="btns" style="margin-top:8px"><button type="button" class="btn" id="tgGo">Холбох</button>
+      ${c?'<button type="button" class="btn ghost" id="tgBack">Болих</button>':''}</div>
+    <div id="tgWait"></div>`;
+}
+function tgStop(){if(TG.poll){clearTimeout(TG.poll);TG.poll=0;}const w=$('#tgWait');if(w)w.innerHTML='';}
+async function tgFinish(tok,chat,name){
+  await sbRpc('admin_notify_set',{p_token:tok,p_chat:String(chat),p_send_name:!!name,p_off:false});
+  TG.form=false;await tgLoad();await tgTest('✓ Холбогдлоо! Telegram-аа шалгаарай — туршилтын мессеж ирсэн байх ёстой.');
+}
+async function tgTest(okText){
+  tgMsg('Илгээж байна…');
+  const id=await sbRpc('admin_notify_test');
+  for(let i=0;i<6;i++){await new Promise(r=>setTimeout(r,1200));
+    let r=null;try{r=(await sbRpc('admin_notify_result',{p_id:id}))||[];}catch(e){}
+    if(r&&r[0]){if(r[0].ok)return tgMsg(okText||'✓ Илгээлээ. Telegram-аа шалгаарай.');
+      return tgMsg('Telegram хүлээж авсангүй: '+(r[0].err||r[0].status_code)+'. «Өөр бот / утас холбох»-оор дахин холбоно уу.',true);}}
+  tgMsg((okText||'✓ Илгээлээ.')+' (Хэдэн секундийн дараа ирж магадгүй.)');
+}
+$('#tgBox').addEventListener('toggle',()=>{if($('#tgBox').open&&!TG.cfg&&!TG.need)tgLoad();if(!$('#tgBox').open)tgStop();});
+$('#tgBox').addEventListener('click',async e=>{
+  const b=e.target.closest('button');if(!b)return;
+  try{
+    if(b.id==='tgRe'){TG.form=true;tgMsg('');tgRender();return;}
+    if(b.id==='tgBack'){TG.form=false;tgStop();tgMsg('');tgRender();return;}
+    if(b.id==='tgTest'){b.disabled=true;try{await tgTest();}finally{b.disabled=false;}return;}
+    if(b.id==='tgOff'){if(!confirm('Telegram мэдэгдлийг унтраах уу? Ботын түлхүүр серверээс устгагдана.'))return;
+      await sbRpc('admin_notify_set',{p_token:null,p_chat:null,p_send_name:true,p_off:true});await tgLoad();tgMsg('Унтраалаа.');return;}
+    if(b.id==='tgStopWait'){tgStop();tgMsg('Зогсоолоо.');return;}
+    if(b.id==='tgGo'){
+      const inp=$('#tgTok'),tok=inp.value.replace(/\s+/g,''),name=$('#tgName').checked;
+      if(!TG_RE.test(tok))return tgMsg('Түлхүүр «123456789:AAH…» хэлбэртэй байх ёстой. @BotFather-ийн өгсөн бүтэн мөрийг хуулна уу.',true);
+      tgStop();b.disabled=true;tgMsg('Шалгаж байна…');
+      let me;try{me=await tgApi(tok,'getMe');}finally{b.disabled=false;}
+      const u=String(me.username||'').replace(/[^A-Za-z0-9_]/g,'');
+      tgMsg('');
+      $('#tgWait').innerHTML=`<div style="margin:10px 0 0;padding:10px 12px;border-radius:10px;background:var(--leaf-soft);border-left:4px solid var(--leaf)">✓ Бот олдлоо: <b>@${esc(u)}</b><br>
+        Одоо <a href="https://t.me/${esc(u)}" target="_blank" rel="noopener"><b>энд дарж ботоо нээгээд «Start» (Эхлэх)</b></a> дарна уу.
+        Утсан дээрээ Telegram-д <b>@${esc(u)}</b> гэж хайж болно. <span id="tgDots">Хүлээж байна…</span>
+        <div class="btns" style="margin:6px 0 0"><button type="button" class="btn ghost" id="tgStopWait">Болих</button></div></div>`;
+      const t0=Date.now();
+      const tick=async()=>{TG.poll=0;
+        if(!$('#tgWait')||!$('#tgBox').open)return;
+        if(Date.now()-t0>180000){tgStop();return tgMsg('3 минут хүлээсэн ч ботод Start дарагдсангүй. Дахин «Холбох» дарна уу.',true);}
+        let ups=[];try{ups=await tgApi(tok,'getUpdates','timeout=0&allowed_updates=%5B%22message%22%5D');}catch(x){}
+        const m=ups.map(x=>x.message).filter(x=>x&&x.chat&&x.chat.type==='private').pop();
+        if(m){tgStop();inp.value='';tgMsg('Чат олдлоо, хадгалж байна…');
+          try{await tgFinish(tok,m.chat.id,name);}catch(x){tgMsg(x.status===404?'Эхлээд supabase-setup-14.sql-ийг ажиллуулна уу.':x.message,true);}
+          return;}
+        TG.poll=setTimeout(tick,3000);};
+      tick();
+    }
+  }catch(x){b.disabled=false;tgMsg(x.message,true);}
+});
+$('#tgBox').addEventListener('change',async e=>{
+  if(e.target.id!=='tgName'||!TG.cfg||TG.form)return;
+  try{await sbRpc('admin_notify_set',{p_token:null,p_chat:TG.cfg.chat,p_send_name:e.target.checked,p_off:false});TG.cfg.send_name=e.target.checked;
+    tgMsg(e.target.checked?'✓ Нэрийг бичнэ.':'✓ Нэргүйгээр «Шинэ багш бүртгүүллээ» гэж л бичнэ.');}
+  catch(x){e.target.checked=!e.target.checked;tgMsg(x.message,true);}
+});
 function teachersRender(){
   reqBadge();
   const box=$('#tList'),me=AUTH.sess&&AUTH.sess.user.id,today=localDay();
