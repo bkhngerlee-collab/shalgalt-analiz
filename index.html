@@ -4852,13 +4852,22 @@ function p2Extract(src){
   const L=String(src||'').replace(/\r/g,'').split('\n'),out=[],tasks=[],keys={},topics={};
   const HEAD=/^\s*2\.(\d{1,2})(?:\s*[.):\-–]\s*|\s+)(\S.*)$/,SUB=/^\s*([a-j])\s*[.)]\s*(\S.*)$/i,NUMQ=/^\s*\d{1,3}\s*[.)]\s*\S/;
   const KH=/^(?:зөв\s+)?(?:хариулт(?:ууд|ын\s+түлхүүр)?|түлхүүр|answers?(?:\s+key)?)\s*:?\s*$/i,TH=/^(?:агуулга(?:ууд)?|сэдэв(?:үүд)?|topics?)\s*:?\s*$/i;
-  let cur=null,sec='';
+  let cur=null,sec='',lastK=null;
   const close=()=>{if(cur&&cur.subs.length>=2)tasks.push(cur);else if(cur)out.push(...cur.raw);cur=null;};
+  /* Хариултын хүснэгтийн толгой: «Даалгавар │ Хариулт │ Оноо», «№ │ Зөв хариулт» */
+  const KH2=/^(?:даалгавар|асуулт|№|дугаар)\w*\s*[—\-–|\t]\s*(?:зөв\s+)?хариу/i;
+  /* «a=6», «— b=2», «а) 3» — II хэсгийн нэг мөрийн хариулт (босоо хүснэгтийн дараагийн мөр) */
+  const PAIR1=/^\s*(?:[—\-–|]\s*)?[a-jа-к]\s*[.):=\-–]?\s*\d\s*(?:оноо)?\s*$/i;
+  /* «2.1 — a=6 …», «2.1 316524» — даалгаврын текст биш, хариулт */
+  const KEYISH=/^(?:[—\-–|]\s*)?(?:[a-jа-к]\s*[=:]\s*\d|\d{3,10}\s*$)/i;
   for(const l of L){
-    if(KH.test(l.trim())){close();sec='key';out.push(l);continue;}
-    if(TH.test(l.trim())){close();sec='top';out.push(l);continue;}
+    if(KH.test(l.trim())||KH2.test(l.trim())){close();sec='key';lastK=null;out.push('Хариулт');continue;}
+    if(TH.test(l.trim())){close();sec='top';lastK=null;out.push(l);continue;}
     const h=l.match(HEAD);
-    if(sec){if(h){(sec==='key'?keys:topics)[+h[1]]=h[2].trim();continue;}out.push(l);continue;}
+    if(!sec&&h&&KEYISH.test(h[2].trim())){close();keys[+h[1]]=h[2].trim();lastK=+h[1];continue;}
+    if(lastK!=null&&PAIR1.test(l)){keys[lastK]+=' '+l.replace(/[—\-–|]/g,' ').trim();continue;}
+    if(l.trim())lastK=null;
+    if(sec){if(h){(sec==='key'?keys:topics)[+h[1]]=h[2].trim();if(sec==='key')lastK=+h[1];continue;}out.push(l);continue;}
     if(h){close();let t=h[2],pts=null;t=t.replace(/[\[(]\s*(\d+(?:[.,]\d+)?)\s*(?:оноо|points?|marks?)\s*[\])]/i,(mm,p)=>{pts=parseFloat(p.replace(',','.'));return'';}).trim();
       cur={n:+h[1],text:t,pre:[],subs:[],points:pts,raw:[l]};continue;}
     if(cur){const s=l.match(SUB),want=M2LET[cur.subs.length];
@@ -4869,7 +4878,7 @@ function p2Extract(src){
       if(cur.subs.length)cur.subs[cur.subs.length-1]+=' '+l.trim();else cur.text+='\n'+l.trim();cur.raw.push(l);continue;}
     out.push(l);}
   close();
-  return{text:out.join('\n'),tasks,keys,topics};
+  return{text:out.join('\n'),tasks,keys,topics,warn:[]};
 }
 /* Задгай даалгавар (IV хэсэг): "Задгай даалгавар" гарчгийн доорх "1. … /2 оноо/", "2. …" даалгаврууд;
    хариултын хэсэг ("Оноожуулалт", "Хариулт", "Үнэлгээ") дэх "Задгай даалгавар" мөрийн доорх мөрүүд → зөв хариултын санаа.
@@ -4976,7 +4985,10 @@ function bulkImport(SRC,X){X=X||{};
     if(isP2(q))q.key=k;else if(k&&OPTS.includes(k[0]))q.key=k[0];});
   /* II хэсэг (хүснэгт) — салгаж авсан "2.1 …" даалгаврууд */
   P2X.tasks.forEach(t=>{const q=newQ(2);q.rows=Math.min(10,t.subs.length);q.subs=t.subs.slice(0,q.rows);q.text=t.text.trim();
-    q.points=t.points!=null&&t.points>0?t.points:q.rows;q.key=mNorm(P2X.keys[t.n]||'',q.rows);if(P2X.topics[t.n])q.topic=P2X.topics[t.n].slice(0,80);q._p2=t.n;qs.push(q);});
+    q.points=t.points!=null&&t.points>0?t.points:q.rows;q.key=mNorm(P2X.keys[t.n]||'',q.rows);
+    if(P2X.keys[t.n]!=null){const got=(q.key.match(/[^-]/g)||[]).length;
+      if(got<q.rows)P2X.warn.push('2.'+t.n+' даалгавар '+q.rows+' мөртэй ч хариултаас '+got+' мөрийнх нь л олдлоо ('+(q.key||'хоосон')+') — хариултаа шалгана уу');}
+    if(P2X.topics[t.n])q.topic=P2X.topics[t.n].slice(0,80);q._p2=t.n;qs.push(q);});
   if(P2X.tasks.length)state.exam.p2N=10;   // хүснэгт: 0–9
   /* IV хэсэг — салгаж авсан задгай даалгаврууд (зураг нь onParsed-ээр очно) */
   const new3=openQs(P3X);qs.push(...new3);
@@ -5044,7 +5056,7 @@ function bulkImport(SRC,X){X=X||{};
   undoBar('Асуултууд солигдлоо ('+n+' асуулт).');
   m.style.color=noKey?'var(--iodine)':'';m.textContent=(tbl?'Хүснэгт танигдлаа. ':'')+'I хэсэгт '+p1.length+' асуулт'+(p2.length?', II хэсэгт '+p2.length+' асуулт':'')+(new4.length?', III хэсэгт (үнэн/худал) '+new4.length+' асуулт':'')+(new3.length?', IV хэсэгт (задгай) '+new3.length+' даалгавар':'')+' орлоо.'
     +(new3.length?' Задгай даалгаврын '+new3.filter(q=>q.key).length+'-д зөв хариултын санаа орлоо.':'')
-    +(P3X.warn.length?' ⚠ '+P3X.warn.join('; ')+'.':'')+(P3X.cut?' Задгай даалгавар 6-аас олон байсан тул эхний 6-г авлаа.':'')
+    +(P2X.warn.length?' ⚠ '+P2X.warn.join('; ')+'.':'')+(P3X.warn.length?' ⚠ '+P3X.warn.join('; ')+'.':'')+(P3X.cut?' Задгай даалгавар 6-аас олон байсан тул эхний 6-г авлаа.':'')
     +(Object.keys(KK.mc).length+Object.keys(KK.tf).length?' Төгсгөлийн хариултын түлхүүрийг ('+(Object.keys(KK.mc).length+Object.keys(KK.tf).length)+') дугаараар нь оноолоо.':'')
     +(Object.keys(KK.topics).length?' Төгсгөлийн агуулгын жагсаалтыг ('+Object.keys(KK.topics).length+' асуулт) оноолоо.':'')
     +(grpUsed?' Бүлгийн "Агуулга:" гарчгийг доорх асуултуудад оноолоо.':'')
