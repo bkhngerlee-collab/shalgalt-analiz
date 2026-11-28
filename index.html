@@ -814,6 +814,23 @@ tr.pick{cursor:pointer} tr.pick:hover{background:var(--bg)} tr.sel{background:va
 .roster{display:flex;flex-wrap:wrap;gap:6px;margin:12px 0 4px}
 .chip{font:inherit;font-size:.88rem;border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:999px;padding:5px 12px;cursor:pointer}
 .chip.done{background:var(--leaf-soft);border-color:var(--leaf);color:var(--leaf);font-weight:600}
+/* Эзний хэрэглээний статистик */
+.tu-top{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:0 0 6px}
+.tu-top .chip.on{background:var(--leaf);border-color:var(--leaf);color:#fff;font-weight:600}
+.tu-sec{margin:14px 0 6px;font-size:.95rem}.tu-sec small{font-weight:400;color:var(--muted)}
+.tu-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:10px}
+.tu-card{border:1px solid var(--line);border-radius:12px;padding:10px 12px;background:var(--surface);min-width:0}
+.tu-card h4{margin:0 0 8px;font-size:.9rem}
+.tu-wide{grid-column:1/-1}
+.tu-row{display:grid;grid-template-columns:minmax(0,1fr) auto 3.6em;grid-template-areas:"k b s" "bar bar bar";gap:2px 8px;align-items:center;font-size:.82rem;margin:0 0 7px}
+.tu-k{grid-area:k;line-height:1.25}.tu-row b{grid-area:b}.tu-row small{grid-area:s}.tu-row .tu-bar{grid-area:bar;height:7px}
+.tu-bar{height:10px;background:var(--leaf-soft);border-radius:5px;overflow:hidden}
+.tu-bar i{display:block;height:100%;background:var(--leaf);border-radius:5px}
+.tu-row b{text-align:right}.tu-row small{color:var(--muted);text-align:right}
+.tu-tab{width:100%;border-collapse:collapse;font-size:.82rem}
+.tu-tab th,.tu-tab td{padding:4px 6px;border-bottom:1px solid var(--line);text-align:right;white-space:nowrap}
+.tu-tab th:first-child,.tu-tab td:first-child{text-align:left;white-space:normal}
+.tu-tab th{color:var(--muted);font-weight:600}
 .chip.act{box-shadow:0 0 0 3px var(--iodine)}
 .progress{font-size:.88rem;color:var(--muted)}
 .qcard{border:1px solid var(--line);border-radius:8px;padding:8px 12px;margin-bottom:6px}
@@ -1560,6 +1577,9 @@ body.student #studentApp{display:block}
       <textarea id="tMails" readonly rows="4" style="min-height:90px;font-family:ui-monospace,Consolas,monospace;font-size:.9rem" aria-label="Багш нарын имэйл"></textarea>
       <div class="btns" style="margin:6px 0 0"><button type="button" class="btn" id="tMailCopy">📋 Хуулах</button>
         <button type="button" class="btn ghost" id="tMailCsv">⬇ Excel (CSV) татах</button><span class="msg" id="tMailMsg" role="status" style="margin:0;align-self:center"></span></div>
+      <h3 style="margin:18px 0 4px;font-size:1.02rem">📊 Хэрэглээний статистик</h3>
+      <p class="hint" style="margin:0 0 8px">Багш нарын бүтэц, идэвх, программын аль боломжийг хэр ашиглаж байгааг <b>зөвхөн тоо, хувиар</b> харуулна — нэр, дүн харагдахгүй. «📋 Хүснэгтээр хуулах» дарж илтгэл, тайландаа буулгаж болно.</p>
+      <div id="tUse"></div>
       <h3 style="margin:18px 0 4px;font-size:1.02rem">🏆 Багш нарын идэвхийн эрэмбэ</h3>
       <p class="hint" style="margin:0 0 8px">Зөвхөн <b>тоо</b> харагдана — сурагчийн нэр, дүн харагдахгүй. Дансаараа нэвтэрч үүлэнд хадгалдаг багшийн өгөгдлөөр тооцно. Баганын гарчиг дээр дарж эрэмбэлнэ.</p>
       <div id="tRank"></div>
@@ -5070,7 +5090,7 @@ function applyTailToExam(K,m){
   m.textContent=(nk||nt?'✓ Асуултууд хэвээр. '+(tv?VNAMES[tv]+' хувилбарын ':'')+(nk?nk+' асуултад зөв хариулт':'')+(nk&&nt?', ':'')+(nt?nt+' асуултад агуулга':'')+' оноолоо.':'Оноох зүйл олдсонгүй.')
     +(over.length?' ⚠ '+over.join('; ')+' — шалгана уу.':'')+' Доорх жагсаалтаас шалгана уу.';
 }
-$('#qbulkBtn').addEventListener('click',()=>bulkImport($('#qbulk').value));
+$('#qbulkBtn').addEventListener('click',()=>bulkImport($('#qbulk').value,{done:(mm,keyOnly)=>{if(!keyOnly&&!state.exam.src){state.exam.src='paste';save();}}}));
 /* Хуулж буулгасан эсвэл файлаас (Word, Excel, txt) уншсан текстийг асуулт болгоно.
    X.onParsed(qs) — асуулт танигдсаны дараа (зураг оноох), X.done(m) — мессеж бичсэний дараа, X.tv — хувилбар */
 /* II хэсэг (хүснэгт): "2.1 даалгавар … [6 оноо]" + доор нь "a. … b. … f." мөрүүд; хариулт "2.1 316524" / "2.1: a3 b1 …";
@@ -5439,7 +5459,7 @@ async function impFiles(list){
         /* Б, В … хувилбар руу оруулахын өмнө хувилбарын тоо, «Өөр асуултууд» горимыг тохируулна */
         if(p.v>0){if(vCount()<maxV+1)vSet(maxV+1);if(state.exam.vmode!=='own'){state.exam.vmode='own';save();renderSetup();}}
         let rep=null;
-        bulkImport(p.text,{tv:p.v,onParsed:qs=>{rep=docxAttach(qs,p.D,p.text);rep.src=p.text;},done:async(mm,keyOnly)=>{
+        bulkImport(p.text,{tv:p.v,onParsed:qs=>{rep=docxAttach(qs,p.D,p.text);rep.src=p.text;},done:async(mm,keyOnly)=>{if(!keyOnly&&!p.v&&state.exam.src!=='pdf'){state.exam.src='word';save();}
           if(!keyOnly&&rep)await docxFinish(rep,p.D,parts.length===1?pdf:null,mm,p.name+(parts.length>1||p.v>0?' · '+VNAMES[p.v]+' хувилбар':''));
           msgs.push((parts.length>1?VNAMES[p.v]+': ':'')+mm.textContent);
           if(k+1<parts.length)run(k+1);
@@ -5452,7 +5472,7 @@ async function impFiles(list){
       const tsv=s=>s.rows.map(r=>(r||[]).map(c=>String(c||'').replace(/[\t\n\r]+/g,' ')).join('\t')).join('\n');
       const multi=sheets.length>1&&vOwn();
       if(multi){sheets.slice(0,vCount()).forEach((s,v)=>bulkImport(tsv(s),{tv:v,mode:'auto'}));return;}
-      bulkImport(tsv(sheets[0]),{done:(mm,keyOnly)=>{if(!keyOnly)impTitle(xlsx.name);if(sheets.length>1)mm.textContent+=' (Excel-ийн эхний «'+sheets[0].name+'» хуудсыг уншлаа. Бусад хуудсыг Б, В хувилбар болгох бол дээрх «Хувилбарын тоо»-г тохируулаад дахин сонгоно уу.)';}});return;}
+      bulkImport(tsv(sheets[0]),{done:(mm,keyOnly)=>{if(!keyOnly){impTitle(xlsx.name);state.exam.src='excel';save();}if(sheets.length>1)mm.textContent+=' (Excel-ийн эхний «'+sheets[0].name+'» хуудсыг уншлаа. Бусад хуудсыг Б, В хувилбар болгох бол дээрх «Хувилбарын тоо»-г тохируулаад дахин сонгоно уу.)';}});return;}
     if(txt){let t=await txt.text();if(/\.csv$/i.test(txt.name)&&!t.includes('\t'))t=t.split(/\r?\n/).map(l=>{const o=[];let c='',q=false;for(const ch of l){if(ch==='"'){q=!q;continue;}if((ch===','||ch===';')&&!q){o.push(c);c='';}else c+=ch;}o.push(c);return o.join('\t');}).join('\n');
       bulkImport(t);}
   }catch(e){say(e.message||String(e),true);}
@@ -5586,7 +5606,7 @@ function keyOnlyApply(){
   const fresh=!blankEx;
   if(fresh)addExam(blank(0));else{if(matGuard())return;snap('хариултаас асуулт үүсгэх');}
   const used=Math.max(4,...p1.map(q=>q.key?OPTS10.indexOf(q.key)+1:0));
-  state.exam.optN=Math.min(5,used);
+  state.exam.optN=Math.min(5,used);state.exam.src='key';
   const qs=[...p1,...p4],moved=qs.some((q,i)=>q._n!==i+1);
   qs.forEach(q=>{if(moved)q.lbl=String(q._n);delete q._n;});
   state.exam.questions=qs;
@@ -6328,7 +6348,7 @@ $('#saveStudent').addEventListener('click',()=>{
   const miss=draft.filter(a=>!a).length;
   if(miss&&!confirm(miss+' асуулт хариулаагүй байна. Тэр хэвээр нь хадгалах уу?'))return;
   const ex=editId?state.students.find(s=>s.id===editId):state.students.find(s=>s.cls===cls&&s.name===name);
-  if(ex){ex.answers=draft.slice();ex.name=name;ex.v=entryVar;}else state.students.push({id:uid(),cls,name,answers:draft.slice(),v:entryVar});
+  if(ex){ex.answers=draft.slice();ex.name=name;ex.v=entryVar;}else state.students.push({id:uid(),cls,name,answers:draft.slice(),v:entryVar,src:'hand'});
   queueStudent(cls,name,draft);
   if(isAbsent(cls,name))setAbsent(cls,name,false);
   ensureRoster(cls,name);save();
@@ -6348,7 +6368,7 @@ function importText(t){
     const qq=state.exam.questions,ans=c.slice(2).map((v,i)=>isP2(qq[i])?p2Norm(qq[i],v):norm(v));
     if(!ans.some(Boolean)||!c[1])return;
     const a=Array.from({length:n},(_,i)=>ans[i]||''),ex=state.students.find(s=>s.cls===c[0]&&s.name===c[1]);
-    if(ex)ex.answers=a;else state.students.push({id:uid(),cls:c[0],name:c[1],answers:a});
+    if(ex)ex.answers=a;else state.students.push({id:uid(),cls:c[0],name:c[1],answers:a,src:'list'});
     queueStudent(c[0],c[1],a);
     ensureRoster(c[0],c[1]);added++;
   });
@@ -8340,7 +8360,7 @@ async function importAnswersXlsx(f){
       if(c&&code){const byCode=c.students.find(x=>c.codes[x]===code);if(byCode&&(!name||vNorm(name)===vNorm(byCode)||!c.students.includes(name)))name=byCode;}
       if(!name){miss.push((cls||'?')+' '+(code?pad2(code):'?'));return;}
       const ex=state.students.find(x=>x.cls===cls&&x.name===name);
-      if(ex){ex.answers=ans;updated++;}else{state.students.push({id:uid(),cls,name,answers:ans});added++;}
+      if(ex){ex.answers=ans;updated++;}else{state.students.push({id:uid(),cls,name,answers:ans,src:'excel'});added++;}
       queueStudent(cls,name,ans);
       ensureRoster(cls,name);});
     save();renderEntry();
@@ -8675,7 +8695,7 @@ function omrSave(it){
   const n=state.exam.questions.length;
   const ans=mergeAns(it.r,it.r.p3?it.answers:toCanon(it.v||0,it.answers),ex,n);
   if(ex){ex.answers=ans;if(!it.r.p3)ex.v=it.v||0;}
-  else state.students.push({id:uid(),cls:it.cls,name:it.name,answers:ans,v:it.r.p3?0:(it.v||0)});
+  else state.students.push({id:uid(),cls:it.cls,name:it.name,answers:ans,v:it.r.p3?0:(it.v||0),src:'scan'});
   it.saved=true;
   if(vcfg().api&&vcfg().key){ccfg().queue.push({id:uid(),examId:state.id,cls:it.cls,name:it.name,answers:cloudAns(it.r,ans)});setTimeout(cloudPoll,300);}
   return true;
@@ -11521,6 +11541,9 @@ async function tFetch(){
   catch(e){tStats=null;tStatsErr=e.status===404||/could not find|schema cache/i.test(e.message)?'need':e.message;}
   /* Аймаг/дүүрэг, утас (12-р алхмын SQL) — байхгүй бол зүгээр алгасна */
   try{const c=await sbRpc('admin_teacher_contacts')||[];const m={};c.forEach(x=>{m[x.id]=x;});tRows.forEach(t=>{const x=m[t.id];if(x){t.region=x.region||'';t.phone=x.phone||'';}});}catch(e){}
+  /* Хэрэглээний нэгдсэн тоо (15-р алхмын SQL) — байхгүй бол зөвхөн бүтэц, идэвхийг харуулна */
+  try{tUsage=await sbRpc('admin_usage_stats');tUsageErr='';}
+  catch(e){tUsage=null;tUsageErr=e.status===404||/could not find|schema cache/i.test(e.message)?'need':e.message;}
 }
 /* ---------- Эзэнд: имэйлийн нэгдсэн жагсаалт ба идэвхийн эрэмбэ ---------- */
 let tStats=null,tStatsErr='',tSort={k:'students',d:-1};
@@ -11554,7 +11577,52 @@ function tRankRender(){
       ${has?`<td class="num">${r.s.students}</td><td class="num">${r.s.roster} <small style="color:var(--muted)">(${r.s.classes})</small></td><td class="num">${r.s.oexams} <small style="color:var(--muted)">(${r.s.oattempts})</small></td>`:''}
       <td title="${esc(String(r.s.last).slice(0,16).replace('T',' '))}">${tAgo(r.s.last)}</td></tr>`).join('')}</tbody></table></div>`;
 }
-function tExtraRender(){const x=$('#tExtra');if(!x)return;x.hidden=!tRows.length;if(!tRows.length)return;tMailRender();tRankRender();}
+function tExtraRender(){const x=$('#tExtra');if(!x)return;x.hidden=!tRows.length;if(!tRows.length)return;tMailRender();tUseRender();tRankRender();}
+/* ---------- Эзэнд: хэрэглээний статистик (бүтэц, идэвх, боломж, өсөлт) — зөвхөн тоо, хувь ---------- */
+let tUsage=null,tUsageErr='',tUseF='all',tUseCopy=[];
+const T_SRC_E={pdf:'PDF файлаас',word:'Word файлаас',excel:'Excel файлаас',paste:'Хуулж буулгасан',key:'Зөвхөн хариултаар','?':'Гараар / хуучин (тодорхойгүй)'};
+const T_SRC_A={scan:'Камераар уншуулсан',online:'Цахим шалгалт (QR)',excel:'Excel-ээр',hand:'Гараар бөглөсөн',list:'Жагсаалтаар буулгасан','?':'Хуучин (тодорхойгүй)'};
+const T_ACT=['Идэвхтэй (30 хоногт)','Саяхан (31–90 хоног)','Идэвхгүй (90+ хоног)','Шалгалт үүсгээгүй'];
+function tUseRender(){
+  const box=$('#tUse');if(!box)return;const now=Date.now();tUseCopy=[];
+  const R=tRows.filter(t=>tUseF==='all'||(tUseF==='ok'?tState(t)==='ok':tStat(t).exams>0)),N=R.length;
+  const UND='Тодорхойгүй',grp=f=>{const m={};R.forEach(t=>{const k=String(f(t)||'').trim()||UND;m[k]=(m[k]||0)+1;});
+    return Object.entries(m).sort((a,b)=>(a[0]===UND)-(b[0]===UND)||b[1]-a[1]);};
+  const pc=(v,tot)=>tot?Math.round(v/tot*1000)/10+'%':'';
+  const card=(title,rows,tot,wide)=>{tUseCopy.push([title]);rows.forEach(([k,v])=>tUseCopy.push(['',k,v,pc(v,tot)]));
+    return`<div class="tu-card${wide?' tu-wide':''}"><h4>${title}</h4>${rows.length?rows.map(([k,v])=>`<div class="tu-row"><span class="tu-k" title="${esc(k)}">${esc(k)}</span><span class="tu-bar"><i style="width:${tot?Math.max(v?2:0,Math.round(v/tot*100)):0}%"></i></span><b>${v}</b><small>${pc(v,tot)}</small></div>`).join(''):'<p class="hint" style="margin:0">Мэдээлэл алга</p>'}</div>`;};
+  const gN=g=>{g=String(g||'').trim().toLowerCase();return/^(эм|эмэгт|female|f$)/.test(g)?'Эмэгтэй':/^(эр|эрэгт|male|m$)/.test(g)?'Эрэгтэй':g?g[0].toUpperCase()+g.slice(1):'';};
+  const act=t=>{const s=tStat(t);if(!s.exams)return T_ACT[3];const d=s.last?(now-new Date(s.last).getTime())/864e5:1e9;return d<=30?T_ACT[0]:d<=90?T_ACT[1]:T_ACT[2];};
+  const am={};R.forEach(t=>{const k=act(t);am[k]=(am[k]||0)+1;});
+  const agg=f=>{const m={};R.forEach(t=>{const k=String(f(t)||'').trim()||UND,s=tStat(t),o=m[k]=m[k]||{t:0,e:0,s:0};o.t++;o.e+=s.exams||0;o.s+=s.students||0;});
+    return Object.entries(m).sort((a,b)=>(a[0]===UND)-(b[0]===UND)||b[1].e-a[1].e||b[1].t-a[1].t).slice(0,12);};
+  const atab=(title,rows)=>{tUseCopy.push([title,'Багш','Шалгалт','Хамрагдсан сурагч']);rows.forEach(([k,o])=>tUseCopy.push(['  '+k,o.t,o.e,tStats?o.s:'']));
+    return`<div class="tu-card"><h4>${title}</h4><table class="tu-tab"><thead><tr><th></th><th>Багш</th><th>Шалгалт</th><th>Сурагч</th></tr></thead><tbody>${rows.map(([k,o])=>`<tr><td>${esc(k)}</td><td>${o.t}</td><td>${o.e}</td><td>${tStats?o.s:'–'}</td></tr>`).join('')}</tbody></table></div>`;};
+  let h=`<div class="tu-top"><div class="ex-chips" role="group" aria-label="Аль багш нарыг тооцох">${[['all','Бүх багш'],['ok','Эрхтэй'],['act','Шалгалт үүсгэсэн']].map(([k,l])=>`<button type="button" class="chip${tUseF===k?' on':''}" data-tuf="${k}">${l}</button>`).join('')}</div>
+    <span class="hint" style="margin:0">${N} багш</span><button type="button" class="btn ghost" id="tUseCopyBtn" style="margin-left:auto">📋 Хүснэгтээр хуулах</button><span class="msg" id="tUseMsg" role="status" style="margin:0"></span></div>`;
+  h+='<h4 class="tu-sec">👥 Багш нарын бүтэц</h4><div class="tu-grid">'+card('Хүйс',grp(t=>gN(t.gender)),N)+card('Аймаг, дүүрэг',grp(t=>t.region),N)+card('Мэргэжил (хичээл)',grp(t=>t.subject),N)+card('Түвшин, зэрэг',grp(t=>t.level),N)+'</div>';
+  h+='<h4 class="tu-sec">⚡ Идэвх</h4><div class="tu-grid">'+card('Идэвхийн түвшин',T_ACT.map(k=>[k,am[k]||0]),N)+atab('Аймаг, дүүргээр',agg(t=>t.region))+atab('Мэргэжлээр',agg(t=>t.subject))+'</div>';
+  const U=tUsage;
+  if(U&&typeof U==='object'){
+    const E=+U.exams||0,A=+U.answers||0,src=(o,L)=>Object.entries(o||{}).map(([k,v])=>[L[k]||k,+v]).sort((a,b)=>(a[0]===L['?'])-(b[0]===L['?'])||b[1]-a[1]);
+    h+='<h4 class="tu-sec">🧰 Боломжуудын хэрэглээ <small>(бүх багш)</small></h4><div class="tu-grid">'
+      +card('Шалгалтыг оруулсан арга ('+E+' шалгалт)',src(U.exam_src,T_SRC_E),E)
+      +card('Шалгалтын бүтэц',[['Хувилбартай (А, Б …)',+U.exams_variants||0],['II хэсэгтэй (мөр × цифр)',+U.exams_p2||0],['Үнэн/худалтай',+U.exams_tf||0],['Задгай даалгавартай',+U.exams_open||0],['Зурагтай асуулттай',+U.exams_img||0],['Сурагчийн хариулт орсон',+U.exams_used||0]],E)
+      +card('Хариултыг авсан арга ('+A+' хариулт)',src(U.answer_src,T_SRC_A),A)
+      +card('Цахим хэрэгсэл',[['Цахим шалгалт нийтэлсэн',+U.oexams||0],['Цахимаар шалгалт өгсөн',+U.oattempts||0],['Нэр томьёоны сорил',+U.quizzes||0],['Сорилд оролцсон',+U.quiz_attempts||0]],0)+'</div>';
+    const M=(Array.isArray(U.months)?U.months:[]).filter(m=>/^\d{4}-\d{2}$/.test(m.m)).slice(-12),mx=Math.max(1,...M.map(m=>+m.exams||0));
+    tUseCopy.push(['Сар бүрийн өсөлт','Шинэ багш','Шалгалт','Хариулт','Цахимаар']);M.forEach(m=>tUseCopy.push(['  '+m.m,m.teachers,m.exams,m.answers,m.online]));
+    h+='<h4 class="tu-sec">📈 Сар бүрийн өсөлт</h4><div class="tu-card tu-wide"><table class="tu-tab"><thead><tr><th>Сар</th><th>Шинэ багш</th><th style="text-align:left;width:38%">Шалгалт</th><th>Хариулт</th><th>Цахимаар</th></tr></thead><tbody>'
+      +(M.length?M.map(m=>`<tr><td>${esc(m.m)}</td><td>${+m.teachers||0}</td><td style="text-align:left"><span class="tu-bar" style="display:inline-block;width:70%;vertical-align:middle"><i style="width:${Math.round((+m.exams||0)/mx*100)}%"></i></span> ${+m.exams||0}</td><td>${+m.answers||0}</td><td>${+m.online||0}</td></tr>`).join(''):'<tr><td colspan="5">Мэдээлэл алга</td></tr>')+'</tbody></table></div>';
+  }else h+=`<div class="hp-warn" style="margin:10px 0 0">${tUsageErr==='need'?'Боломжуудын хэрэглээ (шалгалтыг оруулсан арга, хариултыг авсан арга, цахим хэрэгсэл) болон сар бүрийн өсөлтийг харахын тулд Supabase-ийн SQL Editor дээр <b>supabase-setup-15.sql</b>-ийг ажиллуулна уу.':esc(tUsageErr||'Хэрэглээний статистик ачаалагдсангүй.')}</div>`;
+  box.innerHTML=h;
+}
+$('#tUse').addEventListener('click',async e=>{
+  const f=e.target.closest('[data-tuf]');if(f){tUseF=f.dataset.tuf;tUseRender();return;}
+  if(e.target.id==='tUseCopyBtn'){const txt=tUseCopy.map(r=>r.join('\t')).join('\n'),m=$('#tUseMsg');
+    try{await navigator.clipboard.writeText(txt);}catch(x){const ta=document.createElement('textarea');ta.value=txt;document.body.appendChild(ta);ta.select();document.execCommand('copy');ta.remove();}
+    if(m)m.textContent='✓ Хуулагдлаа — Word, Excel-д буулгана уу';}
+});
 $('#tMailF').addEventListener('change',tMailRender);$('#tMailSep').addEventListener('change',tMailRender);
 $('#tMailCopy').addEventListener('click',async()=>{const ta=$('#tMails'),m=$('#tMailMsg');
   try{await navigator.clipboard.writeText(ta.value);}catch(e){ta.select();document.execCommand('copy');}
