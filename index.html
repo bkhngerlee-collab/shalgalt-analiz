@@ -11385,6 +11385,42 @@ async function authEnter(){
   try{await cloudFirstLoad();}
   catch(e){SYNC.err=e.net||netErr(e)?'offline':e.message;}
   renderSetup();syncUi();startSyncLoop();mfaRender();
+  setTimeout(contactCheck,1500);
+}
+/* Аймаг/дүүрэг, утсыг бүртгэлд нэмэхээс (11-24) өмнө бүртгүүлсэн багш нарт нэг удаа нөхөж бичүүлнэ.
+   Бүртгэлийн мэдээлэлд (user_metadata) хадгална — эзний статистик (admin_teacher_contacts) шууд харна. */
+const CONTACT_LATER='shalgalt-contact-later';
+async function contactCheck(force){
+  if(!AUTH.sess||$('#contactDlg'))return;
+  if(!force){const l=+lsGet(CONTACT_LATER)||0;if(Date.now()-l<3*864e5)return;}
+  let u;try{u=await sbReq('/auth/v1/user');}catch(e){return;}
+  const md=(u&&u.user_metadata)||{},reg=String(md.region||'').trim(),ph=String(md.phone||'').trim();
+  if(reg&&ph&&!force)return;
+  const d=document.createElement('div');d.id='contactDlg';
+  d.style.cssText='position:fixed;inset:0;z-index:60;background:rgba(0,0,0,.45);display:flex;align-items:center;justify-content:center;padding:16px';
+  d.innerHTML=`<form class="panel" style="max-width:400px;width:100%;margin:0" novalidate>
+    <h2>📍 Бүртгэлээ гүйцээнэ үү</h2>
+    <p class="hint" style="margin:0 0 8px">Та аймаг, дүүрэг, утасны дугаараа бичээгүй байна. Эрхийн хугацаа, шинэчлэлийн талаар холбогдоход хэрэгтэй. Зөвхөн программын эзэн харна.</p>
+    <label for="ctRegion">Аймаг, дүүрэг</label><select id="ctRegion"><option value="">— Сонгоно уу —</option>${MN_REGIONS.map(([g,L])=>`<optgroup label="${esc(g)}">${L.map(x=>`<option${x===reg?' selected':''}>${esc(x)}</option>`).join('')}</optgroup>`).join('')}</select>
+    <label for="ctPhone" style="margin-top:10px">Утасны дугаар</label><input id="ctPhone" type="tel" inputmode="tel" autocomplete="tel" placeholder="99112233" value="${esc(ph)}">
+    <div class="btns"><button class="btn" type="submit">Хадгалах</button><button class="btn ghost" type="button" data-x>Дараа</button></div>
+    <div class="msg" id="ctMsg" role="status" style="color:var(--stain)"></div></form>`;
+  document.body.appendChild(d);
+  const f=d.querySelector('form'),m=d.querySelector('#ctMsg');
+  const later=()=>{lsSet(CONTACT_LATER,String(Date.now()));d.remove();};
+  d.querySelector('[data-x]').onclick=later;
+  d.addEventListener('click',e=>{if(e.target===d)later();});
+  (reg?d.querySelector('#ctPhone'):d.querySelector('#ctRegion')).focus();
+  f.addEventListener('submit',async e=>{
+    e.preventDefault();
+    const region=d.querySelector('#ctRegion').value,phone=d.querySelector('#ctPhone').value.replace(/[^\d+]/g,''),btn=f.querySelector('[type=submit]');
+    if(!region){d.querySelector('#ctRegion').focus();return m.textContent='Аймаг, дүүргээ сонгоно уу.';}
+    if(!/^(\+?976)?\d{8}$/.test(phone)){d.querySelector('#ctPhone').focus();return m.textContent='Утасны дугаараа 8 оронтойгоор бичнэ үү (жишээ нь 99112233).';}
+    btn.disabled=true;m.style.color='';m.textContent='Хадгалж байна…';
+    try{await sbReq('/auth/v1/user',{method:'PUT',body:JSON.stringify({data:{region:region.slice(0,60),phone:phone.slice(0,16)}})});
+      lsSet(CONTACT_LATER,'');d.remove();toast('Баярлалаа! Мэдээлэл хадгалагдлаа.');}
+    catch(x){m.style.color='var(--stain)';m.textContent=authErr({msg:x.message});btn.disabled=false;}
+  });
 }
 async function authAfterLogin(j){
   AUTH.sess=sessFrom(j);
