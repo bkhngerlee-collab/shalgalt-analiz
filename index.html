@@ -760,6 +760,8 @@ body.sc .sync-pill{font-size:.7rem}
 .t-st{text-align:right;font-size:.9rem}
 .t-act{grid-column:1/-1;display:flex;flex-wrap:wrap;gap:6px}
 .t-act .btn{padding:5px 10px;font-size:.84rem}
+.t-note{grid-column:1/-1;border-radius:10px;padding:8px 10px;background:var(--leaf-soft);border-left:4px solid var(--leaf);font-size:.88rem}
+.t-note .btns{margin:6px 0 0;gap:6px}.t-note .btn{padding:5px 10px;font-size:.84rem;text-decoration:none}
 @media(max-width:560px){.t-row{grid-template-columns:1fr}.t-st{text-align:left}}
 .confetti{position:fixed;inset:0;pointer-events:none;z-index:50;overflow:hidden}
 .confetti span{position:absolute;top:-40px;animation-name:fall;animation-timing-function:linear;animation-fill-mode:forwards}
@@ -11307,7 +11309,8 @@ function teachersRender(){
           <span style="align-self:center;font-size:.84rem;color:var(--muted)">${verb}</span>
           ${licBtn}${T_DUR.map(([d,l])=>`<button class="btn ${fresh?'':'ghost'}" data-t="ok" data-d="${d}">${l}</button>`).join('')}
           ${t.approved?'<button class="btn danger" data-t="no">Эрх хаах</button>':''}
-          <button class="btn ghost" data-t="pw">Нууц үг сэргээх</button></div>`}
+          <button class="btn ghost" data-t="pw">Нууц үг сэргээх</button>
+          ${fresh?'':'<button class="btn ghost" data-t="nt">📨 Мэдэгдэх</button>'}</div>${tNote[t.id]?tNoteBar(t):''}`}
       </div>`;};
   /* Бүлэг бүр хураагддаг: шинэ хүсэлт нээлттэй, бусад нь хураалттай эхэлнэ. Байдал нь дахин зурахад хадгалагдана */
   const kind=t=>t.id===me?'ok':!t.approved&&!t.expires?'new':(!t.approved||(t.expires&&t.expires<today))?'off':'ok';
@@ -11379,19 +11382,52 @@ $('#legList').addEventListener('click',async e=>{
   try{await navigator.clipboard.writeText(txt);m.textContent=done;}
   catch(x){m.textContent=txt;}
 });
+/* ---------- Эрх нээсэн/сунгасан/хаасныг багшид мэдэгдэх: эзний имэйл, SMS апп бэлэн бичвэртэй нээгдэнэ ---------- */
+let tNote={};
+function tNoteText(t){
+  const n=tNote[t.id]||{},nm=String(t.name||'').trim(),hi='Сайн байна уу'+(nm?', '+nm+' багшаа':'')+'. ';
+  const u=n.until?n.until+' хүртэл':'хугацаагүй',app='«Шалгалтын анализ» программд таны эрх ';
+  if(n.kind==='close')return hi+app+'хаагдлаа. Таны шалгалт, дүн устаагүй — эрх дахин нээгдэхэд яг хэвээрээ үргэлжилнэ. Асуух зүйл байвал надад хандаарай.';
+  return hi+app+(n.kind==='ext'?u+' сунгагдлаа':n.kind==='now'?u+' нээлттэй байна':u+' нээгдлээ')+'. '
+    +'Бүртгүүлсэн имэйл'+(t.email?' ('+String(t.email).trim()+')':'')+', нууц үгээрээ нэвтэрнэ үү: '+inviteLink();
+}
+function tNoteBar(t){
+  const txt=tNoteText(t),em=String(t.email||'').trim(),ph=String(t.phone||'').replace(/[^\d+]/g,''),E=encodeURIComponent;
+  const sub='Шалгалтын анализ — '+(tNote[t.id].kind==='close'?'эрх хаагдлаа':'эрх нээгдлээ');
+  const touch=matchMedia('(pointer:coarse)').matches;
+  /* Утсан дээр имэйл апп (mailto), компьютер дээр Gmail-ийн шинэ захидлын цонх */
+  const mail=!em?'':touch?'mailto:'+E(em)+'?subject='+E(sub)+'&body='+E(txt)
+    :'https://mail.google.com/mail/?view=cm&fs=1&to='+E(em)+'&su='+E(sub)+'&body='+E(txt);
+  return`<div class="t-note"><b>📨 Багшид мэдэгдэх:</b> товч дарахад бэлэн бичвэртэй цонх нээгдэнэ — та <b>Илгээх</b>-ийг л дарна.
+    <div style="margin-top:4px;color:var(--muted);font-size:.84rem;font-style:italic">${esc(txt)}</div>
+    <div class="btns">${mail?`<a class="btn" href="${esc(mail)}" target="_blank" rel="noopener">📧 Имэйлээр</a>`:''}
+      ${ph?`<a class="btn${mail?' ghost':''}" href="${esc('sms:'+ph+'?&body='+E(txt))}">💬 SMS-ээр</a>`:''}
+      <button type="button" class="btn ghost" data-t="ntc">📋 Бичвэр хуулах</button>
+      <button type="button" class="btn ghost" data-t="ntx" title="Хаах" aria-label="Мэдэгдэх хэсгийг хаах">✕</button></div></div>`;
+}
 $('#tList').addEventListener('click',async e=>{
   const b=e.target.closest('[data-t]');if(!b)return;
   const row=b.closest('.t-row'),id=row.dataset.id,t=tRows.find(x=>x.id===id)||{},m=$('#inviteMsg');
   m.style.color='';
   try{
+    if(b.dataset.t==='nt'){
+      if(tNote[id])delete tNote[id];else tNote[id]={kind:tState(t)==='ok'?'now':'close',until:t.expires||null};
+      teachersRender();return;}
+    if(b.dataset.t==='ntx'){delete tNote[id];teachersRender();return;}
+    if(b.dataset.t==='ntc'){
+      const txt=tNoteText(t);
+      try{await navigator.clipboard.writeText(txt);}catch(x){const ta=document.createElement('textarea');ta.value=txt;document.body.appendChild(ta);ta.select();document.execCommand('copy');ta.remove();}
+      m.textContent='📋 '+(t.name||'Багш')+'-д илгээх бичвэр хуулагдлаа. Messenger, Viber гэх мэт газар буулгана уу.';return;}
     if(b.dataset.t==='ok'){
       const d=+b.dataset.d,until=b.dataset.u||(d?ymdPlus(d):null);
       await sbRpc('admin_set_access',{p_id:id,p_approved:true,p_expires:until});
-      m.textContent='✓ '+(t.name||'Багш')+': '+(until?until+' хүртэл':'хугацаагүй')+' эрх нээлээ. Түүний хуудас 20 секундын дотор өөрөө нээгдэнэ.';
+      tNote[id]={kind:t.approved&&!(t.expires&&t.expires<localDay())?'ext':'open',until};tOpen.ok=true;
+      m.textContent='✓ '+(t.name||'Багш')+': '+(until?until+' хүртэл':'хугацаагүй')+' эрх нээлээ. Доорх ногоон хэсгийн товчоор багшид мэдэгдээрэй.';
     }else if(b.dataset.t==='no'){
       if(!confirm('Багш: '+(t.name||'(нэргүй)')+'\n\nЭрхийг нь хаах уу?\n\nТүүний шалгалт, дүн устахгүй — дахин нээхэд яг хэвээрээ үргэлжилнэ.'))return;
       /* хугацааг нь хадгална — "Эрх хаагдсан" гэж "Шинэ хүсэлт"-ээс ялгагдана */
       await sbRpc('admin_set_access',{p_id:id,p_approved:false,p_expires:t.expires||localDay()});
+      tNote[id]={kind:'close'};tOpen.off=true;
       m.textContent='⛔ '+(t.name||'Багш')+': эрх хаагдлаа. Өгөгдөл нь хадгалагдсан хэвээр.';
     }else if(b.dataset.t==='pw'){
       const p=prompt('Багш: '+(t.name||'(нэргүй)')+'\n\nТүүнд өгөх шинэ түр нууц үгийг бичнэ үү (6+ тэмдэгт).\nДараа нь энэ нууц үгийг тэр багшид хэлж өгөөрэй — тэр нэвтэрсний дараа "Нууц үг солих"-оор өөрийнхөөрөө сольж болно.');
