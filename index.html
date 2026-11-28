@@ -968,6 +968,8 @@ body.student #studentApp{display:block}
 .imp-ic{font-size:2rem;line-height:1}
 .imp-card.main{border-color:var(--leaf,#047857);background:#ECFDF5;color:#064E3B}
 .imp-card.main small{color:#047857;font-weight:600}
+.imp-card.wide{grid-column:1/-1;flex-direction:row;min-height:0;padding:10px 16px;gap:12px;justify-content:flex-start;text-align:left}
+.imp-card.wide .imp-ic{font-size:1.5rem}.imp-card.wide b{white-space:nowrap}
 .imp-card[aria-expanded="true"]{border-color:var(--leaf,#047857);background:rgba(4,120,87,.08)}
 .imp-guide{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(0,1fr);gap:14px;margin-top:14px}
 .imp-rules,.imp-key{border:1px dashed var(--line,#CFE0D6);border-radius:14px;padding:10px 14px;background:var(--card,#fff)}
@@ -1267,13 +1269,24 @@ body.student #studentApp{display:block}
         <button type="button" class="imp-card" id="pdfImp2"><span class="imp-ic" aria-hidden="true">📄</span><b>PDF файл</b><small>Схем, хүснэгттэй бэлэн тест</small></button>
         <button type="button" class="imp-card" id="impPasteBtn" aria-expanded="false"><span class="imp-ic" aria-hidden="true">📋</span><b>Хуулж буулгах</b><small>Текстээр</small></button>
         <button type="button" class="imp-card" id="impHandBtn"><span class="imp-ic" aria-hidden="true">✍️</span><b>Гараар бичих</b><small>Асуулт бүрийг нэг нэгээр</small></button>
+        <button type="button" class="imp-card wide" id="impKeyBtn" aria-expanded="false"><span class="imp-ic" aria-hidden="true">⚡</span><b>Зөвхөн хариулт</b><small>Асуулт нь цаасан дээр бэлэн бол — түлхүүр, агуулгаа буулгаад шууд хариултын хуудас хэвлэнэ</small></button>
+      </div>
+      <div class="imp-paste" id="impKeyOnly" hidden>
+        <p class="hint" style="margin:0 0 6px"><b>Асуулт нь цаасан дээр бэлэн байгаа бол</b> зөвхөн зөв хариулт, хүсвэл агуулгыг буулгана.
+          Асуултын тоог хариултаас тоолж, асуултууд өөрөө үүснэ. Дараа нь хариултын хуудсаа хэвлээд шалгалтаа авна.</p>
+        <textarea id="kOnly" style="min-height:160px" spellcheck="false" aria-label="Зөв хариулт ба агуулга" placeholder="Хариулт&#10;1. Б   2. В   3. А   4. Г   5. Б&#10;6. ҮХҮҮ&#10;&#10;Агуулга&#10;1–3 Эсийн бүтэц&#10;4–6 Удамшил"></textarea>
+        <p class="hint" style="margin:6px 0 0;font-size:.82rem">Ингэж бичсэн ч танина: <code>1-B, 2-C</code> · <code>1. (Б)</code> · үсгийн цуваа <code>БВАГБ ВАГБА</code> ·
+          үнэн/худал <code>6. ҮХҮҮ</code> эсвэл <code>6. а Ү, б Х, в Ү, г Ү</code>. Агуулга: <code>1–3 Эсийн бүтэц</code>. Word-оос хуулж буулгаж болно.</p>
+        <div class="btns"><button class="btn" id="kOnlyBtn">⚡ Асуултуудыг үүсгэх</button></div>
+        <div class="msg" id="kOnlyMsg" role="status"></div>
       </div>
       <div class="imp-guide" id="impGuide">
         <div class="imp-rules"><b>📌 Материал бэлтгэх заавар</b>
           <ol><li>Асуулт бүр <b>дугаартай</b>: 1. 2. 3.</li>
             <li>Сонголт <b>A. B. C. D.</b> · үнэн/худал: <b>«Үнэн/худал»</b> гарчиг + <b>a) b) c) d)</b> мэдэгдэл</li>
             <li>Зураг асуултынхаа доор. Схем, диаграм <b>зураг</b> хэлбэртэй (эсвэл Word-ын <b>PDF</b>-ийг хамт сонгоно)</li>
-            <li>Хамгийн төгсгөлд <b>Хариулт</b>, хүсвэл <b>Агуулга</b> — «Хариулт ийм байна» жишээ шиг</li></ol>
+            <li>Хамгийн төгсгөлд <b>Хариулт</b>, хүсвэл <b>Агуулга</b> — «Хариулт ийм байна» жишээ шиг.
+              Хэд хэдэн асуулт нэг агуулгатай бол <b>«1–3 Антибиотик»</b>, <b>«4–6 Фермент»</b> гэж нэг мөрөөр бичиж болно</li></ol>
           <div class="imp-btns"><button type="button" class="btn ghost" id="tplWord">⬇ Word загвар</button><button type="button" class="btn ghost" id="tplWord2">⬇ 2 хувилбартай загвар</button><button type="button" class="btn ghost" id="tplXlsx">⬇ Excel загвар</button><button type="button" class="btn ghost" id="qtplBtn">🧩 Бусад жишээ</button></div></div>
         <div class="imp-key"><div class="imp-key-h"><b>📋 Хариулт ийм байна</b><button type="button" class="btn ghost" id="impKeyCopy">📋 Хуулах</button></div>
           <pre class="imp-key-pre" id="impKeyPre"></pre>
@@ -5167,15 +5180,17 @@ async function impFiles(list){
     if(docx){
       document.querySelectorAll('.imp-rep').forEach(b=>b.remove());
       /* Нэг файлд «А хувилбар», «Б хувилбар» гарчигтай хэсгүүд, эсвэл хувилбар бүр тусдаа файл (нэр нь …_Б.docx) */
-      const parts=[];
+      const parts=[],skipped=[];
       for(const f of files.filter(x=>/\.docx$/i.test(x.name))){say('📁 "'+f.name+'" файлыг уншиж байна…');
         const D=await readDocx(f);
         /* Зургуудыг урьдчилан ачаална — асуулт танигдмагц (синхрон) асуулт бүрт оноож, хувилбарт ч зөв очно */
         D.els=await Promise.all(D.imgs.map(im=>im.blob?new Promise(res=>{const u=URL.createObjectURL(im.blob),el=new Image();
           el.onload=()=>{URL.revokeObjectURL(u);res(el);};el.onerror=()=>{URL.revokeObjectURL(u);res(null);};el.src=u;}):null));
         const secs=impSplitVariants(D.text);
+        if(!secs.length||!String(D.text||'').trim()){skipped.push(f.name);continue;}   // текстгүй (хоосон эсвэл зөвхөн зурагтай) файл
         if(secs.length>1)secs.forEach(s=>parts.push({v:s.v,text:s.text,D,name:f.name}));
         else parts.push({v:secs[0].v!=null?secs[0].v:impVarFromName(f.name),text:D.text,D,name:f.name});}
+      if(!parts.length)return say('"'+skipped.join('", "')+'" файлаас текст олдсонгүй. Файл хоосон, эсвэл асуултууд нь зураг хэлбэрээр (скан) байж магадгүй — ийм бол «PDF файл»-аар оруулна уу.',true);
       /* Хувилбар тодорхойгүй ганц файл → дээрх «Аль хувилбар» сонголт (эсвэл А) */
       if(parts.length===1&&parts[0].v==null){const sv=$('#impVar');parts[0].v=sv&&!sv.hidden&&sv.value!==''?+sv.value:0;}
       parts.forEach((p,k)=>{if(p.v==null)p.v=k;});parts.sort((a,b)=>a.v-b.v);
@@ -5292,6 +5307,59 @@ function impRender(){
 $('#impFile').addEventListener('change',e=>{const f=e.target.files;if(f&&f.length)impFiles(f).finally(()=>{e.target.value='';});});
 $('#impHub .imp-card.main').addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();$('#impFile').click();}});
 $('#impPasteBtn').addEventListener('click',()=>{const p=$('#impPaste'),on=p.hidden;p.hidden=!on;$('#impPasteBtn').setAttribute('aria-expanded',String(on));if(on)setTimeout(()=>$('#qbulk').focus(),50);});
+/* ---------- ⚡ Зөвхөн хариулт: цаасан тестийн түлхүүр (+агуулга) → асуултууд өөрөө үүснэ → хариултын хуудас ---------- */
+$('#impKeyBtn').addEventListener('click',()=>{const p=$('#impKeyOnly'),on=p.hidden;p.hidden=!on;$('#impKeyBtn').setAttribute('aria-expanded',String(on));if(on)setTimeout(()=>$('#kOnly').focus(),50);});
+function keyOnlyParse(src){
+  let t=String(src||'').replace(/\r/g,'');
+  const TP=bulkTopics(t),topics=TP?TP.topics:{};if(TP)t=TP.text;
+  const L=t.split('\n').map(cleanLine).map(s=>s.replace(KEY_HEAD,'').trim()).filter(Boolean);
+  const tf={},mc={},multi=[],rest=[];
+  L.forEach(s=>{const r=piTfScan([s]);if(Object.keys(r).length)Object.assign(tf,r);else rest.push(s);});
+  const R=rest.join(' '),LET=c=>{const k=LET10.indexOf(String(c).toUpperCase());return k>=0?OPTS10[k%10]:'';};
+  for(const m of R.matchAll(/(\d{1,3})\s*[.)\-:=]?\s*\(?\s*([A-JА-ЗИКa-jа-зик]{1,5})\s*\)?(?=$|[\s,;.])/g)){
+    const n=+m[1];if(!n||tf[n])continue;
+    if(m[2].length>1)multi.push(n);else mc[n]=LET(m[2]);}
+  /* дугааргүй үсгийн цуваа: "БВАГБ ВАГБА" */
+  if(!Object.keys(mc).length&&!Object.keys(tf).length&&/^[A-Ja-jА-ЗИКа-зик\s,;.]+$/.test(R.trim())){
+    R.replace(/[\s,;.]/g,'').split('').forEach((c,i)=>{mc[i+1]=LET(c);});}
+  return{mc,tf,topics,multi};
+}
+function keyOnlyApply(){
+  const m=$('#kOnlyMsg'),bad=t=>{m.style.color='var(--stain)';m.textContent=t;};m.style.color='';
+  const K=keyOnlyParse($('#kOnly').value);
+  const nums=[...new Set([...Object.keys(K.mc),...Object.keys(K.tf)].map(Number))].filter(n=>n>0).sort((a,b)=>a-b);
+  if(!nums.length)return bad('Хариулт танигдсангүй. Жишээ нь «1. Б  2. В  3. А» эсвэл «БВАГБ» гэж бичнэ үү.');
+  const N=nums[nums.length-1];
+  if(N>120)return bad(N+'-р асуулт гэж танигдлаа — асуултын дугаар 120-оос ихгүй байх ёстой. Хариултаа шалгана уу.');
+  const p1=[],p4=[],miss=[],far=[];
+  for(let n=1;n<=N;n++){const top=K.topics[n]?String(K.topics[n]).slice(0,80):'';
+    if(K.tf[n]){const q=newQ(4);q.key=tfNorm(K.tf[n]);q.topic=top;q._n=n;p4.push(q);continue;}
+    const q=newQ(1);q.topic=top;q._n=n;const k=K.mc[n]||'';
+    if(!k)miss.push(n);else if(OPTS10.indexOf(k)>4)far.push(n+' ('+k+')');
+    q.key=OPTS10.indexOf(k)>=0&&OPTS10.indexOf(k)<=4?k:'';p1.push(q);}
+  if(p1.length>60||p4.length>60)return bad('Нэг шалгалтад тест 60, үнэн/худал 60 хүртэл асуулт байна. Хариултаа хоёр шалгалтад хувааж оруулна уу.');
+  /* Одоогийн шалгалт хоосон бол түүнд, эс бөгөөс шинэ шалгалт үүсгэж оруулна — байгаа асуулт, дүнг хэзээ ч дарахгүй */
+  const blankEx=!state.students.length&&state.exam.questions.every(q=>!q.text&&!q.topic&&!q.img&&!(q.opts||[]).some(Boolean)&&!(q.stmts||[]).some(Boolean));
+  const fresh=!blankEx;
+  if(fresh)addExam(blank(0));else{if(matGuard())return;snap('хариултаас асуулт үүсгэх');}
+  const used=Math.max(4,...p1.map(q=>q.key?OPTS10.indexOf(q.key)+1:0));
+  state.exam.optN=Math.min(5,used);
+  const qs=[...p1,...p4],moved=qs.some((q,i)=>q._n!==i+1);
+  qs.forEach(q=>{if(moved)q.lbl=String(q._n);delete q._n;});
+  state.exam.questions=qs;
+  save();refreshAll();$('#kOnly').value='';
+  const tops=new Set(qs.map(q=>q.topic).filter(Boolean)).size;
+  m.style.color=miss.length||far.length||K.multi.length?'var(--iodine)':'';
+  m.innerHTML='✓ '+(fresh?'Шинэ шалгалт үүсгэж, ':'')+qs.length+' асуулт үүслээ: I хэсэгт (тест, '+opts1().join('')+') '+p1.length
+    +(p4.length?', III хэсэгт (үнэн/худал) '+p4.length:'')+(tops?', '+tops+' агуулга':'')+'.'
+    +(miss.length?' <b>Хариулт алга:</b> '+miss.join(', ')+'-р асуулт — доорх жагсаалтад улаанаар харагдана.':'')
+    +(far.length?' <b>A–E-ээс өөр хариулт:</b> '+esc(far.join(', '))+'.':'')
+    +(K.multi.length?' <b>Олон үсэгтэй хариулт</b> ('+K.multi.join(', ')+'-р) — II хэсгийн асуултыг гараар нэмнэ үү.':'')
+    +(fresh||!state.exam.title?' Дээр шалгалтынхаа нэрийг бичээрэй.':'')
+    +' <button type="button" class="btn" id="kOnlySheet" style="margin-left:6px">🖨️ Хариултын хуудас хэвлэх</button>';
+  $('#kOnlySheet').onclick=()=>{if(window.secTab)secTab('s-sheet');const s=$('#s-sheet');if(s)s.scrollIntoView({behavior:'smooth',block:'start'});};
+}
+$('#kOnlyBtn').addEventListener('click',keyOnlyApply);
 $('#impHandBtn').addEventListener('click',()=>{const t=$('#qtable');t.scrollIntoView({behavior:'smooth',block:'start'});setTimeout(()=>{const f=t.querySelector('textarea,input');if(f)f.focus({preventScroll:true});},400);});
 $('#impGuideBtn').addEventListener('click',()=>{impGuideOpen=!impGuideOpen;impRender();});
 $('#impKeyCopy').addEventListener('click',async()=>{let ok=false;try{await navigator.clipboard.writeText(IMP_KEY);ok=true;}catch(e){}
