@@ -606,7 +606,7 @@ td input,td select{min-width:70px}
 .lp-mark{width:34px;height:34px;border-radius:9px;background:var(--leaf);color:#fff;display:grid;place-items:center;flex:0 0 34px}
 .lp-mark svg{width:19px;height:19px;fill:none;stroke:#fff;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
 .lp-nav{display:flex;gap:2px;margin-left:auto}
-.lp-nav a{color:var(--muted);text-decoration:none;font-size:.92rem;padding:8px 12px;border-radius:8px}
+.lp-nav a{color:var(--muted);text-decoration:none;font-size:.92rem;padding:8px 10px;border-radius:8px;white-space:nowrap}
 .lp-nav a:hover{background:var(--leaf-soft);color:var(--leaf)}
 .lp-cta{display:flex;gap:8px;margin-left:auto}
 .lp-nav+.lp-cta{margin-left:0}
@@ -656,7 +656,7 @@ td input,td select{min-width:70px}
 @media (prefers-color-scheme:dark){.lp-step b{color:#0e1a15}}
 .lp-step h3{margin:0 0 4px;font-size:.98rem}
 .lp-step p{margin:0;color:var(--muted);font-size:.86rem}
-.lp-sheets{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+.lp-sheets{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
 .lp-sheet{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:18px}
 .lp-sheet b{color:var(--leaf);font-size:.78rem;letter-spacing:.04em}
 .lp-sheet h3{margin:4px 0 6px;font-size:1.02rem}
@@ -669,6 +669,31 @@ td input,td select{min-width:70px}
   color:var(--muted);font-size:.88rem}
 .lp-more b{color:var(--ink)}
 .lp-foot{text-align:center;color:var(--muted);font-size:.85rem;padding:26px 0;border-top:1px solid var(--line);margin-top:44px}
+/* «Юу хийж болох вэ» ба «Даалгаврын 6 хэлбэр» */
+.lp-jump{display:inline-block;margin-top:16px;color:var(--leaf);font-weight:700;text-decoration:none;font-size:.95rem;border-bottom:1.5px dashed var(--leaf)}
+.lp-can{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+.lp-can>div{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:16px}
+.lp-can>div:hover{border-color:var(--leaf)}
+.lp-can i{font-style:normal;font-size:1.75rem;display:block;line-height:1;margin-bottom:8px}
+.lp-can b{display:block;font-size:.98rem;margin-bottom:4px;line-height:1.3}
+.lp-can span{color:var(--muted);font-size:.85rem;line-height:1.45;display:block}
+.lp-forms{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+.lp-form{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:16px;display:flex;flex-direction:column;gap:9px}
+.lp-form h3{margin:0;font-size:1rem;display:flex;align-items:center;gap:8px}
+.lp-form h3 small{font-weight:600;font-size:.7rem;color:#fff;background:var(--leaf);border-radius:999px;padding:2px 8px;letter-spacing:.03em}
+.lp-form .q{font-size:.86rem;line-height:1.45}
+.lp-form .where{margin-top:auto;font-size:.77rem;color:var(--muted);border-top:1px dashed var(--line);padding-top:7px}
+.lp-chip{display:inline-block;padding:1px 8px;border-radius:999px;background:#FEF3C7;color:#92400E;font-size:.76rem;margin:2px 3px 0 0;font-weight:600}
+.lp-mx{display:grid;grid-template-columns:14px repeat(6,17px);gap:3px 4px;align-items:center;font-size:.72rem;color:var(--muted);font-weight:700}
+.lp-mx span{width:16px;height:16px;border-radius:50%;border:1.5px solid var(--line);display:grid;place-items:center;font-size:.58rem;font-weight:600;color:var(--muted)}
+.lp-mx span.on{background:var(--leaf);border-color:var(--leaf);color:#fff}
+.lp-tf{display:grid;grid-template-columns:1fr auto;gap:4px 8px;font-size:.8rem;align-items:center}
+.lp-tf .lp-bub span{width:19px;height:19px;font-size:.66rem}
+.lp-seq{display:flex;gap:6px;flex-wrap:wrap}
+.lp-seq span{border:1.5px solid var(--line);border-radius:8px;padding:3px 8px;font-size:.78rem;background:var(--bg)}
+@media(max-width:900px){.lp-can,.lp-forms{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:560px){.lp-can,.lp-forms{grid-template-columns:1fr}}
+@media(max-width:1120px){.lp-nav{display:none}.lp-nav+.lp-cta{margin-left:auto}}
 @media(max-width:900px){.lp-grid,.lp-steps,.lp-sheets{grid-template-columns:repeat(2,1fr)}.lp-stats{grid-template-columns:repeat(2,1fr)}}
 @media(max-width:660px){
   .lp-nav{display:none}
@@ -2200,10 +2225,9 @@ body.student #studentApp{display:block}
 <header class="lp-top"><div class="lp-top-in">
   <div class="lp-logo"><span class="lp-mark"><svg viewBox="0 0 24 24"><path d="M4 19V9M9.5 19V5M15 19v-7M20.5 19v-4"/></svg></span>Шалгалтын анализ</div>
   <nav class="lp-nav">
-    <a href="#lp-new">🆕 Шинэ</a>
-    <a href="#lp-feat">Боломжууд</a>
-    <a href="#lp-how">Хэрхэн ажиллах</a>
-    <a href="#lp-sheet">Хариултын хуудас</a>
+    <a href="#lp-can">Юу хийх вэ</a>
+    <a href="#lp-forms">6 хэлбэр</a>
+    <a href="#lp-sheet">Хуудас</a>
   </nav>
   <div class="lp-cta">
     <button type="button" class="pwaBtn" hidden title="Нүүр дэлгэцэд апп болгон суулгах">📲 Суулгах</button>
@@ -2227,11 +2251,64 @@ body.student #studentApp{display:block}
     <div class="lp-stats">
       <div class="lp-stat"><b>10 сек</b><span>нэг шалгалтын анализ</span></div>
       <div class="lp-stat"><b>30 хуудас</b><span>≈ 5 минутад уншина</span></div>
-      <div class="lp-stat"><b>3 төрөл</b><span>тест, үнэн/худал, задгай</span></div>
+      <div class="lp-stat"><b>6 хэлбэр</b><span>тест, нөхөх, харгалзуулах, дараалал, Ү/Х, задгай</span></div>
       <div class="lp-stat"><b>Excel · Word</b><span>тайлан шууд татна</span></div>
     </div>
     <p class="lp-note">Суулгац татах шаардлагагүй — хөтчөөр ажиллана. Хүсвэл нэг товшилтоор
       <b>нүүр дэлгэцэндээ дүрс гаргаж</b>, аппликейшн шиг нээж болно.</p>
+    <a class="lp-jump" href="#lp-can">👇 Юу хийж болохыг харах</a>
+  </section>
+
+  <section class="lp-sec" id="lp-can">
+    <h2>Юу хийж болох вэ</h2>
+    <p>Бэлэн материалаа оруулаад хэвлэ, камераар уншуул — шалгах, дүгнэх ажлыг программ хийнэ.</p>
+    <div class="lp-can">
+      <div><i>📄</i><b>ЭЕШ, олимпиадын PDF-ийг шууд</b><span>Асуулт бүрийг зураг, хүснэгттэй нь таслаж, I ба II хэсгийг хариултын PDF-ээс зөв хариулттай нь оруулна.</span></div>
+      <div><i>🧩</i><b>6 хэлбэрийн даалгавар</b><span>Нэг сонголттой, зурагтай, нөхөх, харгалзуулах, зөв дараалал, үнэн/худал — бүгд автоматаар шалгагдана.</span></div>
+      <div><i>🖨️</i><b>Хариултын хуудас өөрөө зурагдана</b><span>Тест (A–E), II хэсэг (a–h мөр × 0–9), үнэн/худал, задгай — шалгалтад тань тааруулж.</span></div>
+      <div><i>📷</i><b>Утасны камераар шалгана</b><span>30 хуудсыг ≈ 5 минутад уншуулна. Эргэлзээтэй дугуйг зурган дээр нь харуулж асууна.</span></div>
+      <div><i>📱</i><b>QR цахим шалгалт</b><span>Сурагч утаснаасаа өгнө, хуулахаас сэргийлнэ, оноо шууд бодогдож анализд орно.</span></div>
+      <div><i>📊</i><b>Бүрэн анализ, тайлан</b><span>Агуулга, асуулт, түвшин, сурагч бүрийн дүгнэлт — Word, Excel, PowerPoint-оор татна.</span></div>
+      <div><i>🔀</i><b>А, Б хувилбар, нэгдсэн дүн</b><span>Хувилбар бүрийг PDF, Word-оос нэмнэ, камер хувилбарыг өөрөө ялгана. Улирал, жилийн дүнг нэгтгэнэ.</span></div>
+      <div><i>⚡</i><b>Зөвхөн хариултаар</b><span>Асуулт нь цаасан дээр бэлэн бол түлхүүр, агуулгаа буулгаад шууд хариултын хуудсаа хэвлэнэ.</span></div>
+    </div>
+  </section>
+
+  <section class="lp-sec" id="lp-forms">
+    <h2>Даалгаврын 6 хэлбэр</h2>
+    <p>ЭЕШ, олон улсын олимпиад, IGCSE-ийн (multiple choice) бүх хэлбэрийг хариултын хуудсанд буулгаж, камераар шалгана.</p>
+    <div class="lp-forms">
+      <div class="lp-form"><h3>Нэг сонголттой <small>ЗУРАГТАЙ</small></h3>
+        <svg viewBox="0 0 120 64" width="120" height="64" aria-hidden="true"><circle cx="60" cy="32" r="30" fill="#EBD9A6" stroke="#B8A26A" stroke-width="2"/><circle cx="44" cy="20" r="10" fill="#FBF6E8"/><circle cx="78" cy="20" r="15" fill="#FBF6E8"/><circle cx="44" cy="45" r="8" fill="#FBF6E8"/><circle cx="76" cy="45" r="5" fill="#FBF6E8"/><g font-size="7" font-weight="700" fill="#1E3A8A" text-anchor="middle"><text x="44" y="23">A</text><text x="78" y="23">B</text><text x="44" y="48">C</text><text x="76" y="48">D</text></g></svg>
+        <div class="q">Аль антибиотик хамгийн үр дүнтэй вэ?</div>
+        <div class="lp-bub"><span>A</span><span class="on">B</span><span>C</span><span>D</span><span>E</span></div>
+        <div class="where">Хуудсан дээр: <b>I хэсэг</b> · нэг дугуй</div></div>
+      <div class="lp-form"><h3>Нэг сонголттой <small>MULTIPLE CHOICE</small></h3>
+        <div class="q">Томуу, ханиадны үед антибиотик уух нь яагаад ашиггүй вэ?<br><span style="color:var(--muted)">A. … B. … C. Вирус эсийн хана үүсгэдэггүй D. …</span></div>
+        <div class="lp-bub"><span>A</span><span>B</span><span class="on">C</span><span>D</span><span>E</span></div>
+        <div class="where">Хуудсан дээр: <b>I хэсэг</b> · нэг дугуй</div></div>
+      <div class="lp-form"><h3>Нөхөх</h3>
+        <div class="q">a) Эм нь химийн ____-д нөлөөлнө.<br>b) Нэг бичил биетний бусдыг устгах бодисыг ____ гэнэ.<br>
+          <span class="lp-chip">1 урвал</span><span class="lp-chip">2 хоол хүнс</span><span class="lp-chip">3 антибиотик</span></div>
+        <div class="lp-mx" data-k="13"></div>
+        <div class="where">Хуудсан дээр: <b>II хэсэг</b> · зай бүрт үгийн дугаар</div></div>
+      <div class="lp-form"><h3>Харгалзуулах</h3>
+        <div class="q">a) Зүрх &nbsp; b) Уушги &nbsp; c) Бөөр<br><span style="color:var(--muted)">1. Шүүх &nbsp; 2. Цус шахах &nbsp; 3. Хий солилцоо</span></div>
+        <div class="lp-mx" data-k="231"></div>
+        <div class="where">Хуудсан дээр: <b>II хэсэг</b> · мөр бүрт харгалзах дугаар</div></div>
+      <div class="lp-form"><h3>Зөв дараалал <small>ЗУРАГТАЙ</small></h3>
+        <div class="q">Ферментийн үйлчлэлийн үе шатыг зөв дараалалд оруул.</div>
+        <div class="lp-seq"><span>a Холбогдоно</span><span>b Задарна</span><span>c Салж гарна</span><span>d Цогцолбор</span></div>
+        <div class="lp-mx" data-k="1342"></div>
+        <div class="where">Хуудсан дээр: <b>II хэсэг</b> · мөр бүрт дарааллын байр (эсвэл I хэсэгт «2–4–5–1–3» хувилбартай)</div></div>
+      <div class="lp-form"><h3>Үнэн / худал</h3>
+        <div class="lp-tf">
+          <span>а) Антибиотик тэсвэржилтийг үүсгэдэг</span><div class="lp-bub"><span>Ү</span><span class="on">Х</span></div>
+          <span>б) Тэсвэржилт нь амьд үлдэх давуу тал</span><div class="lp-bub"><span class="on">Ү</span><span>Х</span></div>
+          <span>в) Эмчилгээг дуусгалгүй орхих нь эрсдэлтэй</span><div class="lp-bub"><span class="on">Ү</span><span>Х</span></div>
+          <span>г) Вирус эсийн ханатай</span><div class="lp-bub"><span>Ү</span><span class="on">Х</span></div></div>
+        <div class="where">Хуудсан дээр: <b>III хэсэг</b> · мэдэгдэл бүрт Ү эсвэл Х</div></div>
+    </div>
   </section>
 
   <section class="lp-sec lp-new" id="lp-new">
@@ -2239,7 +2316,7 @@ body.student #studentApp{display:block}
     <p>Хиймэл оюун ухааны аргуудад суурилсан шинэ хэрэгслүүд — бэлэн материалаа оруулаад шууд шалгалт аваарай.</p>
     <div class="lp-grid">
       <div class="lp-card"><div class="lp-ico"><svg viewBox="0 0 24 24"><path d="M6 3h9l4 4v14H6z"/><path d="M15 3v4h4"/><path d="M9 13h6M9 17h3"/></svg></div>
-        <div><h3>PDF-ээс шалгалт</h3><p>ЭЕШ, олимпиад, IGCSE зэрэг бэлэн PDF-ийг оруулахад асуулт бүрийг <b>зураг, хүснэгттэй нь</b> таслаж, хариултын PDF-ээс зөв хариулт, оноог уншина. Хоёр баганатай хуудас, 1a/1b дэд асуулт, үнэн/худлыг ч танина.</p></div></div>
+        <div><h3>PDF-ээс шалгалт</h3><p>ЭЕШ, олимпиад, IGCSE зэрэг бэлэн PDF-ийг оруулахад асуулт бүрийг <b>зураг, хүснэгттэй нь</b> таслаж, хариултын PDF-ээс зөв хариулт, оноог уншина. <b>II хэсгийн 2.1–2.4 даалгавар</b>, хоёр баганатай хуудас, 1a/1b дэд асуулт, үнэн/худлыг ч танина.</p></div></div>
       <div class="lp-card"><div class="lp-ico"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><path d="M14 14h3v3h-3zM18 18h3v3h-3zM14 20h2M20 14v2"/></svg></div>
         <div><h3>QR цахим шалгалт</h3><p>Сурагчид QR уншуулаад утаснаасаа шалгалт өгнө. Оноо <b>шууд</b> бодогдож, таны анализд өөрөө орно. Зөв хариулт сурагчийн утсанд очихгүй.</p></div></div>
       <div class="lp-card"><div class="lp-ico"><svg viewBox="0 0 24 24"><path d="M12 3l8 4v5c0 5-3.4 8.3-8 9-4.6-.7-8-4-8-9V7z"/><path d="M9 12l2 2 4-4"/></svg></div>
@@ -2285,7 +2362,7 @@ body.student #studentApp{display:block}
       <div class="lp-card"><div class="lp-ico"><svg viewBox="0 0 24 24"><path d="M6 3h9l4 4v14H6z"/><path d="M15 3v4h4M9 12h6M9 16h4"/></svg></div>
         <div><h3>Сурагч бүрийн дүгнэлт</h3><p>Хүүхэд бүрт оноо, хувь, түвшин, алдсан асуулт, сул агуулга, зөвлөмж.</p></div></div>
       <div class="lp-card"><div class="lp-ico"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="8.5" cy="12" r="2"/><circle cx="15.5" cy="12" r="2"/></svg></div>
-        <div><h3>Гурван төрлийн хариултын хуудас</h3><p>Тест (A–E, олон сонголт), үнэн/худал, задгай даалгавар — нэг хуудсанд хольж болно.</p></div></div>
+        <div><h3>Дөрвөн хэсэгтэй хариултын хуудас</h3><p>Тест (A–E), II хэсэг (харгалзуулах, нөхөх, дараалал — a–h мөр × 0–9), үнэн/худал, задгай даалгавар — нэг хуудсанд хольж болно.</p></div></div>
       <div class="lp-card"><div class="lp-ico"><svg viewBox="0 0 24 24"><rect x="3" y="6" width="18" height="13" rx="2"/><circle cx="12" cy="12.5" r="3.4"/><path d="M8 6l1.5-2h5L16 6"/></svg></div>
         <div><h3>Камераар уншуулах</h3><p>Утасны ердийн камер хангалттай. 30 хуудас ≈ 5 минут. Эргэлзвэл будсан дугуйг нь зургаар үзүүлнэ.</p></div></div>
       <div class="lp-card"><div class="lp-ico"><svg viewBox="0 0 24 24"><path d="M3 17l5-5 4 3 5-7 4 4"/><path d="M3 21h18"/></svg></div>
@@ -2300,11 +2377,14 @@ body.student #studentApp{display:block}
 
   <section class="lp-sec" id="lp-sheet">
     <h2>Хариултын хуудасны хувилбарууд</h2>
-    <p>Гурвыг нь нэг шалгалтад хольж болно. Программ хуудсыг өөрөө зурж, камераар өөрөө уншина.</p>
+    <p>Дөрвөн хэсгийг нэг шалгалтад хольж болно. Программ хуудсыг өөрөө зурж, камераар өөрөө уншина.</p>
     <div class="lp-sheets">
-      <div class="lp-sheet"><b>I–II ХЭСЭГ</b><h3>Тест</h3>
-        <p>Нэг зөв хариулттай (A–E) болон олон зөв хариулттай (A–H) асуулт. Нэг шалгалтад 50 хүртэл.</p>
+      <div class="lp-sheet"><b>I ХЭСЭГ</b><h3>Тест (multiple choice)</h3>
+        <p>Нэг зөв хариулттай, A–E хувилбартай асуулт. Нэг шалгалтад 60 хүртэл.</p>
         <div class="lp-bub"><span>A</span><span class="on">B</span><span>C</span><span>D</span><span>E</span></div></div>
+      <div class="lp-sheet"><b>II ХЭСЭГ</b><h3>Харгалзуулах · Нөхөх · Дараалал</h3>
+        <p>ЭЕШ-ийн хуудас шиг: a–h мөр бүрт 0–9 цифрээс нэгийг будна. Зөв мөр бүр тус тусдаа оноотой. 4 хүртэл даалгавар.</p>
+        <div class="lp-mx" data-k="623"></div></div>
       <div class="lp-sheet"><b>III ХЭСЭГ</b><h3>Үнэн / худал</h3>
         <p>Нэг асуултад 4 мэдэгдэл, тус бүрд Ү эсвэл Х. Стандарт оноо: 4 зөв = 1.5, 3 зөв = 0.9, 2 зөв = 0.3.</p>
         <div class="lp-bub"><span class="on">Ү</span><span>Х</span><span>Ү</span><span class="on">Х</span><span class="on">Ү</span><span>Х</span><span class="on">Ү</span><span>Х</span></div></div>
@@ -3238,6 +3318,9 @@ function qCardHTML(base,i,v,lk){
     <div class="m2grid">${Array.from({length:R},(_,j)=>`<span class="tfno">${M2LET[j]}</span>
       <input data-i="${i}"${dv} data-f="sub" data-j="${j}" value="${esc(subs[j]||'')}" placeholder="${M2LET[j]}. мөрийн тайлбар (заавал биш)" aria-label="${lab}-р даалгаврын ${M2LET[j]} мөр">
       <select data-i="${i}"${dv} data-f="mkey" data-j="${j}" aria-label="${M2LET[j]} мөрийн зөв цифр"${k[j]==='-'?' style="border-color:var(--stain)"':''}><option value="-"${k[j]==='-'?' selected':''}>?</option>${[...D].map(d=>`<option${d===k[j]?' selected':''}>${d}</option>`).join('')}</select>`).join('')}</div>
+    ${B?'':`<div class="btns" style="margin:8px 0 0">
+      <button type="button" class="btn ghost" data-i="${i}" data-f="rowadd"${R>=8?' disabled title="Хариултын хуудсанд 8 хүртэл мөр (a–h) багтана"':''}>＋ Мөр нэмэх${R<8?' ('+M2LET[R]+')':''}</button>
+      <button type="button" class="btn ghost" data-i="${i}" data-f="rowdel"${R<=2?' disabled':''}>− Сүүлийн мөрийг (${M2LET[R-1]}) хасах</button></div>`}
     </div>`;}
   const keyBox=p2?`<input data-i="${i}"${dv} data-f="key" value="${esc(q.key)}" placeholder="ACF" aria-label="${lab}-р асуултын зөв хувилбарууд" style="text-transform:uppercase${q.key?'':';border-color:var(--stain)'}">`
     :`<select data-i="${i}"${dv} data-f="key" aria-label="${lab}-р асуултын зөв хариулт"${opts1().includes(q.key)?'':' style="border-color:var(--stain)"'}>${opts1().includes(q.key)?'':'<option value="" selected>?</option>'}${opts1().map(x=>`<option${x===q.key?' selected':''}>${x}</option>`).join('')}</select>`;
@@ -4512,6 +4595,19 @@ $('#qtable').addEventListener('click',e=>{
     const q=edObj(tb),j=+tb.dataset.j;
     const k=tfNorm(q.key).split('');k[j]=tb.dataset.v;q.key=k.join('');save();
     [...tb.parentNode.querySelectorAll('.tfb')].forEach(x=>x.setAttribute('aria-pressed',x.dataset.v===tb.dataset.v));
+    return;}
+  /* II хэсэг: мөр нэмэх / сүүлийн мөрийг хасах (2–8 мөр) */
+  const rb=e.target.closest('[data-f="rowadd"],[data-f="rowdel"]');if(rb){
+    const i=+rb.dataset.i,q=state.exam.questions[i];if(!isP2M(q))return;
+    const add=rb.dataset.f==='rowadd',R0=+q.rows,R=R0+(add?1:-1);if(R<2||R>8)return;
+    if(!add){const L=M2LET[R0-1],has=(q.subs||[])[R0-1]||(mNorm(q.key,R0)||'').padEnd(R0,'-')[R0-1]!=='-';
+      if(has&&!confirm('«'+L+'» мөрийг (тайлбар, зөв цифртэй нь) хасах уу?'))return;}
+    if(state.students.length&&!confirm('⚠ Энэ даалгаврын мөрийн тоог солих гэж байна. Сурагчдын хариулт, дүн өөрчлөгдөж магадгүй.'+UNDO_NOTE+'\n\nҮргэлжлүүлэх үү?'))return;
+    snap('II хэсгийн мөр '+(add?'нэмэх':'хасах'));
+    const fit=o=>{if(!o)return;o.key=mNorm(o.key,R);o.subs=(o.subs||[]).slice(0,R);};q.rows=R;fit(q);(q.alt||[]).forEach(fit);
+    if(+q.points===R0)q.points=R;   // мөр бүр 1 оноотой байсан бол оноо ч дагаж өөрчлөгдөнө
+    save();renderSetup();renderSheetPanel();
+    const m=$('#qbulkMsg');if(m){m.style.color='';m.textContent=qN(i)+' даалгавар '+R+' мөртэй боллоо'+(add?' — шинэ «'+M2LET[R-1]+'» мөрийн зөв цифрийг сонгоно уу.':'.');}
     return;}
   const b=e.target.closest('[data-f="imgdel"]');if(b){
     if(!confirm((+b.dataset.i+1)+'-р асуултын зургийг устгах уу?'))return;
@@ -5870,8 +5966,9 @@ $('#qtable').addEventListener('change',e=>{
   /* II хэсэг (хүснэгт): мөрийн тоо, мөр бүрийн зөв цифр */
   if(f==='rows'){const q=state.exam.questions[i],R=Math.max(2,Math.min(10,+e.target.value||4));
     if(state.students.length&&!confirm('⚠ Энэ даалгаврын мөрийн тоог солих гэж байна. Сурагчдын хариулт, дүн өөрчлөгдөж магадгүй.'+UNDO_NOTE+'\n\nҮргэлжлүүлэх үү?')){renderSetup();return;}
-    snap('II хэсгийн мөрийн тоо');
+    snap('II хэсгийн мөрийн тоо');const R0=+q.rows;
     const fit=o=>{if(!o)return;o.key=mNorm(o.key,R);o.subs=(o.subs||[]).slice(0,R);};q.rows=R;fit(q);(q.alt||[]).forEach(fit);
+    if(+q.points===R0)q.points=R;
     save();renderSetup();renderSheetPanel();}
   if(f==='mkey'){const q=edObj(e.target),Q=state.exam.questions[i],R=+Q.rows,j=+e.target.dataset.j,k=(mNorm(q.key,R)||'').padEnd(R,'-').split('');
     k[j]=e.target.value;q.key=mNorm(k.join(''),R);save();
@@ -11722,6 +11819,9 @@ $('#tList').addEventListener('click',async e=>{
     teachersLoad();
   }catch(x){m.style.color='var(--stain)';m.textContent=x.message;}
 });
+/* Бүртгүүлэх хуудас: II хэсгийн жижиг дүрс — мөр (a, b, c …) бүрт 1–6-аас нэг будсан дугуй */
+document.querySelectorAll('.lp-mx[data-k]').forEach(el=>{el.innerHTML=[...el.dataset.k].map((d,j)=>'<b>'+'abcdefgh'[j]+'</b>'
+  +[1,2,3,4,5,6].map(n=>'<span'+(String(n)===d?' class="on"':'')+'>'+n+'</span>').join('')).join('');});
 /* ---------- Нүүр дэлгэцэд суулгах (аппликейшн шиг нээгдэх) ----------
    Программыг нэг файл хэвээр нь үлдээхийн тулд manifest-ийг тусдаа файл болгохгүй,
    энд үүсгэж хавсаргана. Дүрснүүдийг <head> дэх <link>-үүдээс авна. */
