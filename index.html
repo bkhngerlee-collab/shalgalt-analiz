@@ -982,6 +982,20 @@ body.student #studentApp{display:block}
 .imp-top{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
 .imp-h{margin:0;font-size:1.15rem;color:var(--leaf,#047857)}
 .imp-guide-btn{margin-left:auto;padding:4px 12px}
+/* «Заавар, загвар» руу заах хөдөлгөөнтэй сум — нэг удаа дармагц алга болно */
+.imp-hint{margin-left:auto;display:inline-flex;align-items:center;gap:6px;background:#FEF3C7;color:#92400E;border:1px solid #F59E0B;border-radius:999px;padding:3px 10px;font-size:.82rem;font-weight:700;white-space:nowrap}
+.imp-hint[hidden]{display:none}
+.imp-hint i{font-style:normal;display:inline-block;font-size:1.05rem;animation:impPoint 1s ease-in-out infinite}
+@keyframes impPoint{0%,100%{transform:translateX(0)}50%{transform:translateX(7px)}}
+.imp-guide-btn.glow{margin-left:6px;animation:impGlow 1.6s ease-in-out infinite}
+@keyframes impGlow{0%,100%{box-shadow:0 0 0 0 rgba(4,120,87,0)}50%{box-shadow:0 0 0 6px rgba(4,120,87,.22)}}
+@media (prefers-reduced-motion:reduce){.imp-hint i,.imp-guide-btn.glow{animation:none}}
+/* Утсанд мөр шилжиж сум товчноос салдаг тул товчны дотор нь баруун талд заана */
+@keyframes impPointL{0%,100%{transform:translateX(0)}50%{transform:translateX(-6px)}}
+@media (max-width:560px){.imp-hint{display:none!important}
+  .imp-guide-btn.glow::after{content:'👈';display:inline-block;margin-left:6px;animation:impPointL 1s ease-in-out infinite}}
+@media (max-width:560px) and (prefers-reduced-motion:reduce){.imp-guide-btn.glow::after{animation:none}}
+@media (prefers-color-scheme:dark){.imp-hint{background:rgba(245,158,11,.18);color:#FDE68A;border-color:rgba(245,158,11,.6)}}
 .imp-var{margin-left:auto;width:auto;padding:4px 8px;font-size:.88rem;border-radius:999px}
 .imp-var:not([hidden])+.imp-guide-btn{margin-left:6px}
 .imp-cards{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-top:12px}
@@ -1288,6 +1302,7 @@ body.student #studentApp{display:block}
     <div id="matLock"></div>
     <div class="imp-hub" id="impHub">
       <div class="imp-top"><h3 class="imp-h" id="impH">📥 Шалгалтын материалаа оруулна уу</h3>
+        <span class="imp-hint" id="impHint" hidden aria-hidden="true"><b>Энд дарж загвараа татаарай</b><i>👉</i></span>
         <button type="button" class="btn ghost imp-guide-btn" id="impGuideBtn" hidden aria-expanded="false">📌 Заавар, загвар ▾</button></div>
       <div class="imp-cards">
         <label class="imp-card main" tabindex="0"><span class="imp-ic" aria-hidden="true">📁</span><b>Word / Excel файл</b><small>⭐ Зөвлөж байна — зураг, хариулттай нь</small>
@@ -5523,6 +5538,9 @@ function impRender(){
   hub.classList.toggle('compact',has);hub.classList.toggle('guide',impGuideOpen);
   $('#impH').textContent=has?'📥 Материал дахин оруулах':'📥 Шалгалтын материалаа оруулна уу';
   const gb=$('#impGuideBtn');gb.hidden=!has;gb.textContent=impGuideOpen?'📌 Заавар хураах ▴':'📌 Заавар, загвар ▾';gb.setAttribute('aria-expanded',String(impGuideOpen));
+  /* Шинэ багшид товчийг заана — нэг удаа дарсны дараа дахиж гарахгүй */
+  let seen=false;try{seen=localStorage.getItem('shalgalt-guide-seen')==='1';}catch(e){}
+  const hn=$('#impHint'),show=!gb.hidden&&!impGuideOpen&&!seen;if(hn)hn.hidden=!show;gb.classList.toggle('glow',show);
   /* Хувилбартай («Өөр асуултууд») шалгалтад: гарчиггүй файл аль хувилбар руу орохыг сонгоно */
   let sv=$('#impVar');if(!sv){sv=document.createElement('select');sv.id='impVar';sv.className='imp-var';sv.setAttribute('aria-label','Аль хувилбарын файл');$('#impGuideBtn').before(sv);}
   const nv=vCount();sv.hidden=!(vOwn()&&nv>1);
@@ -5586,7 +5604,7 @@ function keyOnlyApply(){
 }
 $('#kOnlyBtn').addEventListener('click',keyOnlyApply);
 $('#impHandBtn').addEventListener('click',()=>{const t=$('#qtable');t.scrollIntoView({behavior:'smooth',block:'start'});setTimeout(()=>{const f=t.querySelector('textarea,input');if(f)f.focus({preventScroll:true});},400);});
-$('#impGuideBtn').addEventListener('click',()=>{impGuideOpen=!impGuideOpen;impRender();});
+$('#impGuideBtn').addEventListener('click',()=>{impGuideOpen=!impGuideOpen;try{localStorage.setItem('shalgalt-guide-seen','1');}catch(e){}impRender();});
 $('#impKeyCopy').addEventListener('click',async()=>{let ok=false;try{await navigator.clipboard.writeText(IMP_KEY);ok=true;}catch(e){}
   if(!ok){const ta=document.createElement('textarea');ta.value=IMP_KEY;document.body.appendChild(ta);ta.select();try{ok=document.execCommand('copy');}catch(e){}ta.remove();}
   $('#impKeyCopy').textContent=ok?'✓ Хуулагдлаа':'Хуулж чадсангүй';setTimeout(()=>{$('#impKeyCopy').textContent='📋 Хуулах';},1800);});
