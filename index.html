@@ -3581,6 +3581,25 @@ function piChain(cand,all){
     if(last&&c.p===last.p&&c.col===last.col&&c.top<last.bot)return;
     ch2.push(c);last=c;exp++;});
   if(ch2.length){ch2._n=9;chains.push(ch2);}
+  /* Зарим хуудсанд асуултын дугаар бусдаасаа 15–40pt баруун тийш шилжсэн байдаг (2024 ЭЕШ: 10, 27, 47).
+     Хүлээж буй дугаар нь дугаарын баганадаа олдохгүй бол, дараагийн дугаараас (баганандаа) өмнө байгаа,
+     мөрийнхөө хамгийн зүүн талын ижил дугаарыг авна. Асуулт доторх "1. 2. 3." жагсаалтыг андуурахгүйн тулд
+     баганандаа байгаа дугаарыг үргэлж түрүүлж сонгоно. */
+  const idx=c=>cand.indexOf(c),tol=c=>c.x<=minX[c.p+'/'+c.col]+12;
+  const ch3=[];exp=start;last=null;
+  for(let g=0;g<400;g++){
+    const after=c=>!last||(idx(c)>idx(last)&&!(c.p===last.p&&c.col===last.col&&c.top<last.bot));
+    const pool=cand.filter(c=>c.v===exp&&after(c));if(!pool.length)break;
+    const okCol=c=>!last||c.col!==last.col||Math.abs(c.x-last.x)<=22;
+    /* Дараагийн асуулт 2 хуудаснаас хол байхгүй — нэг PDF-д хэд хэдэн хувилбартай бол дараагийн хувилбар руу үсрэхгүй */
+    const nearP=c=>!last||c.p<=last.p+2;
+    const pTol=pool.find(c=>tol(c)&&okCol(c)&&nearP(c)),nxt=cand.find(c=>c.v===exp+1&&after(c)&&tol(c));
+    let pick=pTol&&(!nxt||idx(pTol)<idx(nxt))?pTol:null;
+    /* шилжсэн дугаарыг зөвхөн ойрхон (тэр эсвэл дараагийн хуудсанд) хайна */
+    /* Өмнөх ба дараагийн дугаарын (баганандаа) яг дунд орших бол — зургийн хажууд бичсэн дугаар (2022 ЭЕШ: 34, 45) — байрлалыг үл харгалзана */
+    if(!pick)pick=pool.find(c=>(!nxt||idx(c)<idx(nxt))&&(c.x<=minX[c.p+'/'+c.col]+45||(nxt&&last))&&(!last||c.p<=last.p+1))||pTol;
+    if(!pick)break;ch3.push(pick);last=pick;exp++;}
+  if(ch3.length){ch3._n=8;chains.push(ch3);}
   /* Хамгийн урт дарааллуудаас (≥85%) баримтад хамгийн түрүүнд эхэлснийг — олон хувилбартай PDF-д
      дараагийн хувилбарыг алгасахгүйн тулд. Тэнцвэл урт нь, дараа нь хатуу (нэг баганат) нь. */
   const M=Math.max(0,...chains.map(c=>c.length)),pos=c=>cand.indexOf(c[0]);
@@ -4066,7 +4085,9 @@ function piRegText(pages,r){
   return r.segs.map(s=>(pages[s.p-1].rows||[]).filter(w=>w.top>=s.y0-2&&w.top<s.y1&&!w.its[0].furn).map(w=>w.its.filter(it=>it.x>=s.x0-2&&it.x<s.x1).map(it=>it.s).join(' ')).join(' ')).join(' ');
 }
 /* "/2 оноо/", "[1 оноо]", "(2 оноо)", "[1 mark]" */
-function piPtsOf(t){const m=piLegacy(t).match(/[\/\[(]\s*(\d{1,2}(?:[.,]5)?)\s*(?:оноо|marks?)\s*[\/\])]/i);
+function piPtsOf(t){t=piLegacy(t);
+  /* "[2 оноо]"; PDF-ийн бичвэрийн дараалал алдагдвал "2 [ оноо]" гэж ирдэг (2024 ЭЕШ, 27-р асуулт) */
+  const m=t.match(/[\/\[(]\s*(\d{1,2}(?:[.,]5)?)\s*(?:оноо|marks?)\s*[\/\])]/i)||t.match(/(?:^|\s)(\d{1,2}(?:[.,]5)?)\s*[\/\[(]\s*(?:оноо|marks?)\s*[\/\])]/i);
   const v=m?parseFloat(m[1].replace(',','.')):null;return v>0&&v<=20?v:null;}
 /* Сонгосон түлхүүрийн хүснэгт/баганаас хариулт, оноог оноох. Бичсэн хариулт байвал түүнийг давуу үзнэ. */
 function piApplyKeys(){
