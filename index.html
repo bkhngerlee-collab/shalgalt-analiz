@@ -1334,8 +1334,8 @@ body.student #studentApp{display:block}
           <div class="xi-p2b">
             <div class="xi-f"><label for="qcount2"><i class="xi-ic c-green" aria-hidden="true">🎯</i>Асуултын тоо (0–4)</label><input id="qcount2" type="number" min="0" max="4"></div>
             <div id="p2opts" class="xi-p2o" hidden>
-              <div class="xi-f"><label for="p2n"><i class="xi-ic c-amber" aria-hidden="true">🔠</i>Сонголтын тоо</label><select id="p2n">
-                <option value="8">8 (A–H)</option><option value="10">10 (A–J)</option></select></div>
+              <div class="xi-f" id="p2nWrap"><label for="p2n"><i class="xi-ic c-amber" aria-hidden="true">🔠</i>Сонголтын тоо (хуучин шалгалт)</label><select id="p2n">
+                <option value="8">8 — хуучин хуудас</option><option value="10">10 (0–9)</option></select></div>
               <div class="xi-f"><label for="p2mode"><i class="xi-ic c-red" aria-hidden="true">⭐</i>II хэсгийн оноо</label><select id="p2mode">
                 <option value="exact">Зөв хувилбаруудыг яг таг будсан бол бүтэн оноо</option>
                 <option value="partial">Хэсэгчилсэн оноо (зөв будсанаас буруу будсаныг хасна)</option></select></div>
@@ -2820,7 +2820,7 @@ const p2N=()=>+(state&&state.exam&&state.exam.p2N)===10?10:8;
 const opts2=()=>OPTS10.slice(0,p2N());
 const newQ=(part)=>part===3?{part:3,topic:'',key:'',points:5,text:'',scale:'tier',lines:3}
   :part===4?{part:4,topic:'',key:'ҮҮҮҮ',points:1.5,text:'',tfmode:'scale',stmts:['','','','']}
-  :part===2?{part:2,topic:'',key:'',points:4,text:'',rows:4,subs:['','','',''],opts:Array(10).fill('')}
+  :part===2?{part:2,topic:'',key:'',points:6,text:'',rows:6,subs:['','','','','',''],opts:Array(10).fill('')}
   :{topic:'',key:'A',points:1,text:'',opts:Array(5).fill('')};
 const isP2=q=>!!q&&q.part===2;
 /* Задгай даалгавар (хуудсан дээр IV хэсэг). Сурагч гараар бичнэ, багш уншаад оноог нь будна. */
@@ -2907,7 +2907,9 @@ function resizeParts(n1,n2,n3,n4){
   const qs=state.exam.questions,[o1,o2,o3,o4]=partCount();
   if(n3==null)n3=o3;if(n4==null)n4=o4;
   const p1=qs.filter(isP1),p2=qs.filter(isP2),p3=qs.filter(isP3),p4=qs.filter(isP4);
+  const hadP2=p2.length>0;   // II хэсэг шинээр нэмэгдвэл үргэлж 0–9 (хуучин 8 сонголттой шалгалтыг өөрчлөхгүй)
   while(p1.length<n1)p1.push(newQ(1));while(p2.length<n2)p2.push(newQ(2));
+  if(!hadP2&&n2>0)state.exam.p2N=10;
   while(p4.length<n4)p4.push(newQ(4));while(p3.length<n3)p3.push(newQ(3));
   p1.length=n1;p2.length=n2;p3.length=n3;p4.length=n4;
   state.exam.questions=[...p1,...p2,...p4,...p3];
@@ -2917,7 +2919,7 @@ function resizeParts(n1,n2,n3,n4){
       a4=s.answers.slice(o1+o2,o1+o2+o4),a3=s.answers.slice(o1+o2+o4,o1+o2+o4+o3);
     s.answers=[...fit(a1,n1),...fit(a2,n2),...fit(a4,n4),...fit(a3,n3)];});
 }
-function blank(n){return{id:uid(),exam:{title:'',date:today(),questions:Array.from({length:n},newQ)},students:[]};}
+function blank(n){return{id:uid(),exam:{title:'',date:today(),p2N:10,questions:Array.from({length:n},newQ)},students:[]};}
 function load(){
   try{const r=localStorage.getItem(KEY);if(r)return JSON.parse(r);
     const o=localStorage.getItem(OLDKEY);if(o){const e=JSON.parse(o);e.id=uid();e.exam.date=e.exam.date||today();return{cur:e.id,exams:[e]};}
@@ -3123,7 +3125,7 @@ function renderSetup(){
   {const so=$('#s-online');if(so&&!so.classList.contains('sec-off')&&window.oeRender)oeRender();}
   const [n1,n2,n3,n4]=partCount();
   $('#qcount').value=n1;$('#qcount2').value=n2;$('#qcount3').value=n3;$('#qcount4').value=n4;$('#optn').value=optN();
-  $('#p2opts').hidden=!n2;$('#p2hint').hidden=false;$('#p2mode').value=state.exam.p2mode||'exact';$('#p2n').value=p2N();
+  $('#p2opts').hidden=!n2;$('#p2hint').hidden=false;$('#p2mode').value=state.exam.p2mode||'exact';$('#p2n').value=p2N();$('#p2nWrap').hidden=p2N()===10;   // шинэ шалгалт үргэлж 0–9; зөвхөн хуучин 8 сонголттойд харагдана
   /* Хариулт орсон шалгалтын материалыг түгжинэ */
   const nst=state.students.length,lk=matLocked();
   const why=nst?`Энэ шалгалтад ${nst} сурагчийн хариулт орсон байна`+(state.exam.online?' (цахимаар нийтэлсэн)':''):'Энэ шалгалтыг цахимаар нийтэлсэн байна';
@@ -3223,7 +3225,7 @@ function qCardHTML(base,i,v,lk){
   if(isP2M(base)){const R=+base.rows,D=m2Dig(),k=mNorm(q.key,R).padEnd(R,'-'),subs=q.subs||[];
     return`${head}<div class="qcard p2m">
     <div class="qhead"><b>${N}</b>${topic}
-    ${B?'':`<select data-i="${i}" data-f="rows" aria-label="${N}-р даалгаврын мөрийн тоо" title="Мөрийн тоо (a, b, c …)">${Array.from({length:9},(_,x)=>x+2).map(n=>`<option value="${n}"${n===R?' selected':''}>${n} мөр (a–${M2LET[n-1]})</option>`).join('')}</select>`}
+    ${B?'':`<select data-i="${i}" data-f="rows" aria-label="${N}-р даалгаврын мөрийн тоо" title="Мөрийн тоо (a, b, c …)">${Array.from({length:7},(_,x)=>x+2).concat(R>8?[R]:[]).map(n=>`<option value="${n}"${n===R?' selected':''}>${n} мөр (a–${M2LET[n-1]})</option>`).join('')}</select>`}
     <input data-i="${i}"${dv} data-f="key" value="${esc(mNorm(q.key,R))}" placeholder="${D.slice(0,R).split('').reverse().join('').slice(0,R)}" aria-label="${lab}-р даалгаврын зөв хариулт (мөр бүрийн цифр)" title="Мөр бүрийн зөв цифр дараалан: 316524 эсвэл a3 b1 c6…" style="font-family:ui-monospace,Consolas,monospace;letter-spacing:.12em${mKeyDone(q)?'':';border-color:var(--stain)'}">
     <input data-i="${i}" data-f="points" type="number" min="0" step="0.5" value="${esc(base.points)}" aria-label="${N}-р даалгаврын оноо">
     ${nav}</div>
@@ -4984,7 +4986,8 @@ function bulkImport(SRC,X){X=X||{};
     const v=KK.mc[n];if(!v)return;const k=keyNorm(v);
     if(isP2(q))q.key=k;else if(k&&OPTS.includes(k[0]))q.key=k[0];});
   /* II хэсэг (хүснэгт) — салгаж авсан "2.1 …" даалгаврууд */
-  P2X.tasks.forEach(t=>{const q=newQ(2);q.rows=Math.min(10,t.subs.length);q.subs=t.subs.slice(0,q.rows);q.text=t.text.trim();
+  P2X.tasks.forEach(t=>{const q=newQ(2);q.rows=Math.min(8,t.subs.length);q.subs=t.subs.slice(0,q.rows);q.text=t.text.trim();
+    if(t.subs.length>8)P2X.warn.push('2.'+t.n+' даалгавар '+t.subs.length+' мөртэй — хариултын хуудсанд 8 хүртэл мөр (a–h) багтах тул эхний 8-ыг авлаа');
     q.points=t.points!=null&&t.points>0?t.points:q.rows;q.key=mNorm(P2X.keys[t.n]||'',q.rows);
     if(P2X.keys[t.n]!=null){const got=(q.key.match(/[^-]/g)||[]).length;
       if(got<q.rows)P2X.warn.push('2.'+t.n+' даалгавар '+q.rows+' мөртэй ч хариултаас '+got+' мөрийнх нь л олдлоо ('+(q.key||'хоосон')+') — хариултаа шалгана уу');}
@@ -5029,7 +5032,7 @@ function bulkImport(SRC,X){X=X||{};
     +'Бүх асуултыг шинээр орж ирсэн '+qs.length+' асуултаар солих гэж байна.\n'
     +'Хариултууд байрандаа үлдэх боловч асуулт нь өөр болох тул дүн өөрчлөгдөж магадгүй.'+UNDO_NOTE+'\n\nҮргэлжлүүлэх үү?'))return;
   snap('асуултуудыг солих');
-  if(uses10)state.exam.p2N=10;
+  if(uses10||(qs.some(isP2)&&!state.exam.questions.some(isP2)))state.exam.p2N=10;   // II хэсэг шинээр орж ирвэл 0–9
   let p1=qs.filter(q=>!isP2(q)&&!isP4(q)&&!isP3(q)),p2=qs.filter(isP2);const cut=p2.length>4;p2=p2.slice(0,4);
   const new4=qs.filter(isP4);
   if(!p1.length&&!new4.length&&!p2.length&&!new3.length){m.style.color='var(--stain)';m.textContent='I хэсгийн асуулт олдсонгүй.';return;}
