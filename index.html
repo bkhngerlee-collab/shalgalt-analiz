@@ -1287,7 +1287,7 @@ body.student #studentApp{display:block}
             <li>Зураг асуултынхаа доор. Схем, диаграм <b>зураг</b> хэлбэртэй (эсвэл Word-ын <b>PDF</b>-ийг хамт сонгоно)</li>
             <li>Хамгийн төгсгөлд <b>Хариулт</b>, хүсвэл <b>Агуулга</b> — «Хариулт ийм байна» жишээ шиг.
               Хэд хэдэн асуулт нэг агуулгатай бол <b>«1–3 Антибиотик»</b>, <b>«4–6 Фермент»</b> гэж нэг мөрөөр бичиж болно</li></ol>
-          <div class="imp-btns"><button type="button" class="btn ghost" id="tplWord">⬇ Word загвар</button><button type="button" class="btn ghost" id="tplWord2">⬇ 2 хувилбартай загвар</button><button type="button" class="btn ghost" id="tplXlsx">⬇ Excel загвар</button><button type="button" class="btn ghost" id="qtplBtn">🧩 Бусад жишээ</button></div></div>
+          <div class="imp-btns"><button type="button" class="btn ghost" id="tplWord">⬇ Word загвар</button><button type="button" class="btn ghost" id="tplWord2">⬇ 2 хувилбартай загвар</button><button type="button" class="btn ghost" id="tplJishig" title="11 асуулт (зурагтай), А ба Б хувилбар, хариулт, агуулгатай бэлэн жишиг шалгалт">⬇ Жишиг шалгалт (11 асуулт, 2 хувилбар)</button><button type="button" class="btn ghost" id="tplXlsx">⬇ Excel загвар</button><button type="button" class="btn ghost" id="qtplBtn">🧩 Бусад жишээ</button></div></div>
         <div class="imp-key"><div class="imp-key-h"><b>📋 Хариулт ийм байна</b><button type="button" class="btn ghost" id="impKeyCopy">📋 Хуулах</button></div>
           <pre class="imp-key-pre" id="impKeyPre"></pre>
           <small>Мөр бүрт нэг асуулт. <code>1-B, 2-C</code> эсвэл <code>1. (B)</code> гэж бичсэн ч танина.</small></div>
@@ -1367,7 +1367,7 @@ body.student #studentApp{display:block}
       <button class="btn ghost" id="addQ1">+ 1 асуулт нэмэх</button>
       <button class="btn ghost" id="addQ5">+ 5 асуулт нэмэх</button>
       <button class="btn" data-go="entry">Хариулт оруулах руу шилжих</button>
-      <button class="btn ghost" id="sample">Жишээ өгөгдөл ачаалах</button>
+      <button class="btn ghost" id="sample" title="11 асуулт, А ба Б хувилбар, 20 сурагчийн хариулттай жишиг шалгалт ачаалж, анализыг харуулна">🧪 Жишиг шалгалт ачаалах (2 хувилбар)</button>
     </div>
   </div>
 
@@ -5368,6 +5368,7 @@ $('#impKeyCopy').addEventListener('click',async()=>{let ok=false;try{await navig
 const dlTpl=f=>{const a=document.createElement('a');a.href=f;a.download=f;document.body.appendChild(a);a.click();a.remove();};
 $('#tplWord').addEventListener('click',()=>dlTpl('shalgalt-zagvar.docx'));
 $('#tplWord2').addEventListener('click',()=>dlTpl('shalgalt-zagvar-2huvilbar.docx'));
+$('#tplJishig').addEventListener('click',()=>dlTpl('shalgalt-jishig-2huvilbar.docx'));
 $('#tplXlsx').addEventListener('click',()=>{
   const H=['№','Асуулт','A','B','C','D','Зөв хариулт','Агуулга','Оноо'].map(v=>({v,s:'h'}));
   const R=[[1,'Фотосинтез эсийн аль органоидод явагддаг вэ?','Митохондри','Хлоропласт','Цөм','Рибосом','B','Эсийн бүтэц',1],
@@ -5814,18 +5815,103 @@ function deleteExamAll(e){
   if(id===state.id)openExam(db.exams[0].id);else save();
 }
 $('#reset').addEventListener('click',()=>deleteExam(state.id));
+/* ---------- Жишиг шалгалт: 11 асуулт (10 тест + 1 үнэн/худал), А ба Б хувилбар, зурагтай, 20 сурагчийн хариулттай ----------
+   Зургуудыг энд canvas дээр зурж үүсгэнэ (файл татахгүй, нэг файл хэвээр). */
+function sampleImgs(){
+  const F='"Segoe UI",system-ui,Roboto,Arial,sans-serif',mk=(w,h,draw)=>{const c=document.createElement('canvas');c.width=w;c.height=h;const x=c.getContext('2d');
+    x.fillStyle='#fff';x.fillRect(0,0,w,h);draw(x,w,h);const d=piEncode(c,860,IMG_MAX_KB);c.width=c.height=0;return d||'';};
+  const txt=(x,s,px,py,sz,col,al,w)=>{x.font=`${w||700} ${sz}px ${F}`;x.fillStyle=col||'#1E293B';x.textAlign=al||'center';x.textBaseline='middle';x.fillText(s,px,py);};
+  /* 1. Антибиотикийн диск: B-гийн цэвэр бүс хамгийн том, D-гийнх хамгийн жижиг */
+  const disk=mk(700,700,(x,w)=>{x.beginPath();x.arc(350,350,320,0,7);x.fillStyle='#EBD9A6';x.fill();x.lineWidth=10;x.strokeStyle='#B8A26A';x.stroke();
+    let s=7;const r=()=>(s=s*16807%2147483647)/2147483647;x.fillStyle='rgba(150,120,60,.35)';
+    for(let i=0;i<2600;i++){const a=r()*6.283,d=Math.sqrt(r())*305;x.fillRect(350+Math.cos(a)*d,350+Math.sin(a)*d,3,3);}
+    [['A',200,210,78],['B',500,210,128],['C',200,500,58],['D',500,500,38]].forEach(([L,cx,cy,z])=>{
+      x.beginPath();x.arc(cx,cy,z,0,7);x.fillStyle='#FBF6E8';x.fill();x.beginPath();x.arc(cx,cy,26,0,7);x.fillStyle='#fff';x.fill();
+      x.lineWidth=3;x.strokeStyle='#94A3B8';x.stroke();txt(x,L,cx,cy+1,30,'#1E3A8A');});});
+  /* 8. Ферментийн 5 үе шат (холимог дугаартай): зөв дараалал 2 → 4 → 5 → 1 → 3 */
+  const enz=mk(1200,800,(c,FW,FH)=>{const gap=FW*.025,pw=(FW-2*gap)/3,ph=(FH-gap)/2;
+    const P=[[1,'Бүтээгдэхүүн салж гарна'],[2,'Субстрат холбогдоно'],[3,'Фермент дахин бэлэн'],[4,'Фермент–субстрат цогцолбор'],[5,'Субстрат задарна']];
+    const enzyme=(cx,top,u)=>{const w=u*4.2,h=u*2.3,a=u*.95,d=u*.8,r=u*.9;c.beginPath();c.moveTo(cx-w/2,top+r);c.quadraticCurveTo(cx-w/2,top,cx-w/2+r,top);
+      c.lineTo(cx-a,top);c.lineTo(cx,top+d);c.lineTo(cx+a,top);c.lineTo(cx+w/2-r,top);c.quadraticCurveTo(cx+w/2,top,cx+w/2,top+r);c.lineTo(cx+w/2,top+h-r*1.3);
+      c.quadraticCurveTo(cx+w/2,top+h,cx+w/2-r*1.3,top+h);c.lineTo(cx-w/2+r*1.3,top+h);c.quadraticCurveTo(cx-w/2,top+h,cx-w/2,top+h-r*1.3);c.closePath();
+      c.fillStyle='#10B981';c.fill();c.lineWidth=u*.09;c.strokeStyle='#047857';c.stroke();};
+    const half=(cx,base,u,side,rot)=>{const a=u*.95,d=u*.8,hh=u*1.05;c.save();c.translate(cx,base);if(rot)c.rotate(rot);c.beginPath();
+      if(side<0){c.moveTo(-a,-hh);c.lineTo(0,-hh);c.lineTo(0,d);c.lineTo(-a,0);}else{c.moveTo(0,-hh);c.lineTo(a,-hh);c.lineTo(a,0);c.lineTo(0,d);}
+      c.closePath();c.fillStyle=side<0?'#F59E0B':'#EC4899';c.fill();c.lineWidth=u*.08;c.strokeStyle=side<0?'#B45309':'#9D174D';c.lineJoin='round';c.stroke();c.restore();};
+    const arrow=(x1,y1,x2,y2,u)=>{c.strokeStyle=c.fillStyle='#334155';c.lineWidth=u*.1;c.lineCap='round';c.beginPath();c.moveTo(x1,y1);c.lineTo(x2,y2);c.stroke();
+      const t=Math.atan2(y2-y1,x2-x1),k=u*.32;c.beginPath();c.moveTo(x2,y2);c.lineTo(x2-k*Math.cos(t-.5),y2-k*Math.sin(t-.5));c.lineTo(x2-k*Math.cos(t+.5),y2-k*Math.sin(t+.5));c.closePath();c.fill();};
+    P.forEach(([n,cap],k)=>{const row=k<3?0:1,col=row?k-3:k,px=(row?(FW-2*pw-gap)/2:0)+col*(pw+gap),py=row*(ph+gap);
+      c.beginPath();c.roundRect(px,py,pw,ph,pw*.06);c.fillStyle='#F8FAFC';c.fill();c.lineWidth=pw*.012;c.strokeStyle='#CBD5E1';c.stroke();
+      const u=pw*.105,cx=px+pw/2,top=py+ph*.52;enzyme(cx,top,u);
+      if(n===1){half(cx-u*1.25,top-u*.75,u,-1,-.5);half(cx+u*1.25,top-u*.75,u,1,.5);arrow(cx-u*1.6,top-u*1.9,cx-u*2.3,top-u*2.6,u);arrow(cx+u*1.6,top-u*1.9,cx+u*2.3,top-u*2.6,u);}
+      if(n===2){half(cx,top-u*1.9,u,-1);half(cx,top-u*1.9,u,1);arrow(cx-u*1.6,top-u*2.6,cx-u*1.6,top-u*.6,u);
+        txt(c,'субстрат',cx+u*1.2,top-u*2.4,u*.42,'#92400E','left');txt(c,'фермент',cx,top+u*1.65,u*.42,'#fff');txt(c,'идэвхт төв',cx+u*1.2,top-u*.5,u*.36,'#065F46','left');}
+      if(n===3)txt(c,'✓',cx,top-u*1.1,u*.9,'#059669');
+      if(n===4){half(cx,top,u,-1);half(cx,top,u,1);}
+      if(n===5){half(cx-u*.18,top,u,-1);half(cx+u*.18,top,u,1);c.strokeStyle='#DC2626';c.lineWidth=u*.1;c.beginPath();c.moveTo(cx,top-u*1.35);c.lineTo(cx-u*.2,top-u*.9);c.lineTo(cx+u*.2,top-u*.55);c.lineTo(cx-u*.15,top-u*.15);c.stroke();}
+      c.beginPath();c.arc(px+pw*.12,py+pw*.12,pw*.085,0,7);c.fillStyle='#1E3A8A';c.fill();txt(c,String(n),px+pw*.12,py+pw*.125,pw*.1,'#fff');
+      txt(c,cap,cx,py+ph*.86,pw*.058,'#1E293B','center',600);});});
+  /* 10. Ферментийн идэвх ба температур: оргил 37 °C */
+  const graph=mk(1200,800,(c,GW,GH)=>{const L=GW*.13,R=GW*.95,T=GH*.08,B=GH*.8,xs=t=>L+(R-L)*t/70,ys=v=>B-(B-T)*v;
+    c.strokeStyle='#E2E8F0';c.lineWidth=2;for(let t=0;t<=70;t+=10){c.beginPath();c.moveTo(xs(t),T);c.lineTo(xs(t),B);c.stroke();}
+    for(let v=0;v<=1.001;v+=.25){c.beginPath();c.moveTo(L,ys(v));c.lineTo(R,ys(v));c.stroke();}
+    c.strokeStyle='#334155';c.lineWidth=5;c.beginPath();c.moveTo(L,T-GH*.03);c.lineTo(L,B);c.lineTo(R+GW*.02,B);c.stroke();
+    for(let t=0;t<=70;t+=10)txt(c,String(t),xs(t),B+GH*.05,GW*.026,'#334155','center',600);
+    txt(c,'Температур (°C)',(L+R)/2,B+GH*.14,GW*.028,'#334155');
+    c.save();c.translate(GW*.045,(T+B)/2);c.rotate(-Math.PI/2);txt(c,'Ферментийн идэвх',0,0,GW*.028,'#334155');c.restore();
+    const act=t=>t<=37?1-Math.pow((37-t)/37,1.8):Math.max(0,1-Math.pow((t-37)/21,2));
+    c.strokeStyle='#10B981';c.lineWidth=GW*.009;c.lineJoin=c.lineCap='round';c.beginPath();
+    for(let t=0;t<=60;t+=.5){const X=xs(t),Y=ys(act(t)*.92);t?c.lineTo(X,Y):c.moveTo(X,Y);}c.stroke();});
+  return{disk,enz,graph};
+}
 $('#sample').addEventListener('click',()=>{
-  const ex={id:uid(),exam:{title:'Биологи, 11-р анги, жишээ шалгалт',date:today(),questions:[
-    {topic:'Эсийн бүтэц',key:'A',points:1},{topic:'Фотосинтез',key:'C',points:1},{topic:'Генетик',key:'B',points:1},
-    {topic:'Экосистем',key:'D',points:1},{topic:'Генетик',key:'A',points:1}]},students:[]};
-  const empty=!state.students.length&&!state.exam.title;
+  const I=sampleImgs(),A4=['','','',''];
+  const Q=(topic,text,opts,key,alt,img,altImg)=>({topic,text,opts:opts.concat(''),key,points:1,img:img||'',alt:[null,{text:alt[0],opts:alt[1].concat(''),key:alt[2],img:altImg||''}]});
+  const fill='Өгүүлбэрүүдийг a–d үгээр нөхөнө үү.\n1. Эм гэдэг нь биед орж химийн ________-д нөлөөлдөг бодис юм.\n2. Пенициллиум мөөгөнцөр орчноосоо ________-ний молекулыг шингээж ашиглана.\n3. Нэг бичил биетний бусдыг устгахаар ялгаруулдаг бүтээгдэхүүнийг ________ гэнэ.\n4. Пенициллинийг Penicillium ________-ийн нэрээр нэрлэсэн.\nҮгс: a) хоол хүнс  b) антибиотик  c) урвал  d) организм';
+  const match='1–4 тайлбар бүрийг a–d бодистой харгалзуулна уу.\n1. Биеийн доторх бактерийн халдварыг эмчилнэ — a) антибиотик\n2. Халдвараас сэргийлж арьсанд түрхэнэ — b) ариутгагч бодис\n3. Жорлонгийн суултуур дээрх бичил биетнийг устгана — c) эсрэгбие\n4. Цагаан эсийн үйлдвэрлэдэг, эмгэг төрүүлэгчийн эсрэг уураг — d) антисептик';
+  const T1='Антибиотик ба ариутгал',T2='Антибиотикт тэсвэржилт',T3='Фермент';
+  const resist=['Ханиад хүрэх бүрт антибиотик уух','Бусдын үлдээсэн антибиотикийг уух','Бие сайжирмагц эмээ зогсоох','Эмчийн зааврын дагуу эмчилгээг бүрэн дуусгах'];
+  const denat=['Фермент хуваагдаж олширдог','Субстрат хэт их болдог','Фермент бүтээгдэхүүн болж хувирдаг','Идэвхт төвийн хэлбэр өөрчлөгдөж (денатураци), субстрат тохирохоо больдог'];
+  const qs=[
+    Q(T1,'Зурагт A–D антибиотиктэй дискийг бактерийн тэжээлт орчинд байрлуулжээ. Аль антибиотик хамгийн үр дүнтэй вэ?',['A антибиотик','B антибиотик','C антибиотик','D антибиотик'],'B',
+      ['Зурагт A–D антибиотиктэй дискийг бактерийн тэжээлт орчинд байрлуулжээ. Аль антибиотик хамгийн бага үр дүнтэй вэ?',['A антибиотик','B антибиотик','C антибиотик','D антибиотик'],'D'],I.disk,I.disk),
+    Q(T1,'Томуу, ханиадны үед антибиотик уух нь яагаад ашиггүй вэ?',['Вирус маш зузаан эсийн ханатай','Вирус хэт том тул антибиотик нэвтэрч чадахгүй','Вирус өөрийн бодисын солилцоогүй, эсийн хана үүсгэдэггүй','Антибиотикийг дархлааны систем устгадаг'],'C',
+      ['Пенициллинийг ямар организм ялгаруулдаг вэ?',['Бактери','Penicillium мөөгөнцөр','Вирус','Хөвд'],'B']),
+    Q(T1,'Анхны антибиотик болох пенициллинийг хэн нээсэн бэ?',['Луи Пастер','Александр Флеминг','Роберт Кох','Эдвард Женнер'],'B',
+      ['Анхны антибиотик болох пенициллинийг хэн нээсэн бэ?',['Роберт Кох','Эдвард Женнер','Александр Флеминг','Луи Пастер'],'C']),
+    Q(T1,fill,['1b, 2c, 3a, 4d','1c, 2a, 3b, 4d','1d, 2a, 3c, 4b','1c, 2d, 3b, 4a'],'B',[fill,['1c, 2a, 3b, 4d','1b, 2c, 3a, 4d','1c, 2d, 3b, 4a','1d, 2a, 3c, 4b'],'A']),
+    Q(T1,match,['1a, 2d, 3b, 4c','1d, 2a, 3b, 4c','1a, 2b, 3d, 4c','1c, 2d, 3a, 4b'],'A',[match,['1d, 2a, 3b, 4c','1c, 2d, 3a, 4b','1a, 2d, 3b, 4c','1a, 2b, 3d, 4c'],'C']),
+    Q(T2,'Антибиотикт тэсвэржилтийг багасгахын тулд юу хийх ёстой вэ?',resist,'D',['Антибиотикт тэсвэржилтийг багасгахын тулд юу хийх ёстой вэ?',[resist[3],resist[0],resist[1],resist[2]],'A']),
+    Q(T3,'Ферментийн идэвхт төвд холбогдож урвалд ордог бодисыг юу гэж нэрлэх вэ?',['Субстрат','Бүтээгдэхүүн','Гормон','Эсрэгбие'],'A',
+      ['Ферментийн урвалын үр дүнд үүсэх бодисыг юу гэж нэрлэх вэ?',['Субстрат','Идэвхт төв','Бүтээгдэхүүн','Гормон'],'C']),
+    Q(T3,'Зурагт ферментийн үйлчлэлийн үе шатуудыг 1–5 гэж дугаарласан. Зөв дарааллыг сонгоно уу.',['2 – 5 – 4 – 1 – 3','4 – 2 – 5 – 3 – 1','2 – 4 – 5 – 1 – 3','2 – 4 – 1 – 5 – 3'],'C',
+      ['Зурагт ферментийн үйлчлэлийн үе шатуудыг 1–5 гэж дугаарласан. Зөв дарааллыг сонгоно уу.',['2 – 4 – 1 – 5 – 3','2 – 4 – 5 – 1 – 3','4 – 2 – 5 – 3 – 1','2 – 5 – 4 – 1 – 3'],'B'],I.enz,I.enz),
+    Q(T3,'Температур хэт өндөр болоход фермент яагаад ажиллахаа больдог вэ?',denat,'D',['Температур хэт өндөр болоход фермент яагаад ажиллахаа больдог вэ?',[denat[1],denat[3],denat[0],denat[2]],'B']),
+    Q(T3,'Графикт ферментийн идэвх температураас хэрхэн хамаарахыг үзүүлэв. Энэ ферментийн хамгийн тохиромжтой температур аль вэ?',['10 °C','25 °C','37 °C','60 °C'],'C',
+      ['Графикт ферментийн идэвх температураас хэрхэн хамаарахыг үзүүлэв. 50 °C-д энэ ферментийн идэвх ямар байх вэ?',['Хамгийн их байна','Огт байхгүй','37 °C-тай харьцуулахад бага','10 °C-тай яг адил'],'C'],I.graph,I.graph),
+    {part:4,topic:T2,key:'ХҮҮҮ',points:1.5,tfmode:'scale',text:'Антибиотикт тэсвэржилтийн тухай:',
+      stmts:['Антибиотик бактерид тэсвэржилтийг үүсгэдэг.','Тэсвэржилт нь бактерийн амьд үлдэх давуу тал юм.','Антибиотикийн эмчилгээг дуусгалгүй орхих нь тэсвэржилтийн магадлалыг нэмэгдүүлнэ.','Антибиотикийг шаардлагагүй хэрэглэх нь тэсвэртэй омог үүсэх магадлалыг нэмэгдүүлнэ.'],
+      alt:[null,{text:'Антибиотикийн тухай:',key:'ҮХҮХ',opts:[],stmts:['Антибиотик бактерийг устгадаг эсвэл өсөлтийг нь зогсоодог.','Антибиотик вирусийн халдварыг эмчилдэг.','Пенициллин бол анх нээгдсэн антибиотик.','Тэсвэртэй бактери антибиотикийн нөлөөгөөр устдаг.']}]}];
+  const n=qs.length,ident=Array.from({length:n},(_,i)=>i);
+  const ex={id:uid(),exam:{title:'Биологи 11-р анги — жишиг шалгалт (2 хувилбар)',date:today(),optN:4,vmode:'own',variants:[ident,ident.slice()],questions:qs},students:[]};
+  const empty=!state.students.length&&!state.exam.title&&!state.exam.questions.some(q=>q.text);
   if(empty)db.exams=db.exams.filter(e=>e.id!==state.id);
   db.exams.push(ex);state=ex;db.cur=ex.id;
-  [['11А','Анужин','ACDDB'],['11А','Тэмүүлэн','ACBDA'],['11А','Номин','ABBDC'],['11А','Билгүүн','ACADA'],
-   ['11А','Сарнай','BCBDA'],['11Б','Мишээл','ACCDB'],['11Б','Эрдэнэ','ACBAA'],['11Б','Хулан','ADDDB'],
-   ['11Б','Тэнгис','ACBDB'],['11Б','Оюу','CCADA']].forEach(r=>{state.students.push({id:uid(),cls:r[0],name:r[1],answers:r[2].split('')});ensureRoster(r[0],r[1]);});
-  ensureRoster('11А','Ариунаа');ensureRoster('11Б','Батзориг');
+  /* Сурагчдын хариулт: асуулт бүрийн хүндрэл, сурагчийн чадвар, хамгийн түгээмэл буруу хариулт (буруу ойлголт) */
+  let seed=20261128;const rnd=()=>(seed=seed*16807%2147483647)/2147483647;
+  const easy=[.88,.62,.8,.55,.5,.72,.82,.45,.38,.7],TFP=[[.32,.82,.74,.86],[.9,.66,.58,.52]];
+  const trap=[['A','A','A','A','B','C','B','D','A','B'],['B','A','A','B','A','D','A','A','C','A']];
+  const N=[['11А',['Анужин','Тэмүүлэн','Номин','Билгүүн','Сарнай','Ариунаа','Төгөлдөр','Мөнхзул','Энхжин','Баясгалан']],
+    ['11Б',['Мишээл','Эрдэнэ','Хулан','Тэнгис','Оюу','Батзориг','Солонго','Амаржаргал','Индра','Ганзориг']]];
+  N.forEach(([cls,names])=>names.forEach((name,k)=>{const v=k%2,skill=(rnd()-.5)*.55,ans=[];
+    qs.forEach((q,i)=>{const Qv=v?Object.assign({},q,q.alt[1]):q;
+      if(q.part===4){ans.push(Qv.key.split('').map((ch,j)=>rnd()<Math.min(.97,TFP[v][j]+skill*.6)?ch:(ch==='Ү'?'Х':'Ү')).join(''));return;}
+      if(rnd()<Math.max(.08,Math.min(.97,easy[i]+skill))){ans.push(Qv.key);return;}
+      const others='ABCD'.split('').filter(L=>L!==Qv.key);ans.push(rnd()<.65&&trap[v][i]!==Qv.key?trap[v][i]:others[Math.floor(rnd()*3)]);});
+    state.students.push({id:uid(),cls,name,v,answers:ans});ensureRoster(cls,name);}));
+  ensureRoster('11А','Гэрэлмаа');ensureRoster('11Б','Тэмүүжин');
   openExam(ex.id);go('analysis');
+  toast('Жишиг шалгалт ачааллаа: 11 асуулт, А ба Б хувилбар, 20 сурагч. «Хувилбар» шүүлтүүрээр хувилбар бүрийг тусад нь харж болно.');
 });
 
 /* ---------- entry ---------- */
